@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Qaizo",
+    "slug": "qaizo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#080b14"
+    },
+    "android": {
+      "package": "com.qaizo.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.qaizo.app"
+    }
+  }
+}

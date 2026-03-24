@@ -1,34 +1,33 @@
 // src/navigation/AppNavigator.js
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { StyleSheet, Text, View } from 'react-native';
 import i18n from '../i18n';
-
-import DashboardScreen from '../screens/DashboardScreen';
-import TransactionsScreen from '../screens/TransactionsScreen';
+import { colors } from '../theme/colors';
+ 
 import AccountsScreen from '../screens/AccountsScreen';
+import DashboardScreen from '../screens/DashboardScreen';
 import InvestmentsScreen from '../screens/InvestmentsScreen';
-import AIAdvisorScreen from '../screens/AIAdvisorScreen';
-
+import SettingsScreen from '../screens/SettingsScreen';
+import TransactionsScreen from '../screens/TransactionsScreen';
+ 
 const Tab = createBottomTabNavigator();
-
+ 
 const icons = {
   Dashboard: '📊',
   Transactions: '📋',
   Accounts: '🏦',
   Investments: '📈',
-  Advisor: '🤖',
+  Settings: '⚙️',
 };
-
+ 
 const labelKeys = {
   Dashboard: 'dashboard',
   Transactions: 'transactions',
   Accounts: 'accounts',
   Investments: 'investments',
-  Advisor: 'advisor',
+  Settings: 'language',
 };
-
+ 
 export default function AppNavigator() {
   return (
     <Tab.Navigator
@@ -38,13 +37,17 @@ export default function AppNavigator() {
         tabBarActiveTintColor: colors.green,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarIcon: ({ focused }) => (
-          <Text style={[styles.icon, focused && styles.iconActive]}>
-            {icons[route.name]}
-          </Text>
+          <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+            <Text style={[styles.icon, focused && styles.iconActive]}>
+              {icons[route.name]}
+            </Text>
+          </View>
         ),
         tabBarLabel: ({ focused }) => (
           <Text style={[styles.label, focused && styles.labelActive]}>
-            {i18n.t(labelKeys[route.name])}
+            {route.name === 'Settings' 
+              ? (i18n.getLanguage() === 'ru' ? 'Ещё' : i18n.getLanguage() === 'he' ? 'עוד' : 'More')
+              : i18n.t(labelKeys[route.name])}
           </Text>
         ),
       })}
@@ -53,26 +56,38 @@ export default function AppNavigator() {
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
       <Tab.Screen name="Accounts" component={AccountsScreen} />
       <Tab.Screen name="Investments" component={InvestmentsScreen} />
-      <Tab.Screen name="Advisor" component={AIAdvisorScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: colors.bg2,
-    borderTopColor: 'rgba(255,255,255,0.04)',
+    borderTopColor: colors.divider,
     borderTopWidth: 1,
-    height: 85,
+    height: 88,
     paddingTop: 8,
     paddingBottom: 28,
+    paddingHorizontal: 4,
+  },
+  iconWrap: {
+    width: 40,
+    height: 32,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: colors.greenSoft,
   },
   icon: {
-    fontSize: 22,
-    opacity: 0.5,
+    fontSize: 20,
+    opacity: 0.45,
   },
   iconActive: {
     opacity: 1,
+    fontSize: 22,
   },
   label: {
     fontSize: 10,
@@ -82,5 +97,6 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     color: colors.green,
+    fontWeight: '700',
   },
 });

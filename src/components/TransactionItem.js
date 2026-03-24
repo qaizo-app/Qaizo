@@ -1,33 +1,34 @@
 // src/components/TransactionItem.js
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
-
+import { colors } from '../theme/colors';
+ 
 export default function TransactionItem({ transaction, onPress }) {
   const isIncome = transaction.type === 'income';
   const sign = isIncome ? '+' : '-';
   const amountColor = isIncome ? colors.green : colors.red;
-
+  const bgColor = isIncome ? colors.greenSoft : colors.redSoft;
+  const catColor = colors.categories[transaction.categoryId] || colors.textMuted;
+ 
   return (
-    <TouchableOpacity style={styles.container} onPress={() => onPress?.(transaction)}>
-      <View style={styles.iconContainer}>
+    <TouchableOpacity style={styles.container} onPress={() => onPress?.(transaction)} activeOpacity={0.7}>
+      <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
         <Text style={styles.icon}>{transaction.icon || '📋'}</Text>
       </View>
       <View style={styles.info}>
         <Text style={styles.category}>{i18n.t(transaction.categoryId) || transaction.categoryId}</Text>
-        <Text style={styles.note}>{transaction.note || transaction.account || ''}</Text>
+        <Text style={styles.note} numberOfLines={1}>{transaction.note || ''}</Text>
       </View>
       <View style={styles.amountContainer}>
         <Text style={[styles.amount, { color: amountColor }]}>
-          {sign}{Math.abs(transaction.amount).toLocaleString()} {transaction.currency || '₪'}
+          {sign}{Math.abs(transaction.amount).toLocaleString()} ₪
         </Text>
         <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
       </View>
     </TouchableOpacity>
   );
 }
-
+ 
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -36,29 +37,28 @@ function formatDate(dateStr) {
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   if (days === 0) return i18n.t('today');
   if (days === 1) return i18n.t('yesterday');
-  return `${d.getDate()}.${d.getMonth() + 1}`;
+  return `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: colors.divider,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(52,211,153,0.08)',
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   icon: {
-    fontSize: 20,
+    fontSize: 22,
   },
   info: {
     flex: 1,
@@ -67,22 +67,25 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
   note: {
     color: colors.textMuted,
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 3,
   },
   amountContainer: {
     alignItems: 'flex-end',
   },
   amount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
+    letterSpacing: -0.3,
   },
   date: {
     color: colors.textMuted,
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 3,
   },
 });
+ 
