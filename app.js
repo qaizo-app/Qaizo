@@ -1,15 +1,17 @@
 // App.js
-// ЗАМЕНИ ПОЛНОСТЬЮ существующий App.js этим файлом!
-import React from 'react';
-import { StatusBar } from 'react-native';
+// ЗАМЕНИ полностью — добавлен GestureHandlerRootView для свайпов
 import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar barStyle="light-content" backgroundColor="#080b14" />
-      <AppNavigator />
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <StatusBar barStyle="light-content" backgroundColor="#0a0e1a" />
+        <AppNavigator />
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
