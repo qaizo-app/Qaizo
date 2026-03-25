@@ -1,11 +1,12 @@
 // src/screens/AccountsScreen.js
-// MaterialCommunityIcons для счетов, крипто-секция восстановлена
+// Нажатие → история счёта, долгое нажатие → редактирование
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
+import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
@@ -41,6 +42,7 @@ function AccIcon({ type, size = 18 }) {
 }
 
 export default function AccountsScreen() {
+  const navigation = useNavigation();
   const [accounts, setAccounts] = useState([]);
   const [showEdit, setShowEdit] = useState(false);
   const [editAccount, setEditAccount] = useState(null);
@@ -60,14 +62,11 @@ export default function AccountsScreen() {
 
   const activeAccounts = accounts.filter(a => a.isActive !== false);
   const inactiveAccounts = accounts.filter(a => a.isActive === false);
-
   const grouped = {};
-  ACCOUNT_TYPES.forEach(t => {
-    const accs = activeAccounts.filter(a => a.type === t.id);
-    if (accs.length > 0) grouped[t.id] = accs;
-  });
+  ACCOUNT_TYPES.forEach(t => { const accs = activeAccounts.filter(a => a.type === t.id); if (accs.length > 0) grouped[t.id] = accs; });
   const totalBalance = activeAccounts.reduce((s, a) => s + (a.balance || 0), 0);
 
+  const openHistory = (acc) => { navigation.navigate('AccountHistory', { account: acc }); };
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber || '');
     setType(acc.type || 'bank'); setCurrency(acc.currency || '₪');
@@ -107,7 +106,11 @@ export default function AccountsScreen() {
           <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>₪ {totalBalance.toLocaleString()}</Text>
         </Card>
 
-        {/* Account groups */}
+        {/* Hint */}
+        <Text style={styles.hint}>
+          {lang==='ru'?'Нажми → история · Долгое → изменить':lang==='he'?'לחיצה → היסטוריה · לחיצה ארוכה → עריכה':'Tap → history · Long press → edit'}
+        </Text>
+
         {Object.entries(grouped).map(([typeId, accs]) => {
           const cfg = accountTypeConfig[typeId];
           const groupSum = accs.reduce((s, a) => s + (a.balance || 0), 0);
@@ -122,7 +125,7 @@ export default function AccountsScreen() {
               </View>
               {accs.map(acc => (
                 <Card key={acc.id}>
-                  <TouchableOpacity style={styles.accRow} onPress={() => openEdit(acc)}>
+                  <TouchableOpacity style={styles.accRow} onPress={() => openHistory(acc)} onLongPress={() => openEdit(acc)}>
                     <AccIcon type={acc.type} />
                     <View style={styles.accInfo}>
                       <Text style={styles.accName}>{acc.name}</Text>
@@ -131,9 +134,12 @@ export default function AccountsScreen() {
                         {acc.overdraft ? ` · ${lang==='ru'?'Лимит':'Limit'}: ${acc.currency}${acc.overdraft}` : ''}
                       </Text>
                     </View>
-                    <Text style={[styles.accBalance, { color: (acc.balance||0) >= 0 ? colors.text : colors.red }]}>
-                      {acc.currency||'₪'} {(acc.balance||0).toLocaleString()}
-                    </Text>
+                    <View style={styles.accRight}>
+                      <Text style={[styles.accBalance, { color: (acc.balance||0) >= 0 ? colors.text : colors.red }]}>
+                        {acc.currency||'₪'} {(acc.balance||0).toLocaleString()}
+                      </Text>
+                      <Feather name="chevron-right" size={16} color={colors.textMuted} />
+                    </View>
                   </TouchableOpacity>
                 </Card>
               ))}
@@ -141,7 +147,7 @@ export default function AccountsScreen() {
           );
         })}
 
-        {/* Crypto placeholder */}
+        {/* Crypto */}
         <View style={styles.groupHeader}>
           <View style={[styles.groupIcon, { backgroundColor: 'rgba(245,158,11,0.12)' }]}>
             <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" />
@@ -149,16 +155,14 @@ export default function AccountsScreen() {
           <Text style={styles.groupTitle}>{typeLabel('crypto', lang)}</Text>
         </View>
         <Card>
-          <TouchableOpacity style={[styles.accRow, { opacity: 0.6 }]}>
+          <View style={[styles.accRow, { opacity: 0.6 }]}>
             <AccIcon type="crypto" />
             <View style={styles.accInfo}>
-              <Text style={[styles.accName, { color: colors.textDim }]}>
-                {lang==='ru'?'Скоро':lang==='he'?'בקרוב':'Coming soon'}
-              </Text>
+              <Text style={[styles.accName, { color: colors.textDim }]}>{lang==='ru'?'Скоро':'Coming soon'}</Text>
               <Text style={styles.accSub}>Bitcoin, Ethereum, USDT...</Text>
             </View>
             <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
-          </TouchableOpacity>
+          </View>
         </Card>
 
         {/* Inactive */}
@@ -168,11 +172,11 @@ export default function AccountsScreen() {
               <View style={[styles.groupIcon, { backgroundColor: 'rgba(100,116,139,0.12)' }]}>
                 <Feather name="archive" size={14} color={colors.textMuted} />
               </View>
-              <Text style={styles.groupTitle}>{lang==='ru'?'Неактивные':lang==='he'?'לא פעילים':'Inactive'}</Text>
+              <Text style={styles.groupTitle}>{lang==='ru'?'Неактивные':'Inactive'}</Text>
             </View>
             {inactiveAccounts.map(acc => (
               <Card key={acc.id}>
-                <TouchableOpacity style={[styles.accRow, { opacity: 0.4 }]} onPress={() => openEdit(acc)}>
+                <TouchableOpacity style={[styles.accRow, { opacity: 0.4 }]} onLongPress={() => openEdit(acc)}>
                   <AccIcon type={acc.type} />
                   <View style={styles.accInfo}><Text style={styles.accName}>{acc.name}</Text></View>
                   <Text style={[styles.accBalance, { color: colors.textMuted }]}>{acc.currency||'₪'} {(acc.balance||0).toLocaleString()}</Text>
@@ -183,81 +187,74 @@ export default function AccountsScreen() {
         )}
       </ScrollView>
 
-      {/* Modal */}
-      <Modal visible={showEdit} animationType="slide" transparent>
-        <View style={styles.overlay}>
-          <ScrollView contentContainerStyle={{ justifyContent:'flex-end', flexGrow:1 }}>
-            <View style={styles.modal}>
-              <View style={styles.handleBar} />
-              <Text style={styles.modalTitle}>{editAccount ? editAccount.name : (lang==='ru'?'Новый счёт':lang==='he'?'חשבון חדש':'New Account')}</Text>
+      {/* Edit/Add — SwipeModal */}
+      <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)}>
+        <Text style={styles.modalTitle}>{editAccount ? editAccount.name : (lang==='ru'?'Новый счёт':'New Account')}</Text>
 
-              <Text style={styles.fieldLabel}>{lang==='ru'?'Тип':lang==='he'?'סוג':'Type'}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-                {ACCOUNT_TYPES.map(t => {
-                  const cfg = accountTypeConfig[t.id];
-                  return (
-                    <TouchableOpacity key={t.id} style={[styles.typeChip, type===t.id && {borderColor:cfg.color, backgroundColor:`${cfg.color}12`}]} onPress={()=>setType(t.id)}>
-                      <MaterialCommunityIcons name={cfg.icon} size={16} color={type===t.id ? cfg.color : colors.textMuted} />
-                      <Text style={[styles.typeChipText, type===t.id && {color:cfg.color}]}>{typeLabel(t.id, lang)}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+        <Text style={styles.fieldLabel}>{lang==='ru'?'Тип':'Type'}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
+          {ACCOUNT_TYPES.map(t => {
+            const cfg = accountTypeConfig[t.id];
+            return (
+              <TouchableOpacity key={t.id} style={[styles.typeChip, type===t.id && {borderColor:cfg.color, backgroundColor:`${cfg.color}12`}]} onPress={()=>setType(t.id)}>
+                <MaterialCommunityIcons name={cfg.icon} size={16} color={type===t.id ? cfg.color : colors.textMuted} />
+                <Text style={[styles.typeChipText, type===t.id && {color:cfg.color}]}>{typeLabel(t.id, lang)}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
-              <Text style={styles.fieldLabel}>{lang==='ru'?'Название':lang==='he'?'שם':'Name'}</Text>
-              <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Mizrahi, Visa 3324..." placeholderTextColor={colors.textMuted} />
+        <Text style={styles.fieldLabel}>{lang==='ru'?'Название':'Name'}</Text>
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Mizrahi, Visa 3324..." placeholderTextColor={colors.textMuted} />
 
-              <Text style={styles.fieldLabel}>{lang==='ru'?'Номер (не обязательно)':lang==='he'?'מספר (לא חובה)':'Number (optional)'}</Text>
-              <TextInput style={styles.input} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
+        <Text style={styles.fieldLabel}>{lang==='ru'?'Номер (не обязательно)':'Number (optional)'}</Text>
+        <TextInput style={styles.input} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
 
-              <Text style={styles.fieldLabel}>{i18n.t('currency')}</Text>
-              <View style={styles.currencyRow}>
-                {CURRENCIES.map(c => (
-                  <TouchableOpacity key={c} style={[styles.currencyBtn, currency===c && {borderColor:tc, backgroundColor:`${tc}12`}]} onPress={()=>setCurrency(c)}>
-                    <Text style={[styles.currencyText, currency===c && {color:tc}]}>{c}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.fieldLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
-              <View style={styles.balanceRow}>
-                <Text style={[styles.balanceCurrency, {color:tc}]}>{currency}</Text>
-                <TextInput style={styles.balanceInput} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
-              </View>
-
-              {(type==='bank'||type==='credit') && (
-                <>
-                  <Text style={styles.fieldLabel}>{type==='credit'?(lang==='ru'?'Мисгерет':lang==='he'?'מסגרת':'Limit'):(lang==='ru'?'Овердрафт':lang==='he'?'אוברדרפט':'Overdraft')}</Text>
-                  <TextInput style={styles.input} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
-                </>
-              )}
-
-              <View style={styles.toggleRow}>
-                <View>
-                  <Text style={styles.toggleLabel}>{lang==='ru'?'Активный':lang==='he'?'פעיל':'Active'}</Text>
-                  <Text style={styles.toggleSub}>{lang==='ru'?'Неактивные скрыты из списков':lang==='he'?'לא פעילים מוסתרים':'Inactive hidden'}</Text>
-                </View>
-                <Switch value={isActive} onValueChange={setIsActive} trackColor={{false:colors.card, true:`${tc}40`}} thumbColor={isActive?tc:colors.textMuted} />
-              </View>
-
-              <View style={styles.btnRow}>
-                {editAccount && (
-                  <TouchableOpacity style={styles.deleteBtn} onPress={()=>setDeleteTarget(editAccount)}>
-                    <Feather name="trash-2" size={20} color={colors.red} />
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity style={styles.cancelBtn} onPress={()=>setShowEdit(false)}>
-                  <Text style={styles.cancelText}>{i18n.t('cancel')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.saveBtn, {backgroundColor:tc}]} onPress={handleSave}>
-                  <Feather name="check" size={18} color="#fff" style={{marginRight:4}} />
-                  <Text style={styles.saveText}>{i18n.t('save')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
+        <Text style={styles.fieldLabel}>{i18n.t('currency')}</Text>
+        <View style={styles.currencyRow}>
+          {CURRENCIES.map(c => (
+            <TouchableOpacity key={c} style={[styles.currencyBtn, currency===c && {borderColor:tc, backgroundColor:`${tc}12`}]} onPress={()=>setCurrency(c)}>
+              <Text style={[styles.currencyText, currency===c && {color:tc}]}>{c}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </Modal>
+
+        <Text style={styles.fieldLabel}>{lang==='ru'?'Баланс':'Balance'}</Text>
+        <View style={styles.balanceRow}>
+          <Text style={[styles.balanceCurrency, {color:tc}]}>{currency}</Text>
+          <TextInput style={styles.balanceInput} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
+        </View>
+
+        {(type==='bank'||type==='credit') && (
+          <>
+            <Text style={styles.fieldLabel}>{type==='credit'?(lang==='ru'?'Мисгерет':'Limit'):(lang==='ru'?'Овердрафт':'Overdraft')}</Text>
+            <TextInput style={styles.input} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
+          </>
+        )}
+
+        <View style={styles.toggleRow}>
+          <View>
+            <Text style={styles.toggleLabel}>{lang==='ru'?'Активный':'Active'}</Text>
+            <Text style={styles.toggleSub}>{lang==='ru'?'Неактивные скрыты':'Inactive hidden'}</Text>
+          </View>
+          <Switch value={isActive} onValueChange={setIsActive} trackColor={{false:colors.card, true:`${tc}40`}} thumbColor={isActive?tc:colors.textMuted} />
+        </View>
+
+        <View style={styles.btnRow}>
+          {editAccount && (
+            <TouchableOpacity style={styles.deleteBtn} onPress={()=>setDeleteTarget(editAccount)}>
+              <Feather name="trash-2" size={20} color={colors.red} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.cancelBtn} onPress={()=>setShowEdit(false)}>
+            <Text style={styles.cancelText}>{i18n.t('cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.saveBtn, {backgroundColor:tc}]} onPress={handleSave}>
+            <Feather name="check" size={18} color="#fff" style={{marginRight:4}} />
+            <Text style={styles.saveText}>{i18n.t('save')}</Text>
+          </TouchableOpacity>
+        </View>
+      </SwipeModal>
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')} message={deleteTarget?.name||''} confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')} onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </View>
@@ -271,6 +268,7 @@ const styles = StyleSheet.create({
   addBtn: {width:44, height:44, borderRadius:14, backgroundColor:colors.green, justifyContent:'center', alignItems:'center'},
   totalLabel: {color:colors.textDim, fontSize:13, marginBottom:8},
   totalAmount: {fontSize:32, fontWeight:'800'},
+  hint: {color:colors.textMuted, fontSize:11, textAlign:'center', marginBottom:12, opacity:0.5},
   groupHeader: {flexDirection:'row', alignItems:'center', paddingHorizontal:24, marginTop:24, marginBottom:8},
   groupIcon: {width:28, height:28, borderRadius:8, justifyContent:'center', alignItems:'center', marginRight:8},
   groupTitle: {color:colors.textDim, fontSize:12, fontWeight:'700', letterSpacing:1, textTransform:'uppercase', flex:1},
@@ -279,12 +277,10 @@ const styles = StyleSheet.create({
   accInfo: {flex:1, marginLeft:14},
   accName: {color:colors.text, fontSize:16, fontWeight:'600'},
   accSub: {color:colors.textMuted, fontSize:11, marginTop:3},
+  accRight: {flexDirection:'row', alignItems:'center', gap:8},
   accBalance: {fontSize:17, fontWeight:'700'},
   v2Badge: {backgroundColor:'rgba(245,158,11,0.15)', paddingHorizontal:10, paddingVertical:4, borderRadius:8},
   v2Text: {color:'#f59e0b', fontSize:11, fontWeight:'700'},
-  overlay: {flex:1, backgroundColor:colors.overlay},
-  modal: {backgroundColor:colors.bg2, borderTopLeftRadius:28, borderTopRightRadius:28, padding:24, paddingBottom:40},
-  handleBar: {width:40, height:4, borderRadius:2, backgroundColor:colors.textMuted, alignSelf:'center', marginBottom:20, opacity:0.4},
   modalTitle: {color:colors.text, fontSize:20, fontWeight:'700', marginBottom:20},
   fieldLabel: {color:colors.textDim, fontSize:11, fontWeight:'700', letterSpacing:0.5, marginBottom:6, marginTop:4},
   input: {backgroundColor:colors.card, borderRadius:14, padding:14, color:colors.text, fontSize:16, marginBottom:12, borderWidth:1, borderColor:colors.cardBorder},

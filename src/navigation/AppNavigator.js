@@ -1,11 +1,13 @@
 // src/navigation/AppNavigator.js
-// Векторные иконки Feather в табах
+// Stack внутри таба Accounts для истории счёта
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, Text, View } from 'react-native';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
+import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import InvestmentsScreen from '../screens/InvestmentsScreen';
@@ -13,11 +15,21 @@ import SettingsScreen from '../screens/SettingsScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 
 const Tab = createBottomTabNavigator();
+const AccountsStack = createNativeStackNavigator();
+
+function AccountsStackScreen() {
+  return (
+    <AccountsStack.Navigator screenOptions={{ headerShown: false }}>
+      <AccountsStack.Screen name="AccountsList" component={AccountsScreen} />
+      <AccountsStack.Screen name="AccountHistory" component={AccountHistoryScreen} />
+    </AccountsStack.Navigator>
+  );
+}
 
 const tabConfig = {
-  Dashboard:    { icon: 'home',       labelKey: 'dashboard' },
-  Transactions: { icon: 'list',       labelKey: 'transactions' },
-  Accounts:     { icon: 'credit-card', labelKey: 'accounts' },
+  Dashboard:    { icon: 'home',        labelKey: 'dashboard' },
+  Transactions: { icon: 'list',        labelKey: 'transactions' },
+  AccountsTab:  { icon: 'credit-card', labelKey: 'accounts' },
   Investments:  { icon: 'trending-up', labelKey: 'investments' },
   Settings:     { icon: 'settings',    labelKey: null },
 };
@@ -34,11 +46,7 @@ export default function AppNavigator() {
           tabBarInactiveTintColor: colors.textMuted,
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-              <Feather
-                name={cfg.icon}
-                size={focused ? 22 : 20}
-                color={focused ? colors.green : colors.textMuted}
-              />
+              <Feather name={cfg.icon} size={focused ? 22 : 20} color={focused ? colors.green : colors.textMuted} />
             </View>
           ),
           tabBarLabel: ({ focused }) => (
@@ -53,7 +61,7 @@ export default function AppNavigator() {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
-      <Tab.Screen name="Accounts" component={AccountsScreen} />
+      <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
       <Tab.Screen name="Investments" component={InvestmentsScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
@@ -61,27 +69,9 @@ export default function AppNavigator() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: colors.bg2,
-    borderTopColor: colors.divider,
-    borderTopWidth: 1,
-    height: 88,
-    paddingTop: 8,
-    paddingBottom: 28,
-    paddingHorizontal: 4,
-  },
-  iconWrap: {
-    width: 40, height: 32, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  iconWrapActive: {
-    backgroundColor: colors.greenSoft,
-  },
-  label: {
-    fontSize: 10, fontWeight: '600',
-    color: colors.textMuted, marginTop: 2,
-  },
-  labelActive: {
-    color: colors.green, fontWeight: '700',
-  },
+  tabBar: { backgroundColor: colors.bg2, borderTopColor: colors.divider, borderTopWidth: 1, height: 88, paddingTop: 8, paddingBottom: 28, paddingHorizontal: 4 },
+  iconWrap: { width: 40, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  iconWrapActive: { backgroundColor: colors.greenSoft },
+  label: { fontSize: 10, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
+  labelActive: { color: colors.green, fontWeight: '700' },
 });
