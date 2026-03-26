@@ -1,6 +1,7 @@
 // src/screens/SettingsScreen.js
 // Добавлена кнопка Категории → открывает CategoriesScreen
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -16,17 +17,32 @@ export default function SettingsScreen() {
   const [, forceUpdate] = useState(0);
 
   const toggle = (s) => setOpenSection(openSection === s ? null : s);
-  const changeLang = (code) => { i18n.setLanguage(code); setLang(code); forceUpdate(n => n + 1); };
+  const changeLang = async (code) => {
+    i18n.setLanguage(code);
+    setLang(code);
+    forceUpdate(n => n + 1);
+
+    // Сохраняем язык + ставим флаг ручного выбора
+    const settings = await dataService.getSettings();
+    await dataService.saveSettings({ ...settings, language: code });
+    await AsyncStorage.setItem('qaizo_lang_manual', 'true');
+
+    // RTL переключение
+    const needsRestart = i18n.applyRTL(code);
+    if (needsRestart) {
+      Alert.alert('', i18n.t('langChanged'));
+    }
+  };
 
   const handleClearData = () => {
-    Alert.alert('', lang === 'ru' ? 'Удалить все данные?' : 'Delete all data?', [
+    Alert.alert('', i18n.t('deleteAllData'), [
       { text: i18n.t('cancel'), style: 'cancel' },
       { text: i18n.t('delete'), style: 'destructive', onPress: async () => { await dataService.clearAllData(); Alert.alert('', 'Done'); }},
     ]);
   };
   const handleRecalc = async () => {
     await dataService.recalculateBalances();
-    Alert.alert('', lang === 'ru' ? 'Балансы пересчитаны' : 'Balances recalculated');
+    Alert.alert('', i18n.t('balancesRecalculated'));
   };
   const handleExport = async () => {
     const data = await dataService.exportData();
@@ -35,7 +51,7 @@ export default function SettingsScreen() {
 
   const flags = { ru: '🇷🇺', he: '🇮🇱', en: '🇬🇧' };
   const languages = i18n.getAvailableLanguages();
-  const settingsTitle = lang === 'ru' ? 'Настройки' : lang === 'he' ? 'הגדרות' : 'Settings';
+  const settingsTitle = i18n.t('settings');
 
   return (
     <View style={styles.container}>
@@ -48,9 +64,18 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Categories')}>
           <View style={styles.sectionLeft}>
             <Feather name="grid" size={18} color={colors.teal} />
-            <Text style={styles.sectionText}>{lang === 'ru' ? 'Категории' : lang === 'he' ? 'קטגוריות' : 'Categories'}</Text>
+            <Text style={styles.sectionText}>{i18n.t('categories')}</Text>
           </View>
-          <Feather name="chevron-right" size={18} color={colors.textMuted} />
+          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Monthly Report */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('MonthlyReport')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="file-text" size={18} color={colors.blue} />
+            <Text style={styles.sectionText}>{i18n.t('monthlyReport')}</Text>
+          </View>
+          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Language */}
@@ -106,26 +131,26 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('data')}>
           <View style={styles.sectionLeft}>
             <Feather name="database" size={18} color={colors.orange} />
-            <Text style={styles.sectionText}>{lang === 'ru' ? 'Данные' : lang === 'he' ? 'נתונים' : 'Data'}</Text>
+            <Text style={styles.sectionText}>{i18n.t('data')}</Text>
           </View>
           <Feather name={openSection === 'data' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
         {openSection === 'data' && (
           <Card>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleExport}>
-              <Feather name="upload" size={18} color={colors.textDim} style={{ marginRight: 12 }} />
+              <Feather name="upload" size={18} color={colors.textDim} style={{ marginEnd: 12 }} />
               <Text style={styles.optText}>{i18n.t('exportData')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]}>
-              <Feather name="download" size={18} color={colors.textDim} style={{ marginRight: 12 }} />
+              <Feather name="download" size={18} color={colors.textDim} style={{ marginEnd: 12 }} />
               <Text style={styles.optText}>{i18n.t('importData')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleRecalc}>
-              <Feather name="refresh-cw" size={18} color={colors.blue} style={{ marginRight: 12 }} />
-              <Text style={styles.optText}>{lang === 'ru' ? 'Пересчитать балансы' : 'Recalculate balances'}</Text>
+              <Feather name="refresh-cw" size={18} color={colors.blue} style={{ marginEnd: 12 }} />
+              <Text style={styles.optText}>{i18n.t('recalculate')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.optRow} onPress={handleClearData}>
-              <Feather name="trash-2" size={18} color={colors.red} style={{ marginRight: 12 }} />
+              <Feather name="trash-2" size={18} color={colors.red} style={{ marginEnd: 12 }} />
               <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('clearData')}</Text>
             </TouchableOpacity>
           </Card>
@@ -154,13 +179,13 @@ const styles = StyleSheet.create({
 
   sectionBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
   sectionLeft: { flexDirection: 'row', alignItems: 'center' },
-  sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', marginLeft: 12 },
+  sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', marginStart: 12 },
   sectionRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionValue: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
 
   optRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16 },
   optBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  optEmoji: { fontSize: 22, marginRight: 14 },
+  optEmoji: { fontSize: 22, marginEnd: 14 },
   optText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '500' },
 
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.textMuted, justifyContent: 'center', alignItems: 'center' },

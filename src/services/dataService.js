@@ -1,6 +1,5 @@
 // src/services/dataService.js
 // ПРОСЛОЙКА — единственная точка входа в базу данных
-// ИСПРАВЛЕНО: баланс счёта обновляется автоматически при добавлении/удалении транзакций
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -10,6 +9,8 @@ const KEYS = {
   INVESTMENTS: 'qaizo_investments',
   CATEGORIES: 'qaizo_categories',
   SETTINGS: 'qaizo_settings',
+  BUDGETS: 'qaizo_budgets',
+  RECURRING: 'qaizo_recurring',
 };
 
 const DEFAULT_ACCOUNTS = [
@@ -90,7 +91,6 @@ const dataService = {
       const newTx = { ...transaction, id: generateId(), createdAt: new Date().toISOString() };
       const updated = [newTx, ...transactions];
       await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
-      // Обновляем баланс счёта
       if (newTx.account) {
         await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
@@ -104,7 +104,6 @@ const dataService = {
       const tx = transactions.find(t => t.id === id);
       const updated = transactions.filter(t => t.id !== id);
       await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
-      // Откатываем баланс счёта
       if (tx && tx.account) {
         const reverseType = tx.type === 'income' ? 'expense' : 'income';
         await updateAccountBalance(tx.account, tx.amount, reverseType);
@@ -119,7 +118,6 @@ const dataService = {
       const oldTx = transactions.find(t => t.id === id);
       const updated = transactions.map(t => t.id === id ? { ...t, ...changes } : t);
       await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
-      // Откатываем старый баланс, применяем новый
       if (oldTx && oldTx.account) {
         const reverseType = oldTx.type === 'income' ? 'expense' : 'income';
         await updateAccountBalance(oldTx.account, oldTx.amount, reverseType);
@@ -188,6 +186,141 @@ const dataService = {
     try { await AsyncStorage.setItem(KEYS.CATEGORIES, JSON.stringify(categories)); return true; } catch (e) { return false; }
   },
 
+  // ─── BUDGETS ───────────────────────────────────────────
+  // Формат: { food: 2000, transport: 500, ... } — лимит в шекелях на месяц
+  async getBudgets() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.BUDGETS);
+      return data ? JSON.parse(data) : {};
+    } catch (e) { return {}; }
+  },
+
+  async saveBudgets(budgets) {
+    try {
+      await AsyncStorage.setItem(KEYS.BUDGETS, JSON.stringify(budgets));
+      return true;
+    } catch (e) { return false; }
+  },
+
+  async setBudget(categoryId, limit) {
+    try {
+      const budgets = await this.getBudgets();
+      if (limit > 0) {
+        budgets[categoryId] = limit;
+      } else {
+        delete budgets[categoryId];
+      }
+      await this.saveBudgets(budgets);
+      return true;
+    } catch (e) { return false; }
+  },
+
+  async deleteBudget(categoryId) {
+    return this.setBudget(categoryId, 0);
+  },
+
+  // ─── RECURRING PAYMENTS ─────────────────────────────────
+  // Формат: массив объектов с intervalMonths, startDate, endType, nextDate
+  async getRecurring() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.RECURRING);
+      return data ? JSON.parse(data) : [];
+    } catch (e) { return []; }
+  },
+
+  async saveRecurring(items) {
+    try { await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items)); return true; } catch (e) { return false; }
+  },
+
+  async addRecurring(item) {
+    try {
+      const items = await this.getRecurring();
+      const newItem = { ...item, id: generateId(), completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
+      items.push(newItem);
+      await this.saveRecurring(items);
+      return newItem;
+    } catch (e) { return null; }
+  },
+
+  async updateRecurring(id, changes) {
+    try {
+      const items = await this.getRecurring();
+      const updated = items.map(r => r.id === id ? { ...r, ...changes } : r);
+      await this.saveRecurring(updated);
+      return true;
+    } catch (e) { return false; }
+  },
+
+  async deleteRecurring(id) {
+    try {
+      const items = await this.getRecurring();
+      await this.saveRecurring(items.filter(r => r.id !== id));
+      return true;
+    } catch (e) { return false; }
+  },
+
+  // Подтвердить платёж: создать транзакцию + сдвинуть nextDate
+  async confirmRecurring(id) {
+    try {
+      const items = await this.getRecurring();
+      const rec = items.find(r => r.id === id);
+      if (!rec) return false;
+
+      // Создаём транзакцию
+      await this.addTransaction({
+        type: rec.type,
+        amount: rec.amount,
+        categoryId: rec.categoryId,
+        icon: rec.icon || 'repeat',
+        recipient: rec.recipient || '',
+        note: rec.note || '',
+        currency: rec.currency || '₪',
+        date: new Date().toISOString(),
+        account: rec.account,
+        tags: rec.tags || [],
+      });
+
+      // Считаем следующую дату
+      const next = new Date(rec.nextDate);
+      next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+      const newCount = (rec.completedCount || 0) + 1;
+
+      // Проверяем конец
+      let stillActive = true;
+      if (rec.endType === 'count' && newCount >= (rec.totalCount || 1)) stillActive = false;
+      if (rec.endType === 'date' && rec.endDate && next > new Date(rec.endDate)) stillActive = false;
+
+      await this.updateRecurring(id, {
+        nextDate: next.toISOString().slice(0, 10),
+        completedCount: newCount,
+        isActive: stillActive,
+      });
+
+      return true;
+    } catch (e) { return false; }
+  },
+
+  // Пропустить платёж: сдвинуть nextDate без создания транзакции
+  async skipRecurring(id) {
+    try {
+      const items = await this.getRecurring();
+      const rec = items.find(r => r.id === id);
+      if (!rec) return false;
+
+      const next = new Date(rec.nextDate);
+      next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+
+      let stillActive = true;
+      if (rec.endType === 'date' && rec.endDate && next > new Date(rec.endDate)) stillActive = false;
+
+      await this.updateRecurring(id, {
+        nextDate: next.toISOString().slice(0, 10),
+        isActive: stillActive,
+      });
+      return true;
+    } catch (e) { return false; }
+  },
+
   // ─── SETTINGS ──────────────────────────────────────────
   async getSettings() {
     try { const data = await AsyncStorage.getItem(KEYS.SETTINGS); return data ? JSON.parse(data) : DEFAULT_SETTINGS; } catch (e) { return DEFAULT_SETTINGS; }
@@ -202,10 +335,10 @@ const dataService = {
   },
   async exportData() {
     try {
-      const [transactions, accounts, investments, categories, settings] = await Promise.all([
-        this.getTransactions(), this.getAccounts(), this.getInvestments(), this.getCategories(), this.getSettings()
+      const [transactions, accounts, investments, categories, settings, budgets, recurring] = await Promise.all([
+        this.getTransactions(), this.getAccounts(), this.getInvestments(), this.getCategories(), this.getSettings(), this.getBudgets(), this.getRecurring()
       ]);
-      return { transactions, accounts, investments, categories, settings, exportedAt: new Date().toISOString() };
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, exportedAt: new Date().toISOString() };
     } catch (e) { return null; }
   },
   async importData(data) {
@@ -215,26 +348,24 @@ const dataService = {
       if (data.investments) await AsyncStorage.setItem(KEYS.INVESTMENTS, JSON.stringify(data.investments));
       if (data.categories) await AsyncStorage.setItem(KEYS.CATEGORIES, JSON.stringify(data.categories));
       if (data.settings) await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(data.settings));
+      if (data.budgets) await AsyncStorage.setItem(KEYS.BUDGETS, JSON.stringify(data.budgets));
+      if (data.recurring) await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(data.recurring));
       return true;
     } catch (e) { return false; }
   },
 
-  // Пересчитать балансы всех счетов из транзакций (для починки)
   async recalculateBalances() {
     try {
       const transactions = await this.getTransactions();
       const accounts = await this.getAccounts();
-      // Сбросить все балансы
       const balances = {};
       accounts.forEach(a => { balances[a.id] = 0; });
-      // Посчитать из транзакций
       transactions.forEach(tx => {
         if (tx.account && balances[tx.account] !== undefined) {
           if (tx.type === 'income') balances[tx.account] += tx.amount;
           else if (tx.type === 'expense') balances[tx.account] -= tx.amount;
         }
       });
-      // Обновить счета
       const updated = accounts.map(a => ({ ...a, balance: balances[a.id] !== undefined ? balances[a.id] : a.balance }));
       await this.saveAccounts(updated);
       return true;

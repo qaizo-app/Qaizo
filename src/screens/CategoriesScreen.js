@@ -176,9 +176,9 @@ export default function CategoriesScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Feather name="arrow-left" size={22} color={colors.text} />
+            <Feather name={i18n.isRTL() ? "arrow-right" : "arrow-left"} size={22} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>{lang === 'ru' ? 'Категории' : lang === 'he' ? 'קטגוריות' : 'Categories'}</Text>
+          <Text style={styles.title}>{i18n.t('categories')}</Text>
           <TouchableOpacity style={styles.addBtn} onPress={openAddGroup}>
             <Feather name="plus" size={20} color={colors.bg} />
           </TouchableOpacity>
@@ -212,7 +212,7 @@ export default function CategoriesScreen() {
                 <TouchableOpacity style={styles.addSubBtn} onPress={() => openAddSub(group)}>
                   <Feather name="plus" size={16} color={group.color} />
                   <Text style={[styles.addSubText, { color: group.color }]}>
-                    {lang === 'ru' ? 'Добавить' : lang === 'he' ? 'הוסף' : 'Add'}
+                    {i18n.t('add')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -226,16 +226,16 @@ export default function CategoriesScreen() {
         {({ close }) => (
           <View>
             <Text style={styles.modalTitle}>
-              {editItem ? (lang === 'ru' ? 'Изменить' : 'Edit') : (lang === 'ru' ? 'Добавить' : 'Add')}
+              {editItem ? i18n.t('edit') : i18n.t('add')}
               {editParent ? ` → ${getName(editParent.name)}` : ''}
             </Text>
 
-            <Text style={styles.fieldLabel}>{lang === 'ru' ? 'Название' : 'Name'}</Text>
+            <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
             <TextInput style={styles.input} value={editName} onChangeText={setEditName}
-              placeholder={lang === 'ru' ? 'Название категории' : 'Category name'}
+              placeholder={i18n.t('categoryName')}
               placeholderTextColor={colors.textMuted} autoFocus />
 
-            <Text style={styles.fieldLabel}>{lang === 'ru' ? 'Иконка' : 'Icon'}</Text>
+            <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
             <View style={styles.iconGrid}>
               {ICON_OPTIONS.map(ic => (
                 <TouchableOpacity key={ic} style={[styles.iconBtn, editIcon === ic && { borderColor: editColor, backgroundColor: `${editColor}15` }]}
@@ -247,7 +247,7 @@ export default function CategoriesScreen() {
 
             {!editParent && (
               <>
-                <Text style={styles.fieldLabel}>{lang === 'ru' ? 'Цвет' : 'Color'}</Text>
+                <Text style={styles.fieldLabel}>{i18n.t('color')}</Text>
                 <View style={styles.colorGrid}>
                   {COLOR_OPTIONS.map(c => (
                     <TouchableOpacity key={c} style={[styles.colorBtn, { backgroundColor: c }, editColor === c && styles.colorBtnActive]}
@@ -284,13 +284,13 @@ const styles = StyleSheet.create({
   addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
   groupRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 8, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder },
-  groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
   groupName: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '600' },
-  subCount: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginRight: 8, backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  subCount: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginEnd: 8, backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
 
   subsContainer: { marginHorizontal: 20, marginTop: 4, backgroundColor: colors.card, borderRadius: 14, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
   subRow: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
-  subIcon: { width: 32, height: 32, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  subIcon: { width: 32, height: 32, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginEnd: 12 },
   subName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
 
   addSubBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 12, gap: 6 },

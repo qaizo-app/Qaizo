@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
 
   footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
   todayBtn: { flexDirection: 'row', alignItems: 'center', padding: 12 },
-  todayText: { color: colors.green, fontSize: 14, fontWeight: '600', marginLeft: 6 },
+  todayText: { color: colors.green, fontSize: 14, fontWeight: '600', marginStart: 6 },
   closeBtn: { padding: 12 },
   closeText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 });

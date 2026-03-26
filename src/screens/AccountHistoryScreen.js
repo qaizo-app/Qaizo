@@ -77,7 +77,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Feather name="arrow-left" size={22} color={colors.text} />
+          <Feather name={i18n.isRTL() ? "arrow-right" : "arrow-left"} size={22} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerName}>{account.name}</Text>
@@ -124,7 +124,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
   header:{flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:56,paddingBottom:16},
-  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',marginRight:14,borderWidth:1,borderColor:colors.cardBorder},
+  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',marginEnd:14,borderWidth:1,borderColor:colors.cardBorder},
   headerInfo:{flex:1},
   headerName:{color:colors.text,fontSize:20,fontWeight:'700'},
   headerType:{color:colors.textMuted,fontSize:13,marginTop:2},
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
   countNum:{color:colors.textDim,fontSize:14,fontWeight:'700'},
   list:{paddingHorizontal:20,paddingBottom:120},
-  balLine:{paddingLeft:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
+  balLine:{paddingStart:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
   runBal:{fontSize:11,fontWeight:'500'},
   empty:{alignItems:'center',paddingVertical:50},
   emptyText:{color:colors.textMuted,fontSize:15,marginTop:12},

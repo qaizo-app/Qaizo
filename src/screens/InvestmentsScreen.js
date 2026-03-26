@@ -1,11 +1,11 @@
 // src/screens/InvestmentsScreen.js
-import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors } from '../theme/colors';
-import i18n from '../i18n';
+import { useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Card from '../components/Card';
+import i18n from '../i18n';
 import dataService from '../services/dataService';
+import { colors } from '../theme/colors';
 
 export default function InvestmentsScreen() {
   const [investments, setInvestments] = useState([]);
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   monthlyLabel: { color: colors.textDim, fontSize: 13 },
   monthlyAmount: { color: colors.green, fontSize: 16, fontWeight: '700' },
   invRow: { flexDirection: 'row', alignItems: 'center' },
-  invIcon: { fontSize: 28, marginRight: 14 },
+  invIcon: { fontSize: 28, marginEnd: 14 },
   invInfo: { flex: 1 },
   invName: { color: colors.text, fontSize: 16, fontWeight: '600' },
   invType: { color: colors.textMuted, fontSize: 12, marginTop: 2 },

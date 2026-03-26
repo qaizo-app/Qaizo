@@ -12,6 +12,7 @@ import AccountsScreen from '../screens/AccountsScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import InvestmentsScreen from '../screens/InvestmentsScreen';
+import MonthlyReportScreen from '../screens/MonthlyReportScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 
@@ -33,6 +34,7 @@ function SettingsStackScreen() {
     <SettingsStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0e1a' }, animation: 'fade' }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
       <SettingsStack.Screen name="Categories" component={CategoriesScreen} />
+      <SettingsStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
     </SettingsStack.Navigator>
   );
 }

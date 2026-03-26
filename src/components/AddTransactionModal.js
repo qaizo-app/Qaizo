@@ -84,9 +84,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     onSave?.(); onClose?.();
   };
 
-  const accLabel = type === 'expense' ? (lang === 'ru' ? 'Откуда списать' : 'Pay from') : type === 'income' ? (lang === 'ru' ? 'Куда зачислить' : 'Receive to') : (lang === 'ru' ? 'Откуда' : 'From');
+  const accLabel = type === 'expense' ? i18n.t('payFrom') : type === 'income' ? i18n.t('receiveTo') : i18n.t('from');
   const tc = type === 'expense' ? colors.red : type === 'income' ? colors.green : colors.blue;
-  const title = isEdit ? (lang === 'ru' ? 'Изменить' : 'Edit') : (lang === 'ru' ? 'Добавить' : 'Add');
+  const title = isEdit ? i18n.t('edit') : i18n.t('add');
   const dd = dateStr ? (() => { const [y, m, d] = dateStr.split('-'); return `${d}.${m}.${y}`; })() : '';
   const getAI = (t) => (accountTypeConfig[t] || accountTypeConfig.bank).icon;
 
@@ -106,7 +106,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 return (
                   <TouchableOpacity key={t} style={[st.typeBtn, a && { backgroundColor: `${c}15`, borderWidth: 1, borderColor: `${c}40` }]}
                     onPress={() => !isEdit && chgType(t)} activeOpacity={isEdit ? 1 : 0.7}>
-                    <Feather name={ic} size={16} color={a ? c : colors.textMuted} style={{ marginRight: 4 }} />
+                    <Feather name={ic} size={16} color={a ? c : colors.textMuted} style={{ marginEnd: 4 }} />
                     <Text style={[st.typeTxt, a && { color: colors.text }]}>{lb}</Text>
                   </TouchableOpacity>
                 );
@@ -118,7 +118,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               <TextInput style={st.amtIn} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
               <TouchableOpacity style={st.dateBtn} onPress={() => setShowCal(true)}>
                 <Feather name="calendar" size={14} color={colors.green} />
-                <Text style={st.dateTxt}>{dd || (lang === 'ru' ? 'Дата' : 'Date')}</Text>
+                <Text style={st.dateTxt}>{dd || i18n.t('date')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -139,7 +139,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
 
               {type === 'transfer' && (
                 <>
-                  <Text style={st.label}>{lang === 'ru' ? 'Откуда' : 'From'}</Text>
+                  <Text style={st.label}>{i18n.t('from')}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
                     {accounts.map(acc => { const sl = selAcc === acc.id; return (
                       <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]} onPress={() => setSelAcc(acc.id)}>
@@ -147,7 +147,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                         <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
                       </TouchableOpacity>); })}
                   </ScrollView>
-                  <Text style={st.label}>{lang === 'ru' ? 'Куда' : 'To'}</Text>
+                  <Text style={st.label}>{i18n.t('to')}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
                     {accounts.filter(a => a.id !== selAcc).map(acc => { const sl = toAcc === acc.id; return (
                       <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: colors.blue, backgroundColor: colors.blueSoft }]} onPress={() => setToAcc(acc.id)}>
@@ -172,16 +172,16 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               )}
 
               <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
-                placeholder={lang === 'ru' ? 'Получатель' : 'Payee'} placeholderTextColor={colors.textMuted} />
+                placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
 
               <TouchableOpacity style={st.moreBtn} onPress={() => setShowMore(!showMore)}>
                 <Feather name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textDim} />
-                <Text style={st.moreTxt}>{showMore ? (lang === 'ru' ? 'Меньше' : 'Less') : (lang === 'ru' ? 'Ещё' : 'More')}</Text>
+                <Text style={st.moreTxt}>{showMore ? i18n.t('less') : i18n.t('more')}</Text>
               </TouchableOpacity>
 
               {showMore && (
                 <>
-                  <Text style={st.label}>{lang === 'ru' ? 'Теги' : 'Tags'}</Text>
+                  <Text style={st.label}>{i18n.t('tags')}</Text>
                   <View style={st.tagsRow}>
                     {TAGS.map(tag => { const sl = tags.includes(tag); return (
                       <TouchableOpacity key={tag} style={[st.tagChip, sl && { borderColor: colors.green, backgroundColor: colors.greenSoft }]} onPress={() => togTag(tag)}>
@@ -200,7 +200,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               </TouchableOpacity>
               <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount) > 0 ? 1 : 0.35 }]}
                 onPress={handleSave} disabled={!amount || parseFloat(amount) <= 0}>
-                <Feather name="check" size={18} color="#fff" style={{ marginRight: 6 }} />
+                <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
                 <Text style={st.saveTxt}>{isEdit ? title : i18n.t('save')}</Text>
               </TouchableOpacity>
             </View>
@@ -223,15 +223,15 @@ const st = StyleSheet.create({
   dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 6 },
   dateTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginRight: 8, borderWidth: 1.5, borderColor: 'transparent' },
-  chipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginLeft: 6, maxWidth: 90 },
-  dot: { width: 5, height: 5, borderRadius: 3, marginLeft: 6, opacity: 0.6 },
+  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
+  chipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginStart: 6, maxWidth: 90 },
+  dot: { width: 5, height: 5, borderRadius: 3, marginStart: 6, opacity: 0.6 },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   catBtn: { width: '22%', alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1.5, borderColor: 'transparent', minWidth: 75 },
   catLbl: { color: colors.textMuted, fontSize: 9, fontWeight: '500', marginTop: 4 },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 15, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder },
   moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, marginBottom: 8 },
-  moreTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginLeft: 4 },
+  moreTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginStart: 4 },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   tagChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent' },
   tagTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
