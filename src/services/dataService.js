@@ -1,18 +1,25 @@
 // src/services/dataService.js
 // ПРОСЛОЙКА — единственная точка входа в базу данных
+// ОБНОВЛЕНО: мигрировано с AsyncStorage на Firebase Firestore
+// MERGED: добавлены Budgets и Recurring Payments (от Alex)
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../config/firebase';
+import {
+  collection, doc,
+  getDocs, getDoc,
+  addDoc, setDoc, updateDoc, deleteDoc,
+  writeBatch, increment,
+} from 'firebase/firestore';
 
-const KEYS = {
-  TRANSACTIONS: 'qaizo_transactions',
-  ACCOUNTS: 'qaizo_accounts',
-  INVESTMENTS: 'qaizo_investments',
-  CATEGORIES: 'qaizo_categories',
-  SETTINGS: 'qaizo_settings',
-  BUDGETS: 'qaizo_budgets',
-  RECURRING: 'qaizo_recurring',
-};
+// ─── User ID ──────────────────────────────────────────────
+// Phase 2: replace with auth.currentUser.uid when Firebase Auth is added
+const USER_ID = 'test-user-001';
 
+// ─── Helpers ──────────────────────────────────────────────
+const col = (name) => collection(db, 'users', USER_ID, name);
+const dref = (name, id) => doc(db, 'users', USER_ID, name, id);
+
+// ─── Defaults ─────────────────────────────────────────────
 const DEFAULT_ACCOUNTS = [
   { id: 'cash_ils', name: 'Cash ₪', type: 'cash', icon: 'wallet-outline', balance: 0, currency: '₪', isActive: true },
 ];
@@ -51,28 +58,33 @@ const DEFAULT_CATEGORIES = {
 
 const DEFAULT_SETTINGS = { language: 'ru', currency: '₪', theme: 'dark' };
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+// ─── Normalize a Firestore Timestamp or string to ISO string ──
+function normalizeDate(value) {
+  if (!value) return value;
+  if (typeof value.toDate === 'function') return value.toDate().toISOString();
+  return value;
 }
 
-// ─── Обновить баланс счёта ──────────────────────────────
-async function updateAccountBalance(accountId, amount, type) {
+// ─── Update account balance atomically ────────────────────
+async function _updateAccountBalance(accountId, amount, type) {
   try {
-    const data = await AsyncStorage.getItem(KEYS.ACCOUNTS);
-    const accounts = data ? JSON.parse(data) : DEFAULT_ACCOUNTS;
-    const updated = accounts.map(a => {
-      if (a.id === accountId) {
-        let newBalance = a.balance || 0;
-        if (type === 'income') newBalance += amount;
-        else if (type === 'expense') newBalance -= amount;
-        return { ...a, balance: newBalance };
-      }
-      return a;
-    });
-    await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(updated));
+    const delta = type === 'income' ? amount : type === 'expense' ? -amount : 0;
+    if (delta === 0) return;
+    await updateDoc(dref('accounts', accountId), { balance: increment(delta) });
   } catch (e) {
     console.error('Error updating account balance:', e);
   }
+}
+
+// ─── Map a Firestore transaction snapshot doc to a plain object ──
+function mapTx(d) {
+  const data = d.data();
+  return {
+    ...data,
+    id: d.id,
+    date: normalizeDate(data.date),
+    createdAt: normalizeDate(data.createdAt),
+  };
 }
 
 const dataService = {
@@ -80,19 +92,21 @@ const dataService = {
   // ─── TRANSACTIONS ──────────────────────────────────────
   async getTransactions() {
     try {
-      const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
-      return data ? JSON.parse(data) : [];
+      const snap = await getDocs(col('transactions'));
+      const txs = snap.docs.map(mapTx);
+      txs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return txs;
     } catch (e) { return []; }
   },
 
   async addTransaction(transaction) {
     try {
-      const transactions = await this.getTransactions();
-      const newTx = { ...transaction, id: generateId(), createdAt: new Date().toISOString() };
-      const updated = [newTx, ...transactions];
-      await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
+      const { id: _id, ...data } = transaction;
+      const newData = { ...data, createdAt: new Date().toISOString() };
+      const ref = await addDoc(col('transactions'), newData);
+      const newTx = { ...newData, id: ref.id };
       if (newTx.account) {
-        await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
+        await _updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
       return newTx;
     } catch (e) { return null; }
@@ -100,13 +114,13 @@ const dataService = {
 
   async deleteTransaction(id) {
     try {
-      const transactions = await this.getTransactions();
-      const tx = transactions.find(t => t.id === id);
-      const updated = transactions.filter(t => t.id !== id);
-      await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
-      if (tx && tx.account) {
+      const snap = await getDoc(dref('transactions', id));
+      if (!snap.exists()) return false;
+      const tx = mapTx(snap);
+      await deleteDoc(dref('transactions', id));
+      if (tx.account) {
         const reverseType = tx.type === 'income' ? 'expense' : 'income';
-        await updateAccountBalance(tx.account, tx.amount, reverseType);
+        await _updateAccountBalance(tx.account, tx.amount, reverseType);
       }
       return true;
     } catch (e) { return false; }
@@ -114,17 +128,19 @@ const dataService = {
 
   async updateTransaction(id, changes) {
     try {
-      const transactions = await this.getTransactions();
-      const oldTx = transactions.find(t => t.id === id);
-      const updated = transactions.map(t => t.id === id ? { ...t, ...changes } : t);
-      await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
-      if (oldTx && oldTx.account) {
+      const snap = await getDoc(dref('transactions', id));
+      if (!snap.exists()) return false;
+      const oldTx = mapTx(snap);
+      const { id: _id, ...updateData } = changes;
+      await updateDoc(dref('transactions', id), updateData);
+      // Reverse old balance effect, apply new
+      if (oldTx.account) {
         const reverseType = oldTx.type === 'income' ? 'expense' : 'income';
-        await updateAccountBalance(oldTx.account, oldTx.amount, reverseType);
+        await _updateAccountBalance(oldTx.account, oldTx.amount, reverseType);
       }
       const newTx = { ...oldTx, ...changes };
       if (newTx.account) {
-        await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
+        await _updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
       return true;
     } catch (e) { return false; }
@@ -133,71 +149,104 @@ const dataService = {
   // ─── ACCOUNTS ──────────────────────────────────────────
   async getAccounts() {
     try {
-      const data = await AsyncStorage.getItem(KEYS.ACCOUNTS);
-      return data ? JSON.parse(data) : DEFAULT_ACCOUNTS;
+      const snap = await getDocs(col('accounts'));
+      if (snap.empty) return DEFAULT_ACCOUNTS;
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (e) { return DEFAULT_ACCOUNTS; }
   },
 
   async saveAccounts(accounts) {
-    try { await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts)); return true; } catch (e) { return false; }
+    try {
+      const existing = await getDocs(col('accounts'));
+      const batch = writeBatch(db);
+      existing.docs.forEach(d => batch.delete(d.ref));
+      accounts.forEach(account => {
+        const { id, ...data } = account;
+        const ref = id ? dref('accounts', id) : doc(col('accounts'));
+        batch.set(ref, data);
+      });
+      await batch.commit();
+      return true;
+    } catch (e) { return false; }
   },
 
   async addAccount(account) {
     try {
-      const accounts = await this.getAccounts();
-      const newAccount = { ...account, id: generateId() };
-      accounts.push(newAccount);
-      await this.saveAccounts(accounts);
-      return newAccount;
+      const { id: _id, ...data } = account;
+      const ref = await addDoc(col('accounts'), data);
+      return { ...data, id: ref.id };
     } catch (e) { return null; }
   },
 
   async updateAccount(id, changes) {
     try {
-      const accounts = await this.getAccounts();
-      const updated = accounts.map(a => a.id === id ? { ...a, ...changes } : a);
-      await this.saveAccounts(updated);
+      const { id: _id, ...data } = changes;
+      await updateDoc(dref('accounts', id), data);
       return true;
     } catch (e) { return false; }
   },
 
   async deleteAccount(id) {
     try {
-      const accounts = await this.getAccounts();
-      const updated = accounts.filter(a => a.id !== id);
-      await this.saveAccounts(updated);
+      await deleteDoc(dref('accounts', id));
       return true;
     } catch (e) { return false; }
   },
 
   // ─── INVESTMENTS ───────────────────────────────────────
   async getInvestments() {
-    try { const data = await AsyncStorage.getItem(KEYS.INVESTMENTS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
+    try {
+      const snap = await getDocs(col('investments'));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) { return []; }
   },
+
   async saveInvestments(investments) {
-    try { await AsyncStorage.setItem(KEYS.INVESTMENTS, JSON.stringify(investments)); return true; } catch (e) { return false; }
+    try {
+      const existing = await getDocs(col('investments'));
+      const batch = writeBatch(db);
+      existing.docs.forEach(d => batch.delete(d.ref));
+      investments.forEach(inv => {
+        const { id, ...data } = inv;
+        const ref = id ? dref('investments', id) : doc(col('investments'));
+        batch.set(ref, data);
+      });
+      await batch.commit();
+      return true;
+    } catch (e) { return false; }
   },
 
   // ─── CATEGORIES ────────────────────────────────────────
   async getCategories() {
-    try { const data = await AsyncStorage.getItem(KEYS.CATEGORIES); return data ? JSON.parse(data) : DEFAULT_CATEGORIES; } catch (e) { return DEFAULT_CATEGORIES; }
+    try {
+      const snap = await getDoc(dref('categories', 'config'));
+      if (!snap.exists()) return DEFAULT_CATEGORIES;
+      const data = snap.data();
+      if (!data.income || !data.expense) return DEFAULT_CATEGORIES;
+      return data;
+    } catch (e) { return DEFAULT_CATEGORIES; }
   },
+
   async saveCategories(categories) {
-    try { await AsyncStorage.setItem(KEYS.CATEGORIES, JSON.stringify(categories)); return true; } catch (e) { return false; }
+    try {
+      await setDoc(dref('categories', 'config'), categories);
+      return true;
+    } catch (e) { return false; }
   },
 
   // ─── BUDGETS ───────────────────────────────────────────
   // Формат: { food: 2000, transport: 500, ... } — лимит в шекелях на месяц
   async getBudgets() {
     try {
-      const data = await AsyncStorage.getItem(KEYS.BUDGETS);
-      return data ? JSON.parse(data) : {};
+      const snap = await getDoc(dref('budgets', 'config'));
+      if (!snap.exists()) return {};
+      return snap.data();
     } catch (e) { return {}; }
   },
 
   async saveBudgets(budgets) {
     try {
-      await AsyncStorage.setItem(KEYS.BUDGETS, JSON.stringify(budgets));
+      await setDoc(dref('budgets', 'config'), budgets);
       return true;
     } catch (e) { return false; }
   },
@@ -223,38 +272,46 @@ const dataService = {
   // Формат: массив объектов с intervalMonths, startDate, endType, nextDate
   async getRecurring() {
     try {
-      const data = await AsyncStorage.getItem(KEYS.RECURRING);
-      return data ? JSON.parse(data) : [];
+      const snap = await getDocs(col('recurring'));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (e) { return []; }
   },
 
   async saveRecurring(items) {
-    try { await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items)); return true; } catch (e) { return false; }
+    try {
+      const existing = await getDocs(col('recurring'));
+      const batch = writeBatch(db);
+      existing.docs.forEach(d => batch.delete(d.ref));
+      items.forEach(item => {
+        const { id, ...data } = item;
+        const ref = id ? dref('recurring', id) : doc(col('recurring'));
+        batch.set(ref, data);
+      });
+      await batch.commit();
+      return true;
+    } catch (e) { return false; }
   },
 
   async addRecurring(item) {
     try {
-      const items = await this.getRecurring();
-      const newItem = { ...item, id: generateId(), completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
-      items.push(newItem);
-      await this.saveRecurring(items);
-      return newItem;
+      const { id: _id, ...data } = item;
+      const newData = { ...data, completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
+      const ref = await addDoc(col('recurring'), newData);
+      return { ...newData, id: ref.id };
     } catch (e) { return null; }
   },
 
   async updateRecurring(id, changes) {
     try {
-      const items = await this.getRecurring();
-      const updated = items.map(r => r.id === id ? { ...r, ...changes } : r);
-      await this.saveRecurring(updated);
+      const { id: _id, ...data } = changes;
+      await updateDoc(dref('recurring', id), data);
       return true;
     } catch (e) { return false; }
   },
 
   async deleteRecurring(id) {
     try {
-      const items = await this.getRecurring();
-      await this.saveRecurring(items.filter(r => r.id !== id));
+      await deleteDoc(dref('recurring', id));
       return true;
     } catch (e) { return false; }
   },
@@ -262,9 +319,9 @@ const dataService = {
   // Подтвердить платёж: создать транзакцию + сдвинуть nextDate
   async confirmRecurring(id) {
     try {
-      const items = await this.getRecurring();
-      const rec = items.find(r => r.id === id);
-      if (!rec) return false;
+      const snap = await getDoc(dref('recurring', id));
+      if (!snap.exists()) return false;
+      const rec = { id: snap.id, ...snap.data() };
 
       // Создаём транзакцию
       await this.addTransaction({
@@ -303,9 +360,9 @@ const dataService = {
   // Пропустить платёж: сдвинуть nextDate без создания транзакции
   async skipRecurring(id) {
     try {
-      const items = await this.getRecurring();
-      const rec = items.find(r => r.id === id);
-      if (!rec) return false;
+      const snap = await getDoc(dref('recurring', id));
+      if (!snap.exists()) return false;
+      const rec = { id: snap.id, ...snap.data() };
 
       const next = new Date(rec.nextDate);
       next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
@@ -323,37 +380,75 @@ const dataService = {
 
   // ─── SETTINGS ──────────────────────────────────────────
   async getSettings() {
-    try { const data = await AsyncStorage.getItem(KEYS.SETTINGS); return data ? JSON.parse(data) : DEFAULT_SETTINGS; } catch (e) { return DEFAULT_SETTINGS; }
-  },
-  async saveSettings(settings) {
-    try { await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings)); return true; } catch (e) { return false; }
+    try {
+      const snap = await getDoc(dref('settings', 'config'));
+      if (!snap.exists()) return DEFAULT_SETTINGS;
+      return { ...DEFAULT_SETTINGS, ...snap.data() };
+    } catch (e) { return DEFAULT_SETTINGS; }
   },
 
-  // ─── UTILITIES ─────────────────────────────────────────
-  async clearAllData() {
-    try { await AsyncStorage.multiRemove(Object.values(KEYS)); return true; } catch (e) { return false; }
-  },
-  async exportData() {
+  async saveSettings(settings) {
     try {
-      const [transactions, accounts, investments, categories, settings, budgets, recurring] = await Promise.all([
-        this.getTransactions(), this.getAccounts(), this.getInvestments(), this.getCategories(), this.getSettings(), this.getBudgets(), this.getRecurring()
-      ]);
-      return { transactions, accounts, investments, categories, settings, budgets, recurring, exportedAt: new Date().toISOString() };
-    } catch (e) { return null; }
-  },
-  async importData(data) {
-    try {
-      if (data.transactions) await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(data.transactions));
-      if (data.accounts) await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(data.accounts));
-      if (data.investments) await AsyncStorage.setItem(KEYS.INVESTMENTS, JSON.stringify(data.investments));
-      if (data.categories) await AsyncStorage.setItem(KEYS.CATEGORIES, JSON.stringify(data.categories));
-      if (data.settings) await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(data.settings));
-      if (data.budgets) await AsyncStorage.setItem(KEYS.BUDGETS, JSON.stringify(data.budgets));
-      if (data.recurring) await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(data.recurring));
+      await setDoc(dref('settings', 'config'), settings, { merge: true });
       return true;
     } catch (e) { return false; }
   },
 
+  // ─── UTILITIES ─────────────────────────────────────────
+  async clearAllData() {
+    try {
+      const batch = writeBatch(db);
+      const collectionNames = ['transactions', 'accounts', 'investments', 'recurring'];
+      for (const name of collectionNames) {
+        const snap = await getDocs(col(name));
+        snap.docs.forEach(d => batch.delete(d.ref));
+      }
+      batch.delete(dref('settings', 'config'));
+      batch.delete(dref('categories', 'config'));
+      batch.delete(dref('budgets', 'config'));
+      await batch.commit();
+      return true;
+    } catch (e) { return false; }
+  },
+
+  async exportData() {
+    try {
+      const [transactions, accounts, investments, categories, settings, budgets, recurring] = await Promise.all([
+        this.getTransactions(), this.getAccounts(), this.getInvestments(),
+        this.getCategories(), this.getSettings(), this.getBudgets(), this.getRecurring(),
+      ]);
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, exportedAt: new Date().toISOString() };
+    } catch (e) { return null; }
+  },
+
+  async importData(data) {
+    try {
+      const ops = [];
+      if (data.accounts)    ops.push(this.saveAccounts(data.accounts));
+      if (data.investments) ops.push(this.saveInvestments(data.investments));
+      if (data.categories)  ops.push(this.saveCategories(data.categories));
+      if (data.settings)    ops.push(this.saveSettings(data.settings));
+      if (data.budgets)     ops.push(this.saveBudgets(data.budgets));
+      if (data.recurring)   ops.push(this.saveRecurring(data.recurring));
+      if (data.transactions) {
+        ops.push((async () => {
+          const existing = await getDocs(col('transactions'));
+          const batch = writeBatch(db);
+          existing.docs.forEach(d => batch.delete(d.ref));
+          data.transactions.forEach(tx => {
+            const { id, ...txData } = tx;
+            const ref = id ? dref('transactions', id) : doc(col('transactions'));
+            batch.set(ref, txData);
+          });
+          await batch.commit();
+        })());
+      }
+      await Promise.all(ops);
+      return true;
+    } catch (e) { return false; }
+  },
+
+  // Пересчитать балансы всех счетов из транзакций (для починки)
   async recalculateBalances() {
     try {
       const transactions = await this.getTransactions();
@@ -366,8 +461,13 @@ const dataService = {
           else if (tx.type === 'expense') balances[tx.account] -= tx.amount;
         }
       });
-      const updated = accounts.map(a => ({ ...a, balance: balances[a.id] !== undefined ? balances[a.id] : a.balance }));
-      await this.saveAccounts(updated);
+      const batch = writeBatch(db);
+      accounts.forEach(a => {
+        if (balances[a.id] !== undefined) {
+          batch.update(dref('accounts', a.id), { balance: balances[a.id] });
+        }
+      });
+      await batch.commit();
       return true;
     } catch (e) { return false; }
   },
