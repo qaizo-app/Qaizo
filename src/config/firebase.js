@@ -1,30 +1,18 @@
-// src/config/firebase.js
-// Firebase configuration for Qaizo
-// TODO: Replace with real Firebase config from console.firebase.google.com
-
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "qaizo.firebaseapp.com",
-  projectId: "qaizo",
-  storageBucket: "qaizo.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAP3qu6pOnmc-JQxt4LtXMX_0UYUAnWYUE",
+  authDomain: "qaizo-ece06.firebaseapp.com",
+  projectId: "qaizo-ece06",
+  storageBucket: "qaizo-ece06.firebasestorage.app",
+  messagingSenderId: "568492177874",
+  appId: "1:568492177874:web:019151972555cba53b700b",
 };
 
-// NOTE: App will work without real Firebase config for now
-// It will use local data until Firebase is connected
-let app, db, auth;
+const app = initializeApp(firebaseConfig);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache(),
+});
 
-try {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
-} catch (error) {
-  console.log('Firebase not configured yet, using local mode');
-}
-
-export { app, db, auth };
+export { app, db };
