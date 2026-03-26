@@ -1,9 +1,8 @@
 // src/screens/AIAdvisorScreen.js
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
-import i18n from '../i18n';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Card from '../components/Card';
+import i18n from '../i18n';
+import { colors } from '../theme/colors';
 
 export default function AIAdvisorScreen() {
   const tips = [
@@ -63,7 +62,7 @@ const styles = StyleSheet.create({
   greetSub: { color: colors.textMuted, fontSize: 13 },
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', paddingHorizontal: 20, marginTop: 28, marginBottom: 12 },
   tipHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  tipIcon: { fontSize: 20, marginRight: 8 },
+  tipIcon: { fontSize: 20, marginEnd: 8 },
   tipTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
   tipText: { color: colors.textDim, fontSize: 13, lineHeight: 20 },
   comingTitle: { color: colors.green, fontSize: 15, fontWeight: '600', marginBottom: 8 },

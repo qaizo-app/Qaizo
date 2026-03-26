@@ -1,13 +1,17 @@
 // src/screens/DashboardScreen.js
-// Графики: pie chart категорий, bar chart по месяцам, прогресс-бары бюджетов
+// Графики: pie chart категорий, bar chart по месяцам, бюджеты с прогресс-барами
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
+import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
+import BudgetModal from '../components/BudgetModal';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
+import QuickAddModal from '../components/QuickAddModal';
+import RecurringDetailModal from '../components/RecurringDetailModal';
 import TransactionItem from '../components/TransactionItem';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
@@ -17,15 +21,29 @@ const SW = Dimensions.get('window').width;
 
 export default function DashboardScreen() {
   const [transactions, setTransactions] = useState([]);
+  const [budgets, setBudgets] = useState({});
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [budgetModal, setBudgetModal] = useState(null);
+  const [recurring, setRecurring] = useState([]);
+  const [showRecurring, setShowRecurring] = useState(false);
+  const [editRecurring, setEditRecurring] = useState(null);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [recDetail, setRecDetail] = useState(null);
+  const [quickTemplate, setQuickTemplate] = useState(null);
   const [, forceUpdate] = useState(0);
 
   const loadData = async () => {
-    const txs = await dataService.getTransactions();
+    const [txs, bdg, rec] = await Promise.all([
+      dataService.getTransactions(),
+      dataService.getBudgets(),
+      dataService.getRecurring(),
+    ]);
     setTransactions(txs);
+    setBudgets(bdg);
+    setRecurring(rec);
     forceUpdate(n => n + 1);
   };
 
@@ -47,7 +65,6 @@ export default function DashboardScreen() {
   const mNames = monthNames[lang] || monthNames.en;
   const dateStr = `${(fullMonths[lang] || fullMonths.en)[now.getMonth()]} ${now.getFullYear()}`;
 
-  // This month transactions
   const thisMonth = transactions.filter(t => {
     const d = new Date(t.date || t.createdAt);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -58,7 +75,7 @@ export default function DashboardScreen() {
   const balance = totalIncome - totalExpense;
   const recentTx = transactions.slice(0, 5);
 
-  // ─── PIE CHART DATA ────────────────────────────────
+  // PIE CHART
   const catTotals = {};
   thisMonth.filter(t => t.type === 'expense').forEach(t => {
     const cat = t.categoryId || 'other';
@@ -75,7 +92,7 @@ export default function DashboardScreen() {
       legendFontSize: 11,
     }));
 
-  // ─── BAR CHART DATA (last 6 months) ────────────────
+  // BAR CHART
   const barData = [];
   for (let i = 5; i >= 0; i--) {
     const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -89,10 +106,34 @@ export default function DashboardScreen() {
   }
   const maxBar = Math.max(...barData.map(d => Math.max(d.income, d.expense)), 1);
 
-  // ─── BUDGET PROGRESS ──────────────────────────────
-  const topCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  // BUDGET DATA
+  const budgetRows = [];
+  Object.entries(budgets).forEach(([cat, limit]) => {
+    const spent = catTotals[cat] || 0;
+    budgetRows.push({ cat, spent, limit, hasBudget: true });
+  });
+  const remaining = 6 - budgetRows.length;
+  if (remaining > 0) {
+    Object.entries(catTotals)
+      .filter(([cat]) => !budgets[cat])
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, remaining)
+      .forEach(([cat, spent]) => {
+        budgetRows.push({ cat, spent, limit: 0, hasBudget: false });
+      });
+  }
+  budgetRows.sort((a, b) => {
+    if (a.hasBudget && !b.hasBudget) return -1;
+    if (!a.hasBudget && b.hasBudget) return 1;
+    return b.spent - a.spent;
+  });
 
-  // ─── HANDLERS ──────────────────────────────────────
+  const totalBudgetLimit = Object.values(budgets).reduce((s, v) => s + v, 0);
+  const totalBudgetSpent = Object.keys(budgets).reduce((s, cat) => s + (catTotals[cat] || 0), 0);
+  const totalBudgetPct = totalBudgetLimit > 0 ? Math.round((totalBudgetSpent / totalBudgetLimit) * 100) : 0;
+  const hasBudgets = Object.keys(budgets).length > 0;
+
+  // HANDLERS
   const handleDelete = async () => {
     if (deleteTarget) { await dataService.deleteTransaction(deleteTarget.id); setDeleteTarget(null); await loadData(); }
   };
@@ -101,6 +142,19 @@ export default function DashboardScreen() {
     await loadData();
   };
   const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
+  const handleBudgetSave = async (categoryId, limit) => { await dataService.setBudget(categoryId, limit); await loadData(); };
+  const handleBudgetDelete = async (categoryId) => { await dataService.deleteBudget(categoryId); await loadData(); };
+  const handleConfirmRecurring = async (id) => { await dataService.confirmRecurring(id); await loadData(); };
+  const handleSkipRecurring = async (id) => { await dataService.skipRecurring(id); await loadData(); };
+  const handleDeleteRecurring = async (id) => { await dataService.deleteRecurring(id); await loadData(); };
+
+  // Предстоящие платежи (ближайшие 30 дней, активные)
+  const today = new Date();
+  const in30 = new Date(today); in30.setDate(in30.getDate() + 60);
+  const upcoming = recurring
+    .filter(r => r.isActive && r.nextDate)
+    .filter(r => new Date(r.nextDate) <= in30)
+    .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate));
 
   return (
     <View style={st.container}>
@@ -108,7 +162,6 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.green} />}
         contentContainerStyle={{ paddingBottom: 120 }}>
 
-        {/* Header */}
         <View style={st.header}>
           <View>
             <Text style={st.logo}><Text style={{ color: colors.green }}>Q</Text>aizo</Text>
@@ -119,7 +172,6 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Balance */}
         <Card highlighted>
           <Text style={st.balLabel}>{i18n.t('totalBalance')}</Text>
           <Text style={[st.balAmount, { color: balance >= 0 ? colors.text : colors.red }]}>₪ {balance.toLocaleString()}</Text>
@@ -131,7 +183,7 @@ export default function DashboardScreen() {
               </View>
               <Text style={st.incAmount}>₪ {totalIncome.toLocaleString()}</Text>
             </View>
-            <View style={st.divider} />
+            <View style={st.dividerV} />
             <View style={st.incExpItem}>
               <View style={st.incExpHead}>
                 <Feather name="trending-down" size={14} color={colors.red} />
@@ -142,13 +194,54 @@ export default function DashboardScreen() {
           </View>
         </Card>
 
-        {/* Pie Chart */}
+        {/* ─── FREE MONEY TODAY ─────────────────────────── */}
+        {balance > 0 && (() => {
+          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          const daysLeft = Math.max(lastDay - now.getDate(), 1);
+          const freeToday = Math.floor(balance / daysLeft);
+          const freeTodayColor = freeToday > 200 ? colors.green : freeToday > 50 ? colors.yellow : colors.red;
+          return (
+            <Card>
+              <View style={st.freeTop}>
+                <Feather name="sun" size={18} color={freeTodayColor} />
+                <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
+              </View>
+              <Text style={[st.freeAmount, { color: freeTodayColor }]}>₪{freeToday.toLocaleString()}</Text>
+              <Text style={st.freeSub}>{daysLeft} {i18n.t('daysLeft')}</Text>
+            </Card>
+          );
+        })()}
+
+        {/* ─── QUICK TEMPLATES ──────────────────────────── */}
+        <View style={st.sectionHeader}>
+          <Text style={st.sectionTitle}>{i18n.t('quickAdd')}</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingStart: 20, marginBottom: 8 }}>
+          {[
+            { categoryId: 'food', icon: 'shopping-cart', recipient: '', defaultAmount: null },
+            { categoryId: 'restaurant', icon: 'coffee', recipient: '', defaultAmount: null },
+            { categoryId: 'fuel', icon: 'droplet', recipient: '', defaultAmount: null },
+            { categoryId: 'transport', icon: 'navigation', recipient: '', defaultAmount: null },
+            { categoryId: 'health', icon: 'heart', recipient: '', defaultAmount: null },
+            { categoryId: 'phone', icon: 'smartphone', recipient: '', defaultAmount: null },
+          ].map(tpl => {
+            const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+            return (
+              <TouchableOpacity key={tpl.categoryId} style={st.quickBtn}
+                onPress={() => setQuickTemplate(tpl)} activeOpacity={0.7}>
+                <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                  <Feather name={cfg.icon} size={20} color={cfg.color} />
+                </View>
+                <Text style={st.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
         {pieData.length > 0 && (
           <>
             <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>
-                {lang === 'ru' ? 'Расходы по категориям' : lang === 'he' ? 'הוצאות לפי קטגוריה' : 'Expenses by Category'}
-              </Text>
+              <Text style={st.sectionTitle}>{i18n.t('expensesByCategory')}</Text>
             </View>
             <Card>
               <PieChart
@@ -167,46 +260,137 @@ export default function DashboardScreen() {
           </>
         )}
 
-        {/* Budget Progress Bars */}
-        {topCats.length > 0 && (
+        {budgetRows.length > 0 && (
           <>
             <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>
-                {lang === 'ru' ? 'Топ расходы' : lang === 'he' ? 'הוצאות מובילות' : 'Top Expenses'}
-              </Text>
+              <Text style={st.sectionTitle}>{i18n.t('budgets')}</Text>
+              {hasBudgets && (
+                <Text style={[st.totalPct, { color: totalBudgetPct > 100 ? colors.red : totalBudgetPct > 80 ? colors.yellow : colors.green }]}>
+                  {totalBudgetPct}%
+                </Text>
+              )}
             </View>
+
+            {hasBudgets && (
+              <Card>
+                <View style={st.totalBudgetRow}>
+                  <Text style={st.totalBudgetLabel}>{i18n.t('totalBudget')}</Text>
+                  <Text style={st.totalBudgetAmount}>
+                    ₪{totalBudgetSpent.toLocaleString()} / ₪{totalBudgetLimit.toLocaleString()}
+                  </Text>
+                </View>
+                <View style={st.barBgThick}>
+                  <View style={[st.barFillThick, {
+                    width: `${Math.min(totalBudgetPct, 100)}%`,
+                    backgroundColor: totalBudgetPct > 100 ? colors.red : totalBudgetPct > 80 ? colors.yellow : colors.green,
+                  }]} />
+                </View>
+                <Text style={st.totalBudgetLeft}>
+                  {totalBudgetPct <= 100
+                    ? `${i18n.t('left')}: ₪${(totalBudgetLimit - totalBudgetSpent).toLocaleString()}`
+                    : `${i18n.t('over')}: ₪${(totalBudgetSpent - totalBudgetLimit).toLocaleString()}`
+                  }
+                </Text>
+              </Card>
+            )}
+
             <Card>
-              {topCats.map(([cat, spent]) => {
+              {budgetRows.map(({ cat, spent, limit, hasBudget }) => {
                 const cfg = categoryConfig[cat] || categoryConfig.other;
-                const budget = spent * 1.3; // Условный лимит 130% от текущих трат
-                const pct = Math.min((spent / budget) * 100, 100);
-                const barColor = pct > 90 ? colors.red : pct > 70 ? colors.yellow : cfg.color;
+                const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+                const barColor = !hasBudget ? cfg.color : pct > 100 ? colors.red : pct > 80 ? colors.yellow : cfg.color;
                 return (
-                  <View key={cat} style={st.budgetRow}>
+                  <TouchableOpacity key={cat} style={st.budgetRow}
+                    onPress={() => setBudgetModal({ categoryId: cat, spent })} activeOpacity={0.6}>
                     <View style={st.budgetInfo}>
                       <View style={st.budgetLeft}>
                         <View style={[st.budgetDot, { backgroundColor: cfg.color }]} />
                         <Text style={st.budgetCat}>{i18n.t(cat)}</Text>
                       </View>
-                      <Text style={st.budgetAmount}>₪{spent.toLocaleString()}</Text>
+                      <View style={st.budgetRight}>
+                        {hasBudget ? (
+                          <>
+                            <Text style={[st.budgetPct, { color: barColor }]}>{pct}%</Text>
+                            <Text style={st.budgetAmount}>₪{spent.toLocaleString()} / ₪{limit.toLocaleString()}</Text>
+                          </>
+                        ) : (
+                          <>
+                            <Text style={st.budgetAmount}>₪{spent.toLocaleString()}</Text>
+                            <Feather name="plus-circle" size={14} color={colors.textMuted} style={{ marginStart: 6 }} />
+                          </>
+                        )}
+                      </View>
                     </View>
                     <View style={st.barBg}>
-                      <View style={[st.barFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                      {hasBudget ? (
+                        <View style={[st.barFill, { width: `${Math.min(pct, 100)}%`, backgroundColor: barColor }]} />
+                      ) : (
+                        <View style={[st.barFill, { width: '100%', backgroundColor: cfg.color, opacity: 0.3 }]} />
+                      )}
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </Card>
           </>
         )}
 
-        {/* Bar Chart — 6 months */}
+        {/* ─── UPCOMING RECURRING PAYMENTS ────────────── */}
+        {recurring.length > 0 && (
+          <>
+            <View style={st.sectionHeader}>
+              <Text style={st.sectionTitle}>{i18n.t('upcomingPayments')}</Text>
+              <TouchableOpacity onPress={() => setShowRecurring(true)}>
+                <Feather name="plus-circle" size={20} color={colors.green} />
+              </TouchableOpacity>
+            </View>
+            {upcoming.length > 0 ? (
+              <Card>
+                {upcoming.map(rec => {
+                  const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
+                  const nd = new Date(rec.nextDate);
+                  const diffDays = Math.ceil((nd - today) / (1000 * 60 * 60 * 24));
+                  const isOverdue = diffDays <= 0;
+                  const dateLabel = isOverdue
+                    ? i18n.t('today')
+                    : diffDays === 1 ? i18n.t('tomorrow')
+                    : `${diffDays} ${i18n.t('days')}`;
+                  return (
+                    <TouchableOpacity key={rec.id} style={st.recRow} onPress={() => setRecDetail(rec)} activeOpacity={0.6}>
+                      <View style={[st.recIcon, { backgroundColor: cfg.color + '20' }]}>
+                        <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
+                      </View>
+                      <View style={st.recInfo}>
+                        <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
+                        <Text style={st.recMeta}>
+                          {rec.type === 'expense' ? '-' : '+'}₪{rec.amount.toLocaleString()} · {dateLabel}
+                        </Text>
+                      </View>
+                      <View style={st.recActions}>
+                        <TouchableOpacity style={st.recSkip} onPress={() => handleSkipRecurring(rec.id)}>
+                          <Feather name="fast-forward" size={16} color={colors.textMuted} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[st.recConfirm, isOverdue && { backgroundColor: colors.yellow + '20' }]}
+                          onPress={() => handleConfirmRecurring(rec.id)}>
+                          <Feather name="check" size={16} color={isOverdue ? colors.yellow : colors.green} />
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </Card>
+            ) : (
+              <Card>
+                <Text style={st.recEmptyTxt}>{i18n.t('noUpcoming')}</Text>
+              </Card>
+            )}
+          </>
+        )}
+
         {barData.some(d => d.income > 0 || d.expense > 0) && (
           <>
             <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>
-                {lang === 'ru' ? '6 месяцев' : lang === 'he' ? '6 חודשים' : '6 Months'}
-              </Text>
+              <Text style={st.sectionTitle}>{i18n.t('sixMonths')}</Text>
             </View>
             <Card>
               <View style={st.barChart}>
@@ -234,7 +418,6 @@ export default function DashboardScreen() {
           </>
         )}
 
-        {/* Recent Transactions */}
         <View style={st.sectionHeader}>
           <Text style={st.sectionTitle}>{i18n.t('recentTransactions')}</Text>
           <TouchableOpacity><Text style={st.seeAll}>{i18n.t('seeAll')}</Text></TouchableOpacity>
@@ -255,17 +438,48 @@ export default function DashboardScreen() {
         </Card>
       </ScrollView>
 
+      {/* FAB Menu */}
+      {showFabMenu && (
+        <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowFabMenu(false)}>
+          <View style={st.fabMenu}>
+            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowRecurring(true); }}>
+              <Feather name="repeat" size={18} color={colors.teal} />
+              <Text style={st.fabMenuTxt}>{i18n.t('recurringPayment')}</Text>
+            </TouchableOpacity>
+            <View style={st.fabMenuDivider} />
+            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowAdd(true); }}>
+              <Feather name="plus" size={18} color={colors.green} />
+              <Text style={st.fabMenuTxt}>{i18n.t('oneTimePayment')}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      )}
+
       {/* FAB */}
-      <TouchableOpacity style={st.fab} onPress={() => setShowAdd(true)} activeOpacity={0.8}>
-        <Feather name="plus" size={26} color={colors.bg} />
+      <TouchableOpacity style={st.fab} onPress={() => setShowFabMenu(!showFabMenu)} activeOpacity={0.8}>
+        <Feather name={showFabMenu ? 'x' : 'plus'} size={26} color={colors.bg} />
       </TouchableOpacity>
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
-
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ₪${deleteTarget.amount}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+      <BudgetModal visible={!!budgetModal} categoryId={budgetModal?.categoryId}
+        currentLimit={budgetModal ? (budgets[budgetModal.categoryId] || 0) : 0}
+        spent={budgetModal?.spent || 0}
+        onSave={handleBudgetSave} onDelete={handleBudgetDelete} onClose={() => setBudgetModal(null)} />
+      <AddRecurringModal visible={showRecurring || !!editRecurring}
+        onClose={() => { setShowRecurring(false); setEditRecurring(null); }}
+        onSave={() => loadData()} editItem={editRecurring} />
+      <RecurringDetailModal visible={!!recDetail} item={recDetail}
+        onClose={() => setRecDetail(null)}
+        onConfirm={(id) => { handleConfirmRecurring(id); setRecDetail(null); }}
+        onSkip={(id) => { handleSkipRecurring(id); setRecDetail(null); }}
+        onDelete={(id) => { handleDeleteRecurring(id); setRecDetail(null); }}
+        onEdit={(item) => { setRecDetail(null); setEditRecurring(item); }} />
+      <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
+        onClose={() => setQuickTemplate(null)} onSaved={() => loadData()} />
     </View>
   );
 }
@@ -276,33 +490,36 @@ const st = StyleSheet.create({
   logo: { color: colors.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 },
   subtitle: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
-
   balLabel: { color: colors.textDim, fontSize: 13, marginBottom: 8 },
   balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24 },
   incExpRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
   incExpItem: { flex: 1 },
   incExpHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  divider: { width: 1, height: 40, backgroundColor: colors.divider, marginHorizontal: 16 },
+  dividerV: { width: 1, height: 40, backgroundColor: colors.divider, marginHorizontal: 16 },
   incLabel: { color: colors.green, fontSize: 12, fontWeight: '600' },
-  incAmount: { color: colors.green, fontSize: 20, fontWeight: '700', paddingLeft: 4 },
+  incAmount: { color: colors.green, fontSize: 20, fontWeight: '700', paddingStart: 4 },
   expLabel: { color: colors.red, fontSize: 12, fontWeight: '600' },
-  expAmount: { color: colors.red, fontSize: 20, fontWeight: '700', paddingLeft: 4 },
-
+  expAmount: { color: colors.red, fontSize: 20, fontWeight: '700', paddingStart: 4 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginTop: 28, marginBottom: 12 },
   sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
   seeAll: { color: colors.green, fontSize: 13, fontWeight: '600' },
-
-  // Budget bars
+  totalPct: { fontSize: 15, fontWeight: '700' },
+  totalBudgetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  totalBudgetLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  barBgThick: { height: 10, backgroundColor: colors.bg2, borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
+  barFillThick: { height: 10, borderRadius: 5 },
+  totalBudgetLeft: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
   budgetRow: { marginBottom: 16 },
   budgetInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   budgetLeft: { flexDirection: 'row', alignItems: 'center' },
-  budgetDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
+  budgetRight: { flexDirection: 'row', alignItems: 'center' },
+  budgetDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 8 },
   budgetCat: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  budgetPct: { fontSize: 13, fontWeight: '700', marginEnd: 8 },
   budgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
-  barBg: { height: 6, backgroundColor: colors.card, borderRadius: 3, overflow: 'hidden' },
+  barBg: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: 6, borderRadius: 3 },
-
-  // Bar chart
   barChart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, paddingTop: 8 },
   barGroup: { flex: 1, alignItems: 'center' },
   barsWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 8 },
@@ -312,11 +529,37 @@ const st = StyleSheet.create({
   barLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
   barLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center' },
-  legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+  legendDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 6 },
   legendText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
-
   empty: { alignItems: 'center', paddingVertical: 36 },
   emptyText: { color: colors.textMuted, fontSize: 15, fontWeight: '600', marginTop: 12 },
+  fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10, zIndex: 10 },
+  fabOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 5 },
+  fabMenu: { position: 'absolute', right: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden', minWidth: 200 },
+  fabMenuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 20, gap: 12 },
+  fabMenuTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  fabMenuDivider: { height: 1, backgroundColor: colors.divider },
 
-  fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10 },
+  // Quick templates
+  quickBtn: { alignItems: 'center', marginEnd: 14, width: 68 },
+  quickIcon: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
+  quickLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', textAlign: 'center' },
+
+  // Free money today
+  freeTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  freeLabel: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 4 },
+  freeSub: { color: colors.textMuted, fontSize: 12 },
+
+  // Recurring
+  recRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  recIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginEnd: 12 },
+  recInfo: { flex: 1 },
+  recName: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2 },
+  recActions: { flexDirection: 'row', gap: 8 },
+  recSkip: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
+  recConfirm: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
+  recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
+  recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 });

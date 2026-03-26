@@ -127,7 +127,7 @@ export default function AccountsScreen() {
 
         {/* Hint */}
         <Text style={styles.hint}>
-          {lang==='ru'?'Нажми → история · Долгое → изменить':lang==='he'?'לחיצה → היסטוריה · ארוכה → עריכה':'Tap → history · Long → edit'}
+          {i18n.t('accountHint')}
         </Text>
 
         {/* Groups */}
@@ -136,7 +136,7 @@ export default function AccountsScreen() {
           return (
             <View key={typeId}>
               <View style={styles.groupHeader}>
-                <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ marginRight: 6 }} />
+                <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ marginEnd: 6 }} />
                 <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId, lang)}</Text>
                 <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>₪{sum.toLocaleString()}</Text>
               </View>
@@ -149,14 +149,14 @@ export default function AccountsScreen() {
 
         {/* Crypto */}
         <View style={styles.groupHeader}>
-          <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" style={{ marginRight: 6 }} />
+          <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" style={{ marginEnd: 6 }} />
           <Text style={[styles.groupTitle, { color: '#f59e0b' }]}>{typeLabel('crypto', lang)}</Text>
           <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
         </View>
         <View style={styles.tilesRow}>
           <View style={[styles.tile, { borderLeftColor: '#f59e0b', borderLeftWidth: 3, opacity: 0.4 }]}>
             <MaterialCommunityIcons name="bitcoin" size={16} color="#f59e0b" />
-            <Text style={[styles.tileName, { color: colors.textMuted }]}>{lang==='ru'?'Скоро':'Soon'}</Text>
+            <Text style={[styles.tileName, { color: colors.textMuted }]}>{i18n.t('comingSoon')}</Text>
             <Text style={[styles.tileBalance, { color: colors.textMuted }]}>—</Text>
           </View>
         </View>
@@ -165,8 +165,8 @@ export default function AccountsScreen() {
         {inactive.length > 0 && (
           <View>
             <View style={styles.groupHeader}>
-              <Feather name="archive" size={14} color={colors.textMuted} style={{ marginRight: 6 }} />
-              <Text style={styles.groupTitle}>{lang==='ru'?'Неактивные':'Inactive'}</Text>
+              <Feather name="archive" size={14} color={colors.textMuted} style={{ marginEnd: 6 }} />
+              <Text style={styles.groupTitle}>{i18n.t('inactive')}</Text>
             </View>
             <View style={styles.tilesRow}>
               {inactive.map(acc => (
@@ -185,9 +185,9 @@ export default function AccountsScreen() {
       <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)}>
         {({ close }) => (
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.modalTitle}>{editAccount ? editAccount.name : (lang==='ru'?'Новый счёт':'New Account')}</Text>
+            <Text style={styles.modalTitle}>{editAccount ? editAccount.name : (i18n.t('newAccount'))}</Text>
 
-            <Text style={styles.fieldLabel}>{lang==='ru'?'Тип':'Type'}</Text>
+            <Text style={styles.fieldLabel}>{i18n.t('type')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
               {ACCOUNT_TYPES.map(t => {
                 const cfg = accountTypeConfig[t.id];
@@ -200,10 +200,10 @@ export default function AccountsScreen() {
               })}
             </ScrollView>
 
-            <Text style={styles.fieldLabel}>{lang==='ru'?'Название':'Name'}</Text>
+            <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Mizrahi, Visa 3324..." placeholderTextColor={colors.textMuted} />
 
-            <Text style={styles.fieldLabel}>{lang==='ru'?'Номер':'Number'}</Text>
+            <Text style={styles.fieldLabel}>{i18n.t('number')}</Text>
             <TextInput style={styles.input} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>{i18n.t('currency')}</Text>
@@ -215,7 +215,7 @@ export default function AccountsScreen() {
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>{lang==='ru'?'Баланс':'Balance'}</Text>
+            <Text style={styles.fieldLabel}>{i18n.t('balance')}</Text>
             <View style={styles.balRow}>
               <Text style={[styles.balCur,{color:tc}]}>{currency}</Text>
               <TextInput style={styles.balInput} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
@@ -223,15 +223,15 @@ export default function AccountsScreen() {
 
             {(type==='bank'||type==='credit')&&(
               <>
-                <Text style={styles.fieldLabel}>{type==='credit'?(lang==='ru'?'Мисгерет':'Limit'):(lang==='ru'?'Овердрафт':'Overdraft')}</Text>
+                <Text style={styles.fieldLabel}>{type==='credit'?i18n.t('creditLimit'):i18n.t('overdraft')}</Text>
                 <TextInput style={styles.input} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
               </>
             )}
 
             <View style={styles.toggleRow}>
               <View>
-                <Text style={styles.toggleLabel}>{lang==='ru'?'Активный':'Active'}</Text>
-                <Text style={styles.toggleSub}>{lang==='ru'?'Неактивные скрыты':'Hidden when off'}</Text>
+                <Text style={styles.toggleLabel}>{i18n.t('active')}</Text>
+                <Text style={styles.toggleSub}>{i18n.t('hiddenWhenOff')}</Text>
               </View>
               <Switch value={isActive} onValueChange={setIsActive} trackColor={{false:colors.card,true:`${tc}40`}} thumbColor={isActive?tc:colors.textMuted} />
             </View>
@@ -278,13 +278,13 @@ const styles = StyleSheet.create({
   modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20},
   fieldLabel:{color:colors.textDim,fontSize:11,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4},
   input:{backgroundColor:colors.card,borderRadius:14,padding:14,color:colors.text,fontSize:16,marginBottom:12,borderWidth:1,borderColor:colors.cardBorder},
-  typeChip:{flexDirection:'row',alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginRight:8,borderWidth:1.5,borderColor:'transparent'},
-  typeChipText:{color:colors.textMuted,fontSize:12,fontWeight:'600',marginLeft:6},
+  typeChip:{flexDirection:'row',alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginEnd:8,borderWidth:1.5,borderColor:'transparent'},
+  typeChipText:{color:colors.textMuted,fontSize:12,fontWeight:'600',marginStart:6},
   currRow:{flexDirection:'row',gap:8,marginBottom:16},
   currBtn:{paddingHorizontal:18,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,borderWidth:1.5,borderColor:'transparent'},
   currText:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
   balRow:{flexDirection:'row',alignItems:'center',marginBottom:16},
-  balCur:{fontSize:28,fontWeight:'700',marginRight:8},
+  balCur:{fontSize:28,fontWeight:'700',marginEnd:8},
   balInput:{flex:1,color:colors.text,fontSize:28,fontWeight:'700'},
   toggleRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:16,marginBottom:8,borderTopWidth:1,borderTopColor:colors.divider},
   toggleLabel:{color:colors.text,fontSize:15,fontWeight:'600'},

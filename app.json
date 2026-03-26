@@ -13,6 +13,9 @@
     },
     "ios": {
       "bundleIdentifier": "com.qaizo.app"
-    }
+    },
+    "plugins": [
+      "expo-localization"
+    ]
   }
 }
