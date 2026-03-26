@@ -45,7 +45,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
   );
 
   return (
-    <Swipeable ref={swipeRef} renderRightActions={renderActions} overshootRight={false}>
+    <Swipeable ref={swipeRef} renderRightActions={renderActions} renderLeftActions={renderActions} overshootRight={false} overshootLeft={false}>
       <View style={styles.container}>
         <CategoryIcon categoryId={transaction.categoryId} size="medium" />
         <View style={styles.info}>

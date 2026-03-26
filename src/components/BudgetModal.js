@@ -3,7 +3,7 @@
 
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, Modal, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Modal, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
 
@@ -49,6 +49,7 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
       <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
         <Animated.View style={[st.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -106,6 +107,7 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
           </TouchableWithoutFeedback>
         </Animated.View>
       </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

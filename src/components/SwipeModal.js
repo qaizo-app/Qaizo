@@ -1,7 +1,7 @@
 // src/components/SwipeModal.js
 // v4: без Modal — чистый Animated.View, никакого мерцания
 import { useEffect, useRef } from 'react';
-import { Animated, BackHandler, Dimensions, PanResponder, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, BackHandler, Dimensions, KeyboardAvoidingView, PanResponder, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { colors } from '../theme/colors';
 
 const SCREEN_H = Dimensions.get('window').height;
@@ -72,6 +72,7 @@ export default function SwipeModal({ visible, onClose, children }) {
       </TouchableWithoutFeedback>
 
       {/* Модалка */}
+      <KeyboardAvoidingView behavior='padding' style={{ justifyContent: 'flex-end' }}>
       <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
         <View {...panResponder.panHandlers} style={styles.swipeZone}>
           <View style={styles.handle} />
@@ -80,6 +81,7 @@ export default function SwipeModal({ visible, onClose, children }) {
           {renderContent()}
         </View>
       </Animated.View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

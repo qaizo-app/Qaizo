@@ -2,7 +2,7 @@
 // Пошаговый визард при первом запуске: валюта → счёт → транзакция → готово
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
@@ -90,7 +90,7 @@ export default function SetupWizardScreen({ onDone }) {
         <Text style={st.stepLabel}>{step + 1}/{totalSteps}</Text>
       </View>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={st.content} keyboardShouldPersistTaps="handled">
 
         {/* ─── ШАГ 0: ВАЛЮТА ─────────────────────── */}

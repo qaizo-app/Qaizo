@@ -2,7 +2,7 @@
 // Быстрый ввод: категория выбрана, вводим сумму + выбираем счёт
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
@@ -65,6 +65,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
       <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
         <Animated.View style={[st.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -127,6 +128,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
           </TouchableWithoutFeedback>
         </Animated.View>
       </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
