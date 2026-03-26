@@ -1,7 +1,8 @@
 // src/screens/AccountHistoryScreen.js
-// Кнопка +, свайп действия, тёмный модал удаления
+// Баланс исправлен, + не показывает выбор счёта, свайп работает
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -14,6 +15,7 @@ import { accountTypeConfig, colors } from '../theme/colors';
 export default function AccountHistoryScreen({ route, navigation }) {
   const { account } = route.params;
   const [transactions, setTransactions] = useState([]);
+  const [currentBalance, setCurrentBalance] = useState(account.balance || 0);
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -26,9 +28,14 @@ export default function AccountHistoryScreen({ route, navigation }) {
       .filter(t => t.account === account.id)
       .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
     setTransactions(filtered);
+
+    // Пересчитать баланс из транзакций
+    const accs = await dataService.getAccounts();
+    const acc = accs.find(a => a.id === account.id);
+    if (acc) setCurrentBalance(acc.balance || 0);
   };
 
-  useEffect(() => { loadData(); }, [account.id]);
+  useFocusEffect(useCallback(() => { loadData(); }, []));
 
   const handleDelete = async () => {
     if (deleteTarget) { await dataService.deleteTransaction(deleteTarget.id); setDeleteTarget(null); await loadData(); }
@@ -39,36 +46,28 @@ export default function AccountHistoryScreen({ route, navigation }) {
   };
   const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
 
-  // Running balance calculation
+  // Расчёт остатка после каждой транзакции
   const withBalance = (() => {
-    const sorted = [...transactions].reverse();
-    let running = account.balance || 0;
-    sorted.forEach(tx => { if (tx.type === 'income') running -= tx.amount; else running += tx.amount; });
-    const result = [];
-    sorted.forEach(tx => {
-      if (tx.type === 'income') running += tx.amount; else running -= tx.amount;
-      result.push({ ...tx, runningBalance: running });
+    if (transactions.length === 0) return [];
+    let bal = currentBalance;
+    const result = transactions.map(tx => {
+      const entry = { ...tx, runningBalance: bal };
+      if (tx.type === 'income') bal -= tx.amount;
+      else bal += tx.amount;
+      return entry;
     });
-    return result.reverse();
+    return result;
   })();
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-  };
 
   const renderItem = ({ item }) => (
     <View>
-      <TransactionItem
-        transaction={item}
+      <TransactionItem transaction={item}
         onDelete={(t) => setDeleteTarget(t)}
         onEdit={(t) => setEditTx(t)}
-        onDuplicate={handleDuplicate}
-      />
-      <View style={styles.balanceRow}>
-        <Text style={[styles.runningBalance, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]}>
-          {lang === 'ru' ? 'Остаток' : lang === 'he' ? 'יתרה' : 'Balance'}: {account.currency || '₪'} {item.runningBalance.toLocaleString()}
+        onDuplicate={handleDuplicate} />
+      <View style={styles.balLine}>
+        <Text style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]}>
+          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: {account.currency||'₪'} {item.runningBalance.toLocaleString()}
         </Text>
       </View>
     </View>
@@ -76,99 +75,72 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Feather name="arrow-left" size={22} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerName}>{account.name}</Text>
-          <Text style={styles.headerType}>
-            {account.accountNumber ? `${account.accountNumber} · ` : ''}
-            {account.type}
-          </Text>
+          <Text style={styles.headerType}>{account.accountNumber ? `${account.accountNumber} · ` : ''}{account.type}</Text>
         </View>
         <View style={[styles.headerIcon, { backgroundColor: `${cfg.color}18` }]}>
           <MaterialCommunityIcons name={cfg.icon} size={22} color={cfg.color} />
         </View>
       </View>
 
-      {/* Balance */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>{lang === 'ru' ? 'Текущий баланс' : lang === 'he' ? 'יתרה נוכחית' : 'Current Balance'}</Text>
-        <Text style={[styles.balanceAmount, { color: (account.balance || 0) >= 0 ? colors.text : colors.red }]}>
-          {account.currency || '₪'} {(account.balance || 0).toLocaleString()}
+      <View style={styles.balCard}>
+        <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
+        <Text style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]}>
+          {account.currency||'₪'} {currentBalance.toLocaleString()}
         </Text>
-        {account.overdraft && (
-          <Text style={styles.overdraftText}>{lang === 'ru' ? 'Лимит' : 'Limit'}: {account.currency || '₪'}{account.overdraft.toLocaleString()}</Text>
-        )}
+        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: {account.currency||'₪'}{account.overdraft.toLocaleString()}</Text>}
       </View>
 
-      {/* Count + hint */}
       <View style={styles.countRow}>
-        <Text style={styles.countText}>{lang === 'ru' ? 'Транзакции' : 'Transactions'}</Text>
-        <View style={styles.countBadge}><Text style={styles.countNumber}>{transactions.length}</Text></View>
+        <Text style={styles.countText}>{lang==='ru'?'Транзакции':'Transactions'}</Text>
+        <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
       </View>
-      {transactions.length > 0 && (
-        <Text style={styles.hint}>← {lang === 'ru' ? 'свайпни для действий' : 'swipe for actions'}</Text>
-      )}
 
-      {/* List */}
-      <FlatList
-        data={withBalance}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
+      <FlatList data={withBalance} keyExtractor={item=>item.id} renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Feather name="inbox" size={36} color={colors.textMuted} />
-            <Text style={styles.emptyText}>{lang === 'ru' ? 'Нет транзакций' : 'No transactions'}</Text>
-          </View>
-        }
-      />
+        ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={36} color={colors.textMuted} /><Text style={styles.emptyText}>{lang==='ru'?'Нет транзакций':'No transactions'}</Text></View>} />
 
-      {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={() => setShowAdd(true)} activeOpacity={0.8}>
         <Feather name="plus" size={26} color={colors.bg} />
       </TouchableOpacity>
 
-      <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
+      {/* preselectedAccount — модалка не покажет выбор счёта */}
+      <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
+        onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ₪${deleteTarget.amount}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
-        onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+        onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
-  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginRight: 14, borderWidth: 1, borderColor: colors.cardBorder },
-  headerInfo: { flex: 1 },
-  headerName: { color: colors.text, fontSize: 20, fontWeight: '700' },
-  headerType: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
-  headerIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-
-  balanceCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.card, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(52,211,153,0.15)' },
-  balanceLabel: { color: colors.textDim, fontSize: 13, marginBottom: 6 },
-  balanceAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1 },
-  overdraftText: { color: colors.textMuted, fontSize: 12, marginTop: 8 },
-
-  countRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 4 },
-  countText: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  countBadge: { backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder },
-  countNumber: { color: colors.textDim, fontSize: 14, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 11, paddingHorizontal: 20, marginBottom: 8, opacity: 0.5 },
-
-  list: { paddingHorizontal: 20, paddingBottom: 120 },
-
-  balanceRow: { paddingLeft: 58, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: colors.divider },
-  runningBalance: { fontSize: 11, fontWeight: '500' },
-
-  emptyContainer: { alignItems: 'center', paddingVertical: 50 },
-  emptyText: { color: colors.textMuted, fontSize: 15, marginTop: 12 },
-
-  fab: { position: 'absolute', right: 24, bottom: 30, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10 },
+  container:{flex:1,backgroundColor:colors.bg},
+  header:{flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:56,paddingBottom:16},
+  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',marginRight:14,borderWidth:1,borderColor:colors.cardBorder},
+  headerInfo:{flex:1},
+  headerName:{color:colors.text,fontSize:20,fontWeight:'700'},
+  headerType:{color:colors.textMuted,fontSize:13,marginTop:2},
+  headerIcon:{width:48,height:48,borderRadius:14,justifyContent:'center',alignItems:'center'},
+  balCard:{marginHorizontal:20,marginBottom:16,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:'rgba(52,211,153,0.15)'},
+  balLabel:{color:colors.textDim,fontSize:13,marginBottom:6},
+  balAmount:{fontSize:32,fontWeight:'800',letterSpacing:-1},
+  odText:{color:colors.textMuted,fontSize:12,marginTop:8},
+  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,marginBottom:8},
+  countText:{color:colors.text,fontSize:16,fontWeight:'700'},
+  countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
+  countNum:{color:colors.textDim,fontSize:14,fontWeight:'700'},
+  list:{paddingHorizontal:20,paddingBottom:120},
+  balLine:{paddingLeft:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
+  runBal:{fontSize:11,fontWeight:'500'},
+  empty:{alignItems:'center',paddingVertical:50},
+  emptyText:{color:colors.textMuted,fontSize:15,marginTop:12},
+  fab:{position:'absolute',right:24,bottom:30,width:60,height:60,borderRadius:18,backgroundColor:colors.green,justifyContent:'center',alignItems:'center',elevation:10,shadowColor:colors.green,shadowOffset:{width:0,height:6},shadowOpacity:0.4,shadowRadius:16},
 });

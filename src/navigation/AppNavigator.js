@@ -1,5 +1,5 @@
 // src/navigation/AppNavigator.js
-// Stack внутри таба Accounts для истории счёта
+// Категории доступны из таба Ещё (Settings)
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,6 +9,7 @@ import { colors } from '../theme/colors';
 
 import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
+import CategoriesScreen from '../screens/CategoriesScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import InvestmentsScreen from '../screens/InvestmentsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -16,13 +17,23 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 
 const Tab = createBottomTabNavigator();
 const AccountsStack = createNativeStackNavigator();
+const SettingsStack = createNativeStackNavigator();
 
 function AccountsStackScreen() {
   return (
-    <AccountsStack.Navigator screenOptions={{ headerShown: false }}>
+    <AccountsStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0e1a' }, animation: 'fade' }}>
       <AccountsStack.Screen name="AccountsList" component={AccountsScreen} />
       <AccountsStack.Screen name="AccountHistory" component={AccountHistoryScreen} />
     </AccountsStack.Navigator>
+  );
+}
+
+function SettingsStackScreen() {
+  return (
+    <SettingsStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0e1a' }, animation: 'fade' }}>
+      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
+      <SettingsStack.Screen name="Categories" component={CategoriesScreen} />
+    </SettingsStack.Navigator>
   );
 }
 
@@ -31,7 +42,7 @@ const tabConfig = {
   Transactions: { icon: 'list',        labelKey: 'transactions' },
   AccountsTab:  { icon: 'credit-card', labelKey: 'accounts' },
   Investments:  { icon: 'trending-up', labelKey: 'investments' },
-  Settings:     { icon: 'settings',    labelKey: null },
+  SettingsTab:  { icon: 'settings',    labelKey: null },
 };
 
 export default function AppNavigator() {
@@ -51,7 +62,7 @@ export default function AppNavigator() {
           ),
           tabBarLabel: ({ focused }) => (
             <Text style={[styles.label, focused && styles.labelActive]}>
-              {route.name === 'Settings'
+              {route.name === 'SettingsTab'
                 ? (i18n.getLanguage() === 'ru' ? 'Ещё' : i18n.getLanguage() === 'he' ? 'עוד' : 'More')
                 : i18n.t(cfg.labelKey)}
             </Text>
@@ -63,7 +74,7 @@ export default function AppNavigator() {
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
       <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
       <Tab.Screen name="Investments" component={InvestmentsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="SettingsTab" component={SettingsStackScreen} />
     </Tab.Navigator>
   );
 }

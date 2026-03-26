@@ -1,73 +1,120 @@
 // src/components/SwipeModal.js
-// Исправлен: плавное закрытие без мерцания
+// v4: без Modal — чистый Animated.View, никакого мерцания
 import { useEffect, useRef } from 'react';
-import { Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, BackHandler, Dimensions, PanResponder, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { colors } from '../theme/colors';
 
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-const CLOSE_THRESHOLD = 80;
+const SCREEN_H = Dimensions.get('window').height;
 
-export default function SwipeModal({ visible, onClose, children, maxHeight = '92%' }) {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const closing = useRef(false);
+export default function SwipeModal({ visible, onClose, children }) {
+  const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const isClosing = useRef(false);
 
   useEffect(() => {
     if (visible) {
-      closing.current = false;
-      translateY.setValue(0);
+      isClosing.current = false;
+      Animated.parallel([
+        Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]).start();
     }
   }, [visible]);
 
+  // Android back button
+  useEffect(() => {
+    if (!visible) return;
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      doClose();
+      return true;
+    });
+    return () => handler.remove();
+  }, [visible]);
+
   const doClose = () => {
-    if (closing.current) return;
-    closing.current = true;
-    Animated.timing(translateY, {
-      toValue: SCREEN_HEIGHT,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
+    if (isClosing.current) return;
+    isClosing.current = true;
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: SCREEN_H, duration: 250, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => {
       onClose();
     });
   };
 
   const panResponder = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_, g) => g.dy > 8,
+    onMoveShouldSetPanResponder: (_, g) => g.dy > 5,
     onPanResponderMove: (_, g) => {
-      if (g.dy > 0) translateY.setValue(g.dy);
+      if (g.dy > 0) slideAnim.setValue(g.dy);
     },
     onPanResponderRelease: (_, g) => {
-      if (g.dy > CLOSE_THRESHOLD || g.vy > 0.4) {
+      if (g.dy > 60 || g.vy > 0.3) {
         doClose();
       } else {
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }).start();
+        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 120, friction: 14 }).start();
       }
     },
   })).current;
 
   if (!visible) return null;
 
+  const renderContent = () => {
+    if (typeof children === 'function') return children({ close: doClose });
+    return children;
+  };
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={doClose}>
-      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <TouchableWithoutFeedback onPress={doClose}>
-          <View style={styles.backdrop} />
-        </TouchableWithoutFeedback>
-        <Animated.View style={[styles.modal, { maxHeight, transform: [{ translateY }] }]}>
-          <View {...panResponder.panHandlers} style={styles.handleZone}>
-            <View style={styles.handle} />
-          </View>
-          {children}
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </Modal>
+    <View style={styles.fullscreen}>
+      {/* Тёмный фон */}
+      <TouchableWithoutFeedback onPress={doClose}>
+        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
+      </TouchableWithoutFeedback>
+
+      {/* Модалка */}
+      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+        <View {...panResponder.panHandlers} style={styles.swipeZone}>
+          <View style={styles.handle} />
+        </View>
+        <View style={styles.content}>
+          {renderContent()}
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { flex: 1, backgroundColor: colors.overlay },
-  modal: { backgroundColor: colors.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 24, paddingBottom: 36 },
-  handleZone: { paddingTop: 12, paddingBottom: 16, alignItems: 'center' },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.textMuted, opacity: 0.5 },
+  fullscreen: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1000,
+    elevation: 1000,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  sheet: {
+    backgroundColor: colors.bg2,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: '92%',
+  },
+  swipeZone: {
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.textMuted,
+    opacity: 0.5,
+  },
+  content: {
+    paddingHorizontal: 24,
+    paddingBottom: 36,
+  },
 });
