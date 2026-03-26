@@ -1,0 +1,20 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // TEST MODE — allow all during Phase 1 (no auth yet)
+    // Phase 2: replace with auth-based rules below
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    // Phase 2 rules (uncomment when Firebase Auth is added):
+    // match /users/{userId}/{document=**} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
+    // match /{document=**} {
+    //   allow read, write: if false;
+    // }
+  }
+}
