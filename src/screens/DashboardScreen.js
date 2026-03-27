@@ -2,8 +2,9 @@
 // Графики: pie chart категорий, bar chart по месяцам, бюджеты с прогресс-барами
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { PieChart } from 'react-native-chart-kit';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -42,7 +43,26 @@ export default function DashboardScreen() {
   const [streakData, setStreakData] = useState(null);
   const [newMilestone, setNewMilestone] = useState(null);
   const [weekStart, setWeekStart] = useState('monday');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const bellAnim = useRef(new Animated.Value(1)).current;
   const toast = useToast();
+
+  // Слушаем входящие уведомления
+  useEffect(() => {
+    const sub = Notifications.addNotificationReceivedListener(notification => {
+      const { title, body } = notification.request.content;
+      setNotifications(prev => [{ id: Date.now().toString(), title, body, time: new Date() }, ...prev].slice(0, 20));
+      // Анимация колокольчика
+      Animated.sequence([
+        Animated.timing(bellAnim, { toValue: 1.3, duration: 150, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 1.1, duration: 100, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]).start();
+    });
+    return () => sub.remove();
+  }, []);
 
   const st = createSt();
 
@@ -210,8 +230,15 @@ export default function DashboardScreen() {
             <Text style={st.logo}><Text style={{ color: colors.green }}>Q</Text>aizo</Text>
             <Text style={st.subtitle}>{dateStr}</Text>
           </View>
-          <TouchableOpacity style={st.profileBtn}>
-            <Feather name="user" size={20} color={colors.textDim} />
+          <TouchableOpacity style={st.profileBtn} onPress={() => setShowNotifModal(true)}>
+            <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
+              <Feather name="bell" size={20} color={notifications.length > 0 ? colors.green : colors.textDim} />
+            </Animated.View>
+            {notifications.length > 0 && (
+              <View style={st.bellBadge}>
+                <Text style={st.bellBadgeText}>{notifications.length > 9 ? '9+' : notifications.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -535,6 +562,45 @@ export default function DashboardScreen() {
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
         onClose={() => setQuickTemplate(null)} onSaved={() => loadData()} />
 
+      {/* Notifications modal */}
+      <Modal visible={showNotifModal} transparent animationType="fade" onRequestClose={() => setShowNotifModal(false)}>
+        <TouchableOpacity style={st.notifOverlay} activeOpacity={1} onPress={() => setShowNotifModal(false)}>
+          <View style={st.notifModal}>
+            <View style={st.notifHeader}>
+              <Feather name="bell" size={20} color={colors.green} />
+              <Text style={st.notifTitle}>{i18n.t('notifications')}</Text>
+              {notifications.length > 0 && (
+                <TouchableOpacity onPress={() => { setNotifications([]); }} style={st.notifClearBtn}>
+                  <Text style={st.notifClearTxt}>{i18n.t('clearAll')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {notifications.length === 0 ? (
+              <View style={st.notifEmpty}>
+                <Feather name="bell-off" size={32} color={colors.textMuted} />
+                <Text style={st.notifEmptyTxt}>{i18n.t('noNotifications')}</Text>
+              </View>
+            ) : (
+              <ScrollView style={st.notifList} showsVerticalScrollIndicator={false}>
+                {notifications.map((n) => (
+                  <View key={n.id} style={st.notifItem}>
+                    <View style={st.notifDot} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={st.notifItemTitle}>{n.title}</Text>
+                      <Text style={st.notifItemBody}>{n.body}</Text>
+                      <Text style={st.notifItemTime}>
+                        {n.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Milestone celebration */}
       {newMilestone && (
         <TouchableOpacity style={st.milestoneOverlay} activeOpacity={1} onPress={() => setNewMilestone(null)}>
@@ -634,6 +700,26 @@ const createSt = () => StyleSheet.create({
   recConfirm: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
   recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+
+  // Bell badge
+  bellBadge: { position: 'absolute', top: 6, right: 6, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.red, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3 },
+  bellBadgeText: { color: '#fff', fontSize: 9, fontWeight: '800' },
+
+  // Notifications modal
+  notifOverlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-start', paddingTop: 110, alignItems: 'center' },
+  notifModal: { backgroundColor: colors.bg2, borderRadius: 24, marginHorizontal: 20, width: SW - 40, maxHeight: 420, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden' },
+  notifHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 20, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  notifTitle: { color: colors.text, fontSize: 17, fontWeight: '700', flex: 1 },
+  notifClearBtn: { paddingVertical: 4, paddingHorizontal: 10 },
+  notifClearTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  notifEmpty: { alignItems: 'center', paddingVertical: 40, gap: 12 },
+  notifEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+  notifList: { maxHeight: 340, paddingHorizontal: 20 },
+  notifItem: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
+  notifDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.green, marginTop: 6 },
+  notifItemTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  notifItemBody: { color: colors.textDim, fontSize: 13, lineHeight: 18 },
+  notifItemTime: { color: colors.textMuted, fontSize: 11, marginTop: 4 },
 
   // Milestone celebration
   milestoneOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 20 },

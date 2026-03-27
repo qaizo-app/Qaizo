@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
+import ConfirmModal from '../components/ConfirmModal';
 import ExportModal from '../components/ExportModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
@@ -22,6 +23,7 @@ export default function SettingsScreen() {
   const [weekStart, setWeekStart] = useState('monday');
   const [curSymbol, setCurSymbol] = useState(sym());
   const [showExport, setShowExport] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [langVersion, setLangVersion] = useState(0);
   const currentUser = authService.getCurrentUser();
@@ -67,11 +69,11 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleClearData = () => {
-    Alert.alert('', i18n.t('deleteAllData'), [
-      { text: i18n.t('cancel'), style: 'cancel' },
-      { text: i18n.t('delete'), style: 'destructive', onPress: async () => { await dataService.clearAllData(); toast.show(i18n.t('dataCleared'), 'success'); }},
-    ]);
+  const [showClearData, setShowClearData] = useState(false);
+  const handleClearDataConfirm = async () => {
+    await dataService.clearAllData();
+    setShowClearData(false);
+    toast.show(i18n.t('dataCleared'), 'success');
   };
   const handleRecalc = async () => {
     await dataService.recalculateBalances();
@@ -238,7 +240,7 @@ export default function SettingsScreen() {
               <Feather name="refresh-cw" size={18} color={colors.blue} style={{ marginEnd: 12 }} />
               <Text style={styles.optText}>{i18n.t('recalculate')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.optRow} onPress={handleClearData}>
+            <TouchableOpacity style={styles.optRow} onPress={() => setShowClearData(true)}>
               <Feather name="trash-2" size={18} color={colors.red} style={{ marginEnd: 12 }} />
               <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('clearData')}</Text>
             </TouchableOpacity>
@@ -265,6 +267,10 @@ export default function SettingsScreen() {
                 }}>
                   <Feather name="log-out" size={16} color={colors.red} />
                   <Text style={styles.logoutTxt}>{i18n.t('logout')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.deleteAccountBtn} onPress={() => setShowDeleteAccount(true)}>
+                  <Feather name="user-x" size={16} color={colors.red} />
+                  <Text style={styles.deleteAccountTxt}>{i18n.t('deleteAccount')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -298,6 +304,24 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
+
+      <ConfirmModal visible={showClearData}
+        title={i18n.t('clearData')} message={i18n.t('deleteAllData')}
+        confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
+        onConfirm={handleClearDataConfirm} onCancel={() => setShowClearData(false)}
+        icon="trash-2" />
+
+      <ConfirmModal visible={showDeleteAccount}
+        title={i18n.t('deleteAccount')} message={i18n.t('deleteAccountConfirm')}
+        confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
+        onConfirm={async () => {
+          await dataService.clearAllData();
+          await authService.logout();
+          setShowDeleteAccount(false);
+          toast.show(i18n.t('accountDeleted'), 'success');
+        }}
+        onCancel={() => setShowDeleteAccount(false)}
+        icon="user-x" />
     </View>
   );
 }
@@ -335,6 +359,8 @@ const createStyles = () => StyleSheet.create({
   userEmail: { color: colors.textDim, fontSize: 13, marginTop: 2 },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.redSoft },
   logoutTxt: { color: colors.red, fontSize: 14, fontWeight: '600' },
+  deleteAccountBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, marginTop: 8 },
+  deleteAccountTxt: { color: colors.red, fontSize: 13, fontWeight: '500' },
   loginBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   loginTxt: { color: colors.green, fontSize: 16, fontWeight: '700' },
 });
