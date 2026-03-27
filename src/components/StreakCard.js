@@ -9,7 +9,7 @@ import Card from './Card';
 
 function getStreakColor(streak) {
   if (streak >= 30) return colors.green;
-  if (streak >= 14) return colors.green;
+  if (streak >= 14) return colors.teal;
   if (streak >= 7) return colors.yellow;
   if (streak >= 3) return colors.orange;
   return colors.textDim;

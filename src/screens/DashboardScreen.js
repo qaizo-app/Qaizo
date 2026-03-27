@@ -215,7 +215,7 @@ export default function DashboardScreen() {
 
   // Предстоящие платежи (ближайшие 30 дней, активные)
   const today = new Date();
-  const in30 = new Date(today); in30.setDate(in30.getDate() + 60);
+  const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
   const upcoming = recurring
     .filter(r => r.isActive && r.nextDate)
     .filter(r => new Date(r.nextDate) <= in30)

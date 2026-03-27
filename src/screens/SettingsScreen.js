@@ -286,11 +286,9 @@ export default function SettingsScreen() {
               <TouchableOpacity style={styles.loginBtn} onPress={() => {
                 AsyncStorage.removeItem('qaizo_auth_skipped');
                 // Force app to re-check auth → show AuthScreen
-                // Simplest: reload
-                const { Updates } = require('expo');
-                Updates?.reloadAsync?.().catch(() => {
-                  Alert.alert('', i18n.t('restartApp'));
-                });
+                import('expo-updates').then(({ reloadAsync }) => {
+                  reloadAsync?.().catch(() => Alert.alert('', i18n.t('restartApp')));
+                }).catch(() => Alert.alert('', i18n.t('restartApp')));
               }}>
                 <Feather name="log-in" size={18} color={colors.green} />
                 <Text style={styles.loginTxt}>{i18n.t('loginOrRegister')}</Text>
