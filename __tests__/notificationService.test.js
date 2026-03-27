@@ -93,6 +93,12 @@ describe('notificationService', () => {
     expect(result).toBe(true);
     // Day-of + day-before = 2 notifications
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(2);
+
+    // Verify trigger format uses timeInterval type
+    const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
+    expect(call.trigger.type).toBe('timeInterval');
+    expect(call.trigger.seconds).toBeGreaterThan(0);
+    expect(call.trigger.channelId).toBe('payments');
   });
 
   test('scheduleRecurringNotifications skips inactive', async () => {
@@ -119,8 +125,9 @@ describe('notificationService', () => {
 
     const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
     expect(call.content.data.type).toBe('streak_reminder');
+    expect(call.trigger.type).toBe('daily');
     expect(call.trigger.hour).toBe(20);
-    expect(call.trigger.repeats).toBe(true);
+    expect(call.trigger.channelId).toBe('payments');
   });
 
   test('scheduleStreakReminder skips if already scheduled', async () => {

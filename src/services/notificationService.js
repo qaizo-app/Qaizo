@@ -1,5 +1,5 @@
 // src/services/notificationService.js
-// Локальные push-уведомления для рекуррентных платежей
+// Локальные уведомления (без remote push — не поддерживается в Expo Go SDK 53+)
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import i18n from '../i18n';
@@ -40,13 +40,18 @@ const notificationService = {
 
         // Уведомление в день платежа (9:00)
         if (nextDate > now) {
+          const secondsUntil = Math.floor((nextDate.getTime() - now.getTime()) / 1000);
           await Notifications.scheduleNotificationAsync({
             content: {
               title: i18n.t('recurringPayment'),
               body: `${rec.recipient || i18n.t(rec.categoryId)} — ${rec.type === 'expense' ? '-' : '+'}${sym()}${rec.amount}`,
               data: { recurringId: rec.id },
             },
-            trigger: { date: nextDate },
+            trigger: {
+              type: 'timeInterval',
+              seconds: secondsUntil,
+              channelId: 'payments',
+            },
           });
         }
 
@@ -56,13 +61,18 @@ const notificationService = {
         dayBefore.setHours(20, 0, 0, 0);
 
         if (dayBefore > now) {
+          const secondsUntil = Math.floor((dayBefore.getTime() - now.getTime()) / 1000);
           await Notifications.scheduleNotificationAsync({
             content: {
               title: i18n.t('upcomingPayment'),
               body: `${i18n.t('tomorrow')}: ${rec.recipient || i18n.t(rec.categoryId)} — ${sym()}${rec.amount}`,
               data: { recurringId: rec.id },
             },
-            trigger: { date: dayBefore },
+            trigger: {
+              type: 'timeInterval',
+              seconds: secondsUntil,
+              channelId: 'payments',
+            },
           });
         }
       }
@@ -74,7 +84,7 @@ const notificationService = {
     }
   },
 
-  // Уведомление для стрика (ежедневное в 20:00)
+  // Ежедневное напоминание внести транзакцию (20:00)
   async scheduleStreakReminder() {
     try {
       // Проверяем нет ли уже такого
@@ -89,9 +99,10 @@ const notificationService = {
           data: { type: 'streak_reminder' },
         },
         trigger: {
+          type: 'daily',
           hour: 20,
           minute: 0,
-          repeats: true,
+          channelId: 'payments',
         },
       });
     } catch (e) {
