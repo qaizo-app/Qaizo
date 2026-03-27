@@ -11,6 +11,7 @@ import TransactionItem from '../components/TransactionItem';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function AccountHistoryScreen({ route, navigation }) {
   const { account } = route.params;
@@ -20,6 +21,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [editTx, setEditTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const lang = i18n.getLanguage();
+
+  const styles = createStyles();
+
   const cfg = accountTypeConfig[account.type] || accountTypeConfig.bank;
 
   const loadData = async () => {
@@ -67,7 +71,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onDuplicate={handleDuplicate} />
       <View style={styles.balLine}>
         <Text style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]}>
-          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: {account.currency||'₪'} {item.runningBalance.toLocaleString()}
+          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: {account.currency||sym()} {item.runningBalance.toLocaleString()}
         </Text>
       </View>
     </View>
@@ -91,9 +95,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
       <View style={styles.balCard}>
         <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
         <Text style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]}>
-          {account.currency||'₪'} {currentBalance.toLocaleString()}
+          {account.currency||sym()} {currentBalance.toLocaleString()}
         </Text>
-        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: {account.currency||'₪'}{account.overdraft.toLocaleString()}</Text>}
+        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: {account.currency||sym()}{account.overdraft.toLocaleString()}</Text>}
       </View>
 
       <View style={styles.countRow}>
@@ -114,14 +118,14 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ₪${deleteTarget.amount}` : ''}
+        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${sym()}${deleteTarget.amount}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
   header:{flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:56,paddingBottom:16},
   backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',marginEnd:14,borderWidth:1,borderColor:colors.cardBorder},

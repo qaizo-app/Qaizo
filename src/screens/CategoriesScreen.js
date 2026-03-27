@@ -105,6 +105,7 @@ export default function CategoriesScreen() {
   const [editColor, setEditColor] = useState('#60a5fa');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const lang = i18n.getLanguage();
+  const styles = createStyles();
 
   const toggleGroup = (id) => setExpandedGroup(expandedGroup === id ? null : id);
   const getName = (nameObj) => {
@@ -224,7 +225,8 @@ export default function CategoriesScreen() {
       {/* Edit modal */}
       <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)}>
         {({ close }) => (
-          <View>
+          <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 20 }}>
             <Text style={styles.modalTitle}>
               {editItem ? i18n.t('edit') : i18n.t('add')}
               {editParent ? ` → ${getName(editParent.name)}` : ''}
@@ -233,7 +235,7 @@ export default function CategoriesScreen() {
             <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
             <TextInput style={styles.input} value={editName} onChangeText={setEditName}
               placeholder={i18n.t('categoryName')}
-              placeholderTextColor={colors.textMuted} autoFocus />
+              placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
             <View style={styles.iconGrid}>
@@ -266,7 +268,7 @@ export default function CategoriesScreen() {
                 <Text style={styles.saveText}> {i18n.t('save')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         )}
       </SwipeModal>
 
@@ -277,7 +279,7 @@ export default function CategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   title: { color: colors.text, fontSize: 22, fontWeight: '800', flex: 1, textAlign: 'center' },
@@ -307,7 +309,7 @@ const styles = StyleSheet.create({
   colorBtn: { width: 32, height: 32, borderRadius: 10, borderWidth: 2, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, borderWidth: 3 },
 
-  btnRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
+  btnRow: { flexDirection: 'row', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

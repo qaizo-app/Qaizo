@@ -8,16 +8,18 @@ import Card from '../components/Card';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 const SW = Dimensions.get('window').width;
 
 export default function MonthlyReportScreen() {
   const [transactions, setTransactions] = useState([]);
   const [monthOffset, setMonthOffset] = useState(0); // 0 = текущий, -1 = прошлый
-  const [, forceUpdate] = useState(0);
+
+  const st = createSt();
 
   useFocusEffect(useCallback(() => {
-    dataService.getTransactions().then(txs => { setTransactions(txs); forceUpdate(n => n + 1); });
+    dataService.getTransactions().then(txs => { setTransactions(txs); });
   }, []));
 
   const lang = i18n.getLanguage();
@@ -124,17 +126,17 @@ export default function MonthlyReportScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.green }]}>₪{totalIncome.toLocaleString()}</Text>
+              <Text style={[st.summaryAmount, { color: colors.green }]}>{sym()}{totalIncome.toLocaleString()}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.red }]}>₪{totalExpense.toLocaleString()}</Text>
+              <Text style={[st.summaryAmount, { color: colors.red }]}>{sym()}{totalExpense.toLocaleString()}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('balance')}</Text>
-              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>₪{balance.toLocaleString()}</Text>
+              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>{sym()}{balance.toLocaleString()}</Text>
             </View>
           </View>
         </Card>
@@ -149,7 +151,7 @@ export default function MonthlyReportScreen() {
             </View>
             <View style={st.statBox}>
               <Feather name="activity" size={16} color={colors.teal} />
-              <Text style={st.statValue}>₪{avgDaily.toLocaleString()}</Text>
+              <Text style={st.statValue}>{sym()}{avgDaily.toLocaleString()}</Text>
               <Text style={st.statLabel}>{i18n.t('avgPerDay')}</Text>
             </View>
             <View style={st.statBox}>
@@ -208,7 +210,7 @@ export default function MonthlyReportScreen() {
                     </View>
                     <View style={st.catRight}>
                       <Text style={st.catPct}>{pct}%</Text>
-                      <Text style={st.catAmount}>₪{amount.toLocaleString()}</Text>
+                      <Text style={st.catAmount}>{sym()}{amount.toLocaleString()}</Text>
                     </View>
                   </View>
                 );
@@ -231,7 +233,7 @@ export default function MonthlyReportScreen() {
                     <Feather name="user" size={14} color={colors.textMuted} style={{ marginEnd: 8 }} />
                     <Text style={st.catName}>{name}</Text>
                   </View>
-                  <Text style={st.catAmount}>₪{amount.toLocaleString()}</Text>
+                  <Text style={st.catAmount}>{sym()}{amount.toLocaleString()}</Text>
                 </View>
               ))}
             </Card>
@@ -253,7 +255,7 @@ export default function MonthlyReportScreen() {
                       <View style={[st.catDot, { backgroundColor: cfg.color }]} />
                       <Text style={st.catName}>{i18n.t(cat)}</Text>
                     </View>
-                    <Text style={[st.catAmount, { color: colors.green }]}>₪{amount.toLocaleString()}</Text>
+                    <Text style={[st.catAmount, { color: colors.green }]}>{sym()}{amount.toLocaleString()}</Text>
                   </View>
                 );
               })}
@@ -274,7 +276,7 @@ export default function MonthlyReportScreen() {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },

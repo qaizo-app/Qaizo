@@ -6,10 +6,12 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 import SwipeModal from './SwipeModal';
 
 export default function RecurringDetailModal({ visible, item, onClose, onConfirm, onSkip, onDelete, onEdit }) {
   const [history, setHistory] = useState([]);
+  const st = createSt();
 
   useEffect(() => {
     if (visible && item) {
@@ -78,7 +80,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Text style={st.subtitle}>{i18n.t(item.categoryId)}</Text>
             </View>
             <Text style={[st.amount, { color: item.type === 'expense' ? colors.red : colors.green }]}>
-              {item.type === 'expense' ? '-' : '+'}₪{item.amount.toLocaleString()}
+              {item.type === 'expense' ? '-' : '+'}{sym()}{item.amount.toLocaleString()}
             </Text>
           </View>
 
@@ -140,7 +142,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
                 <View key={tx.id || idx} style={[st.historyRow, idx < history.length - 1 && st.historyBorder]}>
                   <Text style={st.historyDate}>{formatDate(tx.date || tx.createdAt)}</Text>
                   <Text style={[st.historyAmount, { color: tx.type === 'expense' ? colors.red : colors.green }]}>
-                    {tx.type === 'expense' ? '-' : '+'}₪{tx.amount.toLocaleString()}
+                    {tx.type === 'expense' ? '-' : '+'}{sym()}{tx.amount.toLocaleString()}
                   </Text>
                 </View>
               ))}
@@ -169,7 +171,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   iconWrap: { width: 50, height: 50, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
   title: { color: colors.text, fontSize: 18, fontWeight: '700' },

@@ -6,9 +6,10 @@ import { Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInp
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { CURRENCIES as CURRENCY_LIST, sym } from '../utils/currency';
 
 const { width: SW } = Dimensions.get('window');
-const CURRENCIES = ['₪', '$', '€', '£'];
+const CURRENCY_SYMBOLS = CURRENCY_LIST.map(c => c.symbol);
 const ACCOUNT_TYPES = ['bank', 'credit', 'cash'];
 const EXPENSE_CATS = ['food', 'transport', 'fuel', 'health', 'phone', 'utilities', 'rent', 'restaurant', 'other'];
 
@@ -16,7 +17,7 @@ export default function SetupWizardScreen({ onDone }) {
   const [step, setStep] = useState(0); // 0=валюта, 1=счёт, 2=транзакция, 3=готово
 
   // Шаг 0: Валюта
-  const [currency, setCurrency] = useState('₪');
+  const [currency, setCurrency] = useState(sym());
 
   // Шаг 1: Счёт
   const [accName, setAccName] = useState('');
@@ -30,6 +31,7 @@ export default function SetupWizardScreen({ onDone }) {
 
   // Созданные объекты
   const [createdAccount, setCreatedAccount] = useState(null);
+  const st = createSt();
 
   const totalSteps = 4;
   const progress = ((step + 1) / totalSteps) * 100;
@@ -103,7 +105,7 @@ export default function SetupWizardScreen({ onDone }) {
             <Text style={st.stepSub}>{i18n.t('wizCurrencySub')}</Text>
 
             <View style={st.optionGrid}>
-              {CURRENCIES.map(c => (
+              {CURRENCY_SYMBOLS.map(c => (
                 <TouchableOpacity key={c}
                   style={[st.currBtn, currency === c && { borderColor: colors.blue, backgroundColor: 'rgba(96,165,250,0.1)' }]}
                   onPress={() => setCurrency(c)}>
@@ -249,7 +251,7 @@ export default function SetupWizardScreen({ onDone }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   progressRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, gap: 12 },
   progressBg: { flex: 1, height: 4, backgroundColor: colors.card, borderRadius: 2, overflow: 'hidden' },

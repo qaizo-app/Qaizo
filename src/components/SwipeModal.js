@@ -10,6 +10,7 @@ export default function SwipeModal({ visible, onClose, children }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const isClosing = useRef(false);
+  const styles = createStyles();
 
   useEffect(() => {
     if (visible) {
@@ -86,7 +87,7 @@ export default function SwipeModal({ visible, onClose, children }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   fullscreen: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '92%',
+    overflow: 'hidden',
   },
   swipeZone: {
     height: 36,

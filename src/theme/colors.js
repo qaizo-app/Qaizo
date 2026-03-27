@@ -1,7 +1,7 @@
 // src/theme/colors.js
-// Исправлены иконки — используем MaterialCommunityIcons для счетов
+// Мутируемый объект — applyTheme() меняет все свойства на месте
 
-export const colors = {
+const darkColors = {
   bg: '#0a0e1a',
   bg2: '#0f1424',
   card: '#151c2f',
@@ -34,7 +34,56 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.80)',
 };
 
-// Категории транзакций — Feather icons (все проверены)
+const lightColors = {
+  bg: '#f8fafc',
+  bg2: '#f1f5f9',
+  card: '#ffffff',
+  cardBorder: 'rgba(0, 0, 0, 0.08)',
+  cardHighlight: 'rgba(52, 211, 153, 0.06)',
+
+  green: '#059669',
+  greenDark: '#047857',
+  greenGlow: 'rgba(5, 150, 105, 0.12)',
+  greenSoft: 'rgba(5, 150, 105, 0.08)',
+  teal: '#0d9488',
+  emerald: '#059669',
+
+  red: '#e11d48',
+  redDark: '#be123c',
+  redSoft: 'rgba(225, 29, 72, 0.08)',
+  orange: '#ea580c',
+  yellow: '#d97706',
+  blue: '#2563eb',
+  blueSoft: 'rgba(37, 99, 235, 0.08)',
+
+  text: '#0f172a',
+  textSecondary: '#334155',
+  textDim: '#64748b',
+  textMuted: '#94a3b8',
+
+  white: '#ffffff',
+  black: '#000000',
+  divider: 'rgba(0, 0, 0, 0.06)',
+  overlay: 'rgba(0, 0, 0, 0.50)',
+};
+
+// Мутируемый объект — все экраны импортируют его
+export const colors = { ...darkColors };
+
+// Текущая тема
+let _currentTheme = 'dark';
+
+export function applyTheme(mode) {
+  _currentTheme = mode;
+  const palette = mode === 'light' ? lightColors : darkColors;
+  Object.assign(colors, palette);
+}
+
+export function getCurrentTheme() {
+  return _currentTheme;
+}
+
+// Категории транзакций — Feather icons (не зависят от темы)
 export const categoryConfig = {
   food:           { icon: 'shopping-cart', color: '#fb7185' },
   restaurant:     { icon: 'coffee',        color: '#f97316' },
@@ -64,7 +113,7 @@ export const categoryConfig = {
   transfer:       { icon: 'repeat',        color: '#60a5fa' },
 };
 
-// Типы счетов — MaterialCommunityIcons (все проверены, нет знаков вопроса)
+// Типы счетов — MaterialCommunityIcons
 export const accountTypeConfig = {
   bank:       { icon: 'bank-outline',          color: '#60a5fa' },
   credit:     { icon: 'credit-card-outline',   color: '#a78bfa' },

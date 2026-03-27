@@ -5,25 +5,34 @@ import { useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
 
-const DAYS_RU = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-const DAYS_HE = ['ב','ג','ד','ה','ו','ש','א'];
-const DAYS_EN = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+// Дни по индексу JS (0=Sun, 1=Mon, ... 6=Sat)
+const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const DAYS_HE = ['א','ב','ג','ד','ה','ו','ש'];
+const DAYS_EN = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-export default function DatePickerModal({ visible, onClose, onSelect, selectedDate, lang = 'ru' }) {
+export default function DatePickerModal({ visible, onClose, onSelect, selectedDate, lang = 'ru', weekStart = 'monday' }) {
   const today = new Date();
   const sel = selectedDate ? new Date(selectedDate) : today;
   const [viewYear, setViewYear] = useState(sel.getFullYear());
   const [viewMonth, setViewMonth] = useState(sel.getMonth());
+  const styles = createStyles();
 
   const months = lang === 'ru' ? MONTHS_RU : lang === 'he' ? MONTHS_HE : MONTHS_EN;
-  const days = lang === 'ru' ? DAYS_RU : lang === 'he' ? DAYS_HE : DAYS_EN;
+  const allDays = lang === 'ru' ? DAYS_RU : lang === 'he' ? DAYS_HE : DAYS_EN;
+
+  // Начало недели: sunday=0, monday=1, saturday=6
+  const wsMap = { sunday: 0, monday: 1, saturday: 6 };
+  const wsIdx = wsMap[weekStart] ?? 1;
+
+  // Переупорядочить дни от wsIdx
+  const days = [];
+  for (let i = 0; i < 7; i++) days.push(allDays[(wsIdx + i) % 7]);
 
   const firstDay = new Date(viewYear, viewMonth, 1);
-  let startDay = firstDay.getDay() - 1;
-  if (startDay < 0) startDay = 6;
+  let startDay = (firstDay.getDay() - wsIdx + 7) % 7;
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
   const cells = [];
@@ -124,7 +133,7 @@ export default function DatePickerModal({ visible, onClose, onSelect, selectedDa
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
   modal: { backgroundColor: colors.bg2, borderRadius: 24, padding: 20, width: '100%', borderWidth: 1, borderColor: colors.cardBorder },
 

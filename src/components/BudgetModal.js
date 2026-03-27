@@ -3,15 +3,17 @@
 
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, KeyboardAvoidingView, Modal, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Modal, PanResponder, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function BudgetModal({ visible, categoryId, currentLimit, spent, onSave, onDelete, onClose }) {
   const [value, setValue] = useState('');
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const inputRef = useRef(null);
+  const st = createSt();
 
   useEffect(() => {
     if (visible) {
@@ -29,6 +31,19 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
       ]).start();
     }
   }, [visible]);
+
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, g) => g.dy > 5,
+    onPanResponderMove: (_, g) => { if (g.dy > 0) slideAnim.setValue(g.dy); },
+    onPanResponderRelease: (_, g) => {
+      if (g.dy > 60 || g.vy > 0.3) {
+        Animated.timing(slideAnim, { toValue: 300, duration: 150, useNativeDriver: true }).start(() => onClose());
+      } else {
+        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }).start();
+      }
+    },
+  })).current;
 
   const cfg = categoryConfig[categoryId] || categoryConfig.other;
   const catName = i18n.t(categoryId) || categoryId;
@@ -54,8 +69,9 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
         <Animated.View style={[st.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <Animated.View style={[st.sheet, { transform: [{ translateY: slideAnim }] }]}>
-
-              {/* Заголовок с иконкой категории */}
+              <View {...panResponder.panHandlers} style={st.handleZone}>
+                <View style={st.handle} />
+              </View>
               <View style={st.header}>
                 <View style={[st.iconWrap, { backgroundColor: cfg.color + '20' }]}>
                   <Feather name={cfg.icon} size={20} color={cfg.color} />
@@ -63,15 +79,15 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
                 <View style={{ flex: 1 }}>
                   <Text style={st.title}>{catName}</Text>
                   <Text style={st.spentLabel}>
-                    {i18n.t('spent')}: ₪{(spent || 0).toLocaleString()}
-                    {currentLimit > 0 ? ` / ₪${currentLimit.toLocaleString()} (${pct}%)` : ''}
+                    {i18n.t('spent')}: {sym()}{(spent || 0).toLocaleString()}
+                    {currentLimit > 0 ? ` / ${sym()}${currentLimit.toLocaleString()} (${pct}%)` : ''}
                   </Text>
                 </View>
               </View>
 
               {/* Поле ввода */}
               <View style={st.inputRow}>
-                <Text style={st.currency}>₪</Text>
+                <Text style={st.currency}>{sym()}</Text>
                 <TextInput
                   ref={inputRef}
                   style={st.input}
@@ -112,9 +128,11 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40 },
+  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.textMuted, opacity: 0.5, alignSelf: 'center' },
+  handleZone: { height: 28, justifyContent: 'center', marginBottom: 8 },
 
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   iconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },

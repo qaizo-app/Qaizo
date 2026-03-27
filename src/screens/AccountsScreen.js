@@ -9,6 +9,7 @@ import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
+import { CURRENCIES, sym } from '../utils/currency';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -18,14 +19,8 @@ const ACCOUNT_TYPES = [
   { id:'bank' },{ id:'credit' },{ id:'cash' },{ id:'mortgage' },
   { id:'loan' },{ id:'investment' },{ id:'debt' },
 ];
-const CURRENCIES = ['₪','$','€','£','CZK'];
-const typeLabel = (id, lang) => {
-  const l = { bank:{ru:'Банк',he:'בנק',en:'Bank'}, credit:{ru:'Кредитка',he:'כרטיס אשראי',en:'Credit Card'},
-    cash:{ru:'Наличные',he:'מזומן',en:'Cash'}, mortgage:{ru:'Ипотека',he:'משכנתא',en:'Mortgage'},
-    loan:{ru:'Ссуда',he:'הלוואה',en:'Loan'}, investment:{ru:'Инвестиции',he:'השקעות',en:'Investment'},
-    debt:{ru:'Долг',he:'חוב',en:'Debt'}, crypto:{ru:'Крипто',he:'קריפטו',en:'Crypto'} };
-  return l[id]?.[lang] || l[id]?.en || id;
-};
+const CURRENCY_SYMBOLS = CURRENCIES.map(c => c.symbol);
+const typeLabel = (id) => i18n.t(id);
 
 // Порядок групп: самые ходовые сверху
 const GROUP_ORDER = ['cash','bank','credit','investment','loan','mortgage','debt'];
@@ -38,15 +33,14 @@ export default function AccountsScreen() {
   const [name, setName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [type, setType] = useState('bank');
-  const [currency, setCurrency] = useState('₪');
+  const [currency, setCurrency] = useState(sym());
   const [balance, setBalance] = useState('0');
   const [overdraft, setOverdraft] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [, forceUpdate] = useState(0);
-  const lang = i18n.getLanguage();
+  const styles = createStyles();
 
-  const loadData = async () => { setAccounts(await dataService.getAccounts()); forceUpdate(n=>n+1); };
+  const loadData = async () => { setAccounts(await dataService.getAccounts()); };
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
   const active = accounts.filter(a => a.isActive !== false);
@@ -70,12 +64,12 @@ export default function AccountsScreen() {
   const openHistory = (acc) => navigation.navigate('AccountHistory', { account: acc });
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber||'');
-    setType(acc.type||'bank'); setCurrency(acc.currency||'₪'); setBalance(String(acc.balance||0));
+    setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(String(acc.balance||0));
     setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setIsActive(acc.isActive!==false); setShowEdit(true);
   };
   const openAdd = () => {
     setEditAccount(null); setName(''); setAccountNumber(''); setType('bank');
-    setCurrency('₪'); setBalance('0'); setOverdraft(''); setIsActive(true); setShowEdit(true);
+    setCurrency(sym()); setBalance('0'); setOverdraft(''); setIsActive(true); setShowEdit(true);
   };
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -102,7 +96,7 @@ export default function AccountsScreen() {
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
         <Text style={[styles.tileBalance, { color: bal >= 0 ? colors.text : colors.red }]}>
-          {acc.currency||'₪'}{bal.toLocaleString()}
+          {acc.currency||sym()}{bal.toLocaleString()}
         </Text>
       </TouchableOpacity>
     );
@@ -122,7 +116,7 @@ export default function AccountsScreen() {
         {/* Total */}
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
-          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>₪ {totalBalance.toLocaleString()}</Text>
+          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>{sym()} {totalBalance.toLocaleString()}</Text>
         </View>
 
         {/* Hint */}
@@ -137,8 +131,8 @@ export default function AccountsScreen() {
             <View key={typeId}>
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ marginEnd: 6 }} />
-                <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId, lang)}</Text>
-                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>₪{sum.toLocaleString()}</Text>
+                <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>{sym()}{sum.toLocaleString()}</Text>
               </View>
               <View style={styles.tilesRow}>
                 {accs.map(renderTile)}
@@ -150,7 +144,7 @@ export default function AccountsScreen() {
         {/* Crypto */}
         <View style={styles.groupHeader}>
           <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" style={{ marginEnd: 6 }} />
-          <Text style={[styles.groupTitle, { color: '#f59e0b' }]}>{typeLabel('crypto', lang)}</Text>
+          <Text style={[styles.groupTitle, { color: '#f59e0b' }]}>{typeLabel('crypto')}</Text>
           <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
         </View>
         <View style={styles.tilesRow}>
@@ -173,7 +167,7 @@ export default function AccountsScreen() {
                 <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35, borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{acc.currency||'₪'}{(acc.balance||0).toLocaleString()}</Text>
+                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{acc.currency||sym()}{(acc.balance||0).toLocaleString()}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -194,7 +188,7 @@ export default function AccountsScreen() {
                 return (
                   <TouchableOpacity key={t.id} style={[styles.typeChip, type===t.id && {borderColor:cfg.color, backgroundColor:`${cfg.color}12`}]} onPress={()=>setType(t.id)}>
                     <MaterialCommunityIcons name={cfg.icon} size={16} color={type===t.id?cfg.color:colors.textMuted} />
-                    <Text style={[styles.typeChipText, type===t.id&&{color:cfg.color}]}>{typeLabel(t.id,lang)}</Text>
+                    <Text style={[styles.typeChipText, type===t.id&&{color:cfg.color}]}>{typeLabel(t.id)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -208,7 +202,7 @@ export default function AccountsScreen() {
 
             <Text style={styles.fieldLabel}>{i18n.t('currency')}</Text>
             <View style={styles.currRow}>
-              {CURRENCIES.map(c => (
+              {CURRENCY_SYMBOLS.map(c => (
                 <TouchableOpacity key={c} style={[styles.currBtn, currency===c&&{borderColor:tc,backgroundColor:`${tc}12`}]} onPress={()=>setCurrency(c)}>
                   <Text style={[styles.currText, currency===c&&{color:tc}]}>{c}</Text>
                 </TouchableOpacity>
@@ -250,7 +244,7 @@ export default function AccountsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
   header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:12},
   title:{color:colors.text,fontSize:24,fontWeight:'800'},

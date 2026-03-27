@@ -6,10 +6,11 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 import SwipeModal from './SwipeModal';
 
-const EXP = ['food','restaurant','transport','fuel','health','phone','utilities','clothing','household','kids','entertainment','education','cosmetics','electronics','insurance','rent','arnona','vaad','other'];
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
+const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','other_income','transfer'].includes(k));
 const INTERVALS = [1, 2, 3, 6, 12];
 
 export default function AddRecurringModal({ visible, onClose, onSave, editItem }) {
@@ -26,6 +27,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [totalCount, setTotalCount] = useState('12');
   const [endDate, setEndDate] = useState('');
   const isEdit = !!editItem;
+  const st = createSt();
 
   useEffect(() => {
     if (visible) {
@@ -78,7 +80,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       icon: categoryConfig[categoryId]?.icon || 'repeat',
       recipient: recipient.trim(),
       note: note.trim(),
-      currency: '₪',
+      currency: sym(),
       account: selAcc,
       intervalMonths,
       nextDate,
@@ -129,7 +131,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Сумма */}
           <View style={st.amtRow}>
-            <Text style={[st.cur, { color: tc }]}>₪</Text>
+            <Text style={[st.cur, { color: tc }]}>{sym()}</Text>
             <TextInput style={st.amtIn} value={amount} onChangeText={setAmount}
               placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
           </View>
@@ -237,7 +239,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
   typeRow: { flexDirection: 'row', marginBottom: 16, backgroundColor: colors.card, borderRadius: 14, padding: 4 },
   typeBtn: { flex: 1, paddingVertical: 12, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },

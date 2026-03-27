@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { colors } from '../theme/colors';
  
 export default function Card({ children, style, highlighted }) {
+  const styles = createStyles();
   return (
     <View style={[
       styles.card,
@@ -14,7 +15,7 @@ export default function Card({ children, style, highlighted }) {
   );
 }
  
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: 20,

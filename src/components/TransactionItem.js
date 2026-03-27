@@ -6,13 +6,16 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 import CategoryIcon from './CategoryIcon';
 
 export default function TransactionItem({ transaction, onDelete, onEdit, onDuplicate }) {
   const swipeRef = useRef(null);
+  const styles = createStyles();
+  const isTransfer = !!transaction.isTransfer;
   const isIncome = transaction.type === 'income';
-  const sign = isIncome ? '+' : '-';
-  const amountColor = isIncome ? colors.green : colors.red;
+  const sign = isTransfer ? '' : isIncome ? '+' : '-';
+  const amountColor = isTransfer ? colors.blue : isIncome ? colors.green : colors.red;
 
   const closeSwipe = () => swipeRef.current?.close();
 
@@ -56,7 +59,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
         </View>
         <View style={styles.amountContainer}>
           <Text style={[styles.amount, { color: amountColor }]}>
-            {sign}{Math.abs(transaction.amount).toLocaleString()} ₪
+            {sign}{Math.abs(transaction.amount).toLocaleString()} {sym()}
           </Text>
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
         </View>
@@ -76,7 +79,7 @@ function formatDate(dateStr) {
   return `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 14, paddingHorizontal: 4,

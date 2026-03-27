@@ -6,12 +6,12 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
 
-const EXP = ['food','restaurant','transport','fuel','health','phone','utilities','clothing','household','kids','entertainment','education','cosmetics','electronics','insurance','rent','arnona','vaad','other'];
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
-const TAGS = ['👤 Alex','👩 Alexandra','👦 Sean','👧 Nicole','👨‍👩‍👧‍👦 Family'];
+const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','other_income','transfer'].includes(k));
 
 export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount }) {
   const [type, setType] = useState('expense');
@@ -26,13 +26,19 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [selAcc, setSelAcc] = useState('');
   const [toAcc, setToAcc] = useState('');
   const [showMore, setShowMore] = useState(false);
+  const [userTags, setUserTags] = useState([]);
+  const [newTagText, setNewTagText] = useState('');
+  const [weekStart, setWeekStart] = useState('monday');
   const isEdit = !!editTransaction;
   const lang = i18n.getLanguage();
   const hasPre = !!preselectedAccount;
+  const st = createSt();
 
   useEffect(() => {
     if (visible) {
-      Promise.all([dataService.getAccounts(), dataService.getTransactions()]).then(([accs, txs]) => {
+      dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
+      Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags()]).then(([accs, txs, savedTags]) => {
+        setUserTags(savedTags);
         const usage = {};
         txs.forEach(tx => { usage[tx.account] = (usage[tx.account]||0)+1; });
         let sorted = [...accs].filter(a => a.isActive !== false).sort((a, b) => (usage[b.id]||0) - (usage[a.id]||0));
@@ -76,10 +82,11 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       if (selAcc === toAcc) return;
       const fn = accounts.find(a => a.id === selAcc)?.name || '';
       const tn = accounts.find(a => a.id === toAcc)?.name || '';
-      await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: '₪', date: txDate, account: selAcc, isTransfer: true, tags });
-      await dataService.addTransaction({ type: 'income', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: '₪', date: txDate, account: toAcc, isTransfer: true, tags });
+      const transferPairId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags });
+      await dataService.addTransaction({ type: 'income', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags });
     } else {
-      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, icon: categoryConfig[categoryId]?.icon || 'circle', recipient, note, currency: '₪', date: txDate, account: selAcc, tags });
+      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, icon: categoryConfig[categoryId]?.icon || 'circle', recipient, note, currency: sym(), date: txDate, account: selAcc, tags });
     }
     onSave?.(); onClose?.();
   };
@@ -114,7 +121,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             </View>
 
             <View style={st.amtRow}>
-              <Text style={[st.cur, { color: tc }]}>₪</Text>
+              <Text style={[st.cur, { color: tc }]}>{sym()}</Text>
               <TextInput style={st.amtIn} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
               <TouchableOpacity style={st.dateBtn} onPress={() => setShowCal(true)}>
                 <Feather name="calendar" size={14} color={colors.green} />
@@ -183,10 +190,51 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 <>
                   <Text style={st.label}>{i18n.t('tags')}</Text>
                   <View style={st.tagsRow}>
-                    {TAGS.map(tag => { const sl = tags.includes(tag); return (
-                      <TouchableOpacity key={tag} style={[st.tagChip, sl && { borderColor: colors.green, backgroundColor: colors.greenSoft }]} onPress={() => togTag(tag)}>
-                        <Text style={[st.tagTxt, sl && { color: colors.green }]}>{tag}</Text>
+                    {userTags.map((tag, idx) => {
+                      const tagColors = ['#34d399','#60a5fa','#fb923c','#a78bfa','#f472b6','#fbbf24','#2dd4bf','#f87171'];
+                      const tc = tagColors[idx % tagColors.length];
+                      const sl = tags.includes(tag);
+                      return (
+                      <TouchableOpacity key={tag} style={[st.tagChip, sl && { borderColor: tc, backgroundColor: `${tc}15` }]}
+                        onPress={() => togTag(tag)}
+                        onLongPress={() => {
+                          dataService.deleteTag(tag);
+                          setUserTags(prev => prev.filter(t => t !== tag));
+                          setTags(prev => prev.filter(t => t !== tag));
+                        }}>
+                        <Text style={[st.tagTxt, sl && { color: tc }]}>{tag}</Text>
                       </TouchableOpacity>); })}
+                    {/* Добавить новый тег */}
+                    <View style={st.newTagWrap}>
+                      <TextInput
+                        style={st.newTagInput}
+                        value={newTagText}
+                        onChangeText={setNewTagText}
+                        placeholder={i18n.t('newTag')}
+                        placeholderTextColor={colors.textMuted}
+                        returnKeyType="done"
+                        onSubmitEditing={() => {
+                          const t = newTagText.trim();
+                          if (t && !userTags.includes(t)) {
+                            dataService.addTag(t);
+                            setUserTags(prev => [...prev, t]);
+                            setTags(prev => [...prev, t]);
+                          }
+                          setNewTagText('');
+                        }}
+                      />
+                      <TouchableOpacity style={st.newTagBtn} onPress={() => {
+                        const t = newTagText.trim();
+                        if (t && !userTags.includes(t)) {
+                          dataService.addTag(t);
+                          setUserTags(prev => [...prev, t]);
+                          setTags(prev => [...prev, t]);
+                        }
+                        setNewTagText('');
+                      }}>
+                        <Feather name="plus" size={16} color={colors.green} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                   <TextInput style={[st.input, { height: 60, textAlignVertical: 'top' }]} value={note} onChangeText={setNote}
                     placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} multiline />
@@ -207,12 +255,12 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           </View>
         )}
       </SwipeModal>
-      <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} />
+      <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
     </>
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
   typeRow: { flexDirection: 'row', marginBottom: 20, backgroundColor: colors.card, borderRadius: 14, padding: 4 },
   typeBtn: { flex: 1, flexDirection: 'row', paddingVertical: 12, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
@@ -235,6 +283,9 @@ const st = StyleSheet.create({
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   tagChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent' },
   tagTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
+  newTagWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder, paddingStart: 10 },
+  newTagInput: { color: colors.text, fontSize: 13, paddingVertical: 8, minWidth: 80, maxWidth: 120 },
+  newTagBtn: { paddingHorizontal: 10, paddingVertical: 8 },
   btnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelBtn: { flex: 1, paddingVertical: 18, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },

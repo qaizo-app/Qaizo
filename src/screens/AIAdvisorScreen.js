@@ -3,15 +3,20 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Card from '../components/Card';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function AIAdvisorScreen() {
+  const styles = createStyles();
+  const s = sym();
   const tips = [
-    { icon: '🛒', title: 'Shopping', text: 'Based on your purchase patterns, you could save ~₪200/month by switching from Shufersal to Rami Levy for basic products.' },
-    { icon: '📱', title: 'Cellular', text: 'Your Golan Telecom plan at ₪29/month is already competitive. No action needed.' },
-    { icon: '🏦', title: 'Bank fees', text: 'You paid ₪833/month in bank commissions last year. Consider switching to a digital bank like One Zero for lower fees.' },
-    { icon: '⚡', title: 'Electricity', text: 'Your average electricity bill is ₪554/month. Consider a solar panel installation — payback in ~4 years.' },
-    { icon: '🛡️', title: 'Insurance', text: 'Review your car insurance — comparing 3+ providers could save you ₪1,000-3,000/year.' },
+    { icon: '🛒', titleKey: 'aiTip1Title', textKey: 'aiTip1Text' },
+    { icon: '📱', titleKey: 'aiTip2Title', textKey: 'aiTip2Text' },
+    { icon: '🏦', titleKey: 'aiTip3Title', textKey: 'aiTip3Text' },
+    { icon: '⚡', titleKey: 'aiTip4Title', textKey: 'aiTip4Text' },
+    { icon: '🛡️', titleKey: 'aiTip5Title', textKey: 'aiTip5Text' },
   ];
+
+  const fmt = (key) => i18n.t(key).replace(/\{sym\}/g, s);
 
   return (
     <View style={styles.container}>
@@ -32,19 +37,19 @@ export default function AIAdvisorScreen() {
           <Card key={idx} style={{ marginHorizontal: 20 }}>
             <View style={styles.tipHeader}>
               <Text style={styles.tipIcon}>{tip.icon}</Text>
-              <Text style={styles.tipTitle}>{tip.title}</Text>
+              <Text style={styles.tipTitle}>{i18n.t(tip.titleKey)}</Text>
             </View>
-            <Text style={styles.tipText}>{tip.text}</Text>
+            <Text style={styles.tipText}>{fmt(tip.textKey)}</Text>
           </Card>
         ))}
 
         <Card style={{ marginHorizontal: 20, marginTop: 8 }}>
-          <Text style={styles.comingTitle}>🚀 Coming Soon</Text>
+          <Text style={styles.comingTitle}>🚀 {i18n.t('aiComingSoon')}</Text>
           <Text style={styles.comingText}>
-            • Receipt scanning with price comparison{'\n'}
-            • Smart shopping list auto-generation{'\n'}
-            • Personalized savings plan{'\n'}
-            • Insurance and pension optimization
+            • {i18n.t('aiFeature1')}{'\n'}
+            • {i18n.t('aiFeature2')}{'\n'}
+            • {i18n.t('aiFeature3')}{'\n'}
+            • {i18n.t('aiFeature4')}
           </Text>
         </Card>
       </ScrollView>
@@ -52,7 +57,7 @@ export default function AIAdvisorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },

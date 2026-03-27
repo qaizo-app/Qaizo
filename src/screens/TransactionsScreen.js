@@ -11,6 +11,7 @@ import TransactionItem from '../components/TransactionItem';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function TransactionsScreen() {
   const [transactions, setTransactions] = useState([]);
@@ -20,12 +21,11 @@ export default function TransactionsScreen() {
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [, forceUpdate] = useState(0);
+  const styles = createStyles();
 
   const loadData = async () => {
     const txs = await dataService.getTransactions();
     setTransactions(txs);
-    forceUpdate(n => n + 1);
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
@@ -129,7 +129,7 @@ export default function TransactionsScreen() {
       {filtered.length > 0 && (
         <View style={styles.summary}>
           <Text style={[styles.summaryAmount, { color: totalFiltered >= 0 ? colors.green : colors.red }]}>
-            ₪ {totalFiltered.toLocaleString()}
+            {sym()} {totalFiltered.toLocaleString()}
           </Text>
           {!showSearch && (
             <Text style={styles.hint}>
@@ -182,7 +182,7 @@ export default function TransactionsScreen() {
       <ConfirmModal
         visible={!!deleteTarget}
         title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ₪${deleteTarget.amount}` : ''}
+        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${sym()}${deleteTarget.amount}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)}
       />
@@ -190,7 +190,7 @@ export default function TransactionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },

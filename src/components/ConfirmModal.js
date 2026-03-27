@@ -9,6 +9,7 @@ export default function ConfirmModal({
   confirmText = 'Delete', cancelText = 'Cancel',
   confirmColor = colors.red, icon = 'trash-2',
 }) {
+  const styles = createStyles();
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
@@ -37,7 +38,7 @@ export default function ConfirmModal({
   );
 }
  
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   overlay: {
     flex: 1, backgroundColor: colors.overlay,
     justifyContent: 'center', alignItems: 'center', padding: 40,

@@ -31,14 +31,14 @@ const SLIDES = [
     features: ['onb3f1', 'onb3f2', 'onb3f3'],
   },
   {
-    icon: 'camera',
+    icon: 'file-text',
     color: '#fb923c',
     titleKey: 'onb4Title',
     subKey: 'onb4Sub',
     features: ['onb4f1', 'onb4f2', 'onb4f3'],
   },
   {
-    icon: 'users',
+    icon: 'zap',
     color: '#f472b6',
     titleKey: 'onb5Title',
     subKey: 'onb5Sub',
@@ -64,6 +64,7 @@ export default function OnboardingScreen({ onDone }) {
     }
   });
   const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 });
+  const st = createSt();
 
   const isLast = currentIndex === SLIDES.length - 1;
 
@@ -157,7 +158,7 @@ export default function OnboardingScreen({ onDone }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   logoRow: { paddingTop: 60, alignItems: 'center', marginBottom: 8 },
   logo: { color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1 },

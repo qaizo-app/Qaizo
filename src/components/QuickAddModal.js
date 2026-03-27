@@ -2,18 +2,34 @@
 // Быстрый ввод: категория выбрана, вводим сумму + выбираем счёт
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, KeyboardAvoidingView, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Modal, PanResponder, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function QuickAddModal({ visible, template, onClose, onSaved }) {
+  // ВСЕ хуки — в самом верху, до любых условий
   const [amount, setAmount] = useState('');
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const inputRef = useRef(null);
+  const st = createSt();
+
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, g) => g.dy > 5,
+    onPanResponderMove: (_, g) => { if (g.dy > 0) slideAnim.setValue(g.dy); },
+    onPanResponderRelease: (_, g) => {
+      if (g.dy > 60 || g.vy > 0.3) {
+        Animated.timing(slideAnim, { toValue: 300, duration: 150, useNativeDriver: true }).start(() => onClose());
+      } else {
+        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }).start();
+      }
+    },
+  })).current;
 
   useEffect(() => {
     if (visible) {
@@ -37,6 +53,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
     }
   }, [visible]);
 
+  // Early return ПОСЛЕ всех хуков
   if (!template) return null;
 
   const cfg = categoryConfig[template.categoryId] || categoryConfig.other;
@@ -53,7 +70,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
       icon: cfg.icon,
       recipient: template.recipient || '',
       note: '',
-      currency: '₪',
+      currency: sym(),
       date: new Date().toISOString(),
       account: selAcc,
       tags: [],
@@ -65,11 +82,14 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
         <Animated.View style={[st.overlay, { opacity: fadeAnim }]}>
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <TouchableWithoutFeedback onPress={() => {}}>
             <Animated.View style={[st.sheet, { transform: [{ translateY: slideAnim }] }]}>
+              <View {...panResponder.panHandlers} style={st.handleZone}>
+                <View style={st.handle} />
+              </View>
               <View style={st.header}>
                 <View style={[st.iconWrap, { backgroundColor: cfg.color + '20' }]}>
                   <Feather name={cfg.icon} size={22} color={cfg.color} />
@@ -79,7 +99,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
               {/* Сумма */}
               <View style={st.inputRow}>
-                <Text style={[st.currency, { color: cfg.color }]}>₪</Text>
+                <Text style={[st.currency, { color: cfg.color }]}>{sym()}</Text>
                 <TextInput
                   ref={inputRef}
                   style={st.input}
@@ -95,15 +115,15 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
               {/* Выбор счёта */}
               <Text style={st.label}>{i18n.t('payFrom')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }} keyboardShouldPersistTaps="always">
                 {accounts.map(acc => {
                   const sel = selAcc === acc.id;
                   const accCfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
                   return (
                     <TouchableOpacity key={acc.id}
-                      style={[st.accChip, sel && { borderColor: cfg.color, backgroundColor: `${cfg.color}10` }]}
-                      onPress={() => setSelAcc(acc.id)}>
-                      <MaterialCommunityIcons name={getAccIcon(acc.type)} size={14} color={sel ? cfg.color : colors.textMuted} />
+                      style={[st.accChip, sel && { borderColor: accCfg.color, backgroundColor: `${accCfg.color}10` }]}
+                      onPress={() => { setSelAcc(acc.id); inputRef.current?.focus(); }}>
+                      <MaterialCommunityIcons name={getAccIcon(acc.type)} size={14} color={sel ? accCfg.color : colors.textMuted} />
                       <Text style={[st.accTxt, sel && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
                     </TouchableOpacity>
                   );
@@ -133,9 +153,11 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40 },
+  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.textMuted, opacity: 0.5, alignSelf: 'center' },
+  handleZone: { height: 28, justifyContent: 'center', marginBottom: 8 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   iconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
   title: { color: colors.text, fontSize: 18, fontWeight: '700' },

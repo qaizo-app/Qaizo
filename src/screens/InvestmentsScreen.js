@@ -6,9 +6,12 @@ import Card from '../components/Card';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function InvestmentsScreen() {
   const [investments, setInvestments] = useState([]);
+
+  const styles = createStyles();
 
   useFocusEffect(useCallback(() => {
     const load = async () => {
@@ -30,10 +33,10 @@ export default function InvestmentsScreen() {
 
         <Card style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalInvested')}</Text>
-          <Text style={styles.totalAmount}>₪ {totalInvested.toLocaleString()}</Text>
+          <Text style={styles.totalAmount}>{sym()} {totalInvested.toLocaleString()}</Text>
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>{i18n.t('monthlyContribution')}</Text>
-            <Text style={styles.monthlyAmount}>₪ {totalMonthly.toLocaleString()}</Text>
+            <Text style={styles.monthlyAmount}>{sym()} {totalMonthly.toLocaleString()}</Text>
           </View>
         </Card>
 
@@ -68,7 +71,7 @@ export default function InvestmentsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },

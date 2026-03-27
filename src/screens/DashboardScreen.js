@@ -12,10 +12,15 @@ import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import QuickAddModal from '../components/QuickAddModal';
 import RecurringDetailModal from '../components/RecurringDetailModal';
+import StreakCard from '../components/StreakCard';
 import TransactionItem from '../components/TransactionItem';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
+import streakService from '../services/streakService';
+import { useToast } from '../components/ToastProvider';
+import notificationService from '../services/notificationService';
 import { categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 const SW = Dimensions.get('window').width;
 
@@ -33,18 +38,31 @@ export default function DashboardScreen() {
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [recDetail, setRecDetail] = useState(null);
   const [quickTemplate, setQuickTemplate] = useState(null);
-  const [, forceUpdate] = useState(0);
+  const [showQuickSelect, setShowQuickSelect] = useState(false);
+  const [streakData, setStreakData] = useState(null);
+  const [newMilestone, setNewMilestone] = useState(null);
+  const [weekStart, setWeekStart] = useState('monday');
+  const toast = useToast();
+
+  const st = createSt();
 
   const loadData = async () => {
-    const [txs, bdg, rec] = await Promise.all([
+    const [txs, bdg, rec, settings] = await Promise.all([
       dataService.getTransactions(),
       dataService.getBudgets(),
       dataService.getRecurring(),
+      dataService.getSettings(),
     ]);
+    if (settings.weekStart) setWeekStart(settings.weekStart);
     setTransactions(txs);
     setBudgets(bdg);
     setRecurring(rec);
-    forceUpdate(n => n + 1);
+
+    // Обновляем стрики
+    const result = await streakService.updateStreaks(txs);
+    setStreakData(result.streakData);
+    if (result.newMilestone) setNewMilestone(result.newMilestone);
+
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
@@ -135,18 +153,43 @@ export default function DashboardScreen() {
 
   // HANDLERS
   const handleDelete = async () => {
-    if (deleteTarget) { await dataService.deleteTransaction(deleteTarget.id); setDeleteTarget(null); await loadData(); }
+    if (deleteTarget) {
+      const ok = await dataService.deleteTransaction(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadData();
+      toast.show(ok ? i18n.t('deleted') : i18n.t('errorOccurred'), ok ? 'success' : 'error');
+    }
   };
   const handleDuplicate = async (tx) => {
-    await dataService.addTransaction({ ...tx, id: undefined, createdAt: undefined, date: new Date().toISOString(), note: tx.note ? `${tx.note} (copy)` : '(copy)' });
+    const res = await dataService.addTransaction({ ...tx, id: undefined, createdAt: undefined, date: new Date().toISOString(), note: tx.note ? `${tx.note} (copy)` : '(copy)' });
     await loadData();
+    toast.show(res ? i18n.t('duplicated') : i18n.t('errorOccurred'), res ? 'success' : 'error');
   };
   const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
-  const handleBudgetSave = async (categoryId, limit) => { await dataService.setBudget(categoryId, limit); await loadData(); };
+  const handleBudgetSave = async (categoryId, limit) => {
+    await dataService.setBudget(categoryId, limit);
+    await loadData();
+    toast.show(i18n.t('saved'), 'success');
+  };
   const handleBudgetDelete = async (categoryId) => { await dataService.deleteBudget(categoryId); await loadData(); };
-  const handleConfirmRecurring = async (id) => { await dataService.confirmRecurring(id); await loadData(); };
-  const handleSkipRecurring = async (id) => { await dataService.skipRecurring(id); await loadData(); };
-  const handleDeleteRecurring = async (id) => { await dataService.deleteRecurring(id); await loadData(); };
+  const handleConfirmRecurring = async (id) => {
+    await dataService.confirmRecurring(id);
+    await loadData();
+    notificationService.scheduleRecurringNotifications();
+    toast.show(i18n.t('paymentConfirmed'), 'success');
+  };
+  const handleSkipRecurring = async (id) => {
+    await dataService.skipRecurring(id);
+    await loadData();
+    notificationService.scheduleRecurringNotifications();
+    toast.show(i18n.t('paymentSkipped'), 'info');
+  };
+  const handleDeleteRecurring = async (id) => {
+    await dataService.deleteRecurring(id);
+    await loadData();
+    notificationService.scheduleRecurringNotifications();
+    toast.show(i18n.t('deleted'), 'success');
+  };
 
   // Предстоящие платежи (ближайшие 30 дней, активные)
   const today = new Date();
@@ -174,14 +217,14 @@ export default function DashboardScreen() {
 
         <Card highlighted>
           <Text style={st.balLabel}>{i18n.t('totalBalance')}</Text>
-          <Text style={[st.balAmount, { color: balance >= 0 ? colors.text : colors.red }]}>₪ {balance.toLocaleString()}</Text>
+          <Text style={[st.balAmount, { color: balance >= 0 ? colors.text : colors.red }]}>{sym()} {balance.toLocaleString()}</Text>
           <View style={st.incExpRow}>
             <View style={st.incExpItem}>
               <View style={st.incExpHead}>
                 <Feather name="trending-up" size={14} color={colors.green} />
                 <Text style={st.incLabel}> {i18n.t('income')}</Text>
               </View>
-              <Text style={st.incAmount}>₪ {totalIncome.toLocaleString()}</Text>
+              <Text style={st.incAmount}>{sym()} {totalIncome.toLocaleString()}</Text>
             </View>
             <View style={st.dividerV} />
             <View style={st.incExpItem}>
@@ -189,10 +232,13 @@ export default function DashboardScreen() {
                 <Feather name="trending-down" size={14} color={colors.red} />
                 <Text style={st.expLabel}> {i18n.t('expenses')}</Text>
               </View>
-              <Text style={st.expAmount}>₪ {totalExpense.toLocaleString()}</Text>
+              <Text style={st.expAmount}>{sym()} {totalExpense.toLocaleString()}</Text>
             </View>
           </View>
         </Card>
+
+        {/* ─── STREAK ─────────────────────────────────── */}
+        <StreakCard streakData={streakData} transactions={transactions} weekStart={weekStart} />
 
         {/* ─── FREE MONEY TODAY ─────────────────────────── */}
         {balance > 0 && (() => {
@@ -206,37 +252,11 @@ export default function DashboardScreen() {
                 <Feather name="sun" size={18} color={freeTodayColor} />
                 <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
               </View>
-              <Text style={[st.freeAmount, { color: freeTodayColor }]}>₪{freeToday.toLocaleString()}</Text>
+              <Text style={[st.freeAmount, { color: freeTodayColor }]}>{sym()}{freeToday.toLocaleString()}</Text>
               <Text style={st.freeSub}>{daysLeft} {i18n.t('daysLeft')}</Text>
             </Card>
           );
         })()}
-
-        {/* ─── QUICK TEMPLATES ──────────────────────────── */}
-        <View style={st.sectionHeader}>
-          <Text style={st.sectionTitle}>{i18n.t('quickAdd')}</Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingStart: 20, marginBottom: 8 }}>
-          {[
-            { categoryId: 'food', icon: 'shopping-cart', recipient: '', defaultAmount: null },
-            { categoryId: 'restaurant', icon: 'coffee', recipient: '', defaultAmount: null },
-            { categoryId: 'fuel', icon: 'droplet', recipient: '', defaultAmount: null },
-            { categoryId: 'transport', icon: 'navigation', recipient: '', defaultAmount: null },
-            { categoryId: 'health', icon: 'heart', recipient: '', defaultAmount: null },
-            { categoryId: 'phone', icon: 'smartphone', recipient: '', defaultAmount: null },
-          ].map(tpl => {
-            const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
-            return (
-              <TouchableOpacity key={tpl.categoryId} style={st.quickBtn}
-                onPress={() => setQuickTemplate(tpl)} activeOpacity={0.7}>
-                <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
-                  <Feather name={cfg.icon} size={20} color={cfg.color} />
-                </View>
-                <Text style={st.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
 
         {pieData.length > 0 && (
           <>
@@ -276,7 +296,7 @@ export default function DashboardScreen() {
                 <View style={st.totalBudgetRow}>
                   <Text style={st.totalBudgetLabel}>{i18n.t('totalBudget')}</Text>
                   <Text style={st.totalBudgetAmount}>
-                    ₪{totalBudgetSpent.toLocaleString()} / ₪{totalBudgetLimit.toLocaleString()}
+                    {sym()}{totalBudgetSpent.toLocaleString()} / {sym()}{totalBudgetLimit.toLocaleString()}
                   </Text>
                 </View>
                 <View style={st.barBgThick}>
@@ -287,8 +307,8 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={st.totalBudgetLeft}>
                   {totalBudgetPct <= 100
-                    ? `${i18n.t('left')}: ₪${(totalBudgetLimit - totalBudgetSpent).toLocaleString()}`
-                    : `${i18n.t('over')}: ₪${(totalBudgetSpent - totalBudgetLimit).toLocaleString()}`
+                    ? `${i18n.t('left')}: ${sym()}${(totalBudgetLimit - totalBudgetSpent).toLocaleString()}`
+                    : `${i18n.t('over')}: ${sym()}${(totalBudgetSpent - totalBudgetLimit).toLocaleString()}`
                   }
                 </Text>
               </Card>
@@ -311,11 +331,11 @@ export default function DashboardScreen() {
                         {hasBudget ? (
                           <>
                             <Text style={[st.budgetPct, { color: barColor }]}>{pct}%</Text>
-                            <Text style={st.budgetAmount}>₪{spent.toLocaleString()} / ₪{limit.toLocaleString()}</Text>
+                            <Text style={st.budgetAmount}>{sym()}{spent.toLocaleString()} / {sym()}{limit.toLocaleString()}</Text>
                           </>
                         ) : (
                           <>
-                            <Text style={st.budgetAmount}>₪{spent.toLocaleString()}</Text>
+                            <Text style={st.budgetAmount}>{sym()}{spent.toLocaleString()}</Text>
                             <Feather name="plus-circle" size={14} color={colors.textMuted} style={{ marginStart: 6 }} />
                           </>
                         )}
@@ -363,7 +383,7 @@ export default function DashboardScreen() {
                       <View style={st.recInfo}>
                         <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
                         <Text style={st.recMeta}>
-                          {rec.type === 'expense' ? '-' : '+'}₪{rec.amount.toLocaleString()} · {dateLabel}
+                          {rec.type === 'expense' ? '-' : '+'}{sym()}{rec.amount.toLocaleString()} · {dateLabel}
                         </Text>
                       </View>
                       <View style={st.recActions}>
@@ -451,6 +471,11 @@ export default function DashboardScreen() {
               <Feather name="plus" size={18} color={colors.green} />
               <Text style={st.fabMenuTxt}>{i18n.t('oneTimePayment')}</Text>
             </TouchableOpacity>
+            <View style={st.fabMenuDivider} />
+            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowQuickSelect(true); }}>
+              <Feather name="zap" size={18} color={colors.yellow} />
+              <Text style={st.fabMenuTxt}>{i18n.t('quickAdd')}</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       )}
@@ -462,7 +487,7 @@ export default function DashboardScreen() {
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ₪${deleteTarget.amount}` : ''}
+        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${sym()}${deleteTarget.amount}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
       <BudgetModal visible={!!budgetModal} categoryId={budgetModal?.categoryId}
@@ -478,13 +503,55 @@ export default function DashboardScreen() {
         onSkip={(id) => { handleSkipRecurring(id); setRecDetail(null); }}
         onDelete={(id) => { handleDeleteRecurring(id); setRecDetail(null); }}
         onEdit={(item) => { setRecDetail(null); setEditRecurring(item); }} />
+      {/* Quick category select */}
+      {showQuickSelect && (
+        <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>
+          <View style={st.quickSelectSheet}>
+            <Text style={st.quickSelectTitle}>{i18n.t('quickAdd')}</Text>
+            <View style={st.quickSelectGrid}>
+              {[
+                { categoryId: 'food', icon: 'shopping-cart', recipient: '', defaultAmount: null },
+                { categoryId: 'restaurant', icon: 'coffee', recipient: '', defaultAmount: null },
+                { categoryId: 'fuel', icon: 'droplet', recipient: '', defaultAmount: null },
+                { categoryId: 'transport', icon: 'navigation', recipient: '', defaultAmount: null },
+                { categoryId: 'health', icon: 'heart', recipient: '', defaultAmount: null },
+                { categoryId: 'phone', icon: 'smartphone', recipient: '', defaultAmount: null },
+              ].map(tpl => {
+                const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                return (
+                  <TouchableOpacity key={tpl.categoryId} style={st.quickBtn}
+                    onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
+                    <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                      <Feather name={cfg.icon} size={20} color={cfg.color} />
+                    </View>
+                    <Text style={st.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </TouchableOpacity>
+      )}
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
         onClose={() => setQuickTemplate(null)} onSaved={() => loadData()} />
+
+      {/* Milestone celebration */}
+      {newMilestone && (
+        <TouchableOpacity style={st.milestoneOverlay} activeOpacity={1} onPress={() => setNewMilestone(null)}>
+          <View style={st.milestoneCard}>
+            <Text style={st.milestoneEmoji}>🔥</Text>
+            <Text style={st.milestoneTxt}>{i18n.t(`streakMilestone${newMilestone}`)}</Text>
+            <TouchableOpacity style={st.milestoneBtn} onPress={() => setNewMilestone(null)}>
+              <Text style={st.milestoneBtnTxt}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
   logo: { color: colors.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 },
@@ -540,8 +607,13 @@ const st = StyleSheet.create({
   fabMenuTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
   fabMenuDivider: { height: 1, backgroundColor: colors.divider },
 
+  // Quick select sheet
+  quickSelectSheet: { position: 'absolute', right: 24, left: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder, padding: 20 },
+  quickSelectTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  quickSelectGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+
   // Quick templates
-  quickBtn: { alignItems: 'center', marginEnd: 14, width: 68 },
+  quickBtn: { alignItems: 'center', width: 68, paddingVertical: 8 },
   quickIcon: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
   quickLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', textAlign: 'center' },
 
@@ -562,4 +634,12 @@ const st = StyleSheet.create({
   recConfirm: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
   recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+
+  // Milestone celebration
+  milestoneOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 20 },
+  milestoneCard: { backgroundColor: colors.card, borderRadius: 24, padding: 32, alignItems: 'center', marginHorizontal: 40, borderWidth: 2, borderColor: colors.orange },
+  milestoneEmoji: { fontSize: 48, marginBottom: 16 },
+  milestoneTxt: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 20 },
+  milestoneBtn: { backgroundColor: colors.orange, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 12 },
+  milestoneBtnTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });

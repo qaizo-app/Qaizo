@@ -15,7 +15,14 @@
       "bundleIdentifier": "com.qaizo.app"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      "./plugins/withTransparentAutofill",
+      [
+        "expo-notifications",
+        {
+          "sounds": []
+        }
+      ]
     ]
   }
 }
