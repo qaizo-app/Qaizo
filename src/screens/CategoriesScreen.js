@@ -1,12 +1,14 @@
 // src/screens/CategoriesScreen.js
 // Управление категориями: группы + подкатегории, добавление, редактирование
 import { Feather } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
-import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ConfirmModal from '../components/ConfirmModal';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
+import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 
 const ICON_OPTIONS = [
@@ -95,7 +97,18 @@ const DEFAULT_GROUPS = [
 
 export default function CategoriesScreen() {
   const navigation = useNavigation();
-  const [groups, setGroups] = useState(DEFAULT_GROUPS);
+  const [groups, setGroups] = useState([]);
+
+  useFocusEffect(useCallback(() => {
+    dataService.getCategories().then(saved => {
+      setGroups(saved && saved.length > 0 ? saved : DEFAULT_GROUPS);
+    });
+  }, []));
+
+  const persistGroups = (newGroups) => {
+    setGroups(newGroups);
+    dataService.saveCategories(newGroups);
+  };
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -155,7 +168,7 @@ export default function CategoriesScreen() {
         newGroups.push({ id, name: { [lang]: editName.trim() }, icon: editIcon, color: editColor, subs: [] });
       }
     }
-    setGroups(newGroups);
+    persistGroups(newGroups);
     setShowEdit(false);
   };
 
@@ -168,7 +181,7 @@ export default function CategoriesScreen() {
     } else {
       newGroups = newGroups.filter(g => g.id !== deleteTarget.id);
     }
-    setGroups(newGroups);
+    persistGroups(newGroups);
     setDeleteTarget(null);
   };
 
