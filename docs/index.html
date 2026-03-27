@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qaizo - AI-Powered Finance Management</title>
+  <meta name="description" content="Qaizo - Smart personal finance app with AI advisor, budget tracking, and tax planning. Smarter every day.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>Q</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e1a; color: #cbd5e1; overflow-x: hidden; }
+
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; position: relative; }
+    .hero::before { content: ''; position: absolute; top: -40%; left: -20%; width: 60%; height: 80%; background: radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 70%); pointer-events: none; }
+
+    .logo { font-size: 72px; font-weight: 800; color: #f1f5f9; letter-spacing: -3px; margin-bottom: 8px; }
+    .logo span { color: #34d399; }
+    .tagline { font-size: 20px; color: #64748b; font-weight: 500; margin-bottom: 48px; }
+
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; max-width: 900px; width: 100%; margin-bottom: 48px; }
+    .feature { background: #151c2f; border: 1px solid rgba(52,211,153,0.10); border-radius: 20px; padding: 28px; text-align: left; transition: transform 0.2s, border-color 0.2s; }
+    .feature:hover { transform: translateY(-4px); border-color: rgba(52,211,153,0.25); }
+    .feature-icon { font-size: 28px; margin-bottom: 14px; }
+    .feature h3 { color: #f1f5f9; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feature p { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+
+    .cta { display: inline-flex; align-items: center; gap: 10px; background: #34d399; color: #0a0e1a; font-size: 17px; font-weight: 700; padding: 16px 36px; border-radius: 14px; text-decoration: none; transition: background 0.2s; }
+    .cta:hover { background: #2dd4bf; }
+
+    .badges { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+    .badge { background: #151c2f; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px 20px; color: #94a3b8; font-size: 13px; font-weight: 600; }
+
+    .section { padding: 80px 20px; max-width: 900px; margin: 0 auto; }
+    .section-title { color: #f1f5f9; font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 16px; }
+    .section-sub { color: #64748b; font-size: 16px; text-align: center; margin-bottom: 48px; }
+
+    .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .ai-card { background: #0f1424; border: 1px solid rgba(52,211,153,0.08); border-radius: 16px; padding: 24px; }
+    .ai-card h4 { color: #34d399; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .ai-card p { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+
+    footer { text-align: center; padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.04); }
+    footer a { color: #64748b; text-decoration: none; font-size: 14px; margin: 0 16px; }
+    footer a:hover { color: #34d399; }
+    .copyright { color: #475569; font-size: 12px; margin-top: 16px; }
+
+    @media (max-width: 600px) {
+      .logo { font-size: 52px; }
+      .tagline { font-size: 16px; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="logo"><span>Q</span>aizo</div>
+    <div class="tagline">Smarter every day.</div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Financial Advisor</h3>
+        <p>Personalized insights powered by Gemini AI. Spending anomalies, savings tips, and budget warnings.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💬</div>
+        <h3>Smart Input</h3>
+        <p>Just type "Rami Levy 450 shekels" and AI parses it into a transaction. No forms needed.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🛡️</div>
+        <h3>Tax Virtual Safe</h3>
+        <p>Auto-calculate VAT, income tax, and national insurance. Know your real earnings instantly.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <h3>Budget Tracking</h3>
+        <p>Set budgets by category. Get alerts when spending exceeds limits. Daily budget calculator.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔔</div>
+        <h3>Smart Notifications</h3>
+        <p>Recurring payment reminders, streak alerts, and cash flow warnings. Never miss a payment.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌍</div>
+        <h3>Multi-language</h3>
+        <p>Full support for Hebrew, Russian, and English. RTL layout included. Built for Israel.</p>
+      </div>
+    </div>
+
+    <a class="cta" href="#">Coming Soon</a>
+
+    <div class="badges">
+      <div class="badge">React Native + Expo</div>
+      <div class="badge">Firebase</div>
+      <div class="badge">Gemini AI</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">AI That Works For You</div>
+    <div class="section-sub">Not just charts. Real intelligence that saves you money.</div>
+
+    <div class="ai-grid">
+      <div class="ai-card">
+        <h4>Natural Language Input</h4>
+        <p>Say or type "Taxi 35 shekels" and AI creates the transaction with the right category, amount, and payee.</p>
+      </div>
+      <div class="ai-card">
+        <h4>Cash Flow Prediction</h4>
+        <p>Compares your balance against upcoming payments. Warns you before you hit negative.</p>
+      </div>
+      <div class="ai-card">
+        <h4>Spending Anomalies</h4>
+        <p>Detects when a category spikes 30%+ vs last month. "Fuel is up 45% this month."</p>
+      </div>
+      <div class="ai-card">
+        <h4>Daily Budget</h4>
+        <p>Recalculates every day. Saved yesterday? Your limit increases today.</p>
+      </div>
+      <div class="ai-card">
+        <h4>Tax Reserve</h4>
+        <p>For self-employed: auto-separates VAT (17%), income tax, and Bituach Leumi from your income.</p>
+      </div>
+      <div class="ai-card">
+        <h4>Personal Advice</h4>
+        <p>Gemini AI analyzes your data and gives specific, actionable tips in your language.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="mailto:support@qaizo.app">Contact</a>
+    </div>
+    <div class="copyright">&copy; 2026 Qaizo. All rights reserved.</div>
+  </footer>
+
+</body>
+</html>
