@@ -37,6 +37,10 @@ yarn-error.*
 # Claude Code
 .claude/
 
+# Daily task files (generated, not tracked)
+tasks/alex-*.md
+tasks/sean-*.md
+
 # typescript
 *.tsbuildinfo
 
