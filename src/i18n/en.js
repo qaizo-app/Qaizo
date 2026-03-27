@@ -392,6 +392,10 @@ export default {
   examples: 'Examples',
   confirm: 'Confirm',
 
+  // Gemini AI
+  aiPersonalAdvice: 'Personal AI Advice',
+  aiThinking: 'AI is analyzing your data...',
+
   // General
   savings: 'Savings',
   day: 'day',

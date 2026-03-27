@@ -401,6 +401,10 @@ export default {
   examples: 'Примеры',
   confirm: 'Подтвердить',
 
+  // Gemini AI
+  aiPersonalAdvice: 'Персональные советы ИИ',
+  aiThinking: 'ИИ анализирует ваши данные...',
+
   // Общее
   savings: 'Сбережения',
   day: 'день',

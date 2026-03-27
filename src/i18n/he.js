@@ -392,6 +392,10 @@ export default {
   examples: 'דוגמאות',
   confirm: 'אישור',
 
+  // Gemini AI
+  aiPersonalAdvice: 'ייעוץ אישי מ-AI',
+  aiThinking: 'ה-AI מנתח את הנתונים שלך...',
+
   // כללי
   savings: 'חיסכון',
   day: 'יום',

@@ -14,6 +14,8 @@ import { fmt } from '../utils/currency';
 export default function AIAdvisorScreen() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [geminiTips, setGeminiTips] = useState(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const st = createStyles();
 
@@ -29,8 +31,16 @@ export default function AIAdvisorScreen() {
     const daily = aiService.calculateDailyBudget(txs, budgets);
     const taxReserve = analysis.income > 0 ? aiService.calculateTaxReserve(analysis.income) : null;
 
-    setData({ ...analysis, daily, taxReserve });
+    setData({ ...analysis, daily, taxReserve, _txs: txs, _budgets: budgets });
     setLoading(false);
+
+    // Gemini advice (async, не блокирует UI)
+    if (txs.length > 0 && !geminiTips) {
+      setGeminiLoading(true);
+      const tips = await aiService.getPersonalAdvice(txs, budgets, i18n.getLanguage());
+      if (tips) setGeminiTips(tips);
+      setGeminiLoading(false);
+    }
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
@@ -225,6 +235,38 @@ export default function AIAdvisorScreen() {
               <Text style={st.emptyText}>{i18n.t('aiAllGood')}</Text>
             </View>
           </Card>
+        )}
+
+        {/* ─── Gemini Personal Advice ─────── */}
+        {(geminiTips || geminiLoading) && (
+          <>
+            <Text style={st.sectionTitle}>
+              <Feather name="cpu" size={16} color={colors.blue} />{'  '}{i18n.t('aiPersonalAdvice')}
+            </Text>
+            {geminiLoading ? (
+              <Card style={{ marginHorizontal: 20 }}>
+                <View style={st.emptyWrap}>
+                  <ActivityIndicator size="small" color={colors.blue} />
+                  <Text style={st.emptyText}>{i18n.t('aiThinking')}</Text>
+                </View>
+              </Card>
+            ) : geminiTips?.map((tip, idx) => {
+              const color = typeColors[tip.type] || colors.blue;
+              return (
+                <Card key={`gemini-${idx}`} style={{ marginHorizontal: 20 }}>
+                  <View style={st.insightRow}>
+                    <View style={[st.insightIcon, { backgroundColor: color + '15' }]}>
+                      <Feather name={tip.icon || 'star'} size={20} color={color} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={st.insightTitle}>{tip.title}</Text>
+                      <Text style={st.insightText}>{tip.text}</Text>
+                    </View>
+                  </View>
+                </Card>
+              );
+            })}
+          </>
         )}
 
         {/* ─── Tips ─────────────────────────── */}

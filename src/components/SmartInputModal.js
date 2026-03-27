@@ -2,7 +2,7 @@
 // Умный ввод транзакций — пользователь пишет текст, ИИ разбирает
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Keyboard, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import aiService from '../services/aiService';
 import dataService from '../services/dataService';
@@ -33,6 +33,8 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     }
   }, [parsed]);
 
+  const [aiLoading, setAiLoading] = useState(false);
+
   const handleTextChange = (val) => {
     setText(val);
     if (val.length > 3) {
@@ -41,6 +43,14 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     } else {
       setParsed(null);
     }
+  };
+
+  const handleSmartParse = async () => {
+    if (text.length < 3) return;
+    setAiLoading(true);
+    const result = await aiService.parseTransactionSmart(text);
+    setParsed(result);
+    setAiLoading(false);
   };
 
   const handleSave = async () => {
@@ -84,7 +94,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
 
           {/* Input */}
           <View style={st.inputWrap}>
-            <Feather name="mic" size={20} color={colors.green} style={{ marginStart: 16 }} />
+            <Feather name="edit-3" size={20} color={colors.green} style={{ marginStart: 16 }} />
             <TextInput
               ref={inputRef}
               style={st.input}
@@ -96,6 +106,14 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
               autoCorrect={false}
               autoComplete="off"
             />
+            {text.length > 3 && (
+              <TouchableOpacity style={st.aiBtn} onPress={handleSmartParse} disabled={aiLoading}>
+                {aiLoading
+                  ? <ActivityIndicator size="small" color={colors.green} />
+                  : <Feather name="cpu" size={18} color={colors.green} />
+                }
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Examples */}
@@ -168,6 +186,7 @@ const createStyles = () => StyleSheet.create({
 
   inputWrap: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.cardBorder, marginHorizontal: 20, marginBottom: 16, minHeight: 56 },
   input: { flex: 1, color: colors.text, fontSize: 16, paddingVertical: 16, paddingHorizontal: 12, maxHeight: 100 },
+  aiBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginEnd: 8 },
 
   examples: { paddingHorizontal: 24, marginBottom: 16 },
   exTitle: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 8 },

@@ -1,7 +1,10 @@
 // src/services/aiService.js
-// Локальный AI-движок: парсинг текста, налоги, прогнозы, инсайты
+// AI-движок: Gemini API + локальный фоллбэк для парсинга, налогов, прогнозов
 import i18n from '../i18n';
-import { fmt, sym } from '../utils/currency';
+import { fmt, sym, code as curCode } from '../utils/currency';
+
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // ─── МААМ и налоговые ставки (Израиль) ──────────────────
 const MAAM_RATE = 0.17;
@@ -310,12 +313,133 @@ function generateInsights(transactions, budgets, accounts, recurring) {
   return { insights, income, expense, balance, savingsRate, cashFlow };
 }
 
+// ─── Gemini API ─────────────────────────────────────────
+async function callGemini(prompt) {
+  if (!GEMINI_API_KEY) return null;
+  try {
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch (e) {
+    console.warn('Gemini API error:', e.message);
+    return null;
+  }
+}
+
+// Умный парсинг транзакции через Gemini
+async function parseTransactionSmart(text) {
+  const lang = i18n.getLanguage();
+  const currency = curCode();
+  const categories = Object.keys(CATEGORY_KEYWORDS).join(', ');
+
+  const prompt = `You are a financial transaction parser. Parse this text into a transaction.
+Input: "${text}"
+User language: ${lang}, Currency: ${currency}
+
+Available categories: ${categories}
+
+Respond ONLY with valid JSON, no markdown, no explanation:
+{"amount": number, "type": "expense" or "income", "categoryId": "one of the categories above", "recipient": "store/payee name or empty string", "note": "original text"}
+
+Rules:
+- Extract the numeric amount
+- Determine if income or expense from context
+- Pick the best matching categoryId
+- If mentions salary/income/received → type: "income"
+- recipient = store name if mentioned`;
+
+  const result = await callGemini(prompt);
+  if (result) {
+    try {
+      // Извлекаем JSON из ответа (может быть обёрнут в ```)
+      const jsonStr = result.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.amount && parsed.type && parsed.categoryId) {
+        return parsed;
+      }
+    } catch (e) {}
+  }
+
+  // Фоллбэк на локальный парсер
+  return parseTransaction(text);
+}
+
+// Персональные советы от Gemini
+async function getPersonalAdvice(transactions, budgets, lang) {
+  const now = new Date();
+  const thisMonth = transactions.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+
+  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+  const catTotals = {};
+  thisMonth.filter(t => t.type === 'expense').forEach(t => {
+    catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
+  });
+
+  const topCats = Object.entries(catTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([cat, amount]) => `${cat}: ${amount}`)
+    .join(', ');
+
+  const budgetInfo = Object.entries(budgets)
+    .map(([cat, limit]) => `${cat}: spent ${catTotals[cat] || 0}/${limit}`)
+    .join(', ');
+
+  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+
+  const prompt = `You are a smart financial advisor for an Israeli user. Analyze their data and give 2-3 short, specific, actionable tips.
+
+Monthly data:
+- Income: ${income} ${curCode()}
+- Expenses: ${expense} ${curCode()}
+- Savings: ${income - expense} ${curCode()}
+- Top categories: ${topCats || 'no data'}
+- Budgets: ${budgetInfo || 'none set'}
+- Day of month: ${now.getDate()}/${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}
+
+Respond in ${langMap[lang] || 'English'}. Keep each tip to 1-2 sentences. Be specific with numbers. Format as JSON array:
+[{"title": "short title", "text": "advice text", "type": "positive|warning|info"}]
+
+No markdown, no explanation, only the JSON array.`;
+
+  const result = await callGemini(prompt);
+  if (result) {
+    try {
+      const jsonStr = result.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+      const tips = JSON.parse(jsonStr);
+      if (Array.isArray(tips) && tips.length > 0) {
+        return tips.map(t => ({
+          ...t,
+          icon: t.type === 'positive' ? 'star' : t.type === 'warning' ? 'alert-circle' : 'info',
+        }));
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
 export default {
   parseTransaction,
+  parseTransactionSmart,
   calculateTaxReserve,
   predictCashFlow,
   calculateDailyBudget,
   generateInsights,
+  getPersonalAdvice,
+  callGemini,
   MAAM_RATE,
   ESTIMATED_INCOME_TAX,
   BITUACH_LEUMI,
