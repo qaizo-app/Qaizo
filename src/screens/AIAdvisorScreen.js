@@ -1,57 +1,250 @@
 // src/screens/AIAdvisorScreen.js
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+// Умный финансовый советник — инсайты, налоги, прогнозы, дневной бюджет
+import { Feather } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Card from '../components/Card';
 import i18n from '../i18n';
+import aiService from '../services/aiService';
+import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
-import { sym } from '../utils/currency';
+import { fmt } from '../utils/currency';
 
 export default function AIAdvisorScreen() {
-  const styles = createStyles();
-  const s = sym();
-  const tips = [
-    { icon: '🛒', titleKey: 'aiTip1Title', textKey: 'aiTip1Text' },
-    { icon: '📱', titleKey: 'aiTip2Title', textKey: 'aiTip2Text' },
-    { icon: '🏦', titleKey: 'aiTip3Title', textKey: 'aiTip3Text' },
-    { icon: '⚡', titleKey: 'aiTip4Title', textKey: 'aiTip4Text' },
-    { icon: '🛡️', titleKey: 'aiTip5Title', textKey: 'aiTip5Text' },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const st = createStyles();
 
-  const fmt = (key) => i18n.t(key).replace(/\{sym\}/g, s);
+  const loadData = async () => {
+    const [txs, budgets, accounts, recurring] = await Promise.all([
+      dataService.getTransactions(),
+      dataService.getBudgets(),
+      dataService.getAccounts(),
+      dataService.getRecurring(),
+    ]);
+
+    const analysis = aiService.generateInsights(txs, budgets, accounts, recurring);
+    const daily = aiService.calculateDailyBudget(txs, budgets);
+    const taxReserve = analysis.income > 0 ? aiService.calculateTaxReserve(analysis.income) : null;
+
+    setData({ ...analysis, daily, taxReserve });
+    setLoading(false);
+  };
+
+  useFocusEffect(useCallback(() => { loadData(); }, []));
+  const onRefresh = async () => { setRefreshing(true); await loadData(); setRefreshing(false); };
+
+  const typeColors = {
+    positive: colors.green,
+    warning: colors.yellow,
+    negative: colors.red,
+    info: colors.blue,
+  };
+
+  if (loading) {
+    return (
+      <View style={[st.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.green} />
+        <Text style={st.loadingText}>{i18n.t('aiAnalyzing')}</Text>
+      </View>
+    );
+  }
+
+  const { insights, income, expense, balance, savingsRate, daily, taxReserve, cashFlow } = data || {};
 
   return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{i18n.t('advisor')}</Text>
+    <View style={st.container}>
+      <ScrollView showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.green} />}
+        contentContainerStyle={{ paddingBottom: 100 }}>
+
+        <View style={st.header}>
+          <Text style={st.title}>{i18n.t('advisor')}</Text>
         </View>
 
-        <Card style={styles.greetCard}>
-          <Text style={styles.greetIcon}>🤖</Text>
-          <Text style={styles.greetText}>{i18n.t('aiGreeting')}</Text>
-          <Text style={styles.greetSub}>{i18n.t('aiAnalyzing')}</Text>
+        {/* ─── Summary ──────────────────────── */}
+        <Card highlighted style={{ marginHorizontal: 20 }}>
+          <View style={st.summaryRow}>
+            <View style={st.summaryItem}>
+              <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
+              <Text style={[st.summaryValue, { color: colors.green }]}>{fmt(income || 0)}</Text>
+            </View>
+            <View style={st.summaryDivider} />
+            <View style={st.summaryItem}>
+              <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
+              <Text style={[st.summaryValue, { color: colors.red }]}>{fmt(expense || 0)}</Text>
+            </View>
+            <View style={st.summaryDivider} />
+            <View style={st.summaryItem}>
+              <Text style={st.summaryLabel}>{i18n.t('savings')}</Text>
+              <Text style={[st.summaryValue, { color: (balance || 0) >= 0 ? colors.green : colors.red }]}>
+                {savingsRate || 0}%
+              </Text>
+            </View>
+          </View>
         </Card>
 
-        <Text style={styles.sectionTitle}>💡 {i18n.t('aiTip')}</Text>
-
-        {tips.map((tip, idx) => (
-          <Card key={idx} style={{ marginHorizontal: 20 }}>
-            <View style={styles.tipHeader}>
-              <Text style={styles.tipIcon}>{tip.icon}</Text>
-              <Text style={styles.tipTitle}>{i18n.t(tip.titleKey)}</Text>
+        {/* ─── Daily Budget ─────────────────── */}
+        {daily && (
+          <Card style={{ marginHorizontal: 20, marginTop: 12 }}>
+            <View style={st.dailyRow}>
+              <View style={[st.dailyIcon, { backgroundColor: colors.greenSoft }]}>
+                <Feather name="sun" size={22} color={colors.green} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={st.dailyLabel}>{i18n.t('aiDailyBudget')}</Text>
+                <Text style={st.dailyAmount}>{fmt(daily.dailyBudget)}<Text style={st.dailySub}> / {i18n.t('day')}</Text></Text>
+                <Text style={st.dailyMeta}>
+                  {daily.daysLeft} {i18n.t('daysLeft')} · {i18n.t('remaining')}: {fmt(daily.remaining)}
+                </Text>
+                {daily.savedYesterday > 0 && (
+                  <View style={st.savedRow}>
+                    <Feather name="award" size={14} color={colors.green} />
+                    <Text style={st.savedText}>
+                      {i18n.t('aiSavedYesterday').replace('{amount}', fmt(daily.savedYesterday))}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <Text style={styles.tipText}>{fmt(tip.textKey)}</Text>
+          </Card>
+        )}
+
+        {/* ─── Tax Reserve (for income) ─────── */}
+        {taxReserve && taxReserve.grossIncome > 0 && (
+          <>
+            <Text style={st.sectionTitle}>
+              <Feather name="shield" size={16} color={colors.yellow} />{'  '}{i18n.t('aiTaxSafe')}
+            </Text>
+            <Card style={{ marginHorizontal: 20 }}>
+              <Text style={st.taxDesc}>{i18n.t('aiTaxSafeDesc')}</Text>
+              <View style={st.taxGrid}>
+                <View style={st.taxItem}>
+                  <Text style={st.taxItemLabel}>{i18n.t('grossIncome')}</Text>
+                  <Text style={[st.taxItemValue, { color: colors.green }]}>{fmt(taxReserve.grossIncome)}</Text>
+                </View>
+                <View style={st.taxItem}>
+                  <Text style={st.taxItemLabel}>{i18n.t('maam')} (17%)</Text>
+                  <Text style={[st.taxItemValue, { color: colors.red }]}>-{fmt(taxReserve.maam)}</Text>
+                </View>
+                <View style={st.taxItem}>
+                  <Text style={st.taxItemLabel}>{i18n.t('incomeTax')} (~10%)</Text>
+                  <Text style={[st.taxItemValue, { color: colors.red }]}>-{fmt(taxReserve.incomeTax)}</Text>
+                </View>
+                <View style={st.taxItem}>
+                  <Text style={st.taxItemLabel}>{i18n.t('bituachLeumi')} (~7%)</Text>
+                  <Text style={[st.taxItemValue, { color: colors.red }]}>-{fmt(taxReserve.bituach)}</Text>
+                </View>
+              </View>
+              <View style={st.taxTotal}>
+                <Text style={st.taxTotalLabel}>{i18n.t('netIncome')}</Text>
+                <Text style={st.taxTotalValue}>{fmt(taxReserve.netIncome)}</Text>
+              </View>
+              <View style={st.taxBar}>
+                <View style={[st.taxBarFill, { flex: taxReserve.netIncome, backgroundColor: colors.green }]} />
+                <View style={[st.taxBarFill, { flex: taxReserve.totalReserve, backgroundColor: colors.red + '80' }]} />
+              </View>
+              <View style={st.taxLegend}>
+                <View style={st.legendItem}><View style={[st.legendDot, { backgroundColor: colors.green }]} /><Text style={st.legendText}>{i18n.t('yours')}</Text></View>
+                <View style={st.legendItem}><View style={[st.legendDot, { backgroundColor: colors.red + '80' }]} /><Text style={st.legendText}>{i18n.t('taxReserve')}</Text></View>
+              </View>
+            </Card>
+          </>
+        )}
+
+        {/* ─── Cash Flow Prediction ─────────── */}
+        {cashFlow && cashFlow.upcoming.length > 0 && (
+          <>
+            <Text style={st.sectionTitle}>
+              <Feather name="activity" size={16} color={colors.blue} />{'  '}{i18n.t('aiCashFlow')}
+            </Text>
+            <Card style={{ marginHorizontal: 20 }}>
+              <View style={st.cfSummary}>
+                <View style={st.cfItem}>
+                  <Text style={st.cfLabel}>{i18n.t('currentBalance')}</Text>
+                  <Text style={[st.cfValue, { color: colors.green }]}>{fmt(cashFlow.currentBalance)}</Text>
+                </View>
+                <Feather name="minus" size={16} color={colors.textMuted} />
+                <View style={st.cfItem}>
+                  <Text style={st.cfLabel}>{i18n.t('upcoming')}</Text>
+                  <Text style={[st.cfValue, { color: colors.red }]}>{fmt(cashFlow.totalUpcoming)}</Text>
+                </View>
+                <Feather name="arrow-right" size={16} color={colors.textMuted} />
+                <View style={st.cfItem}>
+                  <Text style={st.cfLabel}>{i18n.t('projected')}</Text>
+                  <Text style={[st.cfValue, { color: cashFlow.projectedBalance >= 0 ? colors.green : colors.red }]}>
+                    {fmt(cashFlow.projectedBalance)}
+                  </Text>
+                </View>
+              </View>
+              {cashFlow.isAtRisk && (
+                <View style={st.riskBanner}>
+                  <Feather name="alert-octagon" size={16} color={colors.red} />
+                  <Text style={st.riskText}>{i18n.t('aiCashFlowWarning')}</Text>
+                </View>
+              )}
+              {cashFlow.upcoming.slice(0, 5).map((item, idx) => (
+                <View key={idx} style={st.cfRow}>
+                  <Text style={st.cfDate}>{item.date}</Text>
+                  <Text style={st.cfName}>{i18n.t(item.name) || item.name}</Text>
+                  <Text style={[st.cfAmount, { color: item.type === 'expense' ? colors.red : colors.green }]}>
+                    {item.type === 'expense' ? '-' : '+'}{fmt(item.amount)}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+          </>
+        )}
+
+        {/* ─── Insights ─────────────────────── */}
+        <Text style={st.sectionTitle}>
+          <Feather name="zap" size={16} color={colors.green} />{'  '}{i18n.t('aiInsights')}
+        </Text>
+
+        {insights && insights.length > 0 ? insights.map((insight, idx) => {
+          const color = typeColors[insight.type];
+          return (
+            <Card key={idx} style={{ marginHorizontal: 20 }}>
+              <View style={st.insightRow}>
+                <View style={[st.insightIcon, { backgroundColor: color + '15' }]}>
+                  <Feather name={insight.icon} size={20} color={color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.insightTitle}>{insight.title}</Text>
+                  <Text style={st.insightText}>{insight.text}</Text>
+                </View>
+              </View>
+            </Card>
+          );
+        }) : (
+          <Card style={{ marginHorizontal: 20 }}>
+            <View style={st.emptyWrap}>
+              <Feather name="check-circle" size={32} color={colors.green} />
+              <Text style={st.emptyText}>{i18n.t('aiAllGood')}</Text>
+            </View>
+          </Card>
+        )}
+
+        {/* ─── Tips ─────────────────────────── */}
+        <Text style={st.sectionTitle}>
+          <Feather name="book-open" size={16} color={colors.teal} />{'  '}{i18n.t('aiTip')}
+        </Text>
+        {[
+          { icon: '🛒', titleKey: 'aiTip1Title', textKey: 'aiTip1Text' },
+          { icon: '🛡️', titleKey: 'aiTip5Title', textKey: 'aiTip5Text' },
+        ].map((tip, idx) => (
+          <Card key={idx} style={{ marginHorizontal: 20 }}>
+            <View style={st.tipRow}>
+              <Text style={st.tipIcon}>{tip.icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={st.tipTitle}>{i18n.t(tip.titleKey)}</Text>
+                <Text style={st.tipText}>{i18n.t(tip.textKey).replace(/\{sym\}/g, require('../utils/currency').sym())}</Text>
+              </View>
+            </View>
           </Card>
         ))}
-
-        <Card style={{ marginHorizontal: 20, marginTop: 8 }}>
-          <Text style={styles.comingTitle}>🚀 {i18n.t('aiComingSoon')}</Text>
-          <Text style={styles.comingText}>
-            • {i18n.t('aiFeature1')}{'\n'}
-            • {i18n.t('aiFeature2')}{'\n'}
-            • {i18n.t('aiFeature3')}{'\n'}
-            • {i18n.t('aiFeature4')}
-          </Text>
-        </Card>
       </ScrollView>
     </View>
   );
@@ -61,15 +254,65 @@ const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },
-  greetCard: { marginHorizontal: 20, alignItems: 'center', paddingVertical: 28, borderWidth: 1, borderColor: 'rgba(52,211,153,0.12)' },
-  greetIcon: { fontSize: 40, marginBottom: 12 },
-  greetText: { color: colors.text, fontSize: 17, fontWeight: '600', marginBottom: 4 },
-  greetSub: { color: colors.textMuted, fontSize: 13 },
+  loadingText: { color: colors.textMuted, fontSize: 14, marginTop: 12 },
+
+  summaryRow: { flexDirection: 'row', alignItems: 'center' },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryDivider: { width: 1, height: 36, backgroundColor: colors.divider },
+  summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
+  summaryValue: { fontSize: 18, fontWeight: '800' },
+
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', paddingHorizontal: 20, marginTop: 28, marginBottom: 12 },
-  tipHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  tipIcon: { fontSize: 20, marginEnd: 8 },
-  tipTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
+
+  // Daily budget
+  dailyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  dailyIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  dailyLabel: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 4 },
+  dailyAmount: { color: colors.text, fontSize: 28, fontWeight: '800' },
+  dailySub: { color: colors.textMuted, fontSize: 14, fontWeight: '500' },
+  dailyMeta: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
+  savedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: colors.greenSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 },
+  savedText: { color: colors.green, fontSize: 12, fontWeight: '600' },
+
+  // Tax reserve
+  taxDesc: { color: colors.textDim, fontSize: 13, lineHeight: 20, marginBottom: 16 },
+  taxGrid: { gap: 10, marginBottom: 16 },
+  taxItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  taxItemLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
+  taxItemValue: { fontSize: 15, fontWeight: '700' },
+  taxTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, marginBottom: 12 },
+  taxTotalLabel: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  taxTotalValue: { color: colors.green, fontSize: 20, fontWeight: '800' },
+  taxBar: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 10 },
+  taxBarFill: { height: 10 },
+  taxLegend: { flexDirection: 'row', gap: 20 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
+
+  // Cash flow
+  cfSummary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  cfItem: { alignItems: 'center', flex: 1 },
+  cfLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', marginBottom: 4 },
+  cfValue: { fontSize: 15, fontWeight: '700' },
+  cfRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.divider },
+  cfDate: { color: colors.textMuted, fontSize: 13, fontWeight: '600', width: 30 },
+  cfName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginStart: 10 },
+  cfAmount: { fontSize: 14, fontWeight: '700' },
+  riskBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
+  riskText: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
+
+  // Insights
+  insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  insightIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  insightTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  insightText: { color: colors.textDim, fontSize: 13, lineHeight: 20 },
+  emptyWrap: { alignItems: 'center', paddingVertical: 24, gap: 12 },
+  emptyText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
+
+  // Tips
+  tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  tipIcon: { fontSize: 20 },
+  tipTitle: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 4 },
   tipText: { color: colors.textDim, fontSize: 13, lineHeight: 20 },
-  comingTitle: { color: colors.green, fontSize: 15, fontWeight: '600', marginBottom: 8 },
-  comingText: { color: colors.textDim, fontSize: 13, lineHeight: 22 },
 });

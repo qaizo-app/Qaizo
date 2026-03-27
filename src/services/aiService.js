@@ -1,0 +1,322 @@
+// src/services/aiService.js
+// Локальный AI-движок: парсинг текста, налоги, прогнозы, инсайты
+import i18n from '../i18n';
+import { fmt, sym } from '../utils/currency';
+
+// ─── МААМ и налоговые ставки (Израиль) ──────────────────
+const MAAM_RATE = 0.17;
+const ESTIMATED_INCOME_TAX = 0.10; // упрощённо для осека
+const BITUACH_LEUMI = 0.07;
+
+// ─── Категории — ключевые слова (HE / RU / EN) ─────────
+const CATEGORY_KEYWORDS = {
+  food: ['супермаркет', 'магазин', 'продукты', 'еда', 'שופרסל', 'רמי לוי', 'מזון', 'supermarket', 'grocery', 'food', 'рами леви', 'шуферсаль', 'shufersal', 'mega', 'מגה', 'יוחננוף', 'victory', 'ויקטורי'],
+  restaurant: ['ресторан', 'кафе', 'кофе', 'מסעדה', 'קפה', 'restaurant', 'cafe', 'coffee', 'пицца', 'pizza', 'פיצה', 'обед', 'lunch', 'ארוחה'],
+  transport: ['такси', 'uber', 'gett', 'bolt', 'מונית', 'taxi', 'автобус', 'אוטובוס', 'bus', 'поезд', 'רכבת', 'train'],
+  fuel: ['бензин', 'заправка', 'דלק', 'דור אלון', 'פז', 'סונול', 'fuel', 'gas', 'petrol', 'топливо', 'paz', 'sonol', 'delek'],
+  health: ['аптека', 'врач', 'доктор', 'רופא', 'מרקחת', 'pharmacy', 'doctor', 'больница', 'בית חולים', 'hospital', 'клалит', 'כללית', 'маккаби', 'מכבי', 'леумит', 'לאומית'],
+  phone: ['связь', 'сим', 'телефон', 'סלולר', 'פלאפון', 'הוט', 'פרטנר', 'cellcom', 'סלקום', 'phone', 'mobile', 'cellular'],
+  utilities: ['электричество', 'вода', 'газ', 'חשמל', 'מים', 'גז', 'electricity', 'water', 'חברת חשמל'],
+  clothing: ['одежда', 'обувь', 'ביגוד', 'נעליים', 'clothes', 'shoes', 'zara', 'h&m', 'castro', 'קסטרו', 'fox', 'פוקס'],
+  household: ['дом', 'мебель', 'בית', 'רהיטים', 'ikea', 'איקאה', 'home', 'furniture'],
+  kids: ['дети', 'школа', 'садик', 'ילדים', 'בית ספר', 'גן', 'kids', 'school', 'kindergarten'],
+  entertainment: ['кино', 'netflix', 'spotify', 'подписка', 'קולנוע', 'נטפליקס', 'cinema', 'movie', 'subscription'],
+  education: ['курс', 'учёба', 'книга', 'קורס', 'לימודים', 'ספר', 'course', 'book', 'study'],
+  cosmetics: ['стрижка', 'парикмахер', 'маникюр', 'תספורת', 'מספרה', 'haircut', 'salon', 'салон', 'beauty', 'יופי', 'краска'],
+  electronics: ['компьютер', 'телефон', 'мחשב', 'computer', 'laptop', 'техника', 'אלקטרוניקה'],
+  insurance: ['страховка', 'ביטוח', 'insurance'],
+  rent: ['аренда', 'квартира', 'שכירות', 'דירה', 'rent', 'apartment'],
+  arnona: ['арнона', 'ארנונה', 'arnona', 'municipal'],
+  vaad: ['ваад', 'ועד בית', 'vaad', 'building committee'],
+  salary_me: ['зарплата', 'משכורת', 'salary', 'income', 'доход', 'הכנסה', 'оплата за работу'],
+  salary_spouse: ['зп жены', 'зп мужа', 'משכורת בן זוג'],
+  rental_income: ['аренда доход', 'הכנסה משכירות', 'rental income'],
+  other_income: ['возврат', 'החזר', 'refund', 'cashback', 'кэшбэк'],
+};
+
+// ─── Парсинг текста ─────────────────────────────────────
+function parseTransaction(text) {
+  if (!text || !text.trim()) return null;
+
+  const input = text.trim().toLowerCase();
+
+  // Ищем сумму: число (возможно с запятой/точкой)
+  const amountMatch = input.match(/(\d[\d,.']*(?:\.\d+)?)\s*(?:₪|шекел|שקל|שקלים|шек|ш|ils|nis)?/i)
+    || input.match(/(?:₪|шекел|שקל|שקלים|шек|ш|ils|nis)\s*(\d[\d,.']*(?:\.\d+)?)/i);
+
+  let amount = 0;
+  if (amountMatch) {
+    amount = parseFloat(amountMatch[1].replace(/[,'\s]/g, ''));
+  }
+  if (!amount || isNaN(amount)) return null;
+
+  // Определяем тип: доход или расход
+  const incomeWords = ['зарплата', 'доход', 'получил', 'заработал', 'возврат', 'משכורת', 'הכנסה', 'קיבלתי', 'salary', 'income', 'received', 'earned', 'refund', 'cashback'];
+  const isIncome = incomeWords.some(w => input.includes(w));
+  const type = isIncome ? 'income' : 'expense';
+
+  // Определяем категорию
+  let categoryId = isIncome ? 'other_income' : 'other';
+  let maxScore = 0;
+
+  Object.entries(CATEGORY_KEYWORDS).forEach(([cat, keywords]) => {
+    let score = 0;
+    keywords.forEach(kw => {
+      if (input.includes(kw.toLowerCase())) {
+        score += kw.length; // длинные совпадения весят больше
+      }
+    });
+    if (score > maxScore) {
+      maxScore = score;
+      categoryId = cat;
+    }
+  });
+
+  // Если категория — доходная, ставим тип income
+  if (['salary_me', 'salary_spouse', 'rental_income', 'other_income'].includes(categoryId)) {
+    return { amount, type: 'income', categoryId, recipient: extractPayee(input), note: text.trim() };
+  }
+
+  // Извлекаем получателя/магазин
+  const recipient = extractPayee(input);
+
+  return { amount, type, categoryId, recipient, note: text.trim() };
+}
+
+function extractPayee(input) {
+  // Известные магазины/бренды
+  const knownPayees = [
+    'рами леви', 'רמי לוי', 'rami levy',
+    'шуферсаль', 'שופרסל', 'shufersal',
+    'מגה', 'mega',
+    'ויקטורי', 'victory',
+    'יוחננוף',
+    'ikea', 'איקאה', 'икея',
+    'zara', 'h&m', 'castro', 'קסטרו', 'fox', 'פוקס',
+    'netflix', 'spotify', 'apple',
+    'paz', 'פז', 'sonol', 'סונול', 'דור אלון', 'delek', 'דלק',
+    'uber', 'gett', 'bolt', 'wolt', 'וולט',
+  ];
+
+  for (const payee of knownPayees) {
+    if (input.includes(payee)) {
+      return payee.charAt(0).toUpperCase() + payee.slice(1);
+    }
+  }
+  return '';
+}
+
+// ─── Налоговый резерв (для самозанятых) ─────────────────
+function calculateTaxReserve(grossIncome) {
+  const maam = Math.round(grossIncome * MAAM_RATE / (1 + MAAM_RATE)); // МААМ уже включён
+  const incomeTax = Math.round(grossIncome * ESTIMATED_INCOME_TAX);
+  const bituach = Math.round(grossIncome * BITUACH_LEUMI);
+  const total = maam + incomeTax + bituach;
+  const net = grossIncome - total;
+
+  return { grossIncome, maam, incomeTax, bituach, totalReserve: total, netIncome: net };
+}
+
+// ─── Прогноз кассового разрыва ──────────────────────────
+function predictCashFlow(accounts, recurring, transactions) {
+  const now = new Date();
+  const currentBalance = accounts.reduce((s, a) => s + (a.balance || 0), 0);
+
+  // Предстоящие обязательные платежи в этом месяце
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const upcoming = [];
+  let totalUpcoming = 0;
+
+  recurring.filter(r => r.isActive && r.nextDate).forEach(r => {
+    const next = new Date(r.nextDate);
+    if (next.getMonth() === now.getMonth() && next.getFullYear() === now.getFullYear() && next.getDate() > now.getDate()) {
+      upcoming.push({ name: r.recipient || r.categoryId, amount: r.amount, date: next.getDate(), type: r.type });
+      if (r.type === 'expense') totalUpcoming += r.amount;
+    }
+  });
+
+  const projectedBalance = currentBalance - totalUpcoming;
+  const isAtRisk = projectedBalance < 0;
+
+  return {
+    currentBalance,
+    totalUpcoming,
+    projectedBalance,
+    isAtRisk,
+    upcoming: upcoming.sort((a, b) => a.date - b.date),
+  };
+}
+
+// ─── Динамический дневной бюджет ────────────────────────
+function calculateDailyBudget(transactions, budgets) {
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayOfMonth = now.getDate();
+  const daysLeft = daysInMonth - dayOfMonth;
+  if (daysLeft <= 0) return null;
+
+  const thisMonth = transactions.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+
+  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const remaining = income - expense;
+
+  if (remaining <= 0 || income <= 0) return null;
+
+  const dailyBudget = Math.round(remaining / daysLeft);
+
+  // Вчерашние расходы
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = yesterday.toISOString().split('T')[0];
+  const yesterdayExpense = thisMonth
+    .filter(t => t.type === 'expense' && (t.date || t.createdAt || '').startsWith(yStr))
+    .reduce((s, t) => s + t.amount, 0);
+
+  const prevDailyBudget = daysLeft > 0 ? Math.round((remaining + yesterdayExpense) / (daysLeft + 1)) : dailyBudget;
+  const savedYesterday = prevDailyBudget - yesterdayExpense;
+
+  return { dailyBudget, daysLeft, remaining, savedYesterday };
+}
+
+// ─── Генерация инсайтов ─────────────────────────────────
+function generateInsights(transactions, budgets, accounts, recurring) {
+  const now = new Date();
+  const insights = [];
+
+  const thisMonth = transactions.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const lastMonth = transactions.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
+  });
+
+  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const balance = income - expense;
+  const savingsRate = income > 0 ? Math.round((balance / income) * 100) : 0;
+
+  // Категории этого месяца
+  const catTotals = {};
+  thisMonth.filter(t => t.type === 'expense').forEach(t => {
+    catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
+  });
+  // Категории прошлого месяца
+  const lastCatTotals = {};
+  lastMonth.filter(t => t.type === 'expense').forEach(t => {
+    lastCatTotals[t.categoryId] = (lastCatTotals[t.categoryId] || 0) + t.amount;
+  });
+
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayOfMonth = now.getDate();
+  const monthProgress = dayOfMonth / daysInMonth;
+
+  // 1. Норма сбережений
+  if (income > 0) {
+    insights.push({
+      type: savingsRate >= 20 ? 'positive' : savingsRate >= 0 ? 'warning' : 'negative',
+      icon: savingsRate >= 20 ? 'trending-up' : savingsRate >= 0 ? 'alert-circle' : 'trending-down',
+      title: i18n.t('aiSavingsRate'),
+      text: i18n.t('aiSavingsRateText').replace('{rate}', savingsRate).replace('{amount}', fmt(Math.abs(balance))),
+    });
+  }
+
+  // 2. Аномалии по категориям (рост > 30% vs прошлый месяц)
+  Object.entries(catTotals).forEach(([cat, amount]) => {
+    const lastAmount = lastCatTotals[cat] || 0;
+    if (lastAmount > 0 && amount > lastAmount * 1.3 && amount > 100) {
+      const pct = Math.round(((amount - lastAmount) / lastAmount) * 100);
+      insights.push({
+        type: 'warning',
+        icon: 'alert-triangle',
+        title: i18n.t('aiCategorySpike'),
+        text: i18n.t('aiCategorySpikeText')
+          .replace('{cat}', i18n.t(cat))
+          .replace('{pct}', pct)
+          .replace('{amount}', fmt(amount))
+          .replace('{lastAmount}', fmt(lastAmount)),
+      });
+    }
+  });
+
+  // 3. Бюджеты под угрозой
+  Object.entries(budgets).forEach(([cat, limit]) => {
+    const spent = catTotals[cat] || 0;
+    const pct = Math.round((spent / limit) * 100);
+    if (pct >= 100) {
+      insights.push({
+        type: 'negative',
+        icon: 'x-circle',
+        title: i18n.t('aiBudgetExceeded'),
+        text: i18n.t('aiBudgetExceededText').replace('{cat}', i18n.t(cat)).replace('{amount}', fmt(spent - limit)),
+      });
+    } else if (pct > monthProgress * 100 + 15) {
+      insights.push({
+        type: 'warning',
+        icon: 'alert-triangle',
+        title: i18n.t('aiBudgetWarning'),
+        text: i18n.t('aiBudgetWarningText')
+          .replace('{cat}', i18n.t(cat)).replace('{pct}', pct).replace('{days}', daysInMonth - dayOfMonth),
+      });
+    }
+  });
+
+  // 4. Прогноз кассового разрыва
+  const cashFlow = predictCashFlow(accounts, recurring, transactions);
+  if (cashFlow.isAtRisk) {
+    insights.push({
+      type: 'negative',
+      icon: 'alert-octagon',
+      title: i18n.t('aiCashFlowRisk'),
+      text: i18n.t('aiCashFlowRiskText')
+        .replace('{balance}', fmt(cashFlow.currentBalance))
+        .replace('{upcoming}', fmt(cashFlow.totalUpcoming))
+        .replace('{projected}', fmt(Math.abs(cashFlow.projectedBalance))),
+    });
+  }
+
+  // 5. Повторяющиеся подписки (entertainment)
+  const subscriptions = recurring.filter(r => r.isActive && r.categoryId === 'entertainment');
+  if (subscriptions.length > 0) {
+    const total = subscriptions.reduce((s, r) => s + r.amount, 0);
+    if (total > 50) {
+      insights.push({
+        type: 'info',
+        icon: 'tv',
+        title: i18n.t('aiSubscriptions'),
+        text: i18n.t('aiSubscriptionsText')
+          .replace('{count}', subscriptions.length)
+          .replace('{amount}', fmt(total)),
+      });
+    }
+  }
+
+  // 6. Нет данных
+  if (transactions.length === 0) {
+    insights.push({
+      type: 'info',
+      icon: 'edit-3',
+      title: i18n.t('aiNoData'),
+      text: i18n.t('aiNoDataText'),
+    });
+  }
+
+  return { insights, income, expense, balance, savingsRate, cashFlow };
+}
+
+export default {
+  parseTransaction,
+  calculateTaxReserve,
+  predictCashFlow,
+  calculateDailyBudget,
+  generateInsights,
+  MAAM_RATE,
+  ESTIMATED_INCOME_TAX,
+  BITUACH_LEUMI,
+};

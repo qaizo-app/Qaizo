@@ -96,6 +96,15 @@ export default function SettingsScreen() {
           <Text style={styles.title}>⚙️ {settingsTitle}</Text>
         </View>
 
+        {/* AI Advisor */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('AIAdvisor')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="cpu" size={18} color={colors.green} />
+            <Text style={styles.sectionText}>{i18n.t('advisor')}</Text>
+          </View>
+          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Categories */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Categories')}>
           <View style={styles.sectionLeft}>

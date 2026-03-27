@@ -12,6 +12,7 @@ import BudgetModal from '../components/BudgetModal';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import QuickAddModal from '../components/QuickAddModal';
+import SmartInputModal from '../components/SmartInputModal';
 import RecurringDetailModal from '../components/RecurringDetailModal';
 import StreakCard from '../components/StreakCard';
 import TransactionItem from '../components/TransactionItem';
@@ -40,6 +41,7 @@ export default function DashboardScreen() {
   const [recDetail, setRecDetail] = useState(null);
   const [quickTemplate, setQuickTemplate] = useState(null);
   const [showQuickSelect, setShowQuickSelect] = useState(false);
+  const [showSmartInput, setShowSmartInput] = useState(false);
   const [streakData, setStreakData] = useState(null);
   const [newMilestone, setNewMilestone] = useState(null);
   const [weekStart, setWeekStart] = useState('monday');
@@ -489,6 +491,11 @@ export default function DashboardScreen() {
       {showFabMenu && (
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowFabMenu(false)}>
           <View style={st.fabMenu}>
+            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowSmartInput(true); }}>
+              <Feather name="mic" size={18} color={colors.blue} />
+              <Text style={st.fabMenuTxt}>{i18n.t('smartInput')}</Text>
+            </TouchableOpacity>
+            <View style={st.fabMenuDivider} />
             <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowRecurring(true); }}>
               <Feather name="repeat" size={18} color={colors.teal} />
               <Text style={st.fabMenuTxt}>{i18n.t('recurringPayment')}</Text>
@@ -561,6 +568,8 @@ export default function DashboardScreen() {
       )}
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
         onClose={() => setQuickTemplate(null)} onSaved={() => loadData()} />
+      <SmartInputModal visible={showSmartInput}
+        onClose={() => setShowSmartInput(false)} onSaved={() => loadData()} />
 
       {/* Notifications modal */}
       <Modal visible={showNotifModal} transparent animationType="fade" onRequestClose={() => setShowNotifModal(false)}>
