@@ -301,6 +301,7 @@ function parseWalletRow(cols, headerMap) {
     'благотворительность, подарки': 'other', 'подарки и пожертвования': 'other',
     'собачий корм': 'other', 'алкоголь, табак': 'food',
     'налоги': 'other', 'тест': 'other',
+    // Income categories
     'работодатель инвестиции': 'other_income',
     'пособие на детей': 'other_income',
     'возвраты (налоги, покупки)': 'other_income',
@@ -317,11 +318,46 @@ function parseWalletRow(cols, headerMap) {
   // Fuzzy match: try partial matching if exact match failed
   if (!categoryId || categoryId === 'other') {
     const catToMatch = customCat || rawCat;
+    // First try exact substring in map keys
     for (const [key, val] of Object.entries(walletCategoryMap)) {
-      if (catToMatch.includes(key) || key.includes(catToMatch)) {
+      if (val !== 'other' && (catToMatch.includes(key) || key.includes(catToMatch))) {
         categoryId = val;
         break;
       }
+    }
+  }
+  // Keyword-based fallback for unmapped categories
+  if (!categoryId || categoryId === 'other') {
+    const cat = (customCat || rawCat);
+    const kwMap = [
+      [/еда|продукт|напит|алкогол|фрукт|овощ/, 'food'],
+      [/рестора|фастфуд|кафе/, 'restaurant'],
+      [/одежд|обувь/, 'clothing'],
+      [/транспорт|такси|парков|автобус/, 'transport'],
+      [/топлив|бензин|делек/, 'fuel'],
+      [/здоров|врач|аптек|медиц|стомат|доктор/, 'health'],
+      [/телефон|сотов|связ|голан/, 'phone'],
+      [/электрич|вода|газ|коммунал|безек/, 'utilities'],
+      [/интернет|netflix|подпис|книг|аудио/, 'entertainment'],
+      [/страхов|ביטוח/, 'insurance'],
+      [/аренд|склад/, 'rent'],
+      [/арнон|муниципал|налог.*дом|налог.*салон/, 'arnona'],
+      [/ваад|байт/, 'vaad'],
+      [/косметик|тралерик/, 'cosmetics'],
+      [/электрон|аксессуар/, 'electronics'],
+      [/дом|быт|ремонт|обслужив|умный/, 'household'],
+      [/дети|ребен|школ|садик/, 'kids'],
+      [/образован|курс|учеб/, 'education'],
+      [/зарплат.*алекс|зарплат.*я/, 'salary_me'],
+      [/зарплат.*александр|зарплат.*супруг/, 'salary_spouse'],
+      [/подработ|handyman/, 'handyman'],
+      [/продаж/, 'sales'],
+      [/аренд.*доход|доход.*аренд/, 'rental_income'],
+      [/пособ|возврат|инвестиц.*работод|процент.*вложен/, 'other_income'],
+      [/реклам|юридич|сервис|комисс|процент.*минус|процент.*овердрафт|налог/, 'other'],
+    ];
+    for (const [re, val] of kwMap) {
+      if (re.test(cat)) { categoryId = val; break; }
     }
   }
   if (!categoryId) categoryId = isIncome ? 'other_income' : 'other';

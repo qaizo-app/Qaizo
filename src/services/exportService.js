@@ -1,6 +1,6 @@
 // src/services/exportService.js
 // Экспорт транзакций в CSV, XLS (TSV), PDF с фильтром по датам
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
@@ -84,7 +84,7 @@ async function exportCSV(dateFrom, dateTo) {
 
   const bom = '\uFEFF';
   const path = FileSystem.cacheDirectory + `qaizo_${Date.now()}.csv`;
-  await FileSystem.writeAsStringAsync(path, bom + csv, { encoding: FileSystem.EncodingType.UTF8 });
+  await FileSystem.writeAsStringAsync(path, bom + csv, {});
   await shareFile(path, 'text/csv');
 }
 
@@ -102,7 +102,7 @@ async function exportXLS(dateFrom, dateTo) {
 
   const bom = '\uFEFF';
   const path = FileSystem.cacheDirectory + `qaizo_${Date.now()}.xls`;
-  await FileSystem.writeAsStringAsync(path, bom + tsv, { encoding: FileSystem.EncodingType.UTF8 });
+  await FileSystem.writeAsStringAsync(path, bom + tsv, {});
   await shareFile(path, 'application/vnd.ms-excel');
 }
 
