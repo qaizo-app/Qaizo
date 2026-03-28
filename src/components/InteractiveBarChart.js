@@ -15,6 +15,7 @@ function formatAmount(n) {
 export default function InteractiveBarChart({ data, maxBar }) {
   const [selected, setSelected] = useState(null);
   const animValues = useRef(data.map(() => new Animated.Value(0))).current;
+  const st = createSt();
 
   useEffect(() => {
     const anims = animValues.map((val, idx) =>
@@ -103,7 +104,7 @@ export default function InteractiveBarChart({ data, maxBar }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   tooltip: { backgroundColor: colors.bg2, borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
   tooltipMonth: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 6, textAlign: i18n.textAlign() },
   tooltipRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 2 },

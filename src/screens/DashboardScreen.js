@@ -3,7 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
 import AddRecurringModal from '../components/AddRecurringModal';
@@ -44,6 +44,14 @@ export default function DashboardScreen() {
   const [recDetail, setRecDetail] = useState(null);
   const [quickTemplate, setQuickTemplate] = useState(null);
   const [showQuickSelect, setShowQuickSelect] = useState(false);
+  const [quickTab, setQuickTab] = useState('categories');
+  const [quickTemplates, setQuickTemplates] = useState([]);
+  const [showAddTemplate, setShowAddTemplate] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [newTemplateCat, setNewTemplateCat] = useState('');
+  const [newTemplateAcc, setNewTemplateAcc] = useState('');
+  const [accounts, setAccounts] = useState([]);
+  const [deleteTemplate, setDeleteTemplate] = useState(null);
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [streakData, setStreakData] = useState(null);
   const [newMilestone, setNewMilestone] = useState(null);
@@ -74,16 +82,20 @@ export default function DashboardScreen() {
   const st = createSt();
 
   const loadData = async () => {
-    const [txs, bdg, rec, settings] = await Promise.all([
+    const [txs, bdg, rec, settings, accs, tpls] = await Promise.all([
       dataService.getTransactions(),
       dataService.getBudgets(),
       dataService.getRecurring(),
       dataService.getSettings(),
+      dataService.getAccounts(),
+      dataService.getQuickTemplates(),
     ]);
     if (settings.weekStart) setWeekStart(settings.weekStart);
     if (settings.dashLayout) setDashLayout(settings.dashLayout);
     setTransactions(txs);
     setBudgets(bdg);
+    setAccounts(accs.filter(a => a.isActive !== false));
+    setQuickTemplates(tpls);
     setRecurring(rec);
 
     // Обновляем стрики
@@ -580,8 +592,14 @@ export default function DashboardScreen() {
       )}
 
       {/* FAB */}
-      <TouchableOpacity style={st.fab} onPress={() => setShowFabMenu(!showFabMenu)} activeOpacity={0.8}>
-        <Feather name={showFabMenu ? 'x' : 'plus'} size={26} color={colors.bg} />
+      <TouchableOpacity style={st.fab} onPress={() => {
+        if (showFabMenu || showQuickSelect || showAddTemplate) {
+          setShowFabMenu(false); setShowQuickSelect(false); setShowAddTemplate(false);
+        } else {
+          setShowFabMenu(true);
+        }
+      }} activeOpacity={0.8}>
+        <Feather name={showFabMenu || showQuickSelect || showAddTemplate ? 'x' : 'plus'} size={26} color={colors.bg} />
       </TouchableOpacity>
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
@@ -589,6 +607,15 @@ export default function DashboardScreen() {
         message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+      <ConfirmModal visible={deleteTemplate !== null} title={i18n.t('delete')}
+        message={deleteTemplate !== null && quickTemplates[deleteTemplate] ? (quickTemplates[deleteTemplate].name || i18n.t(quickTemplates[deleteTemplate].categoryId)) : ''}
+        confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
+        onConfirm={() => {
+          const updated = quickTemplates.filter((_, i) => i !== deleteTemplate);
+          setQuickTemplates(updated);
+          dataService.saveQuickTemplates(updated);
+          setDeleteTemplate(null);
+        }} onCancel={() => setDeleteTemplate(null)} />
       <BudgetModal visible={!!budgetModal} categoryId={budgetModal?.categoryId}
         currentLimit={budgetModal ? (budgets[budgetModal.categoryId] || 0) : 0}
         spent={budgetModal?.spent || 0}
@@ -607,30 +634,131 @@ export default function DashboardScreen() {
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>
           <View style={st.quickSelectSheet}>
             <Text style={st.quickSelectTitle}>{i18n.t('quickAdd')}</Text>
-            <View style={st.quickSelectGrid}>
-              {[
-                { categoryId: 'food', icon: 'shopping-cart' },
-                { categoryId: 'restaurant', icon: 'coffee' },
-                { categoryId: 'fuel', icon: 'droplet' },
-                { categoryId: 'transport', icon: 'navigation' },
-                { categoryId: 'household', icon: 'home' },
-                { categoryId: 'health', icon: 'heart' },
-                { categoryId: 'clothing', icon: 'shopping-bag' },
-                { categoryId: 'entertainment', icon: 'film' },
-              ].map(tpl => {
-                const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+
+            {/* Tabs: Templates / Categories */}
+            <View style={st.quickTabs}>
+              <TouchableOpacity style={[st.quickTab, quickTab === 'templates' && st.quickTabActive]} onPress={() => setQuickTab('templates')}>
+                <Feather name="bookmark" size={14} color={quickTab === 'templates' ? colors.green : colors.textMuted} />
+                <Text style={[st.quickTabTxt, quickTab === 'templates' && { color: colors.green }]}>{i18n.t('templates')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[st.quickTab, quickTab === 'categories' && st.quickTabActive]} onPress={() => setQuickTab('categories')}>
+                <Feather name="grid" size={14} color={quickTab === 'categories' ? colors.green : colors.textMuted} />
+                <Text style={[st.quickTabTxt, quickTab === 'categories' && { color: colors.green }]}>{i18n.t('categories')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {quickTab === 'templates' ? (
+              <View>
+                {quickTemplates.length > 0 ? (
+                  <View style={st.quickSelectGrid}>
+                    {quickTemplates.map((tpl, idx) => {
+                      const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                      return (
+                        <TouchableOpacity key={idx} style={st.quickBtn}
+                          onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }}
+                          onLongPress={() => setDeleteTemplate(idx)}
+                          activeOpacity={0.7}>
+                          <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                            <Feather name={cfg.icon} size={20} color={cfg.color} />
+                          </View>
+                          <Text style={st.quickLabel} numberOfLines={1}>{tpl.name || i18n.t(tpl.categoryId)}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <Text style={st.quickEmptyTxt}>{i18n.t('noTemplates')}</Text>
+                )}
+                <TouchableOpacity style={st.addTemplateBtn} onPress={() => { setShowQuickSelect(false); setShowAddTemplate(true); }}>
+                  <Feather name="plus" size={16} color={colors.green} />
+                  <Text style={st.addTemplateTxt}>{i18n.t('addTemplate')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={st.quickSelectGrid}>
+                {[
+                  { categoryId: 'food', icon: 'shopping-cart' },
+                  { categoryId: 'restaurant', icon: 'coffee' },
+                  { categoryId: 'fuel', icon: 'droplet' },
+                  { categoryId: 'transport', icon: 'navigation' },
+                  { categoryId: 'household', icon: 'home' },
+                  { categoryId: 'health', icon: 'heart' },
+                  { categoryId: 'clothing', icon: 'shopping-bag' },
+                  { categoryId: 'entertainment', icon: 'film' },
+                ].map(tpl => {
+                  const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                  return (
+                    <TouchableOpacity key={tpl.categoryId} style={st.quickBtn}
+                      onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
+                      <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                        <Feather name={cfg.icon} size={20} color={cfg.color} />
+                      </View>
+                      <Text style={st.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {/* Add Template Modal */}
+      {showAddTemplate && (
+        <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowAddTemplate(false)}>
+          <TouchableOpacity style={st.quickSelectSheet} activeOpacity={1}>
+            <Text style={st.quickSelectTitle}>{i18n.t('addTemplate')}</Text>
+            <TextInput style={st.templateInput} value={newTemplateName} onChangeText={setNewTemplateName}
+              placeholder={i18n.t('templateName')} placeholderTextColor={colors.textMuted} />
+            <Text style={st.templateLabel}>{i18n.t('category')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+              {Object.keys(categoryConfig).filter(k => !['transfer','salary_me','salary_spouse','rental_income','handyman','sales','other_income'].includes(k)).map(cid => {
+                const cfg = categoryConfig[cid];
+                const sel = newTemplateCat === cid;
                 return (
-                  <TouchableOpacity key={tpl.categoryId} style={st.quickBtn}
-                    onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
-                    <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
-                      <Feather name={cfg.icon} size={20} color={cfg.color} />
-                    </View>
-                    <Text style={st.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
+                  <TouchableOpacity key={cid} style={[st.templateChip, sel && { borderColor: cfg.color, backgroundColor: `${cfg.color}15` }]}
+                    onPress={() => setNewTemplateCat(cid)}>
+                    <Feather name={cfg.icon} size={14} color={sel ? cfg.color : colors.textMuted} />
+                    <Text style={[st.templateChipTxt, sel && { color: cfg.color }]} numberOfLines={1}>{i18n.t(cid)}</Text>
                   </TouchableOpacity>
                 );
               })}
+            </ScrollView>
+            <Text style={st.templateLabel}>{i18n.t('account')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+              {accounts.filter(a => ['cash','bank','credit'].includes(a.type)).map(acc => {
+                const sel = newTemplateAcc === acc.id;
+                return (
+                  <TouchableOpacity key={acc.id} style={[st.templateChip, sel && { borderColor: colors.teal, backgroundColor: `${colors.teal}15` }]}
+                    onPress={() => setNewTemplateAcc(acc.id)}>
+                    <Text style={[st.templateChipTxt, sel && { color: colors.teal }]} numberOfLines={1}>{acc.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <View style={{ flexDirection: i18n.row(), gap: 12 }}>
+              <TouchableOpacity style={st.templateCancelBtn} onPress={() => setShowAddTemplate(false)}>
+                <Text style={{ color: colors.textDim, fontWeight: '600' }}>{i18n.t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={st.templateSaveBtn} onPress={() => {
+                if (!newTemplateCat) return;
+                const customName = newTemplateName.trim();
+                // Don't save name if it matches category translation (would break on language switch)
+                const catName = i18n.t(newTemplateCat);
+                const tpl = { name: customName && customName !== catName ? customName : '', categoryId: newTemplateCat, account: newTemplateAcc || null };
+                const updated = [...quickTemplates, tpl];
+                setQuickTemplates(updated);
+                dataService.saveQuickTemplates(updated);
+                setShowAddTemplate(false);
+                setNewTemplateName('');
+                setNewTemplateCat('');
+                setNewTemplateAcc('');
+              }}>
+                <Feather name="check" size={16} color={colors.bg} />
+                <Text style={{ color: colors.bg, fontWeight: '700' }}>{i18n.t('save')}</Text>
+              </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       )}
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
@@ -747,7 +875,20 @@ const createSt = () => StyleSheet.create({
 
   // Quick select sheet
   quickSelectSheet: { position: 'absolute', right: 24, left: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder, padding: 20 },
-  quickSelectTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  quickSelectTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
+  quickTabs: { flexDirection: i18n.row(), marginBottom: 16, backgroundColor: colors.bg, borderRadius: 12, padding: 3 },
+  quickTab: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10 },
+  quickTabActive: { backgroundColor: colors.card },
+  quickTabTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  quickEmptyTxt: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 20 },
+  addTemplateBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, marginTop: 8 },
+  addTemplateTxt: { color: colors.green, fontSize: 13, fontWeight: '600' },
+  templateInput: { backgroundColor: colors.bg, borderRadius: 12, padding: 14, color: colors.text, fontSize: 15, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
+  templateLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
+  templateChip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg, marginEnd: 6, borderWidth: 1.5, borderColor: 'transparent', gap: 4 },
+  templateChipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  templateCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
+  templateSaveBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
   quickSelectGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
 
   // Quick templates

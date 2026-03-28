@@ -33,11 +33,16 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
   useEffect(() => {
     if (visible) {
-      setAmount(template?.defaultAmount ? String(template.defaultAmount) : '');
+      setAmount('');
       dataService.getAccounts().then(accs => {
-        const active = accs.filter(a => a.isActive !== false);
+        const active = accs.filter(a => a.isActive !== false && ['cash', 'bank', 'credit'].includes(a.type));
         setAccounts(active);
-        if (active.length > 0 && !selAcc) setSelAcc(active[0].id);
+        // Use template account if set, otherwise first account
+        if (template?.account && active.some(a => a.id === template.account)) {
+          setSelAcc(template.account);
+        } else if (active.length > 0 && !selAcc) {
+          setSelAcc(active[0].id);
+        }
       });
       Animated.parallel([
         Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),

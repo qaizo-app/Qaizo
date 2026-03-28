@@ -27,6 +27,7 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
   const [selected, setSelected] = useState(null);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const total = data.reduce((s, d) => s + d.amount, 0);
+  const st = createSt();
 
   useEffect(() => {
     Animated.spring(scaleAnim, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }).start();
@@ -178,7 +179,7 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { alignItems: 'center' },
   centerLabel: { position: 'absolute', top: 0, start: 0, justifyContent: 'center', alignItems: 'center' },
   centerAmount: { color: colors.text, fontSize: 18, fontWeight: '800' },

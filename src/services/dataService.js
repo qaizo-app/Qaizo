@@ -20,6 +20,7 @@ const KEYS = {
   RECURRING: 'qaizo_recurring',
   TAGS: 'qaizo_tags',
   STREAKS: 'qaizo_streaks',
+  QUICK_TEMPLATES: 'qaizo_quick_templates',
 };
 
 const DEFAULT_ACCOUNTS = [
@@ -575,6 +576,19 @@ const dataService = {
       await this.saveTags(tags.filter(t => t !== tag));
       return true;
     } catch (e) { return false; }
+  },
+
+  // ─── QUICK TEMPLATES ─────────────────────────────────────
+  async getQuickTemplates() {
+    const uid = getUid();
+    if (uid) return getDocData('quickTemplates', []);
+    try { const data = await AsyncStorage.getItem(KEYS.QUICK_TEMPLATES); return data ? JSON.parse(data) : []; } catch (e) { return []; }
+  },
+
+  async saveQuickTemplates(templates) {
+    const uid = getUid();
+    if (uid) return setDocData('quickTemplates', templates);
+    try { await AsyncStorage.setItem(KEYS.QUICK_TEMPLATES, JSON.stringify(templates)); return true; } catch (e) { return false; }
   },
 
   // ─── STREAKS ──────────────────────────────────────────────
