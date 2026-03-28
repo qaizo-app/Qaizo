@@ -6,8 +6,11 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#080b14"
     },
+    "icon": "./assets/images/icon.png",
     "android": {
       "package": "com.qaizo.app"
     },
