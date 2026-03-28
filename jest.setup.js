@@ -20,6 +20,9 @@ jest.mock('expo-web-browser', () => ({
   maybeCompleteAuthSession: jest.fn(),
 }));
 jest.mock('expo-crypto', () => ({}));
+jest.mock('expo-document-picker', () => ({
+  getDocumentAsync: jest.fn(() => Promise.resolve({ canceled: true })),
+}));
 jest.mock('firebase/firestore', () => ({
   initializeFirestore: jest.fn(() => ({})),
   persistentLocalCache: jest.fn(),

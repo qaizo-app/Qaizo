@@ -89,14 +89,14 @@ export default function AccountsScreen() {
     const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
     const bal = acc.balance || 0;
     return (
-      <TouchableOpacity key={acc.id} style={[styles.tile, { borderLeftColor: cfg.color, borderLeftWidth: 3 }]}
+      <TouchableOpacity key={acc.id} style={[styles.tile, i18n.isRTL() ? { borderRightColor: cfg.color, borderRightWidth: 3 } : { borderLeftColor: cfg.color, borderLeftWidth: 3 }]}
         onPress={() => openHistory(acc)} onLongPress={() => openEdit(acc)} activeOpacity={0.7}>
         <View style={styles.tileTop}>
           <MaterialCommunityIcons name={cfg.icon} size={16} color={cfg.color} />
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
         <Text style={[styles.tileBalance, { color: bal >= 0 ? colors.text : colors.red }]}>
-          {acc.currency||sym()}{bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          {bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {acc.currency||sym()}
         </Text>
       </TouchableOpacity>
     );
@@ -116,7 +116,7 @@ export default function AccountsScreen() {
         {/* Total */}
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
-          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>{sym()} {totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
         </View>
 
         {/* Hint */}
@@ -130,9 +130,9 @@ export default function AccountsScreen() {
           return (
             <View key={typeId}>
               <View style={styles.groupHeader}>
-                <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ marginEnd: 6 }} />
+                <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ }} />
                 <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
-                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>{sym()}{sum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>{sum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
               </View>
               <View style={styles.tilesRow}>
                 {accs.map(renderTile)}
@@ -143,7 +143,7 @@ export default function AccountsScreen() {
 
         {/* Crypto */}
         <View style={styles.groupHeader}>
-          <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" style={{ marginEnd: 6 }} />
+          <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" style={{ }} />
           <Text style={[styles.groupTitle, { color: '#f59e0b' }]}>{typeLabel('crypto')}</Text>
           <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
         </View>
@@ -159,15 +159,15 @@ export default function AccountsScreen() {
         {inactive.length > 0 && (
           <View>
             <View style={styles.groupHeader}>
-              <Feather name="archive" size={14} color={colors.textMuted} style={{ marginEnd: 6 }} />
+              <Feather name="archive" size={14} color={colors.textMuted} style={{ }} />
               <Text style={styles.groupTitle}>{i18n.t('inactive')}</Text>
             </View>
             <View style={styles.tilesRow}>
               {inactive.map(acc => (
-                <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35, borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
+                <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, i18n.isRTL() ? { borderRightColor: colors.textMuted, borderRightWidth: 3 } : { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{acc.currency||sym()}{(acc.balance||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{(acc.balance||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {acc.currency||sym()}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -246,47 +246,47 @@ export default function AccountsScreen() {
 
 const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
-  header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:12},
-  title:{color:colors.text,fontSize:24,fontWeight:'800'},
+  header:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:12},
+  title:{color:colors.text,fontSize:24,fontWeight:'800',textAlign:i18n.textAlign()},
   addBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.green,justifyContent:'center',alignItems:'center'},
 
   totalCard:{marginHorizontal:24,marginBottom:8,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:'rgba(52,211,153,0.15)'},
-  totalLabel:{color:colors.textDim,fontSize:13,marginBottom:6},
-  totalAmount:{fontSize:32,fontWeight:'800'},
+  totalLabel:{color:colors.textDim,fontSize:13,marginBottom:6,textAlign:i18n.textAlign()},
+  totalAmount:{fontSize:32,fontWeight:'800',textAlign:i18n.textAlign()},
 
   hint:{color:colors.textMuted,fontSize:11,textAlign:'center',marginBottom:12,opacity:0.5},
 
-  groupHeader:{flexDirection:'row',alignItems:'center',paddingHorizontal:24,marginTop:20,marginBottom:8},
-  groupTitle:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',flex:1},
+  groupHeader:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:24,marginTop:20,marginBottom:8,gap:6},
+  groupTitle:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',flex:1,textAlign:i18n.textAlign()},
   groupSum:{fontSize:13,fontWeight:'600'},
 
-  tilesRow:{flexDirection:'row',flexWrap:'wrap',paddingHorizontal:24,gap:TILE_GAP},
+  tilesRow:{flexDirection:i18n.row(),flexWrap:'wrap',paddingHorizontal:24,gap:TILE_GAP},
   tile:{width:TILE_W,backgroundColor:colors.card,borderRadius:14,padding:12,borderWidth:1,borderColor:colors.cardBorder,marginBottom:TILE_GAP},
-  tileTop:{marginBottom:6},
-  tileName:{color:colors.textSecondary,fontSize:12,fontWeight:'600',marginBottom:4},
-  tileBalance:{color:colors.text,fontSize:15,fontWeight:'700'},
+  tileTop:{marginBottom:6,alignItems:i18n.isRTL()?'flex-end':'flex-start'},
+  tileName:{color:colors.textSecondary,fontSize:12,fontWeight:'600',marginBottom:4,textAlign:i18n.textAlign()},
+  tileBalance:{color:colors.text,fontSize:15,fontWeight:'700',textAlign:i18n.textAlign()},
 
   v2Badge:{backgroundColor:'rgba(245,158,11,0.15)',paddingHorizontal:8,paddingVertical:2,borderRadius:6},
   v2Text:{color:'#f59e0b',fontSize:10,fontWeight:'700'},
 
-  modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20},
+  modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20,textAlign:i18n.textAlign()},
   fieldLabel:{color:colors.textDim,fontSize:11,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4},
   input:{backgroundColor:colors.card,borderRadius:14,padding:14,color:colors.text,fontSize:16,marginBottom:12,borderWidth:1,borderColor:colors.cardBorder},
-  typeChip:{flexDirection:'row',alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginEnd:8,borderWidth:1.5,borderColor:'transparent'},
+  typeChip:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginEnd:8,borderWidth:1.5,borderColor:'transparent'},
   typeChipText:{color:colors.textMuted,fontSize:12,fontWeight:'600',marginStart:6},
-  currRow:{flexDirection:'row',gap:8,marginBottom:16},
+  currRow:{flexDirection:i18n.row(),gap:8,marginBottom:16},
   currBtn:{paddingHorizontal:18,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,borderWidth:1.5,borderColor:'transparent'},
   currText:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
-  balRow:{flexDirection:'row',alignItems:'center',marginBottom:16},
+  balRow:{flexDirection:i18n.row(),alignItems:'center',marginBottom:16},
   balCur:{fontSize:28,fontWeight:'700',marginEnd:8},
   balInput:{flex:1,color:colors.text,fontSize:28,fontWeight:'700'},
-  toggleRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:16,marginBottom:8,borderTopWidth:1,borderTopColor:colors.divider},
+  toggleRow:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingVertical:16,marginBottom:8,borderTopWidth:1,borderTopColor:colors.divider},
   toggleLabel:{color:colors.text,fontSize:15,fontWeight:'600'},
   toggleSub:{color:colors.textMuted,fontSize:11,marginTop:2},
-  btnRow:{flexDirection:'row',gap:10,marginTop:8},
+  btnRow:{flexDirection:i18n.row(),gap:10,marginTop:8},
   delBtn:{width:54,paddingVertical:16,borderRadius:14,backgroundColor:colors.redSoft,alignItems:'center',justifyContent:'center'},
   cancelBtn:{flex:1,paddingVertical:16,borderRadius:14,backgroundColor:colors.card,alignItems:'center',borderWidth:1,borderColor:colors.cardBorder},
   cancelText:{color:colors.textDim,fontSize:16,fontWeight:'600'},
-  saveBtn:{flex:2,flexDirection:'row',paddingVertical:16,borderRadius:14,alignItems:'center',justifyContent:'center'},
+  saveBtn:{flex:2,flexDirection:i18n.row(),paddingVertical:16,borderRadius:14,alignItems:'center',justifyContent:'center'},
   saveText:{color:'#fff',fontSize:16,fontWeight:'700'},
 });

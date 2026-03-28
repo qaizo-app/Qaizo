@@ -33,10 +33,10 @@ export default function InvestmentsScreen() {
 
         <Card style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalInvested')}</Text>
-          <Text style={styles.totalAmount}>{sym()} {totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+          <Text style={styles.totalAmount}>{totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>{i18n.t('monthlyContribution')}</Text>
-            <Text style={styles.monthlyAmount}>{sym()} {totalMonthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+            <Text style={styles.monthlyAmount}>{totalMonthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
           </View>
         </Card>
 
@@ -74,14 +74,14 @@ export default function InvestmentsScreen() {
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
   totalCard: { marginHorizontal: 20, borderWidth: 1, borderColor: 'rgba(52,211,153,0.12)' },
   totalLabel: { color: colors.textDim, fontSize: 13, marginBottom: 8 },
   totalAmount: { color: colors.text, fontSize: 32, fontWeight: '800', marginBottom: 16 },
-  monthlyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },
+  monthlyRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },
   monthlyLabel: { color: colors.textDim, fontSize: 13 },
   monthlyAmount: { color: colors.green, fontSize: 16, fontWeight: '700' },
-  invRow: { flexDirection: 'row', alignItems: 'center' },
+  invRow: { flexDirection: i18n.row(), alignItems: 'center' },
   invIcon: { fontSize: 28, marginEnd: 14 },
   invInfo: { flex: 1 },
   invName: { color: colors.text, fontSize: 16, fontWeight: '600' },

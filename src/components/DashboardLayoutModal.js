@@ -112,16 +112,16 @@ const createSt = () => StyleSheet.create({
   modal: { backgroundColor: colors.bg2, borderRadius: 20, padding: 20, width: '100%', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
 
-  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, padding: 12, marginBottom: 6, borderWidth: 1, borderColor: colors.cardBorder },
+  row: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, padding: 12, marginBottom: 6, borderWidth: 1, borderColor: colors.cardBorder },
   rowDim: { opacity: 0.5 },
   toggle: { marginEnd: 10 },
   label: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
   labelDim: { color: colors.textMuted },
   moveBtn: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
 
-  footer: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  footer: { flexDirection: i18n.row(), gap: 10, marginTop: 14 },
   cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
-  saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
   saveTxt: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

@@ -79,12 +79,12 @@ export default function AIAdvisorScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryValue, { color: colors.green }]}>{fmt(income || 0)}</Text>
+              <Text style={[st.summaryValue, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit>{fmt(income || 0)}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryValue, { color: colors.red }]}>{fmt(expense || 0)}</Text>
+              <Text style={[st.summaryValue, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>{fmt(expense || 0)}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
@@ -295,66 +295,66 @@ export default function AIAdvisorScreen() {
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
   loadingText: { color: colors.textMuted, fontSize: 14, marginTop: 12 },
 
-  summaryRow: { flexDirection: 'row', alignItems: 'center' },
+  summaryRow: { flexDirection: i18n.row(), alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, height: 36, backgroundColor: colors.divider },
   summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
-  summaryValue: { fontSize: 18, fontWeight: '800' },
+  summaryValue: { fontSize: 15, fontWeight: '800' },
 
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', paddingHorizontal: 20, marginTop: 28, marginBottom: 12 },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', paddingHorizontal: 20, marginTop: 28, marginBottom: 12, textAlign: i18n.textAlign() },
 
   // Daily budget
-  dailyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  dailyRow: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 14 },
   dailyIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  dailyLabel: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 4 },
-  dailyAmount: { color: colors.text, fontSize: 28, fontWeight: '800' },
-  dailySub: { color: colors.textMuted, fontSize: 14, fontWeight: '500' },
-  dailyMeta: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
-  savedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: colors.greenSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 },
+  dailyLabel: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 4, textAlign: i18n.textAlign() },
+  dailyAmount: { color: colors.text, fontSize: 28, fontWeight: '800', textAlign: i18n.textAlign() },
+  dailySub: { color: colors.textMuted, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
+  dailyMeta: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: i18n.textAlign() },
+  savedRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: colors.greenSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 },
   savedText: { color: colors.green, fontSize: 12, fontWeight: '600' },
 
   // Tax reserve
-  taxDesc: { color: colors.textDim, fontSize: 13, lineHeight: 20, marginBottom: 16 },
+  taxDesc: { color: colors.textDim, fontSize: 13, lineHeight: 20, marginBottom: 16, textAlign: i18n.textAlign() },
   taxGrid: { gap: 10, marginBottom: 16 },
-  taxItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taxItemLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
+  taxItem: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center' },
+  taxItemLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
   taxItemValue: { fontSize: 15, fontWeight: '700' },
-  taxTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, marginBottom: 12 },
-  taxTotalLabel: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  taxTotal: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, marginBottom: 12 },
+  taxTotalLabel: { color: colors.text, fontSize: 16, fontWeight: '700', textAlign: i18n.textAlign() },
   taxTotalValue: { color: colors.green, fontSize: 20, fontWeight: '800' },
-  taxBar: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 10 },
+  taxBar: { flexDirection: i18n.row(), height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 10 },
   taxBarFill: { height: 10 },
-  taxLegend: { flexDirection: 'row', gap: 20 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  taxLegend: { flexDirection: i18n.row(), gap: 20 },
+  legendItem: { flexDirection: i18n.row(), alignItems: 'center', gap: 6 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
 
   // Cash flow
-  cfSummary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  cfSummary: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   cfItem: { alignItems: 'center', flex: 1 },
   cfLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', marginBottom: 4 },
   cfValue: { fontSize: 15, fontWeight: '700' },
-  cfRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.divider },
+  cfRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.divider },
   cfDate: { color: colors.textMuted, fontSize: 13, fontWeight: '600', width: 30 },
-  cfName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginStart: 10 },
+  cfName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginStart: 10, textAlign: i18n.textAlign() },
   cfAmount: { fontSize: 14, fontWeight: '700' },
-  riskBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
-  riskText: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
+  riskBanner: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
+  riskText: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
 
   // Insights
-  insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  insightRow: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 14 },
   insightIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  insightTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  insightText: { color: colors.textDim, fontSize: 13, lineHeight: 20 },
+  insightTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4, textAlign: i18n.textAlign() },
+  insightText: { color: colors.textDim, fontSize: 13, lineHeight: 20, textAlign: i18n.textAlign() },
   emptyWrap: { alignItems: 'center', paddingVertical: 24, gap: 12 },
   emptyText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
 
   // Tips
-  tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  tipRow: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 10 },
   tipIcon: { fontSize: 20 },
-  tipTitle: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 4 },
-  tipText: { color: colors.textDim, fontSize: 13, lineHeight: 20 },
+  tipTitle: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 4, textAlign: i18n.textAlign() },
+  tipText: { color: colors.textDim, fontSize: 13, lineHeight: 20, textAlign: i18n.textAlign() },
 });

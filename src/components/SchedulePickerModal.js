@@ -226,17 +226,17 @@ const createSt = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 16 },
   modal: { backgroundColor: colors.bg2, borderRadius: 20, padding: 16, width: '100%', maxHeight: '85%', borderWidth: 1, borderColor: colors.cardBorder },
 
-  modeBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: `${colors.teal}15`, borderRadius: 10, paddingVertical: 6, marginBottom: 10 },
+  modeBanner: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: `${colors.teal}15`, borderRadius: 10, paddingVertical: 6, marginBottom: 10 },
   modeTxt: { color: colors.teal, fontSize: 12, fontWeight: '700' },
 
-  calHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  calHeader: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   navBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
   monthTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
 
-  daysRow: { flexDirection: 'row', marginBottom: 4 },
+  daysRow: { flexDirection: i18n.row(), marginBottom: 4 },
   dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 11, fontWeight: '600' },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  grid: { flexDirection: i18n.row(), flexWrap: 'wrap' },
   cell: { width: '14.28%', paddingVertical: 6, justifyContent: 'center', alignItems: 'center' },
   cellSelected: { backgroundColor: colors.green, borderRadius: 10 },
   cellEnd: { backgroundColor: colors.teal, borderRadius: 10 },
@@ -256,17 +256,17 @@ const createSt = () => StyleSheet.create({
   chipTxtActive: { color: colors.green },
   chipTxtActiveAlt: { color: colors.teal },
 
-  endRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, marginTop: 4 },
+  endRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 8, marginTop: 4 },
   endLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
   endInput: { backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, color: colors.text, fontSize: 14, borderWidth: 1, borderColor: colors.cardBorder, width: 70 },
 
-  endDateBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: colors.cardBorder },
+  endDateBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: colors.cardBorder },
   endDateTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600', flex: 1 },
   pickingDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.teal },
 
-  footer: { flexDirection: 'row', gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.divider },
+  footer: { flexDirection: i18n.row(), gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.divider },
   cancelBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
-  saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 12, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 12, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
   saveTxt: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

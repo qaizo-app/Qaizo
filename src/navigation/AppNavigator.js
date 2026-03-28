@@ -3,6 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '../i18n';
@@ -51,6 +52,8 @@ const tabConfig = {
 };
 
 export default function AppNavigator() {
+  const [, setLangVer] = useState(0);
+  useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + Math.max(insets.bottom, 16);
   const styles = createStyles();

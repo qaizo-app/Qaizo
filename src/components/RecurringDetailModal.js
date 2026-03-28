@@ -80,7 +80,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Text style={st.subtitle}>{i18n.t(item.categoryId)}</Text>
             </View>
             <Text style={[st.amount, { color: item.type === 'expense' ? colors.red : colors.green }]}>
-              {item.type === 'expense' ? '-' : '+'}{sym()}{item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              {item.type === 'expense' ? '-' : '+'}{item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
             </Text>
           </View>
 
@@ -142,7 +142,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
                 <View key={tx.id || idx} style={[st.historyRow, idx < history.length - 1 && st.historyBorder]}>
                   <Text style={st.historyDate}>{formatDate(tx.date || tx.createdAt)}</Text>
                   <Text style={[st.historyAmount, { color: tx.type === 'expense' ? colors.red : colors.green }]}>
-                    {tx.type === 'expense' ? '-' : '+'}{sym()}{tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    {tx.type === 'expense' ? '-' : '+'}{tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
                   </Text>
                 </View>
               ))}
@@ -172,27 +172,27 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
 }
 
 const createSt = () => StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  header: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20 },
   iconWrap: { width: 50, height: 50, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
   title: { color: colors.text, fontSize: 18, fontWeight: '700' },
   subtitle: { color: colors.textDim, fontSize: 13, marginTop: 2 },
   amount: { fontSize: 22, fontWeight: '800' },
 
   infoCard: { backgroundColor: colors.bg2, borderRadius: 16, padding: 16, marginBottom: 16 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+  infoRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 8 },
   infoLabel: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginStart: 10, flex: 1 },
   infoValue: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', textAlign: 'right', maxWidth: '50%' },
   infoDivider: { height: 1, backgroundColor: colors.divider },
 
-  actionsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder },
+  actionsRow: { flexDirection: i18n.row(), gap: 10, marginBottom: 20 },
+  actionBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder },
   actionTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
 
   sectionHeader: { marginBottom: 10 },
   sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
 
   historyCard: { backgroundColor: colors.bg2, borderRadius: 14, padding: 12, marginBottom: 20 },
-  historyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
+  historyRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
   historyBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   historyDate: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
   historyAmount: { fontSize: 14, fontWeight: '700' },
@@ -200,8 +200,8 @@ const createSt = () => StyleSheet.create({
   emptyHistory: { alignItems: 'center', paddingVertical: 24, gap: 8, backgroundColor: colors.bg2, borderRadius: 14, marginBottom: 20 },
   emptyTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
 
-  bottomRow: { flexDirection: 'row', gap: 12 },
-  editBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.bg2 },
-  deleteBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.redSoft },
+  bottomRow: { flexDirection: i18n.row(), gap: 12 },
+  editBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.bg2 },
+  deleteBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.redSoft },
   bottomTxt: { fontSize: 14, fontWeight: '600' },
 });

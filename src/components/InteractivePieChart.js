@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { G, Path, Circle } from 'react-native-svg';
+import i18n from '../i18n';
 import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+
+const rtl = () => i18n.isRTL();
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -121,12 +124,12 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
           <View style={[st.centerLabel, { width: size, height: size }]} pointerEvents="none">
             {selectedItem ? (
               <>
-                <Text style={st.centerAmount}>{sym()}{selectedItem.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                <Text style={st.centerAmount}>{selectedItem.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                 <Text style={st.centerPct}>{Math.round(selectedItem.pct * 100)}%</Text>
               </>
             ) : (
               <>
-                <Text style={st.centerAmount}>{sym()}{total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                <Text style={st.centerAmount}>{total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
               </>
             )}
           </View>
@@ -149,7 +152,7 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
                 {slice.name}
               </Text>
               <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
-                {sym()}{slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                {slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
               </Text>
               <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
             </TouchableOpacity>
@@ -162,17 +165,17 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
 
 const st = StyleSheet.create({
   container: { alignItems: 'center' },
-  centerLabel: { position: 'absolute', top: 0, left: 0, justifyContent: 'center', alignItems: 'center' },
+  centerLabel: { position: 'absolute', top: 0, start: 0, justifyContent: 'center', alignItems: 'center' },
   centerAmount: { color: colors.text, fontSize: 18, fontWeight: '800' },
   centerPct: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginTop: 2 },
 
   legend: { width: '100%', marginTop: 16, gap: 2 },
-  legendRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10 },
+  legendRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, gap: 10 },
   legendRowActive: { backgroundColor: colors.bg2 },
-  legendDot: { width: 10, height: 10, borderRadius: 5, marginEnd: 10 },
-  legendName: { flex: 1, color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendName: { flex: 1, color: colors.textDim, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
   legendNameActive: { color: colors.text },
-  legendAmount: { color: colors.textDim, fontSize: 13, fontWeight: '700', marginEnd: 8 },
+  legendAmount: { color: colors.textDim, fontSize: 13, fontWeight: '700' },
   legendAmountActive: { color: colors.text },
-  legendPct: { color: colors.textMuted, fontSize: 12, fontWeight: '600', minWidth: 32, textAlign: 'right' },
+  legendPct: { color: colors.textMuted, fontSize: 12, fontWeight: '600', minWidth: 32, textAlign: 'center' },
 });

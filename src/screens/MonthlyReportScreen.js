@@ -125,17 +125,17 @@ export default function MonthlyReportScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.green }]}>{sym()}{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+              <Text style={[st.summaryAmount, { color: colors.green }]}>{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.red }]}>{sym()}{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+              <Text style={[st.summaryAmount, { color: colors.red }]}>{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('balance')}</Text>
-              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>{sym()}{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
             </View>
           </View>
         </Card>
@@ -150,7 +150,7 @@ export default function MonthlyReportScreen() {
             </View>
             <View style={st.statBox}>
               <Feather name="activity" size={16} color={colors.teal} />
-              <Text style={st.statValue}>{sym()}{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+              <Text style={st.statValue}>{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
               <Text style={st.statLabel}>{i18n.t('avgPerDay')}</Text>
             </View>
             <View style={st.statBox}>
@@ -195,7 +195,7 @@ export default function MonthlyReportScreen() {
                     </View>
                     <View style={st.catRight}>
                       <Text style={st.catPct}>{pct}%</Text>
-                      <Text style={st.catAmount}>{sym()}{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                      <Text style={st.catAmount}>{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                     </View>
                   </View>
                 );
@@ -215,10 +215,10 @@ export default function MonthlyReportScreen() {
                 <View key={name} style={st.catRow}>
                   <View style={st.catLeft}>
                     <Text style={st.catRank}>{idx + 1}</Text>
-                    <Feather name="user" size={14} color={colors.textMuted} style={{ marginEnd: 8 }} />
+                    <Feather name="user" size={14} color={colors.textMuted} />
                     <Text style={st.catName}>{name}</Text>
                   </View>
-                  <Text style={st.catAmount}>{sym()}{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                  <Text style={st.catAmount}>{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                 </View>
               ))}
             </Card>
@@ -240,7 +240,7 @@ export default function MonthlyReportScreen() {
                       <View style={[st.catDot, { backgroundColor: cfg.color }]} />
                       <Text style={st.catName}>{i18n.t(cat)}</Text>
                     </View>
-                    <Text style={[st.catAmount, { color: colors.green }]}>{sym()}{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                    <Text style={[st.catAmount, { color: colors.green }]}>{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                   </View>
                 );
               })}
@@ -264,19 +264,19 @@ export default function MonthlyReportScreen() {
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
 
-  monthNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 16 },
+  monthNav: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 16 },
   navBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   monthLabel: { color: colors.text, fontSize: 17, fontWeight: '700' },
 
-  summaryRow: { flexDirection: 'row', alignItems: 'center' },
+  summaryRow: { flexDirection: i18n.row(), alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, height: 36, backgroundColor: colors.divider },
   summaryLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', marginBottom: 4 },
   summaryAmount: { fontSize: 16, fontWeight: '800' },
 
-  statsGrid: { flexDirection: 'row', gap: 12 },
+  statsGrid: { flexDirection: i18n.row(), gap: 12 },
   statBox: { flex: 1, alignItems: 'center', paddingVertical: 12, backgroundColor: colors.bg2, borderRadius: 12, gap: 4 },
   statValue: { color: colors.text, fontSize: 16, fontWeight: '800' },
   statLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'center' },
@@ -284,12 +284,12 @@ const createSt = () => StyleSheet.create({
   sectionHeader: { paddingHorizontal: 24, marginTop: 24, marginBottom: 10 },
   sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
 
-  catRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
-  catLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  catRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  catRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  catLeft: { flexDirection: i18n.row(), alignItems: 'center', flex: 1, gap: 8 },
+  catRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   catRank: { color: colors.textMuted, fontSize: 12, fontWeight: '700', width: 20, textAlign: 'center' },
-  catDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 8 },
-  catName: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  catDot: { width: 8, height: 8, borderRadius: 4 },
+  catName: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   catPct: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   catAmount: { color: colors.textDim, fontSize: 14, fontWeight: '700' },
 

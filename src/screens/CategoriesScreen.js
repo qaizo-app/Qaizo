@@ -294,37 +294,37 @@ export default function CategoriesScreen() {
 
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   title: { color: colors.text, fontSize: 22, fontWeight: '800', flex: 1, textAlign: 'center' },
   addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
-  groupRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 8, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder },
-  groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
-  groupName: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '600' },
-  subCount: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginEnd: 8, backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  groupRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 20, marginTop: 8, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10 },
+  groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  groupName: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
+  subCount: { color: colors.textMuted, fontSize: 13, fontWeight: '600', backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
 
   subsContainer: { marginHorizontal: 20, marginTop: 4, backgroundColor: colors.card, borderRadius: 14, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
-  subRow: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
-  subIcon: { width: 32, height: 32, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginEnd: 12 },
-  subName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
+  subRow: { flexDirection: i18n.row(), alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 10 },
+  subIcon: { width: 32, height: 32, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
+  subName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
 
-  addSubBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 12, gap: 6 },
+  addSubBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', padding: 12, gap: 6 },
   addSubText: { fontSize: 13, fontWeight: '600' },
 
-  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20 },
-  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 8 },
-  input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: i18n.textAlign() },
+  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 8, textAlign: i18n.textAlign() },
+  input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
 
-  iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  iconGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   iconBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: 'transparent' },
 
-  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
+  colorGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 10, marginBottom: 20 },
   colorBtn: { width: 32, height: 32, borderRadius: 10, borderWidth: 2, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, borderWidth: 3 },
 
-  btnRow: { flexDirection: 'row', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
+  btnRow: { flexDirection: i18n.row(), gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
-  saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   saveText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

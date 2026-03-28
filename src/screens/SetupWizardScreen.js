@@ -253,7 +253,7 @@ export default function SetupWizardScreen({ onDone }) {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  progressRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, gap: 12 },
+  progressRow: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, gap: 12 },
   progressBg: { flex: 1, height: 4, backgroundColor: colors.card, borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: 4, backgroundColor: colors.green, borderRadius: 2 },
   stepLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
@@ -268,30 +268,30 @@ const createSt = () => StyleSheet.create({
   fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, alignSelf: 'stretch' },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder, alignSelf: 'stretch' },
 
-  optionGrid: { flexDirection: 'row', gap: 12, marginBottom: 28 },
+  optionGrid: { flexDirection: i18n.row(), gap: 12, marginBottom: 28 },
   currBtn: { width: 64, height: 64, borderRadius: 16, borderWidth: 1.5, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   currTxt: { color: colors.textDim, fontSize: 24, fontWeight: '700' },
 
-  typeRow: { flexDirection: 'row', gap: 10, marginBottom: 16, alignSelf: 'stretch' },
+  typeRow: { flexDirection: i18n.row(), gap: 10, marginBottom: 16, alignSelf: 'stretch' },
   typeBtn: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.cardBorder, gap: 4 },
   typeTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
-  balRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, alignSelf: 'stretch' },
+  balRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20, alignSelf: 'stretch' },
   balCur: { color: colors.green, fontSize: 28, fontWeight: '700', marginEnd: 8 },
   balInput: { flex: 1, color: colors.text, fontSize: 28, fontWeight: '700' },
 
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16, alignSelf: 'stretch' },
-  catBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.cardBorder, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  catGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16, alignSelf: 'stretch' },
+  catBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.cardBorder, flexDirection: i18n.row(), alignItems: 'center', gap: 6 },
   catTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
-  twoBtn: { flexDirection: 'row', gap: 12, alignSelf: 'stretch' },
+  twoBtn: { flexDirection: i18n.row(), gap: 12, alignSelf: 'stretch' },
   skipBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   skipTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
 
-  primaryBtn: { flexDirection: 'row', alignSelf: 'stretch', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
+  primaryBtn: { flexDirection: i18n.row(), alignSelf: 'stretch', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
   primaryTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
   doneCard: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: 16, padding: 20, marginBottom: 24, gap: 12 },
-  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  doneRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 10 },
   doneTxt: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
 });

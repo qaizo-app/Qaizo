@@ -3,6 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 // Дни по индексу JS (0=Sun, 1=Mon, ... 6=Sat)
@@ -137,14 +138,14 @@ const createStyles = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
   modal: { backgroundColor: colors.bg2, borderRadius: 24, padding: 20, width: '100%', borderWidth: 1, borderColor: colors.cardBorder },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  header: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   navBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
   monthTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
 
-  daysRow: { flexDirection: 'row', marginBottom: 8 },
+  daysRow: { flexDirection: i18n.row(), marginBottom: 8 },
   dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 12, fontWeight: '600' },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  grid: { flexDirection: i18n.row(), flexWrap: 'wrap' },
   cell: { width: '14.28%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 2 },
   cellSelected: { backgroundColor: colors.green, borderRadius: 12 },
   cellToday: { borderWidth: 1.5, borderColor: colors.green, borderRadius: 12 },
@@ -152,8 +153,8 @@ const createStyles = () => StyleSheet.create({
   cellTextSelected: { color: colors.bg, fontWeight: '700' },
   cellTextToday: { color: colors.green, fontWeight: '700' },
 
-  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
-  todayBtn: { flexDirection: 'row', alignItems: 'center', padding: 12 },
+  footer: { flexDirection: i18n.row(), justifyContent: 'space-between', marginTop: 16 },
+  todayBtn: { flexDirection: i18n.row(), alignItems: 'center', padding: 12 },
   todayText: { color: colors.green, fontSize: 14, fontWeight: '600', marginStart: 6 },
   closeBtn: { padding: 12 },
   closeText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },

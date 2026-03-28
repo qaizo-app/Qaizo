@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
+import i18n from '../i18n';
 import { sym } from '../utils/currency';
 
 export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) {
@@ -20,7 +21,7 @@ export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) 
       {selectedDay !== null && dailyExp[selectedDay] > 0 && (
         <View style={st.tooltip}>
           <Text style={st.tooltipDay}>{selectedDay + 1}</Text>
-          <Text style={st.tooltipAmount}>{sym()}{dailyExp[selectedDay].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+          <Text style={st.tooltipAmount}>{dailyExp[selectedDay].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
         </View>
       )}
 
@@ -67,25 +68,25 @@ export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) 
       {/* Avg line label */}
       <View style={st.avgRow}>
         <View style={st.avgLine} />
-        <Text style={st.avgLabel}>{sym()}{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/d</Text>
+        <Text style={st.avgLabel}>{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}/d</Text>
       </View>
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  tooltip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12, marginBottom: 8, alignSelf: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  tooltip: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12, marginBottom: 8, alignSelf: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   tooltipDay: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   tooltipAmount: { color: colors.text, fontSize: 14, fontWeight: '700' },
 
-  chart: { flexDirection: 'row', alignItems: 'flex-end', height: 64, gap: 1 },
+  chart: { flexDirection: i18n.row(), alignItems: 'flex-end', height: 64, gap: 1 },
   barWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 64 },
   bar: { width: '100%', borderRadius: 2, minHeight: 1 },
 
-  labels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
+  labels: { flexDirection: i18n.row(), justifyContent: 'space-between', marginTop: 6 },
   label: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
 
-  avgRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 },
+  avgRow: { flexDirection: i18n.row(), alignItems: 'center', marginTop: 8, gap: 8 },
   avgLine: { flex: 1, height: 1, backgroundColor: colors.textMuted, opacity: 0.3 },
   avgLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
 });

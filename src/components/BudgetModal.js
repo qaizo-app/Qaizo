@@ -79,8 +79,8 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
                 <View style={{ flex: 1 }}>
                   <Text style={st.title}>{catName}</Text>
                   <Text style={st.spentLabel}>
-                    {i18n.t('spent')}: {sym()}{(spent || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                    {currentLimit > 0 ? ` / ${sym()}${currentLimit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${pct}%)` : ''}
+                    {i18n.t('spent')}: {(spent || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
+                    {currentLimit > 0 ? ` / ${currentLimit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()} (${pct}%)` : ''}
                   </Text>
                 </View>
               </View>
@@ -134,19 +134,19 @@ const createSt = () => StyleSheet.create({
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.textMuted, opacity: 0.5, alignSelf: 'center' },
   handleZone: { height: 28, justifyContent: 'center', marginBottom: 8 },
 
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  header: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 24 },
   iconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
   title: { color: colors.text, fontSize: 18, fontWeight: '700' },
   spentLabel: { color: colors.textDim, fontSize: 13, marginTop: 2 },
 
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, paddingHorizontal: 16, marginBottom: 20 },
+  inputRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, paddingHorizontal: 16, marginBottom: 20 },
   currency: { color: colors.green, fontSize: 22, fontWeight: '700', marginEnd: 8 },
   input: { flex: 1, color: colors.text, fontSize: 22, fontWeight: '700', paddingVertical: 16 },
 
-  deleteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.redSoft, marginBottom: 16 },
+  deleteBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.redSoft, marginBottom: 16 },
   deleteTxt: { color: colors.red, fontSize: 14, fontWeight: '600' },
 
-  buttons: { flexDirection: 'row', gap: 12 },
+  buttons: { flexDirection: i18n.row(), gap: 12 },
   cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelTxt: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
   saveBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center' },

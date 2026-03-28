@@ -34,12 +34,12 @@ export default function InteractiveBarChart({ data, maxBar }) {
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.green }]} />
             <Text style={st.tooltipLabel}>{i18n.t('income')}:</Text>
-            <Text style={[st.tooltipVal, { color: colors.green }]}>{sym()}{selectedData.income.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+            <Text style={[st.tooltipVal, { color: colors.green }]}>{selectedData.income.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
           </View>
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.red }]} />
             <Text style={st.tooltipLabel}>{i18n.t('expenses')}:</Text>
-            <Text style={[st.tooltipVal, { color: colors.red }]}>{sym()}{selectedData.expense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+            <Text style={[st.tooltipVal, { color: colors.red }]}>{selectedData.expense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
           </View>
         </View>
       )}
@@ -105,26 +105,26 @@ export default function InteractiveBarChart({ data, maxBar }) {
 
 const st = StyleSheet.create({
   tooltip: { backgroundColor: colors.bg2, borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
-  tooltipMonth: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 6 },
-  tooltipRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  tooltipMonth: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 6, textAlign: i18n.textAlign() },
+  tooltipRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 2 },
   tooltipDot: { width: 8, height: 8, borderRadius: 4 },
   tooltipLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   tooltipVal: { fontSize: 13, fontWeight: '700' },
 
-  chart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 140, paddingTop: 24 },
+  chart: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'flex-end', height: 140, paddingTop: 24 },
   barGroup: { flex: 1, alignItems: 'center', paddingVertical: 4, borderRadius: 8 },
   barGroupActive: { backgroundColor: colors.bg2 },
   barLabels: { alignItems: 'center', marginBottom: 4, minHeight: 14 },
   barAmount: { fontSize: 9, fontWeight: '700' },
-  barsWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 8 },
+  barsWrap: { flexDirection: i18n.row(), alignItems: 'flex-end', gap: 3, marginBottom: 8 },
   bar: { width: 16, borderRadius: 4, minHeight: 2 },
   barIncome: { backgroundColor: colors.green },
   barExpense: { backgroundColor: colors.red },
   barLabel: { color: colors.textMuted, fontSize: 9, fontWeight: '600', textAlign: 'center' },
   barLabelActive: { color: colors.text, fontWeight: '700' },
 
-  legend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 12 },
-  legendItem: { flexDirection: 'row', alignItems: 'center' },
+  legend: { flexDirection: i18n.row(), justifyContent: 'center', gap: 20, marginTop: 12 },
+  legendItem: { flexDirection: i18n.row(), alignItems: 'center' },
   legendDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 6 },
   legendText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
 });

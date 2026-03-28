@@ -116,7 +116,7 @@ export default function StreakCard({ streakData, transactions, weekStart = 'mond
 
 const createSt = () => StyleSheet.create({
   row: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 },
-  startText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+  startText: { color: colors.textMuted, fontSize: 14, fontWeight: '600', flex: 1, flexShrink: 1 },
 
   topRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', marginBottom: 16 },
   streakBadge: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginEnd: 8 },

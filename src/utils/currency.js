@@ -39,12 +39,12 @@ export function fmtNum(amount) {
 }
 
 export function fmt(amount) {
-  return `${_symbol}${fmtNum(amount)}`;
+  return `${fmtNum(amount)} ${_symbol}`;
 }
 
 export function fmtSigned(amount, type) {
   const sign = type === 'income' ? '+' : type === 'expense' ? '-' : '';
-  return `${sign}${_symbol}${fmtNum(amount)}`;
+  return `${sign}${fmtNum(amount)} ${_symbol}`;
 }
 
 // Конвертация между валютами

@@ -2,8 +2,9 @@
 // Тёмный модал подтверждения — замена белому Alert
 import { Feather } from '@expo/vector-icons';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import i18n from '../i18n';
 import { colors } from '../theme/colors';
- 
+
 export default function ConfirmModal({
   visible, title, message, onConfirm, onCancel,
   confirmText = 'Delete', cancelText = 'Cancel',
@@ -60,7 +61,7 @@ const createStyles = () => StyleSheet.create({
     color: colors.textDim, fontSize: 14, textAlign: 'center',
     lineHeight: 20, marginBottom: 24,
   },
-  buttonRow: { flexDirection: 'row', gap: 12, width: '100%' },
+  buttonRow: { flexDirection: i18n.row(), gap: 12, width: '100%' },
   cancelBtn: {
     flex: 1, paddingVertical: 16, borderRadius: 14,
     backgroundColor: colors.card, alignItems: 'center',

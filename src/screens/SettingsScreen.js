@@ -8,6 +8,7 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import ExportModal from '../components/ExportModal';
+import ImportModal from '../components/ImportModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
 import dataService from '../services/dataService';
@@ -23,6 +24,7 @@ export default function SettingsScreen() {
   const [weekStart, setWeekStart] = useState('sunday');
   const [curSymbol, setCurSymbol] = useState(sym());
   const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [langVersion, setLangVersion] = useState(0);
@@ -170,7 +172,7 @@ export default function SettingsScreen() {
             ].map((opt, idx) => (
               <TouchableOpacity key={opt.mode} style={[styles.optRow, idx < 2 && styles.optBorder]}
                 onPress={() => { setThemeMode(opt.mode); setOpenSection(null); }}>
-                <Feather name={opt.icon} size={18} color={colors.textDim} style={{ marginEnd: 12 }} />
+                <Feather name={opt.icon} size={18} color={colors.textDim} style={{ }} />
                 <Text style={styles.optText}>{opt.label}</Text>
                 <View style={[styles.radio, themeMode === opt.mode && styles.radioOn]}>
                   {themeMode === opt.mode && <View style={styles.radioDot} />}
@@ -241,16 +243,21 @@ export default function SettingsScreen() {
         {openSection === 'data' && (
           <Card>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={() => { setOpenSection(null); setShowExport(true); }}>
-              <Feather name="upload" size={18} color={colors.green} style={{ marginEnd: 12 }} />
+              <Feather name="upload" size={18} color={colors.green} style={{ }} />
               <Text style={styles.optText}>{i18n.t('exportData')}</Text>
               <Text style={styles.sectionValue}>CSV / Excel / PDF</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={() => { setOpenSection(null); setShowImport(true); }}>
+              <Feather name="download" size={18} color={colors.blue} style={{ }} />
+              <Text style={styles.optText}>{i18n.t('importData')}</Text>
+              <Text style={styles.sectionValue}>CSV / Excel</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleRecalc}>
-              <Feather name="refresh-cw" size={18} color={colors.blue} style={{ marginEnd: 12 }} />
+              <Feather name="refresh-cw" size={18} color={colors.blue} style={{ }} />
               <Text style={styles.optText}>{i18n.t('recalculate')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.optRow} onPress={() => setShowClearData(true)}>
-              <Feather name="trash-2" size={18} color={colors.red} style={{ marginEnd: 12 }} />
+              <Feather name="trash-2" size={18} color={colors.red} style={{ }} />
               <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('clearData')}</Text>
             </TouchableOpacity>
           </Card>
@@ -311,6 +318,7 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
+      <ImportModal visible={showImport} onClose={() => setShowImport(false)} onImported={() => toast.show(i18n.t('importDone'), 'success')} />
 
       <ConfirmModal visible={showClearData}
         title={i18n.t('clearData')} message={i18n.t('deleteAllData')}
@@ -336,38 +344,38 @@ export default function SettingsScreen() {
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
 
-  sectionBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
-  sectionLeft: { flexDirection: 'row', alignItems: 'center' },
-  sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', marginStart: 12 },
-  sectionRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionBtn: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
+  sectionLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 12 },
+  sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
+  sectionRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   sectionValue: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
 
-  optRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16 },
+  optRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 16, gap: 12 },
   optBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  optEmoji: { fontSize: 22, marginEnd: 14 },
-  optText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '500' },
+  optEmoji: { fontSize: 22 },
+  optText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '500', textAlign: i18n.textAlign() },
 
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.textMuted, justifyContent: 'center', alignItems: 'center' },
   radioOn: { borderColor: colors.green },
   radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.green },
 
-  aboutRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  aboutRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   aboutLogo: { color: colors.text, fontSize: 22, fontWeight: '800' },
   aboutVer: { color: colors.textMuted, fontSize: 12 },
   aboutText: { color: colors.textDim, fontSize: 14, lineHeight: 22, marginBottom: 12 },
   aboutCopy: { color: colors.textMuted, fontSize: 11 },
 
   // Account
-  userRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  userRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 16 },
   avatarWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
   userName: { color: colors.text, fontSize: 16, fontWeight: '700' },
   userEmail: { color: colors.textDim, fontSize: 13, marginTop: 2 },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.redSoft },
+  logoutBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.redSoft },
   logoutTxt: { color: colors.red, fontSize: 14, fontWeight: '600' },
-  deleteAccountBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, marginTop: 8 },
+  deleteAccountBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, marginTop: 8 },
   deleteAccountTxt: { color: colors.red, fontSize: 13, fontWeight: '500' },
-  loginBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
+  loginBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   loginTxt: { color: colors.green, fontSize: 16, fontWeight: '700' },
 });

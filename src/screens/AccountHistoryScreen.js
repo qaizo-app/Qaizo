@@ -71,7 +71,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onDuplicate={handleDuplicate} />
       <View style={styles.balLine}>
         <Text style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]}>
-          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: {account.currency||sym()} {item.runningBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: {item.runningBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {account.currency||sym()}
         </Text>
       </View>
     </View>
@@ -95,9 +95,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
       <View style={styles.balCard}>
         <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
         <Text style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]}>
-          {account.currency||sym()} {currentBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          {currentBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {account.currency||sym()}
         </Text>
-        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: {account.currency||sym()}{account.overdraft.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>}
+        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: {account.overdraft.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {account.currency||sym()}</Text>}
       </View>
 
       <View style={styles.countRow}>
@@ -118,7 +118,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${sym()}${deleteTarget.amount}` : ''}
+        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </GestureHandlerRootView>

@@ -3,6 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 const ICONS = { success: 'check-circle', error: 'alert-circle', info: 'info', warning: 'alert-triangle' };
@@ -47,6 +48,6 @@ export default function Toast({ visible, message, type = 'success', onHide, dura
 
 const createSt = () => StyleSheet.create({
   container: { position: 'absolute', top: 50, left: 20, right: 20, zIndex: 9999, elevation: 9999 },
-  inner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
+  inner: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
   text: { color: colors.text, fontSize: 14, fontWeight: '600', flex: 1 },
 });

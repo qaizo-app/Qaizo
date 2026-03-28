@@ -115,13 +115,13 @@ const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, marginTop: 8 },
 
-  periods: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  periods: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   periodBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg2, borderWidth: 1, borderColor: 'transparent' },
   periodBtnActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
   periodTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
   periodTxtActive: { color: colors.green },
 
-  formats: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+  formats: { flexDirection: i18n.row(), gap: 12, marginBottom: 20 },
   fmtBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 20, borderRadius: 16, backgroundColor: colors.bg2, gap: 8 },
   fmtTxt: { color: colors.text, fontSize: 14, fontWeight: '700' },
 

@@ -230,15 +230,15 @@ const createSt = () => StyleSheet.create({
 
   title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24 },
 
-  errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
+  errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
   errorTxt: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
 
-  inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
+  inputWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
   inputIcon: { marginStart: 16 },
   input: { flex: 1, color: colors.text, fontSize: 16, paddingVertical: 16, paddingHorizontal: 12 },
   eyeBtn: { paddingHorizontal: 16, paddingVertical: 16 },
 
-  strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14, marginTop: -6, paddingHorizontal: 4 },
+  strengthRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginBottom: 14, marginTop: -6, paddingHorizontal: 4 },
   strengthBar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.divider },
   strengthTxt: { fontSize: 11, fontWeight: '600', marginStart: 8 },
 
@@ -248,14 +248,14 @@ const createSt = () => StyleSheet.create({
   linkBtn: { alignItems: 'center', paddingVertical: 8 },
   linkTxt: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
 
-  switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24 },
+  switchRow: { flexDirection: i18n.row(), justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24 },
   switchTxt: { color: colors.textMuted, fontSize: 14 },
   switchLink: { color: colors.green, fontSize: 14, fontWeight: '700' },
 
-  orRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
+  orRow: { flexDirection: i18n.row(), alignItems: 'center', marginVertical: 16 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.divider },
   orTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500', marginHorizontal: 16 },
-  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderRadius: 14, paddingVertical: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10, marginBottom: 8 },
+  googleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderRadius: 14, paddingVertical: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10, marginBottom: 8 },
   googleG: { fontSize: 20, fontWeight: '800', color: '#4285F4' },
   googleTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
 

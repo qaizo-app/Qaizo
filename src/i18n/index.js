@@ -6,6 +6,7 @@ import en from './en';
 const languages = { ru, he, en };
 
 let currentLang = 'ru';
+const listeners = new Set();
 
 const i18n = {
   t(key) {
@@ -15,7 +16,13 @@ const i18n = {
   setLanguage(lang) {
     if (languages[lang]) {
       currentLang = lang;
+      listeners.forEach(fn => fn(lang));
     }
+  },
+
+  onLanguageChange(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
   },
 
   getLanguage() {
@@ -33,6 +40,10 @@ const i18n = {
   isRTL() {
     return currentLang === 'he';
   },
+
+  // RTL helpers for styles
+  row() { return currentLang === 'he' ? 'row-reverse' : 'row'; },
+  textAlign() { return currentLang === 'he' ? 'right' : 'left'; },
 };
 
 export default i18n;

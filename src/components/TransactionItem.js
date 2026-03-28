@@ -81,19 +81,19 @@ function formatDate(dateStr) {
 
 const createStyles = () => StyleSheet.create({
   container: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: 4,
+    flexDirection: i18n.row(), alignItems: 'center', gap: 14,
+    paddingVertical: 14, paddingHorizontal: 6,
     backgroundColor: colors.card,
     borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
-  info: { flex: 1, marginStart: 14 },
-  category: { color: colors.text, fontSize: 15, fontWeight: '600', letterSpacing: -0.2 },
-  note: { color: colors.textMuted, fontSize: 12, marginTop: 3 },
-  amountContainer: { alignItems: 'flex-end' },
+  info: { flex: 1 },
+  category: { color: colors.text, fontSize: 15, fontWeight: '600', letterSpacing: -0.2, textAlign: i18n.textAlign() },
+  note: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: i18n.textAlign() },
+  amountContainer: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
   amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3 },
   date: { color: colors.textMuted, fontSize: 11, marginTop: 3 },
 
-  actionsRow: { flexDirection: 'row' },
+  actionsRow: { flexDirection: i18n.row() },
   actionBtn: {
     width: 68, justifyContent: 'center', alignItems: 'center',
   },

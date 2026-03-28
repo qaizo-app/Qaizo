@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -248,7 +249,7 @@ export default function DashboardScreen() {
             <Text style={st.logo}><Text style={{ color: colors.green }}>Q</Text>aizo</Text>
             <Text style={st.subtitle}>{dateStr}</Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: i18n.row(), gap: 8 }}>
           <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
             <Feather name="sliders" size={18} color={colors.textDim} />
           </TouchableOpacity>
@@ -272,14 +273,14 @@ export default function DashboardScreen() {
               return (
                 <Card key="balance" highlighted>
                   <Text style={st.balLabel}>{i18n.t('totalBalance')}</Text>
-                  <Text style={[st.balAmount, { color: balance >= 0 ? colors.text : colors.red }]}>{sym()} {balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                  <Text style={[st.balAmount, { color: balance >= 0 ? colors.text : colors.red }]}>{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                   <View style={st.incExpRow}>
                     <View style={st.incExpItem}>
                       <View style={st.incExpHead}>
                         <Feather name="trending-up" size={14} color={colors.green} />
                         <Text style={st.incLabel}> {i18n.t('income')}</Text>
                       </View>
-                      <Text style={st.incAmount}>{sym()} {totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                      <Text style={st.incAmount}>{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                     </View>
                     <View style={st.dividerV} />
                     <View style={st.incExpItem}>
@@ -287,7 +288,7 @@ export default function DashboardScreen() {
                         <Feather name="trending-down" size={14} color={colors.red} />
                         <Text style={st.expLabel}> {i18n.t('expenses')}</Text>
                       </View>
-                      <Text style={st.expAmount}>{sym()} {totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                      <Text style={st.expAmount}>{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                     </View>
                   </View>
                 </Card>
@@ -339,7 +340,7 @@ export default function DashboardScreen() {
                     <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
                   </View>
                   <Text style={[st.freeAmount, { color: freeTodayColor }]}>
-                    {sym()}{freeToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    {freeToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
                   </Text>
 
                   {/* Progress bar */}
@@ -352,20 +353,20 @@ export default function DashboardScreen() {
                     {spentToday > 0 && (
                       <View style={st.freeDetail}>
                         <Feather name="shopping-cart" size={12} color={colors.red} />
-                        <Text style={st.freeDetailTxt}>{i18n.t('spentToday')}: {sym()}{spentToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                        <Text style={st.freeDetailTxt}>{i18n.t('spentToday')}: {spentToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                       </View>
                     )}
                     {upcomingExpenses > 0 && (
                       <View style={st.freeDetail}>
                         <Feather name="clock" size={12} color={colors.orange} />
-                        <Text style={st.freeDetailTxt}>{i18n.t('upcomingBills')}: {sym()}{upcomingExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                        <Text style={st.freeDetailTxt}>{i18n.t('upcomingBills')}: {upcomingExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                       </View>
                     )}
                     {savedYesterday !== 0 && spentYesterday > 0 && (
                       <View style={st.freeDetail}>
                         <Feather name={savedYesterday > 0 ? 'trending-down' : 'trending-up'} size={12} color={savedYesterday > 0 ? colors.green : colors.red} />
                         <Text style={[st.freeDetailTxt, { color: savedYesterday > 0 ? colors.green : colors.red }]}>
-                          {savedYesterday > 0 ? i18n.t('savedYesterday') : i18n.t('overspentYesterday')}: {sym()}{Math.abs(savedYesterday).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          {savedYesterday > 0 ? i18n.t('savedYesterday') : i18n.t('overspentYesterday')}: {Math.abs(savedYesterday).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
                         </Text>
                       </View>
                     )}
@@ -396,7 +397,7 @@ export default function DashboardScreen() {
                       <View style={st.totalBudgetRow}>
                         <Text style={st.totalBudgetLabel}>{i18n.t('totalBudget')}</Text>
                         <Text style={st.totalBudgetAmount}>
-                          {sym()}{totalBudgetSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} / {sym()}{totalBudgetLimit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          {totalBudgetSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} / {totalBudgetLimit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
                         </Text>
                       </View>
                       <View style={st.barBgThick}>
@@ -407,8 +408,8 @@ export default function DashboardScreen() {
                       </View>
                       <Text style={st.totalBudgetLeft}>
                         {totalBudgetPct <= 100
-                          ? `${i18n.t('left')}: ${sym()}${(totalBudgetLimit - totalBudgetSpent).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-                          : `${i18n.t('over')}: ${sym()}${(totalBudgetSpent - totalBudgetLimit).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                          ? `${i18n.t('left')}: ${(totalBudgetLimit - totalBudgetSpent).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()}`
+                          : `${i18n.t('over')}: ${(totalBudgetSpent - totalBudgetLimit).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()}`
                         }
                       </Text>
                     </Card>
@@ -431,11 +432,11 @@ export default function DashboardScreen() {
                               {hb ? (
                                 <>
                                   <Text style={[st.budgetPct, { color: barColor }]}>{pct}%</Text>
-                                  <Text style={st.budgetAmount}>{sym()}{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} / {sym()}{limit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                                  <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} / {limit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                                 </>
                               ) : (
                                 <>
-                                  <Text style={st.budgetAmount}>{sym()}{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+                                  <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                                   <Feather name="plus-circle" size={14} color={colors.textMuted} style={{ marginStart: 6 }} />
                                 </>
                               )}
@@ -472,27 +473,41 @@ export default function DashboardScreen() {
                         const diffDays = Math.ceil((nd - today) / (1000 * 60 * 60 * 24));
                         const isOverdue = diffDays <= 0;
                         const dateLabel = isOverdue ? i18n.t('today') : diffDays === 1 ? i18n.t('tomorrow') : `${diffDays} ${i18n.t('days')}`;
+                        const renderRecSwipeActions = () => (
+                          <View style={{ flexDirection: i18n.row() }}>
+                            <TouchableOpacity style={[st.recSwipeBtn, { backgroundColor: 'rgba(251,191,36,0.15)' }]}
+                              onPress={() => { setEditRecurring(rec); }}>
+                              <Feather name="edit-2" size={18} color={colors.yellow} />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[st.recSwipeBtn, { backgroundColor: colors.redSoft }]}
+                              onPress={() => handleDeleteRecurring(rec.id)}>
+                              <Feather name="trash-2" size={18} color={colors.red} />
+                            </TouchableOpacity>
+                          </View>
+                        );
                         return (
-                          <TouchableOpacity key={rec.id} style={st.recRow} onPress={() => setRecDetail(rec)} activeOpacity={0.6}>
-                            <View style={[st.recIcon, { backgroundColor: cfg.color + '20' }]}>
-                              <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
-                            </View>
-                            <View style={st.recInfo}>
-                              <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
-                              <Text style={st.recMeta}>
-                                {rec.type === 'expense' ? '-' : '+'}{sym()}{rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} · {dateLabel}
-                              </Text>
-                            </View>
-                            <View style={st.recActions}>
-                              <TouchableOpacity style={st.recSkip} onPress={() => handleSkipRecurring(rec.id)}>
-                                <Feather name="fast-forward" size={16} color={colors.textMuted} />
-                              </TouchableOpacity>
-                              <TouchableOpacity style={[st.recConfirm, isOverdue && { backgroundColor: colors.yellow + '20' }]}
-                                onPress={() => handleConfirmRecurring(rec.id)}>
-                                <Feather name="check" size={16} color={isOverdue ? colors.yellow : colors.green} />
-                              </TouchableOpacity>
-                            </View>
-                          </TouchableOpacity>
+                          <Swipeable key={rec.id} renderRightActions={renderRecSwipeActions} renderLeftActions={renderRecSwipeActions} overshootRight={false} overshootLeft={false}>
+                            <TouchableOpacity style={st.recRow} onPress={() => setRecDetail(rec)} activeOpacity={0.6}>
+                              <View style={[st.recIcon, { backgroundColor: cfg.color + '20' }]}>
+                                <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
+                              </View>
+                              <View style={st.recInfo}>
+                                <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
+                                <Text style={st.recMeta}>
+                                  {rec.type === 'expense' ? '-' : '+'}{rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} · {dateLabel}
+                                </Text>
+                              </View>
+                              <View style={st.recActions}>
+                                <TouchableOpacity style={st.recSkip} onPress={() => handleSkipRecurring(rec.id)}>
+                                  <Feather name="fast-forward" size={16} color={colors.textMuted} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[st.recConfirm, isOverdue && { backgroundColor: colors.yellow + '20' }]}
+                                  onPress={() => handleConfirmRecurring(rec.id)}>
+                                  <Feather name="check" size={16} color={isOverdue ? colors.yellow : colors.green} />
+                                </TouchableOpacity>
+                              </View>
+                            </TouchableOpacity>
+                          </Swipeable>
                         );
                       })}
                     </Card>
@@ -571,7 +586,7 @@ export default function DashboardScreen() {
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${sym()}${deleteTarget.amount}` : ''}
+        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
       <BudgetModal visible={!!budgetModal} categoryId={budgetModal?.categoryId}
@@ -685,7 +700,7 @@ export default function DashboardScreen() {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
+  header: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
   logo: { color: colors.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 },
   subtitle: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
@@ -693,7 +708,7 @@ const createSt = () => StyleSheet.create({
   balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, textAlign: i18n.isRTL() ? 'right' : 'left' },
   incExpRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
   incExpItem: { flex: 1 },
-  incExpHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  incExpHead: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 6 },
   dividerV: { width: 1, height: 40, backgroundColor: colors.divider, marginHorizontal: 16 },
   incLabel: { color: colors.green, fontSize: 12, fontWeight: '600' },
   incAmount: { color: colors.green, fontSize: 20, fontWeight: '700', paddingStart: 4 },
@@ -703,18 +718,18 @@ const createSt = () => StyleSheet.create({
   blockTitleRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   seeAll: { color: colors.green, fontSize: 13, fontWeight: '600' },
   totalPct: { fontSize: 15, fontWeight: '700' },
-  totalBudgetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  totalBudgetRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   totalBudgetLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
   totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
   barBgThick: { height: 10, backgroundColor: colors.bg2, borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
   barFillThick: { height: 10, borderRadius: 5 },
   totalBudgetLeft: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
   budgetRow: { marginBottom: 16 },
-  budgetInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  budgetLeft: { flexDirection: 'row', alignItems: 'center' },
-  budgetRight: { flexDirection: 'row', alignItems: 'center' },
-  budgetDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 8 },
-  budgetCat: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  budgetInfo: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  budgetLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
+  budgetRight: { flexDirection: i18n.row(), alignItems: 'center' },
+  budgetDot: { width: 8, height: 8, borderRadius: 4 },
+  budgetCat: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   budgetPct: { fontSize: 13, fontWeight: '700', marginEnd: 8 },
   budgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
   barBg: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
@@ -724,14 +739,14 @@ const createSt = () => StyleSheet.create({
   fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10, zIndex: 10 },
   fabOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 5 },
   fabMenu: { position: 'absolute', right: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden', minWidth: 200 },
-  fabMenuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 20, gap: 12 },
+  fabMenuItem: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 16, paddingHorizontal: 20, gap: 12 },
   fabMenuTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
   fabMenuDivider: { height: 1, backgroundColor: colors.divider },
 
   // Quick select sheet
   quickSelectSheet: { position: 'absolute', right: 24, left: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder, padding: 20 },
   quickSelectTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  quickSelectGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+  quickSelectGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
 
   // Quick templates
   quickBtn: { alignItems: 'center', width: 68, paddingVertical: 8 },
@@ -750,14 +765,15 @@ const createSt = () => StyleSheet.create({
   freeDetailTxt: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
 
   // Recurring
-  recRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  recRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
   recIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginEnd: 12 },
   recInfo: { flex: 1 },
   recName: { color: colors.text, fontSize: 15, fontWeight: '600' },
   recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2 },
-  recActions: { flexDirection: 'row', gap: 8 },
+  recActions: { flexDirection: i18n.row(), gap: 8 },
   recSkip: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   recConfirm: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
+  recSwipeBtn: { width: 60, justifyContent: 'center', alignItems: 'center' },
   recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 
@@ -768,14 +784,14 @@ const createSt = () => StyleSheet.create({
   // Notifications modal
   notifOverlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-start', paddingTop: 110, alignItems: 'center' },
   notifModal: { backgroundColor: colors.bg2, borderRadius: 24, marginHorizontal: 20, width: SW - 40, maxHeight: 420, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden' },
-  notifHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 20, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  notifHeader: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, padding: 20, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.divider },
   notifTitle: { color: colors.text, fontSize: 17, fontWeight: '700', flex: 1 },
   notifClearBtn: { paddingVertical: 4, paddingHorizontal: 10 },
   notifClearTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   notifEmpty: { alignItems: 'center', paddingVertical: 40, gap: 12 },
   notifEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
   notifList: { maxHeight: 340, paddingHorizontal: 20 },
-  notifItem: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
+  notifItem: { flexDirection: i18n.row(), alignItems: 'flex-start', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
   notifDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.green, marginTop: 6 },
   notifItemTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 2 },
   notifItemBody: { color: colors.textDim, fontSize: 13, lineHeight: 18 },

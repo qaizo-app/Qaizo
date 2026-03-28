@@ -173,17 +173,17 @@ const createSt = () => StyleSheet.create({
   subtitle: { color: colors.textDim, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
 
   featureList: { alignSelf: 'stretch', gap: 12 },
-  featureRow: { flexDirection: 'row', alignItems: 'center' },
+  featureRow: { flexDirection: i18n.row(), alignItems: 'center' },
   featureDot: { width: 6, height: 6, borderRadius: 3, marginEnd: 12 },
   featureText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', flex: 1 },
 
   bottom: { paddingHorizontal: 24, paddingBottom: 40 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 24 },
+  dots: { flexDirection: i18n.row(), justifyContent: 'center', gap: 8, marginBottom: 24 },
   dot: { width: 8, height: 8, borderRadius: 4 },
 
-  btnRow: { flexDirection: 'row', gap: 12 },
+  btnRow: { flexDirection: i18n.row(), gap: 12 },
   skipBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   skipTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
-  nextBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  nextBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   nextTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });
