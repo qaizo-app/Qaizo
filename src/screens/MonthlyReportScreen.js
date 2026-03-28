@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
+import DailyExpensesChart from '../components/DailyExpensesChart';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
@@ -85,8 +86,6 @@ export default function MonthlyReportScreen() {
     const d = new Date(t.date || t.createdAt).getDate();
     if (d >= 1 && d <= daysInMonth) dailyExp[d - 1] += t.amount;
   });
-  const maxDaily = Math.max(...dailyExp, 1);
-
   // Доходы по категориям
   const incCatTotals = {};
   incTxs.forEach(t => {
@@ -172,21 +171,7 @@ export default function MonthlyReportScreen() {
               <Text style={st.sectionTitle}>{i18n.t('dailyExpenses')}</Text>
             </View>
             <Card>
-              <View style={st.dailyChart}>
-                {dailyExp.map((val, idx) => (
-                  <View key={idx} style={st.dailyBarWrap}>
-                    <View style={[st.dailyBar, {
-                      height: Math.max((val / maxDaily) * 60, 1),
-                      backgroundColor: val > avgDaily * 1.5 ? colors.red : val > 0 ? colors.green : colors.card,
-                    }]} />
-                  </View>
-                ))}
-              </View>
-              <View style={st.dailyLabels}>
-                <Text style={st.dailyLabel}>1</Text>
-                <Text style={st.dailyLabel}>{Math.round(daysInMonth / 2)}</Text>
-                <Text style={st.dailyLabel}>{daysInMonth}</Text>
-              </View>
+              <DailyExpensesChart dailyExp={dailyExp} avgDaily={avgDaily} daysInMonth={daysInMonth} />
             </Card>
           </>
         )}
@@ -298,12 +283,6 @@ const createSt = () => StyleSheet.create({
 
   sectionHeader: { paddingHorizontal: 24, marginTop: 24, marginBottom: 10 },
   sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
-
-  dailyChart: { flexDirection: 'row', alignItems: 'flex-end', height: 64, gap: 1 },
-  dailyBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
-  dailyBar: { width: '100%', borderRadius: 2, minHeight: 1 },
-  dailyLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  dailyLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
 
   catRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
   catLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },

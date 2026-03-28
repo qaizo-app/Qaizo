@@ -5,12 +5,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { PieChart } from 'react-native-chart-kit';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import BudgetModal from '../components/BudgetModal';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
+import InteractivePieChart from '../components/InteractivePieChart';
+import InteractiveBarChart from '../components/InteractiveBarChart';
 import QuickAddModal from '../components/QuickAddModal';
 import SmartInputModal from '../components/SmartInputModal';
 import RecurringDetailModal from '../components/RecurringDetailModal';
@@ -293,18 +294,7 @@ export default function DashboardScreen() {
               <Text style={st.sectionTitle}>{i18n.t('expensesByCategory')}</Text>
             </View>
             <Card>
-              <PieChart
-                data={pieData}
-                width={SW - 88}
-                height={180}
-                chartConfig={{ color: () => colors.textDim }}
-                accessor="amount"
-                backgroundColor="transparent"
-                paddingLeft="0"
-                center={[0, 0]}
-                hasLegend={true}
-                absolute
-              />
+              <InteractivePieChart data={pieData} size={200} />
             </Card>
           </>
         )}
@@ -442,27 +432,7 @@ export default function DashboardScreen() {
               <Text style={st.sectionTitle}>{i18n.t('sixMonths')}</Text>
             </View>
             <Card>
-              <View style={st.barChart}>
-                {barData.map((d, idx) => (
-                  <View key={idx} style={st.barGroup}>
-                    <View style={st.barsWrap}>
-                      <View style={[st.bar, st.barIncome, { height: Math.max((d.income / maxBar) * 100, 2) }]} />
-                      <View style={[st.bar, st.barExpense, { height: Math.max((d.expense / maxBar) * 100, 2) }]} />
-                    </View>
-                    <Text style={st.barLabel}>{d.month}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={st.barLegend}>
-                <View style={st.legendItem}>
-                  <View style={[st.legendDot, { backgroundColor: colors.green }]} />
-                  <Text style={st.legendText}>{i18n.t('income')}</Text>
-                </View>
-                <View style={st.legendItem}>
-                  <View style={[st.legendDot, { backgroundColor: colors.red }]} />
-                  <Text style={st.legendText}>{i18n.t('expenses')}</Text>
-                </View>
-              </View>
+              <InteractiveBarChart data={barData} maxBar={maxBar} />
             </Card>
           </>
         )}
@@ -662,17 +632,6 @@ const createSt = () => StyleSheet.create({
   budgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
   barBg: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: 6, borderRadius: 3 },
-  barChart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, paddingTop: 8 },
-  barGroup: { flex: 1, alignItems: 'center' },
-  barsWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 8 },
-  bar: { width: 14, borderRadius: 4, minHeight: 2 },
-  barIncome: { backgroundColor: colors.green },
-  barExpense: { backgroundColor: colors.red },
-  barLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
-  barLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 12 },
-  legendItem: { flexDirection: 'row', alignItems: 'center' },
-  legendDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 6 },
-  legendText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   empty: { alignItems: 'center', paddingVertical: 36 },
   emptyText: { color: colors.textMuted, fontSize: 15, fontWeight: '600', marginTop: 12 },
   fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10, zIndex: 10 },
