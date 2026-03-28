@@ -254,6 +254,7 @@ export default {
   hasAccount: 'Already have an account?',
   rememberPassword: 'Remember password?',
   continueWithout: 'Continue without signing in',
+  continueWithGoogle: 'Continue with Google',
   resetSent: 'Reset link sent to your email',
   logout: 'Sign Out',
   loggedOut: 'Signed out',

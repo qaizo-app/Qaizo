@@ -4,11 +4,22 @@ jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(() => ({ currentUser: null })),
   createUserWithEmailAndPassword: jest.fn(),
   signInWithEmailAndPassword: jest.fn(),
+  signInWithCredential: jest.fn(),
   signOut: jest.fn(),
   onAuthStateChanged: jest.fn(),
   sendPasswordResetEmail: jest.fn(),
   updateProfile: jest.fn(),
+  GoogleAuthProvider: { credential: jest.fn() },
 }));
+jest.mock('expo-auth-session', () => ({
+  makeRedirectUri: jest.fn(() => 'test://redirect'),
+  AuthRequest: jest.fn(),
+  ResponseType: { IdToken: 'id_token' },
+}));
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+}));
+jest.mock('expo-crypto', () => ({}));
 jest.mock('firebase/firestore', () => ({
   initializeFirestore: jest.fn(() => ({})),
   persistentLocalCache: jest.fn(),

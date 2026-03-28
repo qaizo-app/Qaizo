@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
 
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
@@ -22,7 +23,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
   const [intervalMonths, setIntervalMonths] = useState(1);
-  const [startDay, setStartDay] = useState('1');
+  const [startDate, setStartDate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [endType, setEndType] = useState('none'); // none, count, date
   const [totalCount, setTotalCount] = useState('12');
   const [endDate, setEndDate] = useState('');
@@ -42,14 +44,14 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           setNote(editItem.note || '');
           setSelAcc(editItem.account || (active[0]?.id || ''));
           setIntervalMonths(editItem.intervalMonths || 1);
-          setStartDay(editItem.nextDate ? String(new Date(editItem.nextDate).getDate()) : '1');
+          setStartDate(editItem.nextDate ? editItem.nextDate.slice(0, 10) : '');
           setEndType(editItem.endType || 'none');
           setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
           setEndDate(editItem.endDate || '');
         } else {
           setType('expense'); setAmount(''); setCategoryId('rent');
           setRecipient(''); setNote(''); setIntervalMonths(1);
-          setStartDay('1'); setEndType('none'); setTotalCount('12'); setEndDate('');
+          setStartDate(''); setEndType('none'); setTotalCount('12'); setEndDate('');
           if (active.length > 0) setSelAcc(active[0].id);
         }
       });
@@ -62,16 +64,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
   const handleSave = async () => {
     if (!amount || parseFloat(amount) <= 0) return;
-    const now = new Date();
-    const day = parseInt(startDay, 10) || 1;
-    let nextMonth = now.getMonth();
-    let nextYear = now.getFullYear();
-    // Если день уже прошёл в этом месяце — начинаем со следующего
-    if (day <= now.getDate()) {
-      nextMonth += 1;
-      if (nextMonth > 11) { nextMonth = 0; nextYear += 1; }
+    // Используем выбранную дату или завтра по умолчанию
+    let nextDate = startDate;
+    if (!nextDate) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      nextDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
     }
-    const nextDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     const data = {
       type,
@@ -182,10 +181,24 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
             ))}
           </View>
 
-          {/* День месяца */}
-          <Text style={st.label}>{i18n.t('dayOfMonth')}</Text>
-          <TextInput style={[st.input, { width: 80 }]} value={startDay} onChangeText={setStartDay}
-            keyboardType="numeric" placeholder="1" placeholderTextColor={colors.textMuted} />
+          {/* Дата начала */}
+          <Text style={st.label}>{i18n.t('date')}</Text>
+          <TouchableOpacity style={st.dateBtn} onPress={() => setShowDatePicker(true)}>
+            <Feather name="calendar" size={16} color={startDate ? colors.green : colors.textMuted} />
+            <Text style={[st.dateTxt, startDate && { color: colors.text }]}>
+              {startDate ? (() => {
+                const d = new Date(startDate + 'T00:00:00');
+                const lang = i18n.getLanguage();
+                const monthNames = {
+                  ru: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+                  he: ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'],
+                  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                };
+                const m = (monthNames[lang] || monthNames.en)[d.getMonth()];
+                return `${d.getDate()} ${m} ${d.getFullYear()}`;
+              })() : i18n.t('date')}
+            </Text>
+          </TouchableOpacity>
 
           {/* Окончание */}
           <Text style={st.label}>{i18n.t('endCondition')}</Text>
@@ -233,6 +246,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               <Text style={st.saveTxt}>{i18n.t('save')}</Text>
             </TouchableOpacity>
           </View>
+          <DatePickerModal
+            visible={showDatePicker}
+            onClose={() => setShowDatePicker(false)}
+            onSelect={(date) => setStartDate(date)}
+            selectedDate={startDate || undefined}
+            lang={i18n.getLanguage()}
+          />
         </ScrollView>
       )}
     </SwipeModal>
@@ -254,6 +274,8 @@ const createSt = () => StyleSheet.create({
   intervalRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   intervalBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder },
   intervalTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  dateBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
+  dateTxt: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
   endRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   endLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
   btnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },

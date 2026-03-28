@@ -256,6 +256,7 @@ export default {
   hasAccount: 'Уже есть аккаунт?',
   rememberPassword: 'Вспомнили пароль?',
   continueWithout: 'Продолжить без входа',
+  continueWithGoogle: 'Войти через Google',
   resetSent: 'Ссылка для сброса отправлена на email',
   confirmPassword: 'Подтвердите пароль',
   passwordsMismatch: 'Пароли не совпадают',

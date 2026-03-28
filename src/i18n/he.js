@@ -247,6 +247,7 @@ export default {
   hasAccount: '?כבר יש חשבון',
   rememberPassword: '?נזכרת בסיסמה',
   continueWithout: 'המשך ללא כניסה',
+  continueWithGoogle: 'התחבר עם Google',
   resetSent: 'קישור לאיפוס נשלח למייל',
   confirmPassword: 'אימות סיסמה',
   passwordsMismatch: 'הסיסמאות לא תואמות',

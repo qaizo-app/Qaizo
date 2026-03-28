@@ -58,6 +58,14 @@ export default function AuthScreen({ onSkip }) {
     }
   };
 
+  const handleGoogle = async () => {
+    setLoading(true);
+    setError('');
+    const result = await authService.loginWithGoogle();
+    setLoading(false);
+    if (!result.success) setError(result.error);
+  };
+
   const handleSubmit = () => {
     if (mode === 'login') handleLogin();
     else if (mode === 'register') handleRegister();
@@ -67,8 +75,9 @@ export default function AuthScreen({ onSkip }) {
   const tc = colors.green;
 
   return (
-    <KeyboardAvoidingView style={st.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={st.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
+        bounces={false} overScrollMode="never">
 
         {/* Лого */}
         <View style={st.logoWrap}>
@@ -164,6 +173,21 @@ export default function AuthScreen({ onSkip }) {
           )}
         </TouchableOpacity>
 
+        {/* Google Sign-In */}
+        {mode !== 'reset' && (
+          <>
+            <View style={st.orRow}>
+              <View style={st.orLine} />
+              <Text style={st.orTxt}>or</Text>
+              <View style={st.orLine} />
+            </View>
+            <TouchableOpacity style={st.googleBtn} onPress={handleGoogle} disabled={loading} activeOpacity={0.8}>
+              <Text style={st.googleG}>G</Text>
+              <Text style={st.googleTxt}>{i18n.t('continueWithGoogle')}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
         {/* Забыл пароль */}
         {mode === 'login' && (
           <TouchableOpacity style={st.linkBtn} onPress={() => { setMode('reset'); setError(''); }}>
@@ -198,7 +222,7 @@ export default function AuthScreen({ onSkip }) {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 28, paddingBottom: 40 },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 40 },
 
   logoWrap: { alignItems: 'center', marginBottom: 40 },
   logo: { color: colors.text, fontSize: 42, fontWeight: '800', letterSpacing: -2 },
@@ -227,6 +251,13 @@ const createSt = () => StyleSheet.create({
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24 },
   switchTxt: { color: colors.textMuted, fontSize: 14 },
   switchLink: { color: colors.green, fontSize: 14, fontWeight: '700' },
+
+  orRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.divider },
+  orTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500', marginHorizontal: 16 },
+  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderRadius: 14, paddingVertical: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10, marginBottom: 8 },
+  googleG: { fontSize: 20, fontWeight: '800', color: '#4285F4' },
+  googleTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
 
   skipBtn: { alignItems: 'center', marginTop: 20 },
   skipTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500', textDecorationLine: 'underline' },
