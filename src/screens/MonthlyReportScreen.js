@@ -125,17 +125,17 @@ export default function MonthlyReportScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.green }]}>{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Text style={[st.summaryAmount, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit>{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.red }]}>{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Text style={[st.summaryAmount, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('balance')}</Text>
-              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]} numberOfLines={1} adjustsFontSizeToFit>{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
             </View>
           </View>
         </Card>
@@ -282,7 +282,7 @@ const createSt = () => StyleSheet.create({
   statLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'center' },
 
   sectionHeader: { paddingHorizontal: 24, marginTop: 24, marginBottom: 10 },
-  sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+  sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, textAlign: i18n.textAlign() },
 
   catRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
   catLeft: { flexDirection: i18n.row(), alignItems: 'center', flex: 1, gap: 8 },

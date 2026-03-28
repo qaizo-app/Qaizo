@@ -147,14 +147,29 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
               onPress={() => handlePress(slice.idx)}
               activeOpacity={0.7}
             >
-              <View style={[st.legendDot, { backgroundColor: slice.color }]} />
-              <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
-                {slice.name}
-              </Text>
-              <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
-                {slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-              </Text>
-              <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
+              {rtl() ? (
+                <>
+                  <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
+                  <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
+                    {slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
+                  </Text>
+                  <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
+                    {slice.name}
+                  </Text>
+                  <View style={[st.legendDot, { backgroundColor: slice.color }]} />
+                </>
+              ) : (
+                <>
+                  <View style={[st.legendDot, { backgroundColor: slice.color }]} />
+                  <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
+                    {slice.name}
+                  </Text>
+                  <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
+                    {slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
+                  </Text>
+                  <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
+                </>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -170,10 +185,10 @@ const st = StyleSheet.create({
   centerPct: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginTop: 2 },
 
   legend: { width: '100%', marginTop: 16, gap: 2 },
-  legendRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, gap: 10 },
+  legendRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, gap: 10 },
   legendRowActive: { backgroundColor: colors.bg2 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendName: { flex: 1, color: colors.textDim, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
+  legendName: { flex: 1, color: colors.textDim, fontSize: 13, fontWeight: '600', textAlign: rtl() ? 'right' : 'left' },
   legendNameActive: { color: colors.text },
   legendAmount: { color: colors.textDim, fontSize: 13, fontWeight: '700' },
   legendAmountActive: { color: colors.text },

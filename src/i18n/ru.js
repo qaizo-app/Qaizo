@@ -118,6 +118,17 @@ export default {
   hishtalmut: 'Керен Хишталмут',
   totalInvested: 'Всего вложено',
   monthlyContribution: 'Ежемесячный взнос',
+  noInvestments: 'Нет инвестиций',
+  investmentsHint: 'Отслеживайте пенсию, накопительные фонды, акции, облигации и другие инвестиции. Импорт из CSV или ручной ввод.',
+  month: 'мес',
+  pension: 'Пенсия',
+  savings: 'Накопительный фонд',
+  education: 'Учебный фонд',
+  stocks: 'Акции',
+  bonds: 'Облигации',
+  real_estate: 'Недвижимость',
+  crypto: 'Крипто',
+  children: 'Детские накопления',
 
   // AI Advisor
   aiGreeting: 'Привет! Я ваш финансовый советник.',

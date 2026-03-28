@@ -37,7 +37,7 @@ export default function StreakCard({ streakData, transactions, weekStart = 'mond
 
   // Метки дней по языку: index 0=Sunday, 1=Monday, ... 6=Saturday
   const allLabels = i18n.getLanguage() === 'he'
-    ? ['ש','א','ב','ג','ד','ה','ו']  // Sun..Sat
+    ? ['א','ב','ג','ד','ה','ו','ש']  // Sun=א, Mon=ב, ... Sat=ש
     : i18n.getLanguage() === 'ru'
     ? ['Вс','Пн','Вт','Ср','Чт','Пт','Сб']
     : ['S','M','T','W','T','F','S'];

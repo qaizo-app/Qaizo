@@ -609,12 +609,14 @@ export default function DashboardScreen() {
             <Text style={st.quickSelectTitle}>{i18n.t('quickAdd')}</Text>
             <View style={st.quickSelectGrid}>
               {[
-                { categoryId: 'food', icon: 'shopping-cart', recipient: '', defaultAmount: null },
-                { categoryId: 'restaurant', icon: 'coffee', recipient: '', defaultAmount: null },
-                { categoryId: 'fuel', icon: 'droplet', recipient: '', defaultAmount: null },
-                { categoryId: 'transport', icon: 'navigation', recipient: '', defaultAmount: null },
-                { categoryId: 'health', icon: 'heart', recipient: '', defaultAmount: null },
-                { categoryId: 'phone', icon: 'smartphone', recipient: '', defaultAmount: null },
+                { categoryId: 'food', icon: 'shopping-cart' },
+                { categoryId: 'restaurant', icon: 'coffee' },
+                { categoryId: 'fuel', icon: 'droplet' },
+                { categoryId: 'transport', icon: 'navigation' },
+                { categoryId: 'household', icon: 'home' },
+                { categoryId: 'health', icon: 'heart' },
+                { categoryId: 'clothing', icon: 'shopping-bag' },
+                { categoryId: 'entertainment', icon: 'film' },
               ].map(tpl => {
                 const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
                 return (
@@ -714,8 +716,8 @@ const createSt = () => StyleSheet.create({
   incAmount: { color: colors.green, fontSize: 20, fontWeight: '700', paddingStart: 4 },
   expLabel: { color: colors.red, fontSize: 12, fontWeight: '600' },
   expAmount: { color: colors.red, fontSize: 20, fontWeight: '700', paddingStart: 4 },
-  blockTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 12, textAlign: i18n.isRTL() ? 'right' : 'left' },
-  blockTitleRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  blockTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
+  blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   seeAll: { color: colors.green, fontSize: 13, fontWeight: '600' },
   totalPct: { fontSize: 15, fontWeight: '700' },
   totalBudgetRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },

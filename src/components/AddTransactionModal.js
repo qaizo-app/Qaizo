@@ -134,7 +134,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 <>
                   <Text style={st.label}>{accLabel}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                    {accounts.map((acc, idx) => { const sl = selAcc === acc.id; return (
+                    {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type)).map((acc, idx) => { const sl = selAcc === acc.id; return (
                       <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]} onPress={() => setSelAcc(acc.id)}>
                         <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
                         <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>

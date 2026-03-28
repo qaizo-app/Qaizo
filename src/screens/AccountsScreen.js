@@ -270,8 +270,8 @@ const createStyles = () => StyleSheet.create({
   v2Text:{color:'#f59e0b',fontSize:10,fontWeight:'700'},
 
   modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20,textAlign:i18n.textAlign()},
-  fieldLabel:{color:colors.textDim,fontSize:11,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4},
-  input:{backgroundColor:colors.card,borderRadius:14,padding:14,color:colors.text,fontSize:16,marginBottom:12,borderWidth:1,borderColor:colors.cardBorder},
+  fieldLabel:{color:colors.textDim,fontSize:11,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4,textAlign:i18n.textAlign()},
+  input:{backgroundColor:colors.card,borderRadius:14,padding:14,color:colors.text,fontSize:16,marginBottom:12,borderWidth:1,borderColor:colors.cardBorder,textAlign:i18n.textAlign()},
   typeChip:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginEnd:8,borderWidth:1.5,borderColor:'transparent'},
   typeChipText:{color:colors.textMuted,fontSize:12,fontWeight:'600',marginStart:6},
   currRow:{flexDirection:i18n.row(),gap:8,marginBottom:16},

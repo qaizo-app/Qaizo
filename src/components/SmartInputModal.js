@@ -2,7 +2,7 @@
 // Умный ввод транзакций — пользователь пишет текст, ИИ разбирает
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Keyboard, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import aiService from '../services/aiService';
 import dataService from '../services/dataService';
@@ -78,7 +78,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={st.overlay}>
+      <KeyboardAvoidingView style={st.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={st.modal}>
           {/* Header */}
           <View style={st.header}>
@@ -171,7 +171,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
             </Animated.View>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

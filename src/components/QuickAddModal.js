@@ -116,7 +116,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
               {/* Выбор счёта */}
               <Text style={st.label}>{i18n.t('payFrom')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }} keyboardShouldPersistTaps="always">
-                {accounts.map(acc => {
+                {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
                   const sel = selAcc === acc.id;
                   const accCfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
                   return (
@@ -158,13 +158,13 @@ const createSt = () => StyleSheet.create({
   sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.textMuted, opacity: 0.5, alignSelf: 'center' },
   handleZone: { height: 28, justifyContent: 'center', marginBottom: 8 },
-  header: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20 },
-  iconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
-  title: { color: colors.text, fontSize: 18, fontWeight: '700' },
+  header: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20, gap: 14 },
+  iconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  title: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: i18n.textAlign() },
   inputRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, paddingHorizontal: 16, marginBottom: 16 },
   currency: { fontSize: 26, fontWeight: '700', marginEnd: 8 },
   input: { flex: 1, color: colors.text, fontSize: 26, fontWeight: '700', paddingVertical: 16 },
-  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8 },
+  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, textAlign: i18n.textAlign() },
   accChip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.bg2, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent', gap: 6 },
   accTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', maxWidth: 90 },
   buttons: { flexDirection: i18n.row(), gap: 12 },
