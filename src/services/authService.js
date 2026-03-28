@@ -74,7 +74,7 @@ const authService = {
         return { success: false, error: 'Google Client ID not configured' };
       }
       const redirectUri = AuthSession.makeRedirectUri({ preferLocalhost: false });
-      const discovery = AuthSession.useAutoDiscovery?.('https://accounts.google.com') || {
+      const discovery = {
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
         tokenEndpoint: 'https://oauth2.googleapis.com/token',
       };
@@ -83,6 +83,7 @@ const authService = {
         redirectUri,
         scopes: ['openid', 'profile', 'email'],
         responseType: AuthSession.ResponseType.IdToken,
+        usePKCE: false,
       });
       const result = await request.promptAsync(discovery);
       if (result.type === 'success' && result.params?.id_token) {

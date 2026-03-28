@@ -80,7 +80,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Text style={st.subtitle}>{i18n.t(item.categoryId)}</Text>
             </View>
             <Text style={[st.amount, { color: item.type === 'expense' ? colors.red : colors.green }]}>
-              {item.type === 'expense' ? '-' : '+'}{sym()}{item.amount.toLocaleString()}
+              {item.type === 'expense' ? '-' : '+'}{sym()}{item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
             </Text>
           </View>
 
@@ -142,7 +142,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
                 <View key={tx.id || idx} style={[st.historyRow, idx < history.length - 1 && st.historyBorder]}>
                   <Text style={st.historyDate}>{formatDate(tx.date || tx.createdAt)}</Text>
                   <Text style={[st.historyAmount, { color: tx.type === 'expense' ? colors.red : colors.green }]}>
-                    {tx.type === 'expense' ? '-' : '+'}{sym()}{tx.amount.toLocaleString()}
+                    {tx.type === 'expense' ? '-' : '+'}{sym()}{tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </Text>
                 </View>
               ))}

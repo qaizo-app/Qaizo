@@ -96,7 +96,7 @@ export default function AccountsScreen() {
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
         <Text style={[styles.tileBalance, { color: bal >= 0 ? colors.text : colors.red }]}>
-          {acc.currency||sym()}{bal.toLocaleString()}
+          {acc.currency||sym()}{bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
         </Text>
       </TouchableOpacity>
     );
@@ -116,7 +116,7 @@ export default function AccountsScreen() {
         {/* Total */}
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
-          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>{sym()} {totalBalance.toLocaleString()}</Text>
+          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>{sym()} {totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
         </View>
 
         {/* Hint */}
@@ -132,7 +132,7 @@ export default function AccountsScreen() {
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ marginEnd: 6 }} />
                 <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
-                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>{sym()}{sum.toLocaleString()}</Text>
+                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>{sym()}{sum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
               </View>
               <View style={styles.tilesRow}>
                 {accs.map(renderTile)}
@@ -167,7 +167,7 @@ export default function AccountsScreen() {
                 <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35, borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{acc.currency||sym()}{(acc.balance||0).toLocaleString()}</Text>
+                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{acc.currency||sym()}{(acc.balance||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -233,7 +233,7 @@ export default function AccountsScreen() {
             <View style={styles.btnRow}>
               {editAccount&&(<TouchableOpacity style={styles.delBtn} onPress={()=>setDeleteTarget(editAccount)}><Feather name="trash-2" size={20} color={colors.red} /></TouchableOpacity>)}
               <TouchableOpacity style={styles.cancelBtn} onPress={close}><Text style={styles.cancelText}>{i18n.t('cancel')}</Text></TouchableOpacity>
-              <TouchableOpacity style={[styles.saveBtn,{backgroundColor:tc}]} onPress={handleSave}><Feather name="check" size={18} color="#fff" /><Text style={styles.saveText}> {i18n.t('save')}</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.saveBtn,{backgroundColor:tc,opacity:name.trim()?1:0.35}]} onPress={handleSave} disabled={!name.trim()}><Feather name="check" size={18} color="#fff" /><Text style={styles.saveText}> {i18n.t('save')}</Text></TouchableOpacity>
             </View>
           </ScrollView>
         )}

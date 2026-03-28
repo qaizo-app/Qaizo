@@ -12,15 +12,16 @@ describe('currency utility', () => {
     expect(sym()).toBe('$');
   });
 
-  test('fmt() formats amount with symbol', () => {
-    expect(fmt(1500)).toBe('₪1,500');
-    expect(fmt(0)).toBe('₪0');
+  test('fmt() formats amount with symbol and 2 decimals', () => {
+    expect(fmt(1500)).toBe('₪1,500.00');
+    expect(fmt(0)).toBe('₪0.00');
+    expect(fmt(99.5)).toBe('₪99.50');
   });
 
   test('fmtSigned() adds sign by type', () => {
-    expect(fmtSigned(100, 'income')).toBe('+₪100');
-    expect(fmtSigned(100, 'expense')).toBe('-₪100');
-    expect(fmtSigned(100, 'transfer')).toBe('₪100');
+    expect(fmtSigned(100, 'income')).toBe('+₪100.00');
+    expect(fmtSigned(100, 'expense')).toBe('-₪100.00');
+    expect(fmtSigned(100, 'transfer')).toBe('₪100.00');
   });
 
   test('convert() between currencies', () => {

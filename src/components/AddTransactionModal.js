@@ -28,7 +28,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showMore, setShowMore] = useState(false);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
-  const [weekStart, setWeekStart] = useState('monday');
+  const [weekStart, setWeekStart] = useState('sunday');
   const isEdit = !!editTransaction;
   const lang = i18n.getLanguage();
   const hasPre = !!preselectedAccount;

@@ -129,7 +129,7 @@ export default function TransactionsScreen() {
       {filtered.length > 0 && (
         <View style={styles.summary}>
           <Text style={[styles.summaryAmount, { color: totalFiltered >= 0 ? colors.green : colors.red }]}>
-            {sym()} {totalFiltered.toLocaleString()}
+            {sym()} {totalFiltered.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </Text>
           {!showSearch && (
             <Text style={styles.hint}>

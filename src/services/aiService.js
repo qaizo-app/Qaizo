@@ -31,10 +31,11 @@ const CATEGORY_KEYWORDS = {
   rent: ['аренда', 'квартира', 'שכירות', 'דירה', 'rent', 'apartment'],
   arnona: ['арнона', 'ארנונה', 'arnona', 'municipal'],
   vaad: ['ваад', 'ועד בית', 'vaad', 'building committee'],
-  salary_me: ['зарплата', 'משכורת', 'salary', 'income', 'доход', 'הכנסה', 'оплата за работу'],
+  salary_me: ['зарплата', 'משכורת', 'salary', 'доход', 'הכנסה', 'оплата за работу', 'получил зп'],
   salary_spouse: ['зп жены', 'зп мужа', 'משכורת בן זוג'],
+  handyman: ['подработ', 'халтур', 'фриланс', 'гонорар', 'עבודה נוספת', 'freelance', 'side job', 'side gig', 'чаевые', 'tip', 'טיפ'],
   rental_income: ['аренда доход', 'הכנסה משכירות', 'rental income'],
-  other_income: ['возврат', 'החזר', 'refund', 'cashback', 'кэшбэк'],
+  other_income: ['возврат', 'החזר', 'refund', 'cashback', 'кэшбэк', 'выиграл', 'выигрыш', 'приз', 'бонус', 'prize', 'won', 'bonus', 'בונוס', 'זיכוי', 'дивиденд', 'dividend', 'profit', 'прибыль'],
 };
 
 // ─── Парсинг текста ─────────────────────────────────────
@@ -54,7 +55,7 @@ function parseTransaction(text) {
   if (!amount || isNaN(amount)) return null;
 
   // Определяем тип: доход или расход
-  const incomeWords = ['зарплата', 'доход', 'получил', 'заработал', 'возврат', 'משכורת', 'הכנסה', 'קיבלתי', 'salary', 'income', 'received', 'earned', 'refund', 'cashback'];
+  const incomeWords = ['зарплата', 'доход', 'получил', 'заработал', 'возврат', 'подработ', 'выиграл', 'выигрыш', 'перевод от', 'перевели', 'вернули', 'кэшбэк', 'бонус', 'приз', 'гонорар', 'фриланс', 'халтур', 'чаевые', 'прибыль', 'дивиденд', 'משכורת', 'הכנסה', 'קיבלתי', 'הרווחתי', 'זיכוי', 'בונוס', 'טיפ', 'salary', 'income', 'received', 'earned', 'refund', 'cashback', 'bonus', 'won', 'prize', 'tip', 'freelance', 'profit', 'dividend', 'payout'];
   const isIncome = incomeWords.some(w => input.includes(w));
   const type = isIncome ? 'income' : 'expense';
 
@@ -344,17 +345,22 @@ async function parseTransactionSmart(text) {
 Input: "${text}"
 User language: ${lang}, Currency: ${currency}
 
-Available categories: ${categories}
+Available expense categories: food, restaurant, transport, fuel, health, phone, utilities, clothing, household, kids, entertainment, education, cosmetics, electronics, insurance, rent, arnona, vaad, other
+Available income categories: salary_me, salary_spouse, handyman, rental_income, other_income
 
 Respond ONLY with valid JSON, no markdown, no explanation:
 {"amount": number, "type": "expense" or "income", "categoryId": "one of the categories above", "recipient": "store/payee name or empty string", "note": "original text"}
 
 Rules:
-- Extract the numeric amount
-- Determine if income or expense from context
-- Pick the best matching categoryId
-- If mentions salary/income/received → type: "income"
-- recipient = store name if mentioned`;
+- Extract the numeric amount from the text
+- IMPORTANT: Determine if income or expense from context clues:
+  - Income words (RU): зарплата, получил, заработал, подработал, выиграл, возврат, бонус, фриланс, чаевые, прибыль
+  - Income words (EN): salary, earned, received, won, bonus, freelance, tip, profit, refund, cashback
+  - Income words (HE): משכורת, הכנסה, קיבלתי, הרווחתי, בונוס, טיפ, זיכוי
+  - If income → use income categories (salary_me, handyman, other_income, etc.)
+  - If expense → use expense categories (food, transport, etc.)
+- Pick the BEST matching categoryId, avoid "other" when possible
+- recipient = store/payee name if mentioned, otherwise empty string`;
 
   const result = await callGemini(prompt);
   if (result) {

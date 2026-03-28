@@ -20,7 +20,7 @@ export default function SettingsScreen() {
   const navigation = useNavigation();
   const { themeMode, setThemeMode } = useTheme();
   const [lang, setLang] = useState(i18n.getLanguage());
-  const [weekStart, setWeekStart] = useState('monday');
+  const [weekStart, setWeekStart] = useState('sunday');
   const [curSymbol, setCurSymbol] = useState(sym());
   const [showExport, setShowExport] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);

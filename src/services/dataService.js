@@ -58,7 +58,7 @@ const DEFAULT_CATEGORIES = {
   ],
 };
 
-const DEFAULT_SETTINGS = { language: 'ru', currency: '₪', theme: 'dark' };
+const DEFAULT_SETTINGS = { language: 'ru', currency: '₪', theme: 'dark', weekStart: 'sunday' };
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);

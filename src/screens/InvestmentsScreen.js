@@ -33,10 +33,10 @@ export default function InvestmentsScreen() {
 
         <Card style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalInvested')}</Text>
-          <Text style={styles.totalAmount}>{sym()} {totalInvested.toLocaleString()}</Text>
+          <Text style={styles.totalAmount}>{sym()} {totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>{i18n.t('monthlyContribution')}</Text>
-            <Text style={styles.monthlyAmount}>{sym()} {totalMonthly.toLocaleString()}</Text>
+            <Text style={styles.monthlyAmount}>{sym()} {totalMonthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
           </View>
         </Card>
 
@@ -49,7 +49,7 @@ export default function InvestmentsScreen() {
                 <Text style={styles.invType}>{i18n.t(inv.type)}</Text>
               </View>
               <View style={styles.invAmounts}>
-                <Text style={styles.invBalance}>{inv.currency} {(inv.balance || 0).toLocaleString()}</Text>
+                <Text style={styles.invBalance}>{inv.currency} {(inv.balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
                 {inv.monthly > 0 && (
                   <Text style={styles.invMonthly}>+{inv.monthly}/mo</Text>
                 )}

@@ -121,12 +121,12 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
           <View style={[st.centerLabel, { width: size, height: size }]} pointerEvents="none">
             {selectedItem ? (
               <>
-                <Text style={st.centerAmount}>{sym()}{selectedItem.amount.toLocaleString()}</Text>
+                <Text style={st.centerAmount}>{sym()}{selectedItem.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
                 <Text style={st.centerPct}>{Math.round(selectedItem.pct * 100)}%</Text>
               </>
             ) : (
               <>
-                <Text style={st.centerAmount}>{sym()}{total.toLocaleString()}</Text>
+                <Text style={st.centerAmount}>{sym()}{total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
               </>
             )}
           </View>
@@ -149,7 +149,7 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
                 {slice.name}
               </Text>
               <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
-                {sym()}{slice.amount.toLocaleString()}
+                {sym()}{slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
               </Text>
               <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
             </TouchableOpacity>

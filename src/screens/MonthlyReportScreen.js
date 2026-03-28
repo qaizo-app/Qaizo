@@ -125,17 +125,17 @@ export default function MonthlyReportScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.green }]}>{sym()}{totalIncome.toLocaleString()}</Text>
+              <Text style={[st.summaryAmount, { color: colors.green }]}>{sym()}{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.red }]}>{sym()}{totalExpense.toLocaleString()}</Text>
+              <Text style={[st.summaryAmount, { color: colors.red }]}>{sym()}{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('balance')}</Text>
-              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>{sym()}{balance.toLocaleString()}</Text>
+              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]}>{sym()}{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
             </View>
           </View>
         </Card>
@@ -150,7 +150,7 @@ export default function MonthlyReportScreen() {
             </View>
             <View style={st.statBox}>
               <Feather name="activity" size={16} color={colors.teal} />
-              <Text style={st.statValue}>{sym()}{avgDaily.toLocaleString()}</Text>
+              <Text style={st.statValue}>{sym()}{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
               <Text style={st.statLabel}>{i18n.t('avgPerDay')}</Text>
             </View>
             <View style={st.statBox}>
@@ -195,7 +195,7 @@ export default function MonthlyReportScreen() {
                     </View>
                     <View style={st.catRight}>
                       <Text style={st.catPct}>{pct}%</Text>
-                      <Text style={st.catAmount}>{sym()}{amount.toLocaleString()}</Text>
+                      <Text style={st.catAmount}>{sym()}{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
                     </View>
                   </View>
                 );
@@ -218,7 +218,7 @@ export default function MonthlyReportScreen() {
                     <Feather name="user" size={14} color={colors.textMuted} style={{ marginEnd: 8 }} />
                     <Text style={st.catName}>{name}</Text>
                   </View>
-                  <Text style={st.catAmount}>{sym()}{amount.toLocaleString()}</Text>
+                  <Text style={st.catAmount}>{sym()}{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
                 </View>
               ))}
             </Card>
@@ -240,7 +240,7 @@ export default function MonthlyReportScreen() {
                       <View style={[st.catDot, { backgroundColor: cfg.color }]} />
                       <Text style={st.catName}>{i18n.t(cat)}</Text>
                     </View>
-                    <Text style={[st.catAmount, { color: colors.green }]}>{sym()}{amount.toLocaleString()}</Text>
+                    <Text style={[st.catAmount, { color: colors.green }]}>{sym()}{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
                   </View>
                 );
               })}

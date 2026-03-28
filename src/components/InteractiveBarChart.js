@@ -7,8 +7,9 @@ import { sym } from '../utils/currency';
 import i18n from '../i18n';
 
 function formatAmount(n) {
-  if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
-  return String(n);
+  if (n >= 10000) return `${Math.round(n / 1000)}k`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(Math.round(n));
 }
 
 export default function InteractiveBarChart({ data, maxBar }) {
@@ -33,12 +34,12 @@ export default function InteractiveBarChart({ data, maxBar }) {
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.green }]} />
             <Text style={st.tooltipLabel}>{i18n.t('income')}:</Text>
-            <Text style={[st.tooltipVal, { color: colors.green }]}>{sym()}{selectedData.income.toLocaleString()}</Text>
+            <Text style={[st.tooltipVal, { color: colors.green }]}>{sym()}{selectedData.income.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
           </View>
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.red }]} />
             <Text style={st.tooltipLabel}>{i18n.t('expenses')}:</Text>
-            <Text style={[st.tooltipVal, { color: colors.red }]}>{sym()}{selectedData.expense.toLocaleString()}</Text>
+            <Text style={[st.tooltipVal, { color: colors.red }]}>{sym()}{selectedData.expense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
           </View>
         </View>
       )}
@@ -119,7 +120,7 @@ const st = StyleSheet.create({
   bar: { width: 16, borderRadius: 4, minHeight: 2 },
   barIncome: { backgroundColor: colors.green },
   barExpense: { backgroundColor: colors.red },
-  barLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
+  barLabel: { color: colors.textMuted, fontSize: 9, fontWeight: '600', textAlign: 'center' },
   barLabelActive: { color: colors.text, fontWeight: '700' },
 
   legend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 12 },

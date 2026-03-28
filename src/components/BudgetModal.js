@@ -79,8 +79,8 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
                 <View style={{ flex: 1 }}>
                   <Text style={st.title}>{catName}</Text>
                   <Text style={st.spentLabel}>
-                    {i18n.t('spent')}: {sym()}{(spent || 0).toLocaleString()}
-                    {currentLimit > 0 ? ` / ${sym()}${currentLimit.toLocaleString()} (${pct}%)` : ''}
+                    {i18n.t('spent')}: {sym()}{(spent || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    {currentLimit > 0 ? ` / ${sym()}${currentLimit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${pct}%)` : ''}
                   </Text>
                 </View>
               </View>

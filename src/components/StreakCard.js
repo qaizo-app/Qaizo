@@ -115,22 +115,22 @@ export default function StreakCard({ streakData, transactions, weekStart = 'mond
 }
 
 const createSt = () => StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  row: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 },
   startText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 
-  topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  streakBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginEnd: 8 },
+  topRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', marginBottom: 16 },
+  streakBadge: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginEnd: 8 },
   streakNum: { fontSize: 28, fontWeight: '800', letterSpacing: -1 },
   streakLabel: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
 
-  dotsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+  dotsRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', justifyContent: 'space-between', marginBottom: 16 },
   dotCol: { alignItems: 'center', gap: 6 },
   dotLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
   dot: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
 
-  bottomRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  bottomRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', justifyContent: 'space-between' },
   statText: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
 
-  riskRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider },
+  riskRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider },
   riskText: { color: colors.yellow, fontSize: 12, fontWeight: '600', flex: 1 },
 });

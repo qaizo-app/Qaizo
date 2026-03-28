@@ -34,13 +34,17 @@ export function code() {
   return _code;
 }
 
+export function fmtNum(amount) {
+  return Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function fmt(amount) {
-  return `${_symbol}${Math.abs(amount).toLocaleString()}`;
+  return `${_symbol}${fmtNum(amount)}`;
 }
 
 export function fmtSigned(amount, type) {
   const sign = type === 'income' ? '+' : type === 'expense' ? '-' : '';
-  return `${sign}${_symbol}${Math.abs(amount).toLocaleString()}`;
+  return `${sign}${_symbol}${fmtNum(amount)}`;
 }
 
 // Конвертация между валютами

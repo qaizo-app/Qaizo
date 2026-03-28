@@ -20,7 +20,7 @@ export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) 
       {selectedDay !== null && dailyExp[selectedDay] > 0 && (
         <View style={st.tooltip}>
           <Text style={st.tooltipDay}>{selectedDay + 1}</Text>
-          <Text style={st.tooltipAmount}>{sym()}{dailyExp[selectedDay].toLocaleString()}</Text>
+          <Text style={st.tooltipAmount}>{sym()}{dailyExp[selectedDay].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
         </View>
       )}
 
@@ -67,7 +67,7 @@ export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) 
       {/* Avg line label */}
       <View style={st.avgRow}>
         <View style={st.avgLine} />
-        <Text style={st.avgLabel}>{sym()}{avgDaily.toLocaleString()}/d</Text>
+        <Text style={st.avgLabel}>{sym()}{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/d</Text>
       </View>
     </View>
   );

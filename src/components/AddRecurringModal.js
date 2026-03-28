@@ -7,12 +7,11 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
-import DatePickerModal from './DatePickerModal';
+import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
 const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','other_income','transfer'].includes(k));
-const INTERVALS = [1, 2, 3, 6, 12];
 
 export default function AddRecurringModal({ visible, onClose, onSave, editItem }) {
   const [type, setType] = useState('expense');
@@ -22,12 +21,12 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [note, setNote] = useState('');
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
-  const [intervalMonths, setIntervalMonths] = useState(1);
   const [startDate, setStartDate] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [endType, setEndType] = useState('none'); // none, count, date
+  const [intervalMonths, setIntervalMonths] = useState(1);
+  const [endType, setEndType] = useState('none');
   const [totalCount, setTotalCount] = useState('12');
   const [endDate, setEndDate] = useState('');
+  const [showSchedule, setShowSchedule] = useState(false);
   const isEdit = !!editItem;
   const st = createSt();
 
@@ -43,8 +42,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           setRecipient(editItem.recipient || '');
           setNote(editItem.note || '');
           setSelAcc(editItem.account || (active[0]?.id || ''));
-          setIntervalMonths(editItem.intervalMonths || 1);
           setStartDate(editItem.nextDate ? editItem.nextDate.slice(0, 10) : '');
+          setIntervalMonths(editItem.intervalMonths || 1);
           setEndType(editItem.endType || 'none');
           setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
           setEndDate(editItem.endDate || '');
@@ -64,7 +63,6 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
   const handleSave = async () => {
     if (!amount || parseFloat(amount) <= 0) return;
-    // Используем выбранную дату или завтра по умолчанию
     let nextDate = startDate;
     if (!nextDate) {
       const tomorrow = new Date();
@@ -104,6 +102,38 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     if (m === 6) return i18n.t('every6Months');
     if (m === 12) return i18n.t('everyYear');
     return `${m}`;
+  };
+
+  // Format date for display
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    const lang = i18n.getLanguage();
+    const monthNames = {
+      ru: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+      he: ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'],
+      en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    };
+    const m = (monthNames[lang] || monthNames.en)[d.getMonth()];
+    return `${d.getDate()} ${m} ${d.getFullYear()}`;
+  };
+
+  const handleScheduleSave = (schedule) => {
+    setStartDate(schedule.date);
+    setIntervalMonths(schedule.intervalMonths);
+    setEndType(schedule.endType);
+    if (schedule.totalCount) setTotalCount(schedule.totalCount);
+    if (schedule.endDate) setEndDate(schedule.endDate);
+  };
+
+  // Build schedule summary text
+  const scheduleSummary = () => {
+    const parts = [];
+    if (startDate) parts.push(formatDate(startDate));
+    parts.push(intervalLabel(intervalMonths));
+    if (endType === 'count') parts.push(`× ${totalCount}`);
+    if (endType === 'date' && endDate) parts.push(`${i18n.t('until')} ${formatDate(endDate)}`);
+    return parts.join(' · ');
   };
 
   return (
@@ -170,66 +200,16 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
             placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
 
-          {/* Периодичность */}
-          <Text style={st.label}>{i18n.t('frequency')}</Text>
-          <View style={st.intervalRow}>
-            {INTERVALS.map(m => (
-              <TouchableOpacity key={m} style={[st.intervalBtn, intervalMonths === m && { borderColor: colors.green, backgroundColor: colors.greenSoft }]}
-                onPress={() => setIntervalMonths(m)}>
-                <Text style={[st.intervalTxt, intervalMonths === m && { color: colors.green }]}>{intervalLabel(m)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Дата начала */}
-          <Text style={st.label}>{i18n.t('date')}</Text>
-          <TouchableOpacity style={st.dateBtn} onPress={() => setShowDatePicker(true)}>
-            <Feather name="calendar" size={16} color={startDate ? colors.green : colors.textMuted} />
-            <Text style={[st.dateTxt, startDate && { color: colors.text }]}>
-              {startDate ? (() => {
-                const d = new Date(startDate + 'T00:00:00');
-                const lang = i18n.getLanguage();
-                const monthNames = {
-                  ru: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
-                  he: ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'],
-                  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-                };
-                const m = (monthNames[lang] || monthNames.en)[d.getMonth()];
-                return `${d.getDate()} ${m} ${d.getFullYear()}`;
-              })() : i18n.t('date')}
-            </Text>
+          {/* Расписание — одна кнопка */}
+          <TouchableOpacity style={st.scheduleBtn} onPress={() => setShowSchedule(true)}>
+            <Feather name="calendar" size={18} color={startDate ? colors.green : colors.textMuted} />
+            <View style={{ flex: 1 }}>
+              <Text style={[st.scheduleTxt, startDate && { color: colors.text }]}>
+                {startDate ? scheduleSummary() : i18n.t('frequency')}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={16} color={colors.textMuted} />
           </TouchableOpacity>
-
-          {/* Окончание */}
-          <Text style={st.label}>{i18n.t('endCondition')}</Text>
-          <View style={st.intervalRow}>
-            {['none', 'count', 'date'].map(et => {
-              const a = endType === et;
-              const lb = et === 'none' ? i18n.t('noEnd') : et === 'count' ? i18n.t('afterN') : i18n.t('untilDate');
-              return (
-                <TouchableOpacity key={et} style={[st.intervalBtn, a && { borderColor: colors.teal, backgroundColor: `${colors.teal}15` }]}
-                  onPress={() => setEndType(et)}>
-                  <Text style={[st.intervalTxt, a && { color: colors.teal }]}>{lb}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {endType === 'count' && (
-            <View style={st.endRow}>
-              <Text style={st.endLabel}>{i18n.t('repeatCount')}:</Text>
-              <TextInput style={[st.input, { width: 80, marginBottom: 0 }]} value={totalCount}
-                onChangeText={setTotalCount} keyboardType="numeric" />
-            </View>
-          )}
-
-          {endType === 'date' && (
-            <View style={st.endRow}>
-              <Text style={st.endLabel}>{i18n.t('endDate')}:</Text>
-              <TextInput style={[st.input, { width: 140, marginBottom: 0 }]} value={endDate}
-                onChangeText={setEndDate} placeholder="2027-03-01" placeholderTextColor={colors.textMuted} />
-            </View>
-          )}
 
           {/* Заметка */}
           <TextInput style={st.input} value={note} onChangeText={setNote}
@@ -246,11 +226,16 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               <Text style={st.saveTxt}>{i18n.t('save')}</Text>
             </TouchableOpacity>
           </View>
-          <DatePickerModal
-            visible={showDatePicker}
-            onClose={() => setShowDatePicker(false)}
-            onSelect={(date) => setStartDate(date)}
-            selectedDate={startDate || undefined}
+
+          <SchedulePickerModal
+            visible={showSchedule}
+            onClose={() => setShowSchedule(false)}
+            onSave={handleScheduleSave}
+            initialDate={startDate}
+            initialInterval={intervalMonths}
+            initialEndType={endType}
+            initialTotalCount={totalCount}
+            initialEndDate={endDate}
             lang={i18n.getLanguage()}
           />
         </ScrollView>
@@ -271,13 +256,8 @@ const createSt = () => StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginStart: 6, maxWidth: 90 },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 15, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder },
-  intervalRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  intervalBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder },
-  intervalTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
-  dateBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
-  dateTxt: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
-  endRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  endLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  scheduleBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
+  scheduleTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
   btnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelBtn: { flex: 1, paddingVertical: 18, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
