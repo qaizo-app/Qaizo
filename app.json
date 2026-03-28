@@ -11,6 +11,7 @@
       "backgroundColor": "#080b14"
     },
     "icon": "./assets/images/icon.png",
+    "scheme": "qaizo",
     "android": {
       "package": "com.qaizo.app"
     },
