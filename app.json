@@ -23,6 +23,12 @@
           "sounds": []
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "912cb02d-8765-41cf-9557-99d035d52189"
+      }
+    },
+    "owner": "qaizo"
   }
 }
