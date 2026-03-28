@@ -264,57 +264,65 @@ export default function SettingsScreen() {
         )}
 
         {/* Account */}
-        <View style={{ marginTop: 12 }}>
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('account')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="user" size={18} color={currentUser ? colors.green : colors.textMuted} />
+            <Text style={styles.sectionText}>{currentUser ? (currentUser.displayName || currentUser.email) : i18n.t('loginOrRegister')}</Text>
+          </View>
+          <Feather name={openSection === 'account' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+        {openSection === 'account' && (
           <Card>
             {currentUser ? (
-              <View>
-                <View style={styles.userRow}>
-                  <View style={styles.avatarWrap}>
-                    <Feather name="user" size={20} color={colors.green} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.userName}>{currentUser.displayName || currentUser.email}</Text>
-                    <Text style={styles.userEmail}>{currentUser.email}</Text>
-                  </View>
+              <>
+                <View style={[styles.optRow, styles.optBorder]}>
+                  <Feather name="mail" size={16} color={colors.textDim} />
+                  <Text style={styles.optText}>{currentUser.email}</Text>
                 </View>
-                <TouchableOpacity style={styles.logoutBtn} onPress={async () => {
+                <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={async () => {
                   await authService.logout();
+                  setOpenSection(null);
                   setLangVersion(n => n + 1);
                 }}>
                   <Feather name="log-out" size={16} color={colors.red} />
-                  <Text style={styles.logoutTxt}>{i18n.t('logout')}</Text>
+                  <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('logout')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteAccountBtn} onPress={() => setShowDeleteAccount(true)}>
+                <TouchableOpacity style={styles.optRow} onPress={() => setShowDeleteAccount(true)}>
                   <Feather name="user-x" size={16} color={colors.red} />
-                  <Text style={styles.deleteAccountTxt}>{i18n.t('deleteAccount')}</Text>
+                  <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('deleteAccount')}</Text>
                 </TouchableOpacity>
-              </View>
+              </>
             ) : (
-              <TouchableOpacity style={styles.loginBtn} onPress={() => {
+              <TouchableOpacity style={styles.optRow} onPress={() => {
                 AsyncStorage.removeItem('qaizo_auth_skipped');
-                // Force app to re-check auth → show AuthScreen
                 import('expo-updates').then(({ reloadAsync }) => {
                   reloadAsync?.().catch(() => Alert.alert('', i18n.t('restartApp')));
                 }).catch(() => Alert.alert('', i18n.t('restartApp')));
               }}>
-                <Feather name="log-in" size={18} color={colors.green} />
-                <Text style={styles.loginTxt}>{i18n.t('loginOrRegister')}</Text>
+                <Feather name="log-in" size={16} color={colors.green} />
+                <Text style={[styles.optText, { color: colors.green }]}>{i18n.t('loginOrRegister')}</Text>
               </TouchableOpacity>
             )}
           </Card>
-        </View>
+        )}
 
         {/* About */}
-        <View style={{ marginTop: 12 }}>
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('about')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="info" size={18} color={colors.textDim} />
+            <Text style={styles.sectionText}>Qaizo</Text>
+          </View>
+          <View style={styles.sectionRight}>
+            <Text style={styles.sectionValue}>v1.0.0</Text>
+            <Feather name={openSection === 'about' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+          </View>
+        </TouchableOpacity>
+        {openSection === 'about' && (
           <Card>
-            <View style={styles.aboutRow}>
-              <Text style={styles.aboutLogo}><Text style={{ color: colors.green }}>Q</Text>aizo</Text>
-              <Text style={styles.aboutVer}>v1.0.0 MVP</Text>
-            </View>
-            <Text style={styles.aboutText}>AI-powered finance management{'\n'}Smarter every day.</Text>
+            <Text style={styles.aboutText}>{i18n.t('aboutText')}</Text>
             <Text style={styles.aboutCopy}>© 2026 Qaizo</Text>
           </Card>
-        </View>
+        )}
       </ScrollView>
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />

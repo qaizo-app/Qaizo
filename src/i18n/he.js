@@ -252,6 +252,7 @@ export default {
   addTemplate: 'תבנית חדשה',
   templateName: 'שם התבנית',
   noTemplates: 'אין תבניות',
+  aboutText: 'ניהול פיננסי חכם עם בינה מלאכותית.\nכל יום — חכם יותר.',
   monthlyReport: 'דוח חודשי',
   transactionsCount: 'תנועות',
   avgPerDay: 'ממוצע/יום',

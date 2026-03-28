@@ -253,6 +253,7 @@ export default {
   addTemplate: 'New Template',
   templateName: 'Template Name',
   noTemplates: 'No templates yet',
+  aboutText: 'AI-powered finance management.\nSmarter every day.',
   monthlyReport: 'Monthly Report',
   transactionsCount: 'Transactions',
   avgPerDay: 'Avg/day',

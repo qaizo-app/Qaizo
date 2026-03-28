@@ -261,6 +261,7 @@ export default {
   addTemplate: 'Новый шаблон',
   templateName: 'Название шаблона',
   noTemplates: 'Нет шаблонов',
+  aboutText: 'Умное управление финансами с ИИ.\nКаждый день — умнее.',
   monthlyReport: 'Месячный отчёт',
   transactionsCount: 'Транзакций',
   avgPerDay: 'В среднем/день',
