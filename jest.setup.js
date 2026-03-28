@@ -23,6 +23,19 @@ jest.mock('expo-crypto', () => ({}));
 jest.mock('expo-document-picker', () => ({
   getDocumentAsync: jest.fn(() => Promise.resolve({ canceled: true })),
 }));
+jest.mock('expo-file-system/legacy', () => ({
+  cacheDirectory: '/tmp/',
+  readAsStringAsync: jest.fn(() => Promise.resolve('')),
+  writeAsStringAsync: jest.fn(() => Promise.resolve()),
+  EncodingType: { UTF8: 'utf8' },
+}));
+jest.mock('expo-print', () => ({
+  printToFileAsync: jest.fn(() => Promise.resolve({ uri: '/tmp/test.pdf' })),
+}));
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
 jest.mock('firebase/firestore', () => ({
   initializeFirestore: jest.fn(() => ({})),
   persistentLocalCache: jest.fn(),

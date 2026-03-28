@@ -18,7 +18,7 @@ jest.mock('../src/services/dataService', () => {
   return { __esModule: true, default: mock };
 });
 
-jest.mock('expo-file-system', () => ({
+jest.mock('expo-file-system/legacy', () => ({
   cacheDirectory: '/tmp/cache/',
   EncodingType: { UTF8: 'utf8' },
   writeAsStringAsync: jest.fn(() => Promise.resolve()),
@@ -38,7 +38,7 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'android' },
 }));
 
-const FileSystem = require('expo-file-system');
+const FileSystem = require('expo-file-system/legacy');
 const Sharing = require('expo-sharing');
 const Print = require('expo-print');
 const { default: dataService } = require('../src/services/dataService');
