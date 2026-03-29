@@ -15,6 +15,7 @@ import DashboardLayoutModal, { DEFAULT_LAYOUT } from '../components/DashboardLay
 import InteractivePieChart from '../components/InteractivePieChart';
 import InteractiveBarChart from '../components/InteractiveBarChart';
 import QuickAddModal from '../components/QuickAddModal';
+import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import SmartInputModal from '../components/SmartInputModal';
 import RecurringDetailModal from '../components/RecurringDetailModal';
 import StreakCard from '../components/StreakCard';
@@ -53,6 +54,7 @@ export default function DashboardScreen() {
   const [accounts, setAccounts] = useState([]);
   const [deleteTemplate, setDeleteTemplate] = useState(null);
   const [showSmartInput, setShowSmartInput] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
   const [streakData, setStreakData] = useState(null);
   const [newMilestone, setNewMilestone] = useState(null);
   const [weekStart, setWeekStart] = useState('sunday');
@@ -90,6 +92,7 @@ export default function DashboardScreen() {
       dataService.getAccounts(),
       dataService.getQuickTemplates(),
     ]);
+    console.log('Dashboard loadData:', txs.length, 'txs,', Object.keys(bdg).length, 'budgets,', rec.length, 'recurring');
     if (settings.weekStart) setWeekStart(settings.weekStart);
     if (settings.dashLayout) setDashLayout(settings.dashLayout);
     setTransactions(txs);
@@ -568,6 +571,11 @@ export default function DashboardScreen() {
       {showFabMenu && (
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowFabMenu(false)}>
           <View style={st.fabMenu}>
+            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowReceipt(true); }}>
+              <Feather name="camera" size={18} color={colors.orange} />
+              <Text style={st.fabMenuTxt}>{i18n.t('scanReceipt')}</Text>
+            </TouchableOpacity>
+            <View style={st.fabMenuDivider} />
             <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowSmartInput(true); }}>
               <Feather name="mic" size={18} color={colors.blue} />
               <Text style={st.fabMenuTxt}>{i18n.t('smartInput')}</Text>
@@ -765,6 +773,8 @@ export default function DashboardScreen() {
         onClose={() => setQuickTemplate(null)} onSaved={() => loadData()} />
       <SmartInputModal visible={showSmartInput}
         onClose={() => setShowSmartInput(false)} onSaved={() => loadData()} />
+      <ReceiptScannerModal visible={showReceipt}
+        onClose={() => setShowReceipt(false)} onSaved={() => loadData()} />
 
       {/* Notifications modal */}
       <Modal visible={showNotifModal} transparent animationType="fade" onRequestClose={() => setShowNotifModal(false)}>

@@ -158,11 +158,14 @@ const dataService = {
   // ─── TRANSACTIONS ────────────────────────────────────────
   async getTransactions() {
     const uid = getUid();
+    console.log('getTransactions uid:', uid ? 'logged in' : 'guest');
     if (uid) return getColDocs('transactions');
     try {
       const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
-      return data ? JSON.parse(data) : [];
-    } catch (e) { return []; }
+      const txs = data ? JSON.parse(data) : [];
+      console.log('getTransactions from AsyncStorage:', txs.length);
+      return txs;
+    } catch (e) { console.error('getTransactions error:', e); return []; }
   },
 
   async addTransaction(transaction) {

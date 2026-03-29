@@ -4,7 +4,7 @@ import i18n from '../i18n';
 import { fmt, sym, code as curCode } from '../utils/currency';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // ─── МААМ и налоговые ставки (Израиль) ──────────────────
 const MAAM_RATE = 0.17;
@@ -326,9 +326,15 @@ async function callGemini(prompt) {
         generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.warn('Gemini API error:', res.status, errText.slice(0, 200));
+      return null;
+    }
     const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    if (!text) console.warn('Gemini empty response:', JSON.stringify(data).slice(0, 300));
+    return text;
   } catch (e) {
     console.warn('Gemini API error:', e.message);
     return null;
@@ -437,6 +443,162 @@ No markdown, no explanation, only the JSON array.`;
   return null;
 }
 
+// ─── Receipt Scanner ────────────────────────────────────
+async function scanReceipt(imageBase64, lang) {
+  if (!GEMINI_API_KEY) return null;
+  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+  try {
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: `Analyze this receipt/invoice image and extract:
+1. total - the total amount paid (number only)
+2. store - store/business name
+3. date - date on receipt (YYYY-MM-DD format), or null if not visible
+4. items - array of {name, price} for individual items (max 5 main items)
+5. category - best matching category from: food, restaurant, fuel, transport, health, phone, utilities, clothing, household, kids, entertainment, education, cosmetics, electronics, insurance, rent, other
+
+Return ONLY valid JSON: {"total": number, "store": "string", "date": "string|null", "items": [{name,price}], "category": "string"}
+No markdown, no explanation.` },
+            { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } },
+          ],
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+      }),
+    });
+    if (!res.ok) {
+      console.warn('Receipt scan error:', res.status);
+      return null;
+    }
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.warn('Receipt scan error:', e.message);
+    return null;
+  }
+}
+
+// ─── AI Chat ────────────────────────────────────────────
+async function chatWithAI(question, transactions, budgets, lang) {
+  const now = new Date();
+  const last90 = transactions.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    return (now - d) < 90 * 24 * 60 * 60 * 1000;
+  });
+
+  const thisMonth = last90.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+
+  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+  const catTotals = {};
+  last90.filter(t => t.type === 'expense').forEach(t => {
+    catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
+  });
+
+  const topCats = Object.entries(catTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([cat, amount]) => `${cat}: ${Math.round(amount)} ${curCode()}`)
+    .join(', ');
+
+  const monthlyIncomes = {};
+  const monthlyExpenses = {};
+  last90.forEach(t => {
+    const d = new Date(t.date || t.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (t.type === 'income') monthlyIncomes[key] = (monthlyIncomes[key] || 0) + t.amount;
+    else monthlyExpenses[key] = (monthlyExpenses[key] || 0) + t.amount;
+  });
+
+  const monthSummary = Object.keys({ ...monthlyIncomes, ...monthlyExpenses })
+    .sort()
+    .map(k => `${k}: income ${Math.round(monthlyIncomes[k] || 0)}, expense ${Math.round(monthlyExpenses[k] || 0)}`)
+    .join('; ');
+
+  const budgetInfo = Object.entries(budgets || {})
+    .map(([cat, limit]) => `${cat}: spent ${Math.round(catTotals[cat] || 0)} of ${limit}`)
+    .join(', ');
+
+  // Top payees
+  const payeeTotals = {};
+  last90.filter(t => t.type === 'expense' && t.recipient).forEach(t => {
+    payeeTotals[t.recipient] = (payeeTotals[t.recipient] || 0) + t.amount;
+  });
+  const topPayees = Object.entries(payeeTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, amount]) => `${name}: ${Math.round(amount)}`)
+    .join(', ');
+
+  // This month categories
+  const thisMonthCats = {};
+  thisMonth.filter(t => t.type === 'expense').forEach(t => {
+    thisMonthCats[t.categoryId] = (thisMonthCats[t.categoryId] || 0) + t.amount;
+  });
+  const thisMonthTopCats = Object.entries(thisMonthCats)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([cat, amount]) => `${cat}: ${Math.round(amount)}`)
+    .join(', ');
+
+  // Today's transactions
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const todayTxs = transactions.filter(t => (t.date || t.createdAt || '').slice(0, 10) === todayStr);
+  const todayExpense = todayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const todayIncome = todayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const todayDetail = todayTxs.map(t => `${t.type === 'income' ? '+' : '-'}${Math.round(t.amount)} ${t.categoryId}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
+
+  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+  const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
+
+  const prompt = `You are Qaizo AI — a personal finance advisor. Answer the user's question using ONLY their real data below. Always include specific numbers.
+
+=== USER DATA (${curCode()}) ===
+TODAY (${todayStr}):
+  Transactions: ${todayTxs.length} (expense: ${Math.round(todayExpense)}, income: ${Math.round(todayIncome)})
+  Details: ${todayDetail || 'no transactions today'}
+
+THIS MONTH (${now.getMonth() + 1}/${now.getFullYear()}):
+  Income: ${Math.round(income)}
+  Expenses: ${Math.round(expense)}
+  Balance: ${Math.round(income - expense)}
+  Days left: ${daysLeft}
+  Daily average spend: ${Math.round(expense / Math.max(now.getDate(), 1))}
+  Categories: ${thisMonthTopCats || 'no data'}
+
+LAST 3 MONTHS:
+  ${monthSummary || 'no data'}
+  Top categories (total): ${topCats || 'no data'}
+  Top payees: ${topPayees || 'no data'}
+
+BUDGETS: ${budgetInfo || 'none set'}
+Total transactions (90 days): ${last90.length}
+=== END DATA ===
+
+User's question: "${question}"
+
+RULES:
+- Respond ONLY in ${langMap[lang] || 'English'}
+- ALWAYS use real numbers from the data above
+- Be specific: "You spent 4,611 on food" not "your food spending is high"
+- Compare months when relevant
+- Give 1-2 actionable tips
+- 3-5 sentences max
+- Plain text only, no markdown`;
+
+  const result = await callGemini(prompt);
+  return result || (lang === 'he' ? 'לא הצלחתי לענות כרגע. נסה שוב.' : lang === 'ru' ? 'Не удалось ответить. Попробуйте ещё раз.' : 'Could not answer right now. Please try again.');
+}
+
 export default {
   parseTransaction,
   parseTransactionSmart,
@@ -445,6 +607,8 @@ export default {
   calculateDailyBudget,
   generateInsights,
   getPersonalAdvice,
+  chatWithAI,
+  scanReceipt,
   callGemini,
   MAAM_RATE,
   ESTIMATED_INCOME_TAX,

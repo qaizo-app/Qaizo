@@ -107,6 +107,24 @@ export default function SettingsScreen() {
           <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
+        {/* AI Chat */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('AIChat')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="message-circle" size={18} color={colors.green} />
+            <Text style={styles.sectionText}>{i18n.t('aiChat')}</Text>
+          </View>
+          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Investments */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Investments')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="trending-up" size={18} color={colors.teal} />
+            <Text style={styles.sectionText}>{i18n.t('investments')}</Text>
+          </View>
+          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Categories */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Categories')}>
           <View style={styles.sectionLeft}>

@@ -13,9 +13,11 @@ import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import DashboardScreen from '../screens/DashboardScreen';
-import InvestmentsScreen from '../screens/InvestmentsScreen';
 import MonthlyReportScreen from '../screens/MonthlyReportScreen';
+import InvestmentsScreen from '../screens/InvestmentsScreen';
 import AIAdvisorScreen from '../screens/AIAdvisorScreen';
+import AIChatScreen from '../screens/AIChatScreen';
+import CalendarScreen from '../screens/CalendarScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 
@@ -39,6 +41,9 @@ function SettingsStackScreen() {
       <SettingsStack.Screen name="Categories" component={CategoriesScreen} />
       <SettingsStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
       <SettingsStack.Screen name="AIAdvisor" component={AIAdvisorScreen} />
+      <SettingsStack.Screen name="Calendar" component={CalendarScreen} />
+      <SettingsStack.Screen name="Investments" component={InvestmentsScreen} />
+      <SettingsStack.Screen name="AIChat" component={AIChatScreen} />
     </SettingsStack.Navigator>
   );
 }
@@ -47,7 +52,7 @@ const tabConfig = {
   Dashboard:    { icon: 'home',        labelKey: 'dashboard',    color: colors.green },
   Transactions: { icon: 'list',        labelKey: 'transactions', color: '#60a5fa' },
   AccountsTab:  { icon: 'credit-card', labelKey: 'accounts',     color: '#f59e0b' },
-  Investments:  { icon: 'trending-up', labelKey: 'investments',  color: '#a78bfa' },
+  Calendar:     { icon: 'calendar',     labelKey: 'calendarView', color: '#a78bfa' },
   SettingsTab:  { icon: 'settings',    labelKey: null,           color: '#94a3b8' },
 };
 
@@ -93,7 +98,7 @@ export default function AppNavigator() {
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
       <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
-      <Tab.Screen name="Investments" component={InvestmentsScreen} />
+      <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="SettingsTab" component={SettingsStackScreen} />
     </Tab.Navigator>
   );
