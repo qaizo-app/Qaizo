@@ -228,7 +228,7 @@ const createSt = () => StyleSheet.create({
   logo: { color: colors.text, fontSize: 42, fontWeight: '800', letterSpacing: -2 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
-  title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
+  title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24 },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
   errorTxt: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },

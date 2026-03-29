@@ -54,7 +54,7 @@ export default function SettingsScreen() {
     await dataService.saveSettings({ ...settings, weekStart: day });
   };
   const changeLang = async (code) => {
-    i18n.setLanguage(code);
+    const rtlChanged = i18n.setLanguage(code);
     setLang(code);
     setOpenSection(null);
     setLangVersion(n => n + 1);
@@ -64,9 +64,7 @@ export default function SettingsScreen() {
     await dataService.saveSettings({ ...settings, language: code });
     await AsyncStorage.setItem('qaizo_lang_manual', 'true');
 
-    // RTL переключение
-    const needsRestart = i18n.applyRTL(code);
-    if (needsRestart) {
+    if (rtlChanged) {
       Alert.alert('', i18n.t('langChanged'));
     }
   };

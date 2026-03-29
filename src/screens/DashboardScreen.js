@@ -853,7 +853,7 @@ const createSt = () => StyleSheet.create({
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   balLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
   balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, textAlign: i18n.isRTL() ? 'right' : 'left' },
-  incExpRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
+  incExpRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
   incExpItem: { flex: 1 },
   incExpHead: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 6 },
   dividerV: { width: 1, height: 40, backgroundColor: colors.divider, marginHorizontal: 16 },
@@ -915,14 +915,14 @@ const createSt = () => StyleSheet.create({
   quickLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', textAlign: 'center' },
 
   // Free money today
-  freeTop: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  freeTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   freeLabel: { color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 },
   freeDays: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
   freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
   freeBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden', marginBottom: 10 },
   freeBarFill: { height: 6, borderRadius: 3 },
   freeDetails: { gap: 4 },
-  freeDetail: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 },
+  freeDetail: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   freeDetailTxt: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
 
   // Recurring

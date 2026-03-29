@@ -4,7 +4,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
 import { useEffect, useState } from 'react';
-import { I18nManager, StatusBar, View } from 'react-native';
+import { I18nManager, StatusBar, StyleSheet, View } from 'react-native';
+
+// Global RTL text alignment patch
+const _originalCreate = StyleSheet.create;
+StyleSheet.create = function(styles) {
+  if (I18nManager.isRTL) {
+    const patched = {};
+    for (const key in styles) {
+      const s = styles[key];
+      if (s && (s.fontSize !== undefined || s.fontWeight !== undefined) && s.textAlign === undefined) {
+        patched[key] = { textAlign: 'right', ...s };
+      } else {
+        patched[key] = s;
+      }
+    }
+    return _originalCreate(patched);
+  }
+  return _originalCreate(styles);
+};
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import i18n from './src/i18n';
@@ -82,11 +100,6 @@ function AppInner() {
         }
 
         i18n.setLanguage(lang);
-        const shouldBeRTL = lang === 'he';
-        if (I18nManager.isRTL !== shouldBeRTL) {
-          I18nManager.allowRTL(true);
-          I18nManager.forceRTL(shouldBeRTL);
-        }
 
         setAuthSkipped(skipped === 'true');
 
