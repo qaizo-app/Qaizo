@@ -6,20 +6,24 @@ import * as Localization from 'expo-localization';
 import { useEffect, useState } from 'react';
 import { I18nManager, StatusBar, StyleSheet, View } from 'react-native';
 
-// Global RTL text alignment patch — uses i18n.isRTL() (reliable) instead of I18nManager.isRTL (may be stale)
+// Global RTL patch: I18nManager flips textAlign ('right' becomes 'left')
+// So we REMOVE explicit textAlign:'right' and let the system handle alignment
 const _originalCreate = StyleSheet.create;
 StyleSheet.create = function(styles) {
-  if (i18n.isRTL()) {
+  if (I18nManager.isRTL) {
     const patched = {};
+    let changed = false;
     for (const key in styles) {
       const s = styles[key];
-      if (s && (s.fontSize !== undefined || s.fontWeight !== undefined) && s.textAlign === undefined) {
-        patched[key] = { textAlign: 'right', ...s };
+      if (s && s.textAlign === 'right') {
+        const { textAlign, ...rest } = s;
+        patched[key] = rest;
+        changed = true;
       } else {
         patched[key] = s;
       }
     }
-    return _originalCreate(patched);
+    return _originalCreate(changed ? patched : styles);
   }
   return _originalCreate(styles);
 };
