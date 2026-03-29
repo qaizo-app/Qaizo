@@ -454,8 +454,8 @@ export default {
   // Smart Input
   smartInput: 'Smart Input',
   smartInputHint: 'Describe your expense or income in natural language',
-  smartInputPlaceholder: 'e.g. Supermarket Rami Levy 800 shekels...',
-  smartExample1: 'Rami Levy supermarket 450',
+  smartInputPlaceholder: 'e.g. Supermarket 800 shekels...',
+  smartExample1: 'Supermarket 450',
   smartExample2: 'Salary received 12000',
   smartExample3: 'Uber taxi 35 shekels',
   examples: 'Examples',

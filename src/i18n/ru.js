@@ -462,8 +462,8 @@ export default {
   // Умный ввод
   smartInput: 'Умный ввод',
   smartInputHint: 'Опишите расход или доход своими словами',
-  smartInputPlaceholder: 'напр. Рами Леви продукты 800 шекелей...',
-  smartExample1: 'Рами Леви супермаркет 450',
+  smartInputPlaceholder: 'напр. Супермаркет 800 шекелей...',
+  smartExample1: 'Супермаркет 450',
   smartExample2: 'Получил зарплату 12000',
   smartExample3: 'Такси Uber 35 шекелей',
   examples: 'Примеры',
