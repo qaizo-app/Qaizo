@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '../i18n';
-import { colors } from '../theme/colors';
+import dataService from '../services/dataService';
+import { categoryConfig, colors } from '../theme/colors';
 
 import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
@@ -21,6 +22,7 @@ import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import ProjectsScreen from '../screens/ProjectsScreen';
+import QuickAddModal from '../components/QuickAddModal';
 import SettingsScreen from '../screens/SettingsScreen';
 import SmartInputModal from '../components/SmartInputModal';
 import TransactionsScreen from '../screens/TransactionsScreen';
@@ -86,6 +88,9 @@ export default function AppNavigator() {
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showQuickSelect, setShowQuickSelect] = useState(false);
+  const [quickTemplate, setQuickTemplate] = useState(null);
+  const [quickTemplates, setQuickTemplates] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const openAddMenu = () => {
@@ -106,7 +111,10 @@ export default function AppNavigator() {
       else if (key === 'scanReceipt') setShowReceipt(true);
       else if (key === 'oneTimePayment') setShowAdd(true);
       else if (key === 'recurringPayment') setShowRecurring(true);
-      else if (key === 'quickAdd') setShowAdd(true);
+      else if (key === 'quickAdd') {
+        dataService.getQuickTemplates().then(t => setQuickTemplates(t));
+        setShowQuickSelect(true);
+      }
     }, 200);
   };
 
@@ -187,11 +195,66 @@ export default function AppNavigator() {
         </Animated.View>
       )}
 
+      {/* Quick Select Overlay */}
+      {showQuickSelect && (
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity style={styles.quickSheet} activeOpacity={1}>
+            <Text style={styles.quickTitle}>{i18n.t('quickAdd')}</Text>
+            {quickTemplates.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.quickSubtitle}>{i18n.t('templates')}</Text>
+                <View style={styles.quickGrid}>
+                  {quickTemplates.map((tpl, idx) => {
+                    const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                    return (
+                      <TouchableOpacity key={idx} style={styles.quickBtn}
+                        onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
+                        <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                          <Feather name={cfg.icon} size={20} color={cfg.color} />
+                        </View>
+                        <Text style={styles.quickLabel} numberOfLines={1}>{tpl.name || i18n.t(tpl.categoryId)}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+            <Text style={styles.quickSubtitle}>{i18n.t('categories')}</Text>
+            <View style={styles.quickGrid}>
+              {[
+                { categoryId: 'food', icon: 'shopping-cart' },
+                { categoryId: 'restaurant', icon: 'coffee' },
+                { categoryId: 'fuel', icon: 'droplet' },
+                { categoryId: 'transport', icon: 'navigation' },
+                { categoryId: 'household', icon: 'home' },
+                { categoryId: 'health', icon: 'heart' },
+                { categoryId: 'clothing', icon: 'shopping-bag' },
+                { categoryId: 'entertainment', icon: 'film' },
+              ].map(tpl => {
+                const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                return (
+                  <TouchableOpacity key={tpl.categoryId} style={styles.quickBtn}
+                    onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
+                    <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                      <Feather name={cfg.icon} size={20} color={cfg.color} />
+                    </View>
+                    <Text style={styles.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
       {/* Global Modals */}
       <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} />
       <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSave={() => setShowSmartInput(false)} />
       <AddRecurringModal visible={showRecurring} onClose={() => setShowRecurring(false)} onSave={() => setShowRecurring(false)} />
       <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />
+      <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
+        onClose={() => setQuickTemplate(null)} onSaved={() => setQuickTemplate(null)} />
     </View>
   );
 }
@@ -207,4 +270,12 @@ const createStyles = () => StyleSheet.create({
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
   menuIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
+
+  quickSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  quickTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
+  quickSubtitle: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
+  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+  quickBtn: { width: 76, alignItems: 'center', gap: 6, paddingVertical: 8 },
+  quickIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  quickLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600', textAlign: 'center' },
 });
