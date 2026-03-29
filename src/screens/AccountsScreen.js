@@ -9,6 +9,7 @@ import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
+import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import { CURRENCIES, sym } from '../utils/currency';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -34,6 +35,8 @@ export default function AccountsScreen() {
   const [accountNumber, setAccountNumber] = useState('');
   const [type, setType] = useState('bank');
   const [currency, setCurrency] = useState(sym());
+  const [currencyCode, setCurrencyCode] = useState(CURRENCIES.find(c => c.symbol === sym())?.code || 'ILS');
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [balance, setBalance] = useState('0');
   const [overdraft, setOverdraft] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -201,13 +204,11 @@ export default function AccountsScreen() {
             <TextInput style={styles.input} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>{i18n.t('currency')}</Text>
-            <View style={styles.currRow}>
-              {CURRENCY_SYMBOLS.map(c => (
-                <TouchableOpacity key={c} style={[styles.currBtn, currency===c&&{borderColor:tc,backgroundColor:`${tc}12`}]} onPress={()=>setCurrency(c)}>
-                  <Text style={[styles.currText, currency===c&&{color:tc}]}>{c}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity style={styles.currPickerBtn} onPress={() => setShowCurrencyPicker(true)} activeOpacity={0.7}>
+              <Text style={styles.currPickerSymbol}>{currency}</Text>
+              <Text style={styles.currPickerCode}>{currencyCode}</Text>
+              <Feather name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
 
             <Text style={styles.fieldLabel}>{i18n.t('balance')}</Text>
             <View style={styles.balRow}>
@@ -240,6 +241,10 @@ export default function AccountsScreen() {
       </SwipeModal>
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')} message={deleteTarget?.name||''} confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')} onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
+      <CurrencyPickerModal visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        selected={currencyCode}
+        onSelect={(cur) => { setCurrency(cur.symbol); setCurrencyCode(cur.code); }} />
     </View>
   );
 }
@@ -274,9 +279,9 @@ const createStyles = () => StyleSheet.create({
   input:{backgroundColor:colors.card,borderRadius:14,padding:14,color:colors.text,fontSize:16,marginBottom:12,borderWidth:1,borderColor:colors.cardBorder,textAlign:i18n.textAlign()},
   typeChip:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginEnd:8,borderWidth:1.5,borderColor:'transparent'},
   typeChipText:{color:colors.textMuted,fontSize:12,fontWeight:'600',marginStart:6},
-  currRow:{flexDirection:i18n.row(),gap:8,marginBottom:16},
-  currBtn:{paddingHorizontal:18,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,borderWidth:1.5,borderColor:'transparent'},
-  currText:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
+  currPickerBtn:{flexDirection:'row',alignItems:'center',backgroundColor:colors.card,borderRadius:14,padding:14,marginBottom:16,borderWidth:1,borderColor:colors.cardBorder,gap:12},
+  currPickerSymbol:{color:colors.text,fontSize:20,fontWeight:'700',width:36,textAlign:'center'},
+  currPickerCode:{color:colors.textSecondary,fontSize:16,fontWeight:'600',flex:1},
   balRow:{flexDirection:i18n.row(),alignItems:'center',marginBottom:16},
   balCur:{fontSize:28,fontWeight:'700',marginEnd:8},
   balInput:{flex:1,color:colors.text,fontSize:28,fontWeight:'700'},

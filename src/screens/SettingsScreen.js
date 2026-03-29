@@ -214,18 +214,6 @@ export default function SettingsScreen() {
           </Card>
         )}
 
-        {/* Currency */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => setShowCurrencyPicker(true)}>
-          <View style={styles.sectionLeft}>
-            <Feather name="dollar-sign" size={18} color={colors.blue} />
-            <Text style={styles.sectionText}>{i18n.t('currency')}</Text>
-          </View>
-          <View style={styles.sectionRight}>
-            <Text style={styles.sectionValue}>{curSymbol} {CURRENCIES.find(c => c.symbol === curSymbol)?.code}</Text>
-            <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
-          </View>
-        </TouchableOpacity>
-
         {/* Week Start */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('week')}>
           <View style={styles.sectionLeft}>

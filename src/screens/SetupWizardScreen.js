@@ -6,10 +6,10 @@ import { Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInp
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
-import { CURRENCIES as CURRENCY_LIST, sym } from '../utils/currency';
+import CurrencyPickerModal from '../components/CurrencyPickerModal';
+import { CURRENCIES as CURRENCY_LIST, setCurrency as setGlobalCurrency, sym } from '../utils/currency';
 
 const { width: SW } = Dimensions.get('window');
-const CURRENCY_SYMBOLS = CURRENCY_LIST.map(c => c.symbol);
 const ACCOUNT_TYPES = ['bank', 'credit', 'cash'];
 const EXPENSE_CATS = ['food', 'transport', 'fuel', 'health', 'phone', 'utilities', 'rent', 'restaurant', 'other'];
 
@@ -18,6 +18,8 @@ export default function SetupWizardScreen({ onDone }) {
 
   // Шаг 0: Валюта
   const [currency, setCurrency] = useState(sym());
+  const [currencyCode, setCurrencyCode] = useState('ILS');
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   // Шаг 1: Счёт
   const [accName, setAccName] = useState('');
@@ -39,6 +41,7 @@ export default function SetupWizardScreen({ onDone }) {
   const handleSaveCurrency = async () => {
     const settings = await dataService.getSettings();
     await dataService.saveSettings({ ...settings, currency });
+    setGlobalCurrency(currency, currencyCode);
     setStep(1);
   };
 
@@ -104,15 +107,11 @@ export default function SetupWizardScreen({ onDone }) {
             <Text style={st.stepTitle}>{i18n.t('wizCurrencyTitle')}</Text>
             <Text style={st.stepSub}>{i18n.t('wizCurrencySub')}</Text>
 
-            <View style={st.optionGrid}>
-              {CURRENCY_SYMBOLS.map(c => (
-                <TouchableOpacity key={c}
-                  style={[st.currBtn, currency === c && { borderColor: colors.blue, backgroundColor: 'rgba(96,165,250,0.1)' }]}
-                  onPress={() => setCurrency(c)}>
-                  <Text style={[st.currTxt, currency === c && { color: colors.blue }]}>{c}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity style={st.currPickerBtn} onPress={() => setShowCurrencyPicker(true)} activeOpacity={0.7}>
+              <Text style={st.currPickerSymbol}>{currency}</Text>
+              <Text style={st.currPickerCode}>{currencyCode}</Text>
+              <Feather name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
 
             <TouchableOpacity style={st.primaryBtn} onPress={handleSaveCurrency}>
               <Text style={st.primaryTxt}>{i18n.t('next')}</Text>
@@ -247,6 +246,10 @@ export default function SetupWizardScreen({ onDone }) {
 
       </ScrollView>
       </KeyboardAvoidingView>
+      <CurrencyPickerModal visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        selected={currencyCode}
+        onSelect={(cur) => { setCurrency(cur.symbol); setCurrencyCode(cur.code); }} />
     </View>
   );
 }
@@ -269,8 +272,9 @@ const createSt = () => StyleSheet.create({
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder, alignSelf: 'stretch' },
 
   optionGrid: { flexDirection: i18n.row(), gap: 12, marginBottom: 28 },
-  currBtn: { width: 64, height: 64, borderRadius: 16, borderWidth: 1.5, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
-  currTxt: { color: colors.textDim, fontSize: 24, fontWeight: '700' },
+  currPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.cardBorder, gap: 12, alignSelf: 'stretch' },
+  currPickerSymbol: { color: colors.text, fontSize: 24, fontWeight: '700', width: 40, textAlign: 'center' },
+  currPickerCode: { color: colors.textSecondary, fontSize: 18, fontWeight: '600', flex: 1 },
 
   typeRow: { flexDirection: i18n.row(), gap: 10, marginBottom: 16, alignSelf: 'stretch' },
   typeBtn: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.cardBorder, gap: 4 },
