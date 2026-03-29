@@ -204,7 +204,7 @@ const createStyles = () => StyleSheet.create({
 
   menuOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 },
   menuOverlayBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  menuContainer: { position: 'absolute', bottom: 100, left: 20, right: 20, backgroundColor: colors.card, borderRadius: 20, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
+  menuContainer: { position: 'absolute', bottom: 120, left: 20, right: 20, backgroundColor: colors.card, borderRadius: 20, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
   menuIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
