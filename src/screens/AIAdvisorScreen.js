@@ -129,9 +129,10 @@ export default function AIAdvisorScreen() {
         {/* ─── Tax Reserve (for income) ─────── */}
         {taxReserve && taxReserve.grossIncome > 0 && (
           <>
-            <Text style={st.sectionTitle}>
-              <Feather name="shield" size={16} color={colors.yellow} />{'  '}{i18n.t('aiTaxSafe')}
-            </Text>
+            <View style={st.sectionTitleRow}>
+              <Feather name="shield" size={16} color={colors.yellow} />
+              <Text style={st.sectionTitle}>{i18n.t('aiTaxSafe')}</Text>
+            </View>
             <Card style={{ marginHorizontal: 20 }}>
               <Text style={st.taxDesc}>{i18n.t('aiTaxSafeDesc')}</Text>
               <View style={st.taxGrid}>
@@ -171,9 +172,10 @@ export default function AIAdvisorScreen() {
         {/* ─── Cash Flow Prediction ─────────── */}
         {cashFlow && cashFlow.upcoming.length > 0 && (
           <>
-            <Text style={st.sectionTitle}>
-              <Feather name="activity" size={16} color={colors.blue} />{'  '}{i18n.t('aiCashFlow')}
-            </Text>
+            <View style={st.sectionTitleRow}>
+              <Feather name="activity" size={16} color={colors.blue} />
+              <Text style={st.sectionTitle}>{i18n.t('aiCashFlow')}</Text>
+            </View>
             <Card style={{ marginHorizontal: 20 }}>
               <View style={st.cfSummary}>
                 <View style={st.cfItem}>
@@ -213,9 +215,10 @@ export default function AIAdvisorScreen() {
         )}
 
         {/* ─── Insights ─────────────────────── */}
-        <Text style={st.sectionTitle}>
-          <Feather name="zap" size={16} color={colors.green} />{'  '}{i18n.t('aiInsights')}
-        </Text>
+        <View style={st.sectionTitleRow}>
+          <Feather name="zap" size={16} color={colors.green} />
+          <Text style={st.sectionTitle}>{i18n.t('aiInsights')}</Text>
+        </View>
 
         {insights && insights.length > 0 ? insights.map((insight, idx) => {
           const color = typeColors[insight.type];
@@ -244,9 +247,10 @@ export default function AIAdvisorScreen() {
         {/* ─── Gemini Personal Advice ─────── */}
         {(geminiTips || geminiLoading) && (
           <>
-            <Text style={st.sectionTitle}>
-              <Feather name="cpu" size={16} color={colors.blue} />{'  '}{i18n.t('aiPersonalAdvice')}
-            </Text>
+            <View style={st.sectionTitleRow}>
+              <Feather name="cpu" size={16} color={colors.blue} />
+              <Text style={st.sectionTitle}>{i18n.t('aiPersonalAdvice')}</Text>
+            </View>
             {geminiLoading ? (
               <Card style={{ marginHorizontal: 20 }}>
                 <View style={st.emptyWrap}>
@@ -274,9 +278,10 @@ export default function AIAdvisorScreen() {
         )}
 
         {/* ─── Tips ─────────────────────────── */}
-        <Text style={st.sectionTitle}>
-          <Feather name="book-open" size={16} color={colors.teal} />{'  '}{i18n.t('aiTip')}
-        </Text>
+        <View style={st.sectionTitleRow}>
+          <Feather name="book-open" size={16} color={colors.teal} />
+          <Text style={st.sectionTitle}>{i18n.t('aiTip')}</Text>
+        </View>
         {[
           { icon: '🛒', titleKey: 'aiTip1Title', textKey: 'aiTip1Text' },
           { icon: '🛡️', titleKey: 'aiTip5Title', textKey: 'aiTip5Text' },
@@ -309,7 +314,8 @@ const createStyles = () => StyleSheet.create({
   summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
   summaryValue: { fontSize: 15, fontWeight: '800' },
 
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', paddingHorizontal: 20, marginTop: 28, marginBottom: 12, textAlign: i18n.textAlign() },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, marginTop: 28, marginBottom: 12 },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
 
   // Daily budget
   dailyRow: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 14 },
