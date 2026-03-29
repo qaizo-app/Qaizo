@@ -442,12 +442,6 @@ const dataService = {
   async deleteProject(id) {
     const projects = await this.getProjects();
     await this.saveProjects(projects.filter(p => p.id !== id));
-    // Clear projectId from transactions
-    const txs = await this.getTransactions();
-    const updated = txs.filter(t => t.projectId === id);
-    for (const tx of updated) {
-      await this.updateTransaction(tx.id, { projectId: null });
-    }
   },
 
   // ─── RECURRING PAYMENTS ──────────────────────────────────

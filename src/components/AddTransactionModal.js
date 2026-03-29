@@ -40,7 +40,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     if (visible) {
       dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
       Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags(), dataService.getProjects()]).then(([accs, txs, savedTags, projs]) => {
-        setProjects(projs);
+        setProjects([...projs].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
         setUserTags(savedTags);
         const usage = {};
         txs.forEach(tx => { usage[tx.account] = (usage[tx.account]||0)+1; });

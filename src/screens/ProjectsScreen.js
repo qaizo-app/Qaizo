@@ -32,6 +32,7 @@ export default function ProjectsScreen() {
   const [showModal, setShowModal] = useState(false);
   const [editProject, setEditProject] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [longPressTarget, setLongPressTarget] = useState(null);
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('folder');
   const [selColor, setSelColor] = useState(COLOR_OPTIONS[0]);
@@ -120,8 +121,9 @@ export default function ProjectsScreen() {
           const total = getProjectTotal(proj.id);
           const count = getProjectTxCount(proj.id);
           return (
-            <TouchableOpacity key={proj.id} style={st.projectRow} onPress={() => openEdit(proj)}
-              onLongPress={() => setDeleteTarget(proj)} activeOpacity={0.7}>
+            <TouchableOpacity key={proj.id} style={st.projectRow}
+              onPress={() => navigation.getParent()?.navigate('Transactions', { filterProject: proj.id })}
+              onLongPress={() => setLongPressTarget(proj)} activeOpacity={0.7}>
               <View style={[st.projectIcon, { backgroundColor: (proj.color || '#60a5fa') + '20' }]}>
                 <Feather name={proj.icon || 'folder'} size={22} color={proj.color || '#60a5fa'} />
               </View>
@@ -175,11 +177,32 @@ export default function ProjectsScreen() {
         </View>
       </SwipeModal>
 
+      {/* Long press menu */}
+      {longPressTarget && !deleteTarget && (
+        <TouchableOpacity style={st.overlay} activeOpacity={1} onPress={() => setLongPressTarget(null)}>
+          <View style={st.actionSheet}>
+            <Text style={st.actionTitle}>{longPressTarget.name}</Text>
+            <TouchableOpacity style={st.actionBtn} onPress={() => { const p = longPressTarget; setLongPressTarget(null); openEdit(p); }}>
+              <Feather name="edit-2" size={18} color={colors.blue} />
+              <Text style={st.actionBtnText}>{i18n.t('edit')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={st.actionBtn} onPress={() => { setDeleteTarget(longPressTarget); setLongPressTarget(null); }}>
+              <Feather name="trash-2" size={18} color={colors.red} />
+              <Text style={[st.actionBtnText, { color: colors.red }]}>{i18n.t('delete')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={st.actionCancelBtn} onPress={() => setLongPressTarget(null)}>
+              <Text style={st.actionCancelText}>{i18n.t('cancel')}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      )}
+
       <ConfirmModal visible={!!deleteTarget}
         title={i18n.t('delete')}
         message={deleteTarget?.name || ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
-        onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+        onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)}
+        icon="trash-2" />
     </View>
   );
 }
@@ -218,4 +241,12 @@ const createSt = () => StyleSheet.create({
   cancelBtnText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
   saveBtnText: { color: colors.bg, fontSize: 15, fontWeight: '700' },
+
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end', zIndex: 100 },
+  actionSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  actionTitle: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 20 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  actionBtnText: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  actionCancelBtn: { alignItems: 'center', paddingVertical: 16, marginTop: 8, borderRadius: 14, backgroundColor: colors.bg2 },
+  actionCancelText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
 });

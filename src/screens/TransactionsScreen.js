@@ -54,10 +54,14 @@ export default function TransactionsScreen({ route }) {
     loadData();
     if (route?.params?.openAdd) {
       setShowAdd(true);
-      // Сбрасываем параметр чтобы не открывалось повторно
       if (route.params) route.params.openAdd = false;
     }
-  }, [route?.params?.openAdd]));
+    if (route?.params?.filterProject) {
+      setSelProjects([route.params.filterProject]);
+      setShowFilters(true);
+      if (route.params) route.params.filterProject = null;
+    }
+  }, [route?.params?.openAdd, route?.params?.filterProject]));
 
   // Count active filters
   const activeFilterCount = (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (selCategories.length > 0 ? 1 : 0) + (selAccounts.length > 0 ? 1 : 0) + (amountMin ? 1 : 0) + (amountMax ? 1 : 0) + (selProjects.length > 0 ? 1 : 0);
