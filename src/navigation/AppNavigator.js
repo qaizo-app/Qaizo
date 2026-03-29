@@ -1,5 +1,4 @@
 // src/navigation/AppNavigator.js
-// Категории доступны из таба Ещё (Settings)
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -23,7 +22,7 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 
 const Tab = createBottomTabNavigator();
 const AccountsStack = createNativeStackNavigator();
-const SettingsStack = createNativeStackNavigator();
+const DashboardStack = createNativeStackNavigator();
 
 function AccountsStackScreen() {
   return (
@@ -34,26 +33,29 @@ function AccountsStackScreen() {
   );
 }
 
-function SettingsStackScreen() {
+function DashboardStackScreen() {
   return (
-    <SettingsStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'fade' }}>
-      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
-      <SettingsStack.Screen name="Categories" component={CategoriesScreen} />
-      <SettingsStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
-      <SettingsStack.Screen name="AIAdvisor" component={AIAdvisorScreen} />
-      <SettingsStack.Screen name="Calendar" component={CalendarScreen} />
-      <SettingsStack.Screen name="Investments" component={InvestmentsScreen} />
-      <SettingsStack.Screen name="AIChat" component={AIChatScreen} />
-    </SettingsStack.Navigator>
+    <DashboardStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'fade' }}>
+      <DashboardStack.Screen name="DashboardMain" component={DashboardScreen} />
+      <DashboardStack.Screen name="Settings" component={SettingsScreen} />
+      <DashboardStack.Screen name="Categories" component={CategoriesScreen} />
+      <DashboardStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
+      <DashboardStack.Screen name="AIAdvisor" component={AIAdvisorScreen} />
+      <DashboardStack.Screen name="Investments" component={InvestmentsScreen} />
+      <DashboardStack.Screen name="AIChat" component={AIChatScreen} />
+    </DashboardStack.Navigator>
   );
 }
+
+// Пустой экран для таба "+" (нажатие перехватывается)
+function EmptyScreen() { return <View style={{ flex: 1, backgroundColor: colors.bg }} />; }
 
 const tabConfig = {
   Dashboard:    { icon: 'home',        labelKey: 'dashboard',    color: colors.green },
   Transactions: { icon: 'list',        labelKey: 'transactions', color: '#60a5fa' },
+  Add:          { icon: 'plus',        labelKey: null,           color: colors.green },
   AccountsTab:  { icon: 'credit-card', labelKey: 'accounts',     color: '#f59e0b' },
-  Calendar:     { icon: 'calendar',     labelKey: 'calendarView', color: '#a78bfa' },
-  SettingsTab:  { icon: 'settings',    labelKey: null,           color: '#94a3b8' },
+  Calendar:     { icon: 'calendar',    labelKey: 'calendarView', color: '#a78bfa' },
 };
 
 export default function AppNavigator() {
@@ -80,32 +82,49 @@ export default function AppNavigator() {
           },
           tabBarActiveTintColor: cfg.color,
           tabBarInactiveTintColor: colors.textMuted,
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconWrap, focused && { backgroundColor: cfg.color + '14' }]}>
-              <Feather name={cfg.icon} size={focused ? 22 : 20} color={focused ? cfg.color : colors.textMuted} />
-            </View>
-          ),
-          tabBarLabel: ({ focused }) => (
-            <Text style={[styles.label, focused && { color: cfg.color, fontWeight: '700' }]}>
-              {route.name === 'SettingsTab'
-                ? (i18n.getLanguage() === 'ru' ? 'Ещё' : i18n.getLanguage() === 'he' ? 'עוד' : 'More')
-                : i18n.t(cfg.labelKey)}
-            </Text>
-          ),
+          tabBarIcon: ({ focused }) => {
+            if (route.name === 'Add') {
+              return (
+                <View style={styles.addBtn}>
+                  <Feather name="plus" size={28} color={colors.bg} />
+                </View>
+              );
+            }
+            return (
+              <View style={[styles.iconWrap, focused && { backgroundColor: cfg.color + '14' }]}>
+                <Feather name={cfg.icon} size={focused ? 22 : 20} color={focused ? cfg.color : colors.textMuted} />
+              </View>
+            );
+          },
+          tabBarLabel: ({ focused }) => {
+            if (route.name === 'Add') return null;
+            return (
+              <Text style={[styles.label, focused && { color: cfg.color, fontWeight: '700' }]}>
+                {i18n.t(cfg.labelKey)}
+              </Text>
+            );
+          },
         };
       }}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Dashboard" component={DashboardStackScreen} />
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
+      <Tab.Screen name="Add" component={EmptyScreen}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Transactions', { openAdd: true });
+          },
+        })}
+      />
       <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
-      <Tab.Screen name="SettingsTab" component={SettingsStackScreen} />
     </Tab.Navigator>
   );
 }
 
 const createStyles = () => StyleSheet.create({
-  tabBar: { backgroundColor: colors.bg2, borderTopColor: colors.divider, borderTopWidth: 1, height: 88, paddingTop: 8, paddingBottom: 28, paddingHorizontal: 4 },
   iconWrap: { width: 40, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   label: { fontSize: 10, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
+  addBtn: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', marginBottom: 20, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
 });

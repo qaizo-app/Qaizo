@@ -1,7 +1,7 @@
 // src/screens/DashboardScreen.js
 // Графики: pie chart категорий, bar chart по месяцам, бюджеты с прогресс-барами
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -31,6 +31,7 @@ import { sym } from '../utils/currency';
 const SW = Dimensions.get('window').width;
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [showAdd, setShowAdd] = useState(false);
@@ -265,7 +266,10 @@ export default function DashboardScreen() {
             <Text style={st.logo}><Text style={{ color: colors.green }}>Q</Text>aizo</Text>
             <Text style={st.subtitle}>{dateStr}</Text>
           </View>
-          <View style={{ flexDirection: i18n.row(), gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
+            <Feather name="settings" size={18} color={colors.textDim} />
+          </TouchableOpacity>
           <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
             <Feather name="sliders" size={18} color={colors.textDim} />
           </TouchableOpacity>

@@ -15,7 +15,7 @@ import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 
-export default function TransactionsScreen() {
+export default function TransactionsScreen({ route }) {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -47,7 +47,14 @@ export default function TransactionsScreen() {
     setAccounts(accs.filter(a => a.isActive !== false));
   };
 
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  useFocusEffect(useCallback(() => {
+    loadData();
+    if (route?.params?.openAdd) {
+      setShowAdd(true);
+      // Сбрасываем параметр чтобы не открывалось повторно
+      if (route.params) route.params.openAdd = false;
+    }
+  }, [route?.params?.openAdd]));
 
   // Count active filters
   const activeFilterCount = (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (selCategories.length > 0 ? 1 : 0) + (selAccounts.length > 0 ? 1 : 0) + (amountMin ? 1 : 0) + (amountMax ? 1 : 0);
