@@ -197,6 +197,8 @@ export default {
   swipeHint: 'החלק לפעולות',
   found: 'נמצאו',
   noResults: 'לא נמצאו תוצאות',
+  frequentlyUsed: 'בשימוש תכוף',
+  search: 'חיפוש',
   filters: 'סינון',
   dateFrom: 'מתאריך',
   dateTo: 'עד',

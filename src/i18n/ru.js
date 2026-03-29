@@ -206,6 +206,8 @@ export default {
   swipeHint: 'свайпни для действий',
   found: 'Найдено',
   noResults: 'Ничего не найдено',
+  frequentlyUsed: 'Часто используемые',
+  search: 'Поиск',
   filters: 'Фильтры',
   dateFrom: 'С',
   dateTo: 'По',

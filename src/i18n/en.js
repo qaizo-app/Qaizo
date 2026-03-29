@@ -197,6 +197,8 @@ export default {
   swipeHint: 'swipe for actions',
   found: 'Found',
   noResults: 'No results found',
+  frequentlyUsed: 'Frequently used',
+  search: 'Search',
   filters: 'Filters',
   dateFrom: 'From',
   dateTo: 'To',

@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import CategoryPickerModal from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -28,6 +29,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showMore, setShowMore] = useState(false);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
+  const [showCatPicker, setShowCatPicker] = useState(false);
   const [projects, setProjects] = useState([]);
   const [selProject, setSelProject] = useState('');
   const [weekStart, setWeekStart] = useState('sunday');
@@ -172,13 +174,13 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               {type !== 'transfer' && (
                 <>
                   <Text style={st.label}>{i18n.t('category')}</Text>
-                  <View style={st.catGrid}>
-                    {cats.map(cid => { const cfg = categoryConfig[cid] || categoryConfig.other; const sl = categoryId === cid; return (
-                      <TouchableOpacity key={cid} style={[st.catBtn, sl && { borderColor: cfg.color, backgroundColor: `${cfg.color}12` }]} onPress={() => setCategoryId(cid)}>
-                        <Feather name={cfg.icon} size={20} color={sl ? cfg.color : colors.textMuted} />
-                        <Text style={[st.catLbl, sl && { color: cfg.color }]} numberOfLines={1}>{i18n.t(cid)}</Text>
-                      </TouchableOpacity>); })}
-                  </View>
+                  <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
+                    <View style={[st.catPickerIcon, { backgroundColor: (categoryConfig[categoryId]?.color || '#64748b') + '18' }]}>
+                      <Feather name={categoryConfig[categoryId]?.icon || 'circle'} size={20} color={categoryConfig[categoryId]?.color || '#64748b'} />
+                    </View>
+                    <Text style={st.catPickerText}>{i18n.t(categoryId)}</Text>
+                    <Feather name="chevron-down" size={18} color={colors.textMuted} />
+                  </TouchableOpacity>
                 </>
               )}
 
@@ -278,6 +280,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         )}
       </SwipeModal>
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
+      <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
     </>
   );
 }
@@ -296,9 +299,9 @@ const createSt = () => StyleSheet.create({
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginStart: 6, maxWidth: 90 },
   dot: { width: 5, height: 5, borderRadius: 3, marginStart: 6, opacity: 0.6 },
-  catGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  catBtn: { width: '22%', alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1.5, borderColor: 'transparent', minWidth: 75 },
-  catLbl: { color: colors.textMuted, fontSize: 9, fontWeight: '500', marginTop: 4 },
+  catPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 },
+  catPickerIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  catPickerText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 15, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
   moreBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', paddingVertical: 8, marginBottom: 8 },
   moreTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginStart: 4 },

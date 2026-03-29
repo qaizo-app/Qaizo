@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import CategoryPickerModal from './CategoryPickerModal';
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -19,6 +20,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [categoryId, setCategoryId] = useState('rent');
   const [recipient, setRecipient] = useState('');
   const [note, setNote] = useState('');
+  const [showCatPicker, setShowCatPicker] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -137,6 +139,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   };
 
   return (
+    <>
     <SwipeModal visible={visible} onClose={onClose}>
       {({ close }) => (
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -182,19 +185,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Категория */}
           <Text style={st.label}>{i18n.t('category')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-            {cats.map(cid => {
-              const cfg = categoryConfig[cid] || categoryConfig.other;
-              const sl = categoryId === cid;
-              return (
-                <TouchableOpacity key={cid} style={[st.chip, sl && { borderColor: cfg.color, backgroundColor: `${cfg.color}12` }]}
-                  onPress={() => setCategoryId(cid)}>
-                  <Feather name={cfg.icon} size={14} color={sl ? cfg.color : colors.textMuted} />
-                  <Text style={[st.chipTxt, sl && { color: cfg.color }]} numberOfLines={1}>{i18n.t(cid)}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
+            <View style={[st.catPickerIcon, { backgroundColor: (categoryConfig[categoryId]?.color || '#64748b') + '18' }]}>
+              <Feather name={categoryConfig[categoryId]?.icon || 'circle'} size={20} color={categoryConfig[categoryId]?.color || '#64748b'} />
+            </View>
+            <Text style={st.catPickerText}>{i18n.t(categoryId)}</Text>
+            <Feather name="chevron-down" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
 
           {/* Получатель */}
           <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
@@ -241,6 +238,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
         </ScrollView>
       )}
     </SwipeModal>
+    <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
+    </>
   );
 }
 
@@ -255,6 +254,9 @@ const createSt = () => StyleSheet.create({
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 8, marginTop: 4, textAlign: i18n.textAlign() },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginStart: 6, maxWidth: 90 },
+  catPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 },
+  catPickerIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  catPickerText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 15, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
   scheduleBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
   scheduleTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
