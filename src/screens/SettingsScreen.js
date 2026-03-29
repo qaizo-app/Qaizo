@@ -98,7 +98,7 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Feather name={i18n.isRTL() ? "arrow-right" : "arrow-left"} size={22} color={colors.text} />
+            <Feather name={"arrow-left"} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>⚙️ {settingsTitle}</Text>
         </View>
@@ -109,7 +109,7 @@ export default function SettingsScreen() {
             <Feather name="cpu" size={18} color={colors.green} />
             <Text style={styles.sectionText}>{i18n.t('advisor')}</Text>
           </View>
-          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* AI Chat */}
@@ -118,7 +118,7 @@ export default function SettingsScreen() {
             <Feather name="message-circle" size={18} color={colors.green} />
             <Text style={styles.sectionText}>{i18n.t('aiChat')}</Text>
           </View>
-          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Investments */}
@@ -127,7 +127,7 @@ export default function SettingsScreen() {
             <Feather name="trending-up" size={18} color={colors.teal} />
             <Text style={styles.sectionText}>{i18n.t('investments')}</Text>
           </View>
-          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Categories */}
@@ -136,7 +136,7 @@ export default function SettingsScreen() {
             <Feather name="grid" size={18} color={colors.teal} />
             <Text style={styles.sectionText}>{i18n.t('categories')}</Text>
           </View>
-          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Projects */}
@@ -145,7 +145,7 @@ export default function SettingsScreen() {
             <Feather name="folder" size={18} color="#a78bfa" />
             <Text style={styles.sectionText}>{i18n.t('projects')}</Text>
           </View>
-          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Monthly Report */}
@@ -154,7 +154,7 @@ export default function SettingsScreen() {
             <Feather name="file-text" size={18} color={colors.blue} />
             <Text style={styles.sectionText}>{i18n.t('monthlyReport')}</Text>
           </View>
-          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Language */}

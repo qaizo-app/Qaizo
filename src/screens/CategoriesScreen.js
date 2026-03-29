@@ -190,7 +190,7 @@ export default function CategoriesScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Feather name={i18n.isRTL() ? "arrow-right" : "arrow-left"} size={22} color={colors.text} />
+            <Feather name={"arrow-left"} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>{i18n.t('categories')}</Text>
           <TouchableOpacity style={styles.addBtn} onPress={openAddGroup}>

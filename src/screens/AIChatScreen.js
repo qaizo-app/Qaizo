@@ -72,7 +72,7 @@ export default function AIChatScreen() {
       {/* Header */}
       <View style={st.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
-          <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+          <Feather name={'arrow-left'} size={22} color={colors.text} />
         </TouchableOpacity>
         <View style={st.headerCenter}>
           <Text style={st.headerTitle}>{i18n.t('aiChat')}</Text>

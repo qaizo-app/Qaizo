@@ -108,19 +108,19 @@ export default function MonthlyReportScreen() {
         {/* Header + навигация по месяцам */}
         <View style={st.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
-            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+            <Feather name={'arrow-left'} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('monthlyReport')}</Text>
         </View>
 
         <View style={st.monthNav}>
           <TouchableOpacity style={st.navBtn} onPress={() => setMonthOffset(monthOffset - 1)}>
-            <Feather name={i18n.isRTL() ? 'chevron-right' : 'chevron-left'} size={22} color={colors.textDim} />
+            <Feather name='chevron-left' size={22} color={colors.textDim} />
           </TouchableOpacity>
           <Text style={st.monthLabel}>{monthLabel}</Text>
           <TouchableOpacity style={[st.navBtn, isCurrentMonth && { opacity: 0.3 }]}
             onPress={() => !isCurrentMonth && setMonthOffset(monthOffset + 1)} disabled={isCurrentMonth}>
-            <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={22} color={colors.textDim} />
+            <Feather name='chevron-right' size={22} color={colors.textDim} />
           </TouchableOpacity>
         </View>
 

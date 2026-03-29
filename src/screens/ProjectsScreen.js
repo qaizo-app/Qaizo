@@ -98,7 +98,7 @@ export default function ProjectsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={st.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
-            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+            <Feather name={'arrow-left'} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('projects')}</Text>
           <TouchableOpacity style={st.addBtn} onPress={openAdd}>
@@ -133,7 +133,7 @@ export default function ProjectsScreen() {
                   {count} {i18n.t('transactions').toLowerCase()} · {total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}
                 </Text>
               </View>
-              <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+              <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
             </TouchableOpacity>
           );
         })}

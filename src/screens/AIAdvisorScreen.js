@@ -73,7 +73,7 @@ export default function AIAdvisorScreen() {
 
         <View style={st.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
-            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+            <Feather name="arrow-left" size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('advisor')}</Text>
         </View>

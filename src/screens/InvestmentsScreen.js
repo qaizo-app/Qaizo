@@ -45,7 +45,7 @@ export default function InvestmentsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+            <Feather name={'arrow-left'} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>{i18n.t('investments')}</Text>
         </View>
