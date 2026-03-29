@@ -289,6 +289,8 @@ export default {
   confirmPassword: 'Confirm password',
   passwordsMismatch: 'Passwords do not match',
   passwordTooShort: 'Password must be at least 6 characters',
+  emailPlaceholder: 'Email',
+  or: 'or',
   invalidEmail: 'Invalid email format',
   passWeak: 'Weak',
   passMedium: 'Medium',

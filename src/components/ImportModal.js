@@ -263,8 +263,8 @@ export default function ImportModal({ visible, onClose, onImported }) {
 }
 
 const createSt = () => StyleSheet.create({
-  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 20, marginBottom: 20 },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16, textAlign: i18n.textAlign() },
+  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 20, marginBottom: 20, textAlign: i18n.textAlign() },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
   errorTxt: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
@@ -273,7 +273,7 @@ const createSt = () => StyleSheet.create({
   pickSub: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
 
   formatInfo: { backgroundColor: colors.card, borderRadius: 14, padding: 16, gap: 8 },
-  formatTitle: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
+  formatTitle: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4, textAlign: i18n.textAlign() },
   formatRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   formatTxt: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
 
@@ -283,7 +283,7 @@ const createSt = () => StyleSheet.create({
   remapBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
 
   // Mapping
-  mapTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 12 },
+  mapTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 12, textAlign: i18n.textAlign() },
   mapRow: { marginBottom: 10 },
   mapField: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginBottom: 6 },
   mapFieldTxt: { color: colors.text, fontSize: 13, fontWeight: '600' },
@@ -312,8 +312,8 @@ const createSt = () => StyleSheet.create({
 
   center: { alignItems: 'center', paddingVertical: 32, gap: 12 },
   importingTxt: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
-  doneTxt: { color: colors.text, fontSize: 20, fontWeight: '700' },
-  doneDetail: { color: colors.textDim, fontSize: 14 },
+  doneTxt: { color: colors.text, fontSize: 20, fontWeight: '700', textAlign: 'center' },
+  doneDetail: { color: colors.textDim, fontSize: 14, textAlign: 'center' },
   doneBtn: { backgroundColor: colors.card, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 14, marginTop: 8, borderWidth: 1, borderColor: colors.cardBorder },
   doneBtnTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
 });

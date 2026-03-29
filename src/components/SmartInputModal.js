@@ -189,9 +189,9 @@ const createStyles = () => StyleSheet.create({
   aiBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginEnd: 8 },
 
   examples: { paddingHorizontal: 24, marginBottom: 16 },
-  exTitle: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 8 },
+  exTitle: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 8, textAlign: i18n.textAlign() },
   exRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8 },
-  exText: { color: colors.textSecondary, fontSize: 14 },
+  exText: { color: colors.textSecondary, fontSize: 14, textAlign: i18n.textAlign(), flex: 1 },
 
   resultCard: { backgroundColor: colors.card, borderRadius: 20, marginHorizontal: 20, padding: 20, borderWidth: 1, borderColor: colors.cardBorder },
   resultHeader: { flexDirection: i18n.row(), alignItems: 'center', gap: 14, marginBottom: 16 },

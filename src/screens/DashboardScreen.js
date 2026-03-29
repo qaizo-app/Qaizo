@@ -62,6 +62,7 @@ export default function DashboardScreen() {
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [dashLayout, setDashLayout] = useState(DEFAULT_LAYOUT);
   const [showLayoutModal, setShowLayoutModal] = useState(false);
+  const [budgetsExpanded, setBudgetsExpanded] = useState(false);
   const bellAnim = useRef(new Animated.Value(1)).current;
   const toast = useToast();
 
@@ -400,15 +401,20 @@ export default function DashboardScreen() {
             case 'budgets':
               if (budgetRows.length === 0) return null;
               return (
-                <View key="budgets">
-                  {hasBudgets && (
-                    <Card>
-                      <View style={st.blockTitleRow}>
-                        <Text style={st.blockTitle}>{i18n.t('budgets')}</Text>
+                <Card key="budgets">
+                  <TouchableOpacity style={st.blockTitleRow} onPress={() => setBudgetsExpanded(!budgetsExpanded)} activeOpacity={0.7}>
+                    <Text style={st.blockTitle}>{i18n.t('budgets')}</Text>
+                    <View style={st.budgetTitleRight}>
+                      {hasBudgets && (
                         <Text style={[st.totalPct, { color: totalBudgetPct > 100 ? colors.red : totalBudgetPct > 80 ? colors.yellow : colors.green }]}>
                           {totalBudgetPct}%
                         </Text>
-                      </View>
+                      )}
+                      <Feather name={budgetsExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+                    </View>
+                  </TouchableOpacity>
+                  {hasBudgets && (
+                    <>
                       <View style={st.totalBudgetRow}>
                         <Text style={st.totalBudgetLabel}>{i18n.t('totalBudget')}</Text>
                         <Text style={st.totalBudgetAmount}>
@@ -427,48 +433,49 @@ export default function DashboardScreen() {
                           : `${i18n.t('over')}: ${(totalBudgetSpent - totalBudgetLimit).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()}`
                         }
                       </Text>
-                    </Card>
+                    </>
                   )}
-                  <Card>
-                    {!hasBudgets && <Text style={st.blockTitle}>{i18n.t('budgets')}</Text>}
-                    {budgetRows.map(({ cat, spent, limit, hasBudget: hb }) => {
-                      const cfg = categoryConfig[cat] || categoryConfig.other;
-                      const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
-                      const barColor = !hb ? cfg.color : pct > 100 ? colors.red : pct > 80 ? colors.yellow : cfg.color;
-                      return (
-                        <TouchableOpacity key={cat} style={st.budgetRow}
-                          onPress={() => setBudgetModal({ categoryId: cat, spent })} activeOpacity={0.6}>
-                          <View style={st.budgetInfo}>
-                            <View style={st.budgetLeft}>
-                              <View style={[st.budgetDot, { backgroundColor: cfg.color }]} />
-                              <Text style={st.budgetCat}>{i18n.t(cat)}</Text>
+                  {budgetsExpanded && (
+                    <View style={hasBudgets ? { marginTop: 16, borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: 16 } : undefined}>
+                      {budgetRows.map(({ cat, spent, limit, hasBudget: hb }) => {
+                        const cfg = categoryConfig[cat] || categoryConfig.other;
+                        const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+                        const barColor = !hb ? cfg.color : pct > 100 ? colors.red : pct > 80 ? colors.yellow : cfg.color;
+                        return (
+                          <TouchableOpacity key={cat} style={st.budgetRow}
+                            onPress={() => setBudgetModal({ categoryId: cat, spent })} activeOpacity={0.6}>
+                            <View style={st.budgetInfo}>
+                              <View style={st.budgetLeft}>
+                                <View style={[st.budgetDot, { backgroundColor: cfg.color }]} />
+                                <Text style={st.budgetCat}>{i18n.t(cat)}</Text>
+                              </View>
+                              <View style={st.budgetRight}>
+                                {hb ? (
+                                  <>
+                                    <Text style={[st.budgetPct, { color: barColor }]}>{pct}%</Text>
+                                    <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} / {limit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                                    <Feather name="plus-circle" size={14} color={colors.textMuted} style={{ marginStart: 6 }} />
+                                  </>
+                                )}
+                              </View>
                             </View>
-                            <View style={st.budgetRight}>
+                            <View style={st.barBg}>
                               {hb ? (
-                                <>
-                                  <Text style={[st.budgetPct, { color: barColor }]}>{pct}%</Text>
-                                  <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} / {limit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
-                                </>
+                                <View style={[st.barFill, { width: `${Math.min(pct, 100)}%`, backgroundColor: barColor }]} />
                               ) : (
-                                <>
-                                  <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
-                                  <Feather name="plus-circle" size={14} color={colors.textMuted} style={{ marginStart: 6 }} />
-                                </>
+                                <View style={[st.barFill, { width: '100%', backgroundColor: cfg.color, opacity: 0.3 }]} />
                               )}
                             </View>
-                          </View>
-                          <View style={st.barBg}>
-                            {hb ? (
-                              <View style={[st.barFill, { width: `${Math.min(pct, 100)}%`, backgroundColor: barColor }]} />
-                            ) : (
-                              <View style={[st.barFill, { width: '100%', backgroundColor: cfg.color, opacity: 0.3 }]} />
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </Card>
-                </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </Card>
               );
             case 'recurring':
               if (recurring.length === 0) return null;
@@ -858,6 +865,7 @@ const createSt = () => StyleSheet.create({
   blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   seeAll: { color: colors.green, fontSize: 13, fontWeight: '600' },
   totalPct: { fontSize: 15, fontWeight: '700' },
+  budgetTitleRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   totalBudgetRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   totalBudgetLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
   totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
@@ -918,11 +926,11 @@ const createSt = () => StyleSheet.create({
   freeDetailTxt: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
 
   // Recurring
-  recRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
-  recIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginEnd: 12 },
+  recRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
+  recIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   recInfo: { flex: 1 },
-  recName: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2 },
+  recName: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
+  recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
   recActions: { flexDirection: i18n.row(), gap: 8 },
   recSkip: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   recConfirm: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },

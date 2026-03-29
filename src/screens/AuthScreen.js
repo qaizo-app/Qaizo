@@ -114,7 +114,7 @@ export default function AuthScreen({ onSkip }) {
         <View style={st.inputWrap}>
           <Feather name="mail" size={18} color={colors.textMuted} style={st.inputIcon} />
           <TextInput style={st.input} value={email} onChangeText={setEmail}
-            placeholder="Email" placeholderTextColor={colors.textMuted}
+            placeholder={i18n.t('emailPlaceholder')} placeholderTextColor={colors.textMuted}
             keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
             autoComplete="off" importantForAutofill="noExcludeDescendants"
             textContentType="none" />
@@ -178,7 +178,7 @@ export default function AuthScreen({ onSkip }) {
           <>
             <View style={st.orRow}>
               <View style={st.orLine} />
-              <Text style={st.orTxt}>or</Text>
+              <Text style={st.orTxt}>{i18n.t('or')}</Text>
               <View style={st.orLine} />
             </View>
             <TouchableOpacity style={st.googleBtn} onPress={handleGoogle} disabled={loading} activeOpacity={0.8}>
@@ -228,14 +228,14 @@ const createSt = () => StyleSheet.create({
   logo: { color: colors.text, fontSize: 42, fontWeight: '800', letterSpacing: -2 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
-  title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24 },
+  title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
   errorTxt: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
 
-  inputWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
   inputIcon: { marginStart: 16 },
-  input: { flex: 1, color: colors.text, fontSize: 16, paddingVertical: 16, paddingHorizontal: 12 },
+  input: { flex: 1, color: colors.text, fontSize: 16, paddingVertical: 16, paddingHorizontal: 12, textAlign: i18n.textAlign() },
   eyeBtn: { paddingHorizontal: 16, paddingVertical: 16 },
 
   strengthRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginBottom: 14, marginTop: -6, paddingHorizontal: 4 },

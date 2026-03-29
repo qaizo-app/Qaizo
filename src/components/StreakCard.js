@@ -118,8 +118,8 @@ const createSt = () => StyleSheet.create({
   row: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 },
   startText: { color: colors.textMuted, fontSize: 14, fontWeight: '600', flex: 1, flexShrink: 1 },
 
-  topRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', marginBottom: 16 },
-  streakBadge: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginEnd: 8 },
+  topRow: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  streakBadge: { flexDirection: i18n.isRTL() ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 },
   streakNum: { fontSize: 28, fontWeight: '800', letterSpacing: -1 },
   streakLabel: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
 

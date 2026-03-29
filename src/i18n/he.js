@@ -295,6 +295,8 @@ export default {
   confirmPassword: 'אימות סיסמה',
   passwordsMismatch: 'הסיסמאות לא תואמות',
   passwordTooShort: 'סיסמה חייבת להכיל לפחות 6 תווים',
+  emailPlaceholder: 'אימייל',
+  or: 'או',
   invalidEmail: 'פורמט אימייל שגוי',
   passWeak: 'חלש',
   passMedium: 'בינוני',

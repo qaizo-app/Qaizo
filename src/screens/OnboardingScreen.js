@@ -172,10 +172,10 @@ const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 12, letterSpacing: -0.5 },
   subtitle: { color: colors.textDim, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
 
-  featureList: { alignSelf: 'stretch', gap: 12 },
-  featureRow: { flexDirection: i18n.row(), alignItems: 'center' },
-  featureDot: { width: 6, height: 6, borderRadius: 3, marginEnd: 12 },
-  featureText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', flex: 1 },
+  featureList: { alignSelf: 'stretch', gap: 12, alignItems: 'flex-start' },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  featureDot: { width: 6, height: 6, borderRadius: 3 },
+  featureText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', flexShrink: 1, textAlign: i18n.textAlign() },
 
   bottom: { paddingHorizontal: 24, paddingBottom: 40 },
   dots: { flexDirection: i18n.row(), justifyContent: 'center', gap: 8, marginBottom: 24 },

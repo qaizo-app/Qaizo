@@ -304,6 +304,8 @@ export default {
   confirmPassword: 'Подтвердите пароль',
   passwordsMismatch: 'Пароли не совпадают',
   passwordTooShort: 'Пароль минимум 6 символов',
+  emailPlaceholder: 'Эл. почта',
+  or: 'или',
   invalidEmail: 'Неверный формат email',
   passWeak: 'Слабый',
   passMedium: 'Средний',
