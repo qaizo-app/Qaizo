@@ -35,36 +35,36 @@ const darkColors = {
 };
 
 const lightColors = {
-  bg: '#f8fafc',
-  bg2: '#f1f5f9',
-  card: '#ffffff',
-  cardBorder: 'rgba(0, 0, 0, 0.08)',
-  cardHighlight: 'rgba(52, 211, 153, 0.06)',
+  bg: '#eef0f5',
+  bg2: '#e4e7ee',
+  card: '#f7f8fb',
+  cardBorder: 'rgba(0, 0, 0, 0.07)',
+  cardHighlight: 'rgba(5, 150, 105, 0.06)',
 
   green: '#059669',
   greenDark: '#047857',
   greenGlow: 'rgba(5, 150, 105, 0.12)',
-  greenSoft: 'rgba(5, 150, 105, 0.08)',
+  greenSoft: 'rgba(5, 150, 105, 0.10)',
   teal: '#0d9488',
   emerald: '#059669',
 
-  red: '#e11d48',
-  redDark: '#be123c',
-  redSoft: 'rgba(225, 29, 72, 0.08)',
+  red: '#dc2626',
+  redDark: '#b91c1c',
+  redSoft: 'rgba(220, 38, 38, 0.10)',
   orange: '#ea580c',
-  yellow: '#d97706',
+  yellow: '#ca8a04',
   blue: '#2563eb',
   blueSoft: 'rgba(37, 99, 235, 0.08)',
 
-  text: '#0f172a',
-  textSecondary: '#334155',
-  textDim: '#64748b',
-  textMuted: '#94a3b8',
+  text: '#1a1e2e',
+  textSecondary: '#3b4055',
+  textDim: '#5c6478',
+  textMuted: '#8891a5',
 
   white: '#ffffff',
   black: '#000000',
-  divider: 'rgba(0, 0, 0, 0.06)',
-  overlay: 'rgba(0, 0, 0, 0.50)',
+  divider: 'rgba(0, 0, 0, 0.08)',
+  overlay: 'rgba(0, 0, 0, 0.40)',
 };
 
 // Мутируемый объект — все экраны импортируют его
