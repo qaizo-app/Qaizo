@@ -3,7 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
@@ -26,7 +26,6 @@ import QuickAddModal from '../components/QuickAddModal';
 import SettingsScreen from '../screens/SettingsScreen';
 import SmartInputModal from '../components/SmartInputModal';
 import TransactionsScreen from '../screens/TransactionsScreen';
-import { useToast } from '../components/ToastProvider';
 
 const Tab = createBottomTabNavigator();
 const AccountsStack = createNativeStackNavigator();
@@ -80,8 +79,6 @@ export default function AppNavigator() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + Math.max(insets.bottom, 16);
   const styles = createStyles();
-  const toast = useToast();
-
   // Add menu state
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -91,6 +88,7 @@ export default function AppNavigator() {
   const [showQuickSelect, setShowQuickSelect] = useState(false);
   const [quickTemplate, setQuickTemplate] = useState(null);
   const [quickTemplates, setQuickTemplates] = useState([]);
+  const [quickTab, setQuickTab] = useState('categories');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const openAddMenu = () => {
@@ -201,49 +199,65 @@ export default function AppNavigator() {
           <View style={{ flex: 1 }} />
           <TouchableOpacity style={styles.quickSheet} activeOpacity={1}>
             <Text style={styles.quickTitle}>{i18n.t('quickAdd')}</Text>
-            {quickTemplates.length > 0 && (
-              <View style={{ marginBottom: 16 }}>
-                <Text style={styles.quickSubtitle}>{i18n.t('templates')}</Text>
-                <View style={styles.quickGrid}>
-                  {quickTemplates.map((tpl, idx) => {
-                    const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
-                    return (
-                      <TouchableOpacity key={idx} style={styles.quickBtn}
-                        onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
-                        <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
-                          <Feather name={cfg.icon} size={20} color={cfg.color} />
-                        </View>
-                        <Text style={styles.quickLabel} numberOfLines={1}>{tpl.name || i18n.t(tpl.categoryId)}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+
+            {/* Tabs */}
+            <View style={styles.quickTabs}>
+              <TouchableOpacity style={[styles.quickTabBtn, quickTab === 'categories' && styles.quickTabActive]} onPress={() => setQuickTab('categories')}>
+                <Feather name="grid" size={14} color={quickTab === 'categories' ? colors.green : colors.textMuted} />
+                <Text style={[styles.quickTabTxt, quickTab === 'categories' && { color: colors.green }]}>{i18n.t('categories')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.quickTabBtn, quickTab === 'templates' && styles.quickTabActive]} onPress={() => setQuickTab('templates')}>
+                <Feather name="bookmark" size={14} color={quickTab === 'templates' ? colors.green : colors.textMuted} />
+                <Text style={[styles.quickTabTxt, quickTab === 'templates' && { color: colors.green }]}>{i18n.t('templates')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {quickTab === 'templates' ? (
+              <View>
+                {quickTemplates.length > 0 ? (
+                  <View style={styles.quickGrid}>
+                    {quickTemplates.map((tpl, idx) => {
+                      const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                      return (
+                        <TouchableOpacity key={idx} style={styles.quickBtn}
+                          onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
+                          <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                            <Feather name={cfg.icon} size={20} color={cfg.color} />
+                          </View>
+                          <Text style={styles.quickLabel} numberOfLines={1}>{tpl.name || i18n.t(tpl.categoryId)}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <Text style={styles.quickEmpty}>{i18n.t('noTemplates')}</Text>
+                )}
+              </View>
+            ) : (
+              <View style={styles.quickGrid}>
+                {[
+                  { categoryId: 'food', icon: 'shopping-cart' },
+                  { categoryId: 'restaurant', icon: 'coffee' },
+                  { categoryId: 'fuel', icon: 'droplet' },
+                  { categoryId: 'transport', icon: 'navigation' },
+                  { categoryId: 'household', icon: 'home' },
+                  { categoryId: 'health', icon: 'heart' },
+                  { categoryId: 'clothing', icon: 'shopping-bag' },
+                  { categoryId: 'entertainment', icon: 'film' },
+                ].map(tpl => {
+                  const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                  return (
+                    <TouchableOpacity key={tpl.categoryId} style={styles.quickBtn}
+                      onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
+                      <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
+                        <Feather name={cfg.icon} size={20} color={cfg.color} />
+                      </View>
+                      <Text style={styles.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
-            <Text style={styles.quickSubtitle}>{i18n.t('categories')}</Text>
-            <View style={styles.quickGrid}>
-              {[
-                { categoryId: 'food', icon: 'shopping-cart' },
-                { categoryId: 'restaurant', icon: 'coffee' },
-                { categoryId: 'fuel', icon: 'droplet' },
-                { categoryId: 'transport', icon: 'navigation' },
-                { categoryId: 'household', icon: 'home' },
-                { categoryId: 'health', icon: 'heart' },
-                { categoryId: 'clothing', icon: 'shopping-bag' },
-                { categoryId: 'entertainment', icon: 'film' },
-              ].map(tpl => {
-                const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
-                return (
-                  <TouchableOpacity key={tpl.categoryId} style={styles.quickBtn}
-                    onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
-                    <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
-                      <Feather name={cfg.icon} size={20} color={cfg.color} />
-                    </View>
-                    <Text style={styles.quickLabel} numberOfLines={1}>{i18n.t(tpl.categoryId)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
           </TouchableOpacity>
         </TouchableOpacity>
       )}
@@ -273,7 +287,11 @@ const createStyles = () => StyleSheet.create({
 
   quickSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
   quickTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  quickSubtitle: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
+  quickTabs: { flexDirection: 'row', marginBottom: 16, backgroundColor: colors.bg, borderRadius: 12, padding: 3 },
+  quickTabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10 },
+  quickTabActive: { backgroundColor: colors.card },
+  quickTabTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  quickEmpty: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 20 },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   quickBtn: { width: 76, alignItems: 'center', gap: 6, paddingVertical: 8 },
   quickIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
