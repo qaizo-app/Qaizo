@@ -243,7 +243,7 @@ const createSt = () => StyleSheet.create({
   strengthTxt: { fontSize: 11, fontWeight: '600', marginStart: 8 },
 
   mainBtn: { backgroundColor: colors.green, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginTop: 8, marginBottom: 12 },
-  mainBtnTxt: { color: colors.bg, fontSize: 17, fontWeight: '700' },
+  mainBtnTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
   linkBtn: { alignItems: 'center', paddingVertical: 8 },
   linkTxt: { color: colors.textDim, fontSize: 14, fontWeight: '500' },

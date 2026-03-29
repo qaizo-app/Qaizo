@@ -67,9 +67,9 @@ const createStyles = () => StyleSheet.create({
     backgroundColor: colors.card, alignItems: 'center',
     borderWidth: 1, borderColor: colors.cardBorder,
   },
-  cancelText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  cancelText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   confirmBtn: {
     flex: 1, paddingVertical: 16, borderRadius: 14, alignItems: 'center',
   },
-  confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  confirmText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

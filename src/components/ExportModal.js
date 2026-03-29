@@ -111,7 +111,7 @@ export default function ExportModal({ visible, onClose, onResult }) {
 
 const createSt = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
 
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: i18n.textAlign() },
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, marginTop: 8, textAlign: i18n.textAlign() },
@@ -123,9 +123,9 @@ const createSt = () => StyleSheet.create({
   periodTxtActive: { color: colors.green },
 
   formats: { flexDirection: i18n.row(), gap: 12, marginBottom: 20 },
-  fmtBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 20, borderRadius: 16, backgroundColor: colors.bg2, gap: 8 },
+  fmtBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, gap: 8 },
   fmtTxt: { color: colors.text, fontSize: 14, fontWeight: '700' },
 
   cancelBtn: { alignItems: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder },
-  cancelTxt: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
 });

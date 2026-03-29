@@ -238,9 +238,9 @@ const createSt = () => StyleSheet.create({
 
   btnRow: { flexDirection: 'row', gap: 12, paddingTop: 24 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
-  cancelBtnText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  cancelBtnText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  saveBtnText: { color: colors.bg, fontSize: 15, fontWeight: '700' },
+  saveBtnText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end', zIndex: 100 },
   actionSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },

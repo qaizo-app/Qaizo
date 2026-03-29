@@ -306,14 +306,14 @@ const createSt = () => StyleSheet.create({
 
   btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 16 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
-  cancelTxt: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   importBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  importTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  importTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
   center: { alignItems: 'center', paddingVertical: 32, gap: 12 },
   importingTxt: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
   doneTxt: { color: colors.text, fontSize: 20, fontWeight: '700', textAlign: 'center' },
   doneDetail: { color: colors.textDim, fontSize: 14, textAlign: 'center' },
-  doneBtn: { backgroundColor: colors.card, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 14, marginTop: 8, borderWidth: 1, borderColor: colors.cardBorder },
+  doneBtn: { backgroundColor: colors.card, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 14, marginTop: 8, borderWidth: 1, borderColor: colors.cardBorder },
   doneBtnTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
 });

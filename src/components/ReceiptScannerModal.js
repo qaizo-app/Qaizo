@@ -232,9 +232,9 @@ const createSt = () => StyleSheet.create({
 
   btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
-  cancelText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  cancelText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  saveText: { color: colors.bg, fontSize: 15, fontWeight: '700' },
+  saveText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
   error: { color: colors.red, fontSize: 13, textAlign: 'center', marginTop: 8 },
 });

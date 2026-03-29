@@ -130,7 +130,7 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
 
 const createSt = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 },
+  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.textMuted, opacity: 0.5, alignSelf: 'center' },
   handleZone: { height: 28, justifyContent: 'center', marginBottom: 8 },
 
@@ -143,12 +143,12 @@ const createSt = () => StyleSheet.create({
   currency: { color: colors.green, fontSize: 22, fontWeight: '700', marginEnd: 8 },
   input: { flex: 1, color: colors.text, fontSize: 22, fontWeight: '700', paddingVertical: 16 },
 
-  deleteBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.redSoft, marginBottom: 16 },
-  deleteTxt: { color: colors.red, fontSize: 14, fontWeight: '600' },
+  deleteBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.redSoft, marginBottom: 16 },
+  deleteTxt: { color: colors.red, fontSize: 16, fontWeight: '600' },
 
   buttons: { flexDirection: i18n.row(), gap: 12 },
-  cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
-  cancelTxt: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
-  saveBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center' },
-  saveTxt: { color: colors.bg, fontSize: 15, fontWeight: '700' },
+  cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
+  cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
+  saveBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center' },
+  saveTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });
