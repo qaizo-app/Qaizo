@@ -55,19 +55,29 @@ export default function SettingsScreen() {
     await dataService.saveSettings({ ...settings, weekStart: day });
   };
   const changeLang = async (code) => {
-    // Сохраняем СНАЧАЛА — forceRTL может перезагрузить приложение
+    const willChangeRTL = (code === 'he') !== (lang === 'he');
+
+    // Сохраняем СНАЧАЛА
     await AsyncStorage.setItem('qaizo_lang_manual', 'true');
     await AsyncStorage.setItem('qaizo_lang_code', code);
     const settings = await dataService.getSettings();
     await dataService.saveSettings({ ...settings, language: code });
 
-    const rtlChanged = i18n.setLanguage(code);
-    setLang(code);
-    setOpenSection(null);
-    setLangVersion(n => n + 1);
-
-    if (rtlChanged) {
+    if (willChangeRTL) {
+      // Показать модал на ТЕКУЩЕМ языке, потом сменить
       setShowLangRestart(true);
+      // Отложить смену языка — модал уже показан
+      setTimeout(() => {
+        i18n.setLanguage(code);
+        setLang(code);
+        setOpenSection(null);
+        setLangVersion(n => n + 1);
+      }, 100);
+    } else {
+      i18n.setLanguage(code);
+      setLang(code);
+      setOpenSection(null);
+      setLangVersion(n => n + 1);
     }
   };
 
