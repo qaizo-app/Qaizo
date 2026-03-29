@@ -340,11 +340,6 @@ export default function TransactionsScreen({ route }) {
         }
       />
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => setShowAdd(true)} activeOpacity={0.8}>
-        <Feather name="plus" size={26} color={colors.bg} />
-      </TouchableOpacity>
-
       <AddTransactionModal
         visible={showAdd || !!editTx}
         onClose={handleCloseModal}

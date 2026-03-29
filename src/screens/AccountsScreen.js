@@ -248,7 +248,7 @@ const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
   header:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:12},
   title:{color:colors.text,fontSize:24,fontWeight:'800',textAlign:i18n.textAlign()},
-  addBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.green,justifyContent:'center',alignItems:'center'},
+  addBtn:{width:44,height:44,borderRadius:22,backgroundColor:colors.green,justifyContent:'center',alignItems:'center'},
 
   totalCard:{marginHorizontal:24,marginBottom:8,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:'rgba(52,211,153,0.15)'},
   totalLabel:{color:colors.textDim,fontSize:13,marginBottom:6,textAlign:i18n.textAlign()},

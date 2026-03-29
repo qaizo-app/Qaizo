@@ -96,7 +96,7 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Feather name="arrow-right" size={22} color={colors.text} />
+            <Feather name={i18n.isRTL() ? "arrow-right" : "arrow-left"} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>⚙️ {settingsTitle}</Text>
         </View>
@@ -384,8 +384,8 @@ export default function SettingsScreen() {
 
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8, gap: 12 },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
+  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
 
   sectionBtn: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
