@@ -281,7 +281,7 @@ export default function AppNavigator() {
               placeholder={i18n.t('templateName')} placeholderTextColor={colors.textMuted} />
             <Text style={styles.templateLabel}>{i18n.t('category')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-              {Object.keys(categoryConfig).filter(k => !['transfer','salary_me','salary_spouse','rental_income','handyman','sales','other_income'].includes(k)).map(cid => {
+              {Object.keys(categoryConfig).filter(k => !['transfer','salary_me','salary_spouse','rental_income','handyman','sales','other_income','insurance','pension','investment','mortgage','education','childcare','arnona','vaad'].includes(k)).map(cid => {
                 const cfg = categoryConfig[cid];
                 const sel = newTemplateCat === cid;
                 return (
@@ -360,7 +360,7 @@ const createStyles = () => StyleSheet.create({
   quickTabTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
   quickEmpty: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 20 },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  quickBtn: { width: 76, alignItems: 'center', gap: 6, paddingVertical: 8 },
+  quickBtn: { width: 68, alignItems: 'center', gap: 6, paddingVertical: 8 },
   quickIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   quickLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   addTemplateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, marginTop: 8 },
