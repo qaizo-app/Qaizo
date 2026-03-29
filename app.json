@@ -27,7 +27,10 @@
           "sounds": []
         }
       ],
-      "@jamsch/expo-speech-recognition"
+      ["@jamsch/expo-speech-recognition", {
+        "microphonePermission": "Allow Qaizo to access your microphone for voice input",
+        "speechRecognitionPermission": "Allow Qaizo to recognize your speech"
+      }]
     ],
     "extra": {
       "eas": {
