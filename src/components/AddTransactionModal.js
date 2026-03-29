@@ -189,10 +189,6 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               <Text style={st.label}>{i18n.t('project')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
                 <View style={st.tagsRow}>
-                  <TouchableOpacity style={[st.tagChip, !selProject && { borderColor: colors.green, backgroundColor: `${colors.green}15` }]}
-                    onPress={() => setSelProject('')}>
-                    <Text style={[st.tagTxt, !selProject && { color: colors.green }]}>—</Text>
-                  </TouchableOpacity>
                   {projects.map(p => {
                     const sel = selProject === p.id;
                     const pc = p.color || '#60a5fa';
