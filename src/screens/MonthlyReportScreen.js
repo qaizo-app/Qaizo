@@ -1,7 +1,7 @@
 // src/screens/MonthlyReportScreen.js
 // Полный месячный отчёт: доходы, расходы, топ категории, топ получатели, динамика
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
@@ -14,6 +14,7 @@ import { sym } from '../utils/currency';
 const SW = Dimensions.get('window').width;
 
 export default function MonthlyReportScreen() {
+  const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [monthOffset, setMonthOffset] = useState(0); // 0 = текущий, -1 = прошлый
 
@@ -106,6 +107,9 @@ export default function MonthlyReportScreen() {
 
         {/* Header + навигация по месяцам */}
         <View style={st.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
+            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+          </TouchableOpacity>
           <Text style={st.title}>{i18n.t('monthlyReport')}</Text>
         </View>
 
@@ -263,7 +267,8 @@ export default function MonthlyReportScreen() {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
+  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
 
   monthNav: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 16 },

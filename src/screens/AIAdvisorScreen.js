@@ -1,7 +1,7 @@
 // src/screens/AIAdvisorScreen.js
 // Умный финансовый советник — инсайты, налоги, прогнозы, дневной бюджет
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Card from '../components/Card';
@@ -12,6 +12,7 @@ import { colors } from '../theme/colors';
 import { fmt } from '../utils/currency';
 
 export default function AIAdvisorScreen() {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [geminiTips, setGeminiTips] = useState(null);
@@ -71,6 +72,9 @@ export default function AIAdvisorScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}>
 
         <View style={st.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
+            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+          </TouchableOpacity>
           <Text style={st.title}>{i18n.t('advisor')}</Text>
         </View>
 
@@ -294,7 +298,8 @@ export default function AIAdvisorScreen() {
 
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
   loadingText: { color: colors.textMuted, fontSize: 14, marginTop: 12 },
 

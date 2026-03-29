@@ -1,8 +1,8 @@
 // src/screens/InvestmentsScreen.js
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
@@ -10,6 +10,7 @@ import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 
 export default function InvestmentsScreen() {
+  const navigation = useNavigation();
   const [investments, setInvestments] = useState([]);
 
   const styles = createStyles();
@@ -43,6 +44,9 @@ export default function InvestmentsScreen() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Feather name={i18n.isRTL() ? 'arrow-right' : 'arrow-left'} size={22} color={colors.text} />
+          </TouchableOpacity>
           <Text style={styles.title}>{i18n.t('investments')}</Text>
         </View>
 
@@ -97,7 +101,8 @@ export default function InvestmentsScreen() {
 
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
   totalCard: { marginHorizontal: 20, borderWidth: 1, borderColor: 'rgba(52,211,153,0.12)' },
   totalLabel: { color: colors.textDim, fontSize: 13, marginBottom: 8, textAlign: i18n.textAlign() },
