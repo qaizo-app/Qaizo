@@ -19,7 +19,6 @@ import InvestmentsScreen from '../screens/InvestmentsScreen';
 import AIAdvisorScreen from '../screens/AIAdvisorScreen';
 import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
-import QuickAddModal from '../components/QuickAddModal';
 import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import ProjectsScreen from '../screens/ProjectsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -87,7 +86,6 @@ export default function AppNavigator() {
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const openAddMenu = () => {
@@ -108,7 +106,7 @@ export default function AppNavigator() {
       else if (key === 'scanReceipt') setShowReceipt(true);
       else if (key === 'oneTimePayment') setShowAdd(true);
       else if (key === 'recurringPayment') setShowRecurring(true);
-      else if (key === 'quickAdd') setShowQuickAdd(true);
+      else if (key === 'quickAdd') setShowAdd(true);
     }, 200);
   };
 
@@ -194,7 +192,6 @@ export default function AppNavigator() {
       <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSave={() => setShowSmartInput(false)} />
       <AddRecurringModal visible={showRecurring} onClose={() => setShowRecurring(false)} onSave={() => setShowRecurring(false)} />
       <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />
-      <QuickAddModal visible={showQuickAdd} onClose={() => setShowQuickAdd(false)} onSave={() => setShowQuickAdd(false)} />
     </View>
   );
 }
