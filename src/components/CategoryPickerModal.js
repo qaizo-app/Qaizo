@@ -8,7 +8,7 @@ import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import SwipeModal from './SwipeModal';
 
-const DEFAULT_GROUPS = [
+export const DEFAULT_GROUPS = [
   { id: 'home', name: { ru:'Дом', he:'בית', en:'Home' }, icon: 'home', color: '#60a5fa',
     subs: [
       { id:'electricity', name:{ru:'Электричество',he:'חשמל',en:'Electricity'}, icon:'zap' },
@@ -78,7 +78,7 @@ const DEFAULT_GROUPS = [
     ]},
 ];
 
-function getCatName(id, groups, lang) {
+export function getCatName(id, groups, lang) {
   // Try i18n first
   const translated = i18n.t(id);
   if (translated !== id) return translated;
@@ -92,7 +92,7 @@ function getCatName(id, groups, lang) {
   return id;
 }
 
-function getCatIcon(id, groups) {
+export function getCatIcon(id, groups) {
   const cfg = categoryConfig[id];
   if (cfg) return { icon: cfg.icon, color: cfg.color };
   for (const g of groups) {

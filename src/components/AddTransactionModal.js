@@ -7,7 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
-import CategoryPickerModal from './CategoryPickerModal';
+import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -30,6 +30,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
   const [showCatPicker, setShowCatPicker] = useState(false);
+  const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);
   const [projects, setProjects] = useState([]);
   const [selProject, setSelProject] = useState('');
   const [weekStart, setWeekStart] = useState('sunday');
@@ -41,6 +42,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   useEffect(() => {
     if (visible) {
       dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
+      dataService.getCategories().then(saved => { if (saved && saved.length > 0) setCatGroups(saved); });
       Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags(), dataService.getProjects()]).then(([accs, txs, savedTags, projs]) => {
         setProjects([...projs].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
         setUserTags(savedTags);
@@ -174,13 +176,14 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               {type !== 'transfer' && (
                 <>
                   <Text style={st.label}>{i18n.t('category')}</Text>
+                  {(() => { const ci = getCatIcon(categoryId, catGroups); return (
                   <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
-                    <View style={[st.catPickerIcon, { backgroundColor: (categoryConfig[categoryId]?.color || '#64748b') + '18' }]}>
-                      <Feather name={categoryConfig[categoryId]?.icon || 'circle'} size={20} color={categoryConfig[categoryId]?.color || '#64748b'} />
+                    <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
+                      <Feather name={ci.icon} size={20} color={ci.color} />
                     </View>
-                    <Text style={st.catPickerText}>{i18n.t(categoryId)}</Text>
+                    <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, lang)}</Text>
                     <Feather name="chevron-down" size={18} color={colors.textMuted} />
-                  </TouchableOpacity>
+                  </TouchableOpacity>); })()}
                 </>
               )}
 

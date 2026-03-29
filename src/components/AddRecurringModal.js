@@ -7,7 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
-import CategoryPickerModal from './CategoryPickerModal';
+import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -21,6 +21,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [recipient, setRecipient] = useState('');
   const [note, setNote] = useState('');
   const [showCatPicker, setShowCatPicker] = useState(false);
+  const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -34,6 +35,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
   useEffect(() => {
     if (visible) {
+      dataService.getCategories().then(saved => { if (saved && saved.length > 0) setCatGroups(saved); });
       dataService.getAccounts().then(accs => {
         const active = accs.filter(a => a.isActive !== false);
         setAccounts(active);
@@ -185,13 +187,14 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Категория */}
           <Text style={st.label}>{i18n.t('category')}</Text>
+          {(() => { const ci = getCatIcon(categoryId, catGroups); return (
           <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
-            <View style={[st.catPickerIcon, { backgroundColor: (categoryConfig[categoryId]?.color || '#64748b') + '18' }]}>
-              <Feather name={categoryConfig[categoryId]?.icon || 'circle'} size={20} color={categoryConfig[categoryId]?.color || '#64748b'} />
+            <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
+              <Feather name={ci.icon} size={20} color={ci.color} />
             </View>
-            <Text style={st.catPickerText}>{i18n.t(categoryId)}</Text>
+            <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, i18n.getLanguage())}</Text>
             <Feather name="chevron-down" size={18} color={colors.textMuted} />
-          </TouchableOpacity>
+          </TouchableOpacity>); })()}
 
           {/* Получатель */}
           <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
