@@ -54,6 +54,13 @@ export default {
   removeBudget: 'הסר מגבלה',
 
   categories: 'קטגוריות',
+  projects: 'פרויקטים',
+  project: 'פרויקט',
+  newProject: 'פרויקט חדש',
+  projectName: 'שם הפרויקט',
+  noProjects: 'אין פרויקטים',
+  projectTotal: 'סה"כ פרויקט',
+  selectProject: 'בחר פרויקט',
   name: 'שם',
   categoryName: 'שם קטגוריה',
   icon: 'אייקון',

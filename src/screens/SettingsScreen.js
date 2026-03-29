@@ -137,6 +137,15 @@ export default function SettingsScreen() {
           <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Projects */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Projects')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="folder" size={18} color="#a78bfa" />
+            <Text style={styles.sectionText}>{i18n.t('projects')}</Text>
+          </View>
+          <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Monthly Report */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('MonthlyReport')}>
           <View style={styles.sectionLeft}>

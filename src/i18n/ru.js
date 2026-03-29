@@ -59,6 +59,13 @@ export default {
 
   // Categories
   categories: 'Категории',
+  projects: 'Проекты',
+  project: 'Проект',
+  newProject: 'Новый проект',
+  projectName: 'Название проекта',
+  noProjects: 'Нет проектов',
+  projectTotal: 'Итого по проекту',
+  selectProject: 'Выберите проект',
   name: 'Название',
   categoryName: 'Название категории',
   icon: 'Иконка',

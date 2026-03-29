@@ -54,6 +54,13 @@ export default {
   removeBudget: 'Remove limit',
 
   categories: 'Categories',
+  projects: 'Projects',
+  project: 'Project',
+  newProject: 'New Project',
+  projectName: 'Project name',
+  noProjects: 'No projects yet',
+  projectTotal: 'Project total',
+  selectProject: 'Select project',
   name: 'Name',
   categoryName: 'Category name',
   icon: 'Icon',

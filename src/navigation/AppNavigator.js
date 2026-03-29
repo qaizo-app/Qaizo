@@ -21,6 +21,7 @@ import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import QuickAddModal from '../components/QuickAddModal';
 import ReceiptScannerModal from '../components/ReceiptScannerModal';
+import ProjectsScreen from '../screens/ProjectsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SmartInputModal from '../components/SmartInputModal';
 import TransactionsScreen from '../screens/TransactionsScreen';
@@ -48,6 +49,7 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
       <DashboardStack.Screen name="AIAdvisor" component={AIAdvisorScreen} />
       <DashboardStack.Screen name="Investments" component={InvestmentsScreen} />
+      <DashboardStack.Screen name="Projects" component={ProjectsScreen} />
       <DashboardStack.Screen name="AIChat" component={AIChatScreen} />
     </DashboardStack.Navigator>
   );

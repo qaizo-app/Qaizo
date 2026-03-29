@@ -36,15 +36,18 @@ export default function TransactionsScreen({ route }) {
   const [showCalFrom, setShowCalFrom] = useState(false);
   const [showCalTo, setShowCalTo] = useState(false);
   const [weekStart, setWeekStart] = useState('sunday');
+  const [projects, setProjects] = useState([]);
+  const [selProjects, setSelProjects] = useState([]);
 
   const styles = createStyles();
   const lang = i18n.getLanguage();
 
   const loadData = async () => {
-    const [txs, accs, settings] = await Promise.all([dataService.getTransactions(), dataService.getAccounts(), dataService.getSettings()]);
+    const [txs, accs, settings, projs] = await Promise.all([dataService.getTransactions(), dataService.getAccounts(), dataService.getSettings(), dataService.getProjects()]);
     if (settings.weekStart) setWeekStart(settings.weekStart);
     setTransactions(txs);
     setAccounts(accs.filter(a => a.isActive !== false));
+    setProjects(projs);
   };
 
   useFocusEffect(useCallback(() => {
@@ -57,10 +60,10 @@ export default function TransactionsScreen({ route }) {
   }, [route?.params?.openAdd]));
 
   // Count active filters
-  const activeFilterCount = (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (selCategories.length > 0 ? 1 : 0) + (selAccounts.length > 0 ? 1 : 0) + (amountMin ? 1 : 0) + (amountMax ? 1 : 0);
+  const activeFilterCount = (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (selCategories.length > 0 ? 1 : 0) + (selAccounts.length > 0 ? 1 : 0) + (amountMin ? 1 : 0) + (amountMax ? 1 : 0) + (selProjects.length > 0 ? 1 : 0);
 
   const clearAllFilters = () => {
-    setDateFrom(''); setDateTo(''); setSelCategories([]); setSelAccounts([]); setAmountMin(''); setAmountMax('');
+    setDateFrom(''); setDateTo(''); setSelCategories([]); setSelAccounts([]); setAmountMin(''); setAmountMax(''); setSelProjects([]);
   };
 
   // Фильтр по типу
@@ -91,6 +94,9 @@ export default function TransactionsScreen({ route }) {
   }
   if (selAccounts.length > 0) {
     filtered = filtered.filter(t => selAccounts.includes(t.account));
+  }
+  if (selProjects.length > 0) {
+    filtered = filtered.filter(t => selProjects.includes(t.projectId));
   }
   if (amountMin) {
     const min = parseFloat(amountMin);
@@ -288,6 +294,28 @@ export default function TransactionsScreen({ route }) {
             </View>
           )}
 
+          {/* Projects filter */}
+          {projects.length > 0 && (
+            <View style={styles.filterSection}>
+              <Text style={styles.filterLabel}>{i18n.t('project')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.chipRow}>
+                  {projects.map(proj => {
+                    const sel = selProjects.includes(proj.id);
+                    const pc = proj.color || '#a78bfa';
+                    return (
+                      <TouchableOpacity key={proj.id} style={[styles.chip, sel && { borderColor: pc, backgroundColor: `${pc}15` }]}
+                        onPress={() => setSelProjects(prev => prev.includes(proj.id) ? prev.filter(id => id !== proj.id) : [...prev, proj.id])}>
+                        <Feather name={proj.icon || 'folder'} size={12} color={sel ? pc : colors.textMuted} />
+                        <Text style={[styles.chipText, sel && { color: pc }]} numberOfLines={1}>{proj.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          )}
+
           {/* Clear button */}
           {activeFilterCount > 0 && (
             <TouchableOpacity style={styles.clearBtn} onPress={clearAllFilters}>
@@ -301,6 +329,11 @@ export default function TransactionsScreen({ route }) {
       {/* Summary */}
       {filtered.length > 0 && (
         <View style={styles.summary}>
+          {selProjects.length === 1 && (
+            <Text style={{ color: projects.find(p => p.id === selProjects[0])?.color || '#a78bfa', fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
+              {i18n.t('projectTotal')}: {projects.find(p => p.id === selProjects[0])?.name}
+            </Text>
+          )}
           <Text style={[styles.summaryAmount, { color: totalFiltered >= 0 ? colors.green : colors.red }]}>
             {totalFiltered.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
           </Text>

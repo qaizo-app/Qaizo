@@ -21,6 +21,7 @@ const KEYS = {
   TAGS: 'qaizo_tags',
   STREAKS: 'qaizo_streaks',
   QUICK_TEMPLATES: 'qaizo_quick_templates',
+  PROJECTS: 'qaizo_projects',
 };
 
 const DEFAULT_ACCOUNTS = [
@@ -407,6 +408,48 @@ const dataService = {
     return this.setBudget(categoryId, 0);
   },
 
+  // ─── PROJECTS ────────────────────────────────────────────
+  async getProjects() {
+    const uid = getUid();
+    if (uid) return getDocData('projects', []);
+    try { const data = await AsyncStorage.getItem(KEYS.PROJECTS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
+  },
+
+  async saveProjects(projects) {
+    const uid = getUid();
+    if (uid) return setDocData('projects', projects);
+    try { await AsyncStorage.setItem(KEYS.PROJECTS, JSON.stringify(projects)); return true; } catch (e) { return false; }
+  },
+
+  async addProject(project) {
+    const projects = await this.getProjects();
+    const newProject = { ...project, id: generateId(), createdAt: new Date().toISOString() };
+    projects.push(newProject);
+    await this.saveProjects(projects);
+    return newProject;
+  },
+
+  async updateProject(id, changes) {
+    const projects = await this.getProjects();
+    const idx = projects.findIndex(p => p.id === id);
+    if (idx >= 0) {
+      projects[idx] = { ...projects[idx], ...changes };
+      await this.saveProjects(projects);
+    }
+    return projects;
+  },
+
+  async deleteProject(id) {
+    const projects = await this.getProjects();
+    await this.saveProjects(projects.filter(p => p.id !== id));
+    // Clear projectId from transactions
+    const txs = await this.getTransactions();
+    const updated = txs.filter(t => t.projectId === id);
+    for (const tx of updated) {
+      await this.updateTransaction(tx.id, { projectId: null });
+    }
+  },
+
   // ─── RECURRING PAYMENTS ──────────────────────────────────
   async getRecurring() {
     const uid = getUid();
@@ -631,7 +674,7 @@ const dataService = {
           const snap = await getDocs(userCol(col));
           await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
         }
-        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks'];
+        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects'];
         for (const name of singleDocs) {
           try { await deleteDoc(userDoc(name + '/data')); } catch (e) {}
         }
@@ -643,12 +686,12 @@ const dataService = {
 
   async exportData() {
     try {
-      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks] = await Promise.all([
+      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects] = await Promise.all([
         this.getTransactions(), this.getAccounts(), this.getInvestments(),
         this.getCategories(), this.getSettings(), this.getBudgets(),
-        this.getRecurring(), this.getTags(), this.getStreaks(),
+        this.getRecurring(), this.getTags(), this.getStreaks(), this.getProjects(),
       ]);
-      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, exportedAt: new Date().toISOString() };
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, exportedAt: new Date().toISOString() };
     } catch (e) { return null; }
   },
 
@@ -681,6 +724,7 @@ const dataService = {
         if (data.settings) await this.saveSettings(data.settings);
         if (data.budgets) await this.saveBudgets(data.budgets);
         if (data.tags) await this.saveTags(data.tags);
+        if (data.projects) await this.saveProjects(data.projects);
       } else {
         if (data.transactions) await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(data.transactions));
         if (data.accounts) await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(data.accounts));
@@ -690,6 +734,7 @@ const dataService = {
         if (data.budgets) await AsyncStorage.setItem(KEYS.BUDGETS, JSON.stringify(data.budgets));
         if (data.recurring) await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(data.recurring));
         if (data.tags) await AsyncStorage.setItem(KEYS.TAGS, JSON.stringify(data.tags));
+        if (data.projects) await AsyncStorage.setItem(KEYS.PROJECTS, JSON.stringify(data.projects));
       }
       return true;
     } catch (e) { return false; }

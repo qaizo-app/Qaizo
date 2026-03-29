@@ -28,6 +28,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showMore, setShowMore] = useState(false);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [selProject, setSelProject] = useState('');
   const [weekStart, setWeekStart] = useState('sunday');
   const isEdit = !!editTransaction;
   const lang = i18n.getLanguage();
@@ -37,7 +39,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   useEffect(() => {
     if (visible) {
       dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
-      Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags()]).then(([accs, txs, savedTags]) => {
+      Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags(), dataService.getProjects()]).then(([accs, txs, savedTags, projs]) => {
+        setProjects(projs);
         setUserTags(savedTags);
         const usage = {};
         txs.forEach(tx => { usage[tx.account] = (usage[tx.account]||0)+1; });
@@ -56,9 +59,10 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           setTags(editTransaction.tags || []);
           setDateStr(editTransaction.date ? editTransaction.date.slice(0, 10) : '');
           setSelAcc(editTransaction.account || (sorted.length > 0 ? sorted[0].id : ''));
-          setShowMore(!!(editTransaction.recipient || editTransaction.tags?.length));
+          setSelProject(editTransaction.projectId || '');
+          setShowMore(!!(editTransaction.recipient || editTransaction.tags?.length || editTransaction.projectId));
         } else {
-          setAmount(''); setRecipient(''); setNote(''); setTags([]);
+          setAmount(''); setRecipient(''); setNote(''); setTags([]); setSelProject('');
           setType('expense'); setCategoryId('food'); setShowMore(false);
           const today = new Date();
           setDateStr(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
@@ -77,7 +81,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     if (!amount || parseFloat(amount) <= 0) return;
     const txDate = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
     if (isEdit) {
-      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount), categoryId, recipient, icon: categoryConfig[categoryId]?.icon || 'circle', note, tags, date: txDate, account: selAcc });
+      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount), categoryId, recipient, icon: categoryConfig[categoryId]?.icon || 'circle', note, tags, date: txDate, account: selAcc, projectId: selProject || null });
     } else if (type === 'transfer') {
       if (selAcc === toAcc) return;
       const fn = accounts.find(a => a.id === selAcc)?.name || '';
@@ -86,7 +90,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags });
       await dataService.addTransaction({ type: 'income', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags });
     } else {
-      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, icon: categoryConfig[categoryId]?.icon || 'circle', recipient, note, currency: sym(), date: txDate, account: selAcc, tags });
+      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, icon: categoryConfig[categoryId]?.icon || 'circle', recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
     }
     onSave?.(); onClose?.();
   };
@@ -236,6 +240,31 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                       </TouchableOpacity>
                     </View>
                   </View>
+                  {/* Project */}
+                  {projects.length > 0 && (
+                    <>
+                      <Text style={st.label}>{i18n.t('project')}</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                        <View style={st.tagsRow}>
+                          <TouchableOpacity style={[st.tagChip, !selProject && { borderColor: colors.green, backgroundColor: `${colors.green}15` }]}
+                            onPress={() => setSelProject('')}>
+                            <Text style={[st.tagTxt, !selProject && { color: colors.green }]}>—</Text>
+                          </TouchableOpacity>
+                          {projects.map(p => {
+                            const sel = selProject === p.id;
+                            const pc = p.color || '#60a5fa';
+                            return (
+                              <TouchableOpacity key={p.id} style={[st.tagChip, sel && { borderColor: pc, backgroundColor: `${pc}15` }]}
+                                onPress={() => setSelProject(sel ? '' : p.id)}>
+                                <Feather name={p.icon || 'folder'} size={14} color={sel ? pc : colors.textMuted} style={{ marginEnd: 4 }} />
+                                <Text style={[st.tagTxt, sel && { color: pc }]}>{p.name}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+                    </>
+                  )}
                   <TextInput style={[st.input, { height: 60, textAlignVertical: 'top' }]} value={note} onChangeText={setNote}
                     placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} multiline />
                 </>
