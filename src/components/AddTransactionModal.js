@@ -30,6 +30,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [newTagText, setNewTagText] = useState('');
   const [projects, setProjects] = useState([]);
   const [selProject, setSelProject] = useState('');
+  const [newProjectMode, setNewProjectMode] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
   const [weekStart, setWeekStart] = useState('sunday');
   const isEdit = !!editTransaction;
   const lang = i18n.getLanguage();
@@ -185,6 +187,56 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
                 placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
 
+              {/* Project */}
+              <Text style={st.label}>{i18n.t('project')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                <View style={st.tagsRow}>
+                  <TouchableOpacity style={[st.tagChip, !selProject && { borderColor: colors.green, backgroundColor: `${colors.green}15` }]}
+                    onPress={() => setSelProject('')}>
+                    <Text style={[st.tagTxt, !selProject && { color: colors.green }]}>—</Text>
+                  </TouchableOpacity>
+                  {projects.map(p => {
+                    const sel = selProject === p.id;
+                    const pc = p.color || '#60a5fa';
+                    return (
+                      <TouchableOpacity key={p.id} style={[st.tagChip, sel && { borderColor: pc, backgroundColor: `${pc}15` }]}
+                        onPress={() => setSelProject(sel ? '' : p.id)}>
+                        <Feather name={p.icon || 'folder'} size={14} color={sel ? pc : colors.textMuted} style={{ marginEnd: 4 }} />
+                        <Text style={[st.tagTxt, sel && { color: pc }]}>{p.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  <TouchableOpacity style={st.tagChip} onPress={() => { setNewProjectMode(true); setNewProjectName(''); }}>
+                    <Feather name="plus" size={14} color={colors.green} />
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+              {newProjectMode && (
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                  <TextInput style={[st.input, { flex: 1 }]} value={newProjectName} onChangeText={setNewProjectName}
+                    placeholder={i18n.t('projectName')} placeholderTextColor={colors.textMuted} autoFocus
+                    onSubmitEditing={async () => {
+                      if (newProjectName.trim()) {
+                        const p = await dataService.addProject({ name: newProjectName.trim(), icon: 'folder', color: '#a78bfa' });
+                        setProjects(prev => [...prev, p]);
+                        setSelProject(p.id);
+                        setNewProjectMode(false);
+                      }
+                    }} />
+                  <TouchableOpacity style={{ justifyContent: 'center', paddingHorizontal: 12 }}
+                    onPress={async () => {
+                      if (newProjectName.trim()) {
+                        const p = await dataService.addProject({ name: newProjectName.trim(), icon: 'folder', color: '#a78bfa' });
+                        setProjects(prev => [...prev, p]);
+                        setSelProject(p.id);
+                      }
+                      setNewProjectMode(false);
+                    }}>
+                    <Feather name="check" size={20} color={colors.green} />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               <TouchableOpacity style={st.moreBtn} onPress={() => setShowMore(!showMore)}>
                 <Feather name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textDim} />
                 <Text style={st.moreTxt}>{showMore ? i18n.t('less') : i18n.t('more')}</Text>
@@ -240,31 +292,6 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {/* Project */}
-                  {projects.length > 0 && (
-                    <>
-                      <Text style={st.label}>{i18n.t('project')}</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                        <View style={st.tagsRow}>
-                          <TouchableOpacity style={[st.tagChip, !selProject && { borderColor: colors.green, backgroundColor: `${colors.green}15` }]}
-                            onPress={() => setSelProject('')}>
-                            <Text style={[st.tagTxt, !selProject && { color: colors.green }]}>—</Text>
-                          </TouchableOpacity>
-                          {projects.map(p => {
-                            const sel = selProject === p.id;
-                            const pc = p.color || '#60a5fa';
-                            return (
-                              <TouchableOpacity key={p.id} style={[st.tagChip, sel && { borderColor: pc, backgroundColor: `${pc}15` }]}
-                                onPress={() => setSelProject(sel ? '' : p.id)}>
-                                <Feather name={p.icon || 'folder'} size={14} color={sel ? pc : colors.textMuted} style={{ marginEnd: 4 }} />
-                                <Text style={[st.tagTxt, sel && { color: pc }]}>{p.name}</Text>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </View>
-                      </ScrollView>
-                    </>
-                  )}
                   <TextInput style={[st.input, { height: 60, textAlignVertical: 'top' }]} value={note} onChangeText={setNote}
                     placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} multiline />
                 </>
@@ -315,7 +342,7 @@ const createSt = () => StyleSheet.create({
   newTagWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder, paddingStart: 10 },
   newTagInput: { color: colors.text, fontSize: 13, paddingVertical: 8, minWidth: 80, maxWidth: 120 },
   newTagBtn: { paddingHorizontal: 10, paddingVertical: 8 },
-  btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
+  btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8, paddingBottom: 24 },
   cancelBtn: { flex: 1, paddingVertical: 18, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 18, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
