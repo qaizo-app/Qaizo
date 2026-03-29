@@ -64,15 +64,9 @@ export default function SettingsScreen() {
     await dataService.saveSettings({ ...settings, language: code });
 
     if (willChangeRTL) {
-      // Показать модал на ТЕКУЩЕМ языке, потом сменить
+      // Показать модал на ТЕКУЩЕМ языке, язык сменится после перезапуска
+      setOpenSection(null);
       setShowLangRestart(true);
-      // Отложить смену языка — модал уже показан
-      setTimeout(() => {
-        i18n.setLanguage(code);
-        setLang(code);
-        setOpenSection(null);
-        setLangVersion(n => n + 1);
-      }, 100);
     } else {
       i18n.setLanguage(code);
       setLang(code);

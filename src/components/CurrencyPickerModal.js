@@ -34,12 +34,10 @@ export default function CurrencyPickerModal({ visible, onClose, onSelect, select
 
   const localCode = getLocalCurrencyCode();
 
-  // Sort: selected first, then local, then rest
+  // Sort: selected first, then original order
   const sorted = [...CURRENCIES].sort((a, b) => {
     if (a.code === selected) return -1;
     if (b.code === selected) return 1;
-    if (a.code === localCode) return -1;
-    if (b.code === localCode) return 1;
     return 0;
   });
 
