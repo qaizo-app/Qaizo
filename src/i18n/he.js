@@ -144,6 +144,8 @@ export default {
   inactive: 'לא פעילים',
   hiddenWhenOff: 'לא פעילים מוסתרים',
   comingSoon: 'בקרוב',
+  comingSoonTitle: 'בקרוב',
+  comingSoonMessage: 'פיצ\'ר זה בפיתוח ויהיה זמין בעדכון הבא',
   accountHint: 'לחיצה → היסטוריה · ארוכה → עריכה',
 
   pension: 'פנסיה',

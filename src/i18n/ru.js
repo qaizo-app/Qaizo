@@ -150,6 +150,8 @@ export default {
   inactive: 'Неактивные',
   hiddenWhenOff: 'Неактивные скрыты',
   comingSoon: 'Скоро',
+  comingSoonTitle: 'Скоро',
+  comingSoonMessage: 'Эта функция в разработке и будет доступна в следующем обновлении',
   accountHint: 'Нажми → история · Долгое → изменить',
 
   // Investments

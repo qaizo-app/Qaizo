@@ -114,21 +114,21 @@ export default function SettingsScreen() {
         </View>
 
         {/* AI Advisor */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('AIAdvisor')}>
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
           <View style={styles.sectionLeft}>
             <Feather name="cpu" size={18} color={colors.green} />
             <Text style={styles.sectionText}>{i18n.t('advisor')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
         </TouchableOpacity>
 
         {/* AI Chat */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('AIChat')}>
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
           <View style={styles.sectionLeft}>
             <Feather name="message-circle" size={18} color={colors.green} />
             <Text style={styles.sectionText}>{i18n.t('aiChat')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
         </TouchableOpacity>
 
         {/* Investments */}
@@ -394,6 +394,7 @@ const createStyles = () => StyleSheet.create({
   sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
   sectionRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   sectionValue: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
+  comingSoonBadge: { color: colors.textMuted, fontSize: 11, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden' },
 
   optRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 16, gap: 12 },
   optBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },

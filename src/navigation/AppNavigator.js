@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '../i18n';
+import { useToast } from '../components/ToastProvider';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 
@@ -66,11 +67,11 @@ const tabConfig = {
 };
 
 const ADD_MENU = [
-  { key: 'smartInput',      icon: 'cpu',       color: '#a78bfa' },
-  { key: 'scanReceipt',     icon: 'camera',    color: colors.teal },
   { key: 'oneTimePayment',  icon: 'plus-circle', color: colors.green },
   { key: 'recurringPayment', icon: 'repeat',   color: '#60a5fa' },
   { key: 'quickAdd',        icon: 'zap',       color: '#f59e0b' },
+  { key: 'smartInput',      icon: 'cpu',       color: '#a78bfa', comingSoon: true },
+  { key: 'scanReceipt',     icon: 'camera',    color: colors.teal, comingSoon: true },
 ];
 
 export default function AppNavigator() {
@@ -79,6 +80,8 @@ export default function AppNavigator() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + Math.max(insets.bottom, 16);
   const styles = createStyles();
+  const toast = useToast();
+
   // Add menu state
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -110,8 +113,8 @@ export default function AppNavigator() {
   const handleMenuPress = (key) => {
     closeAddMenu();
     setTimeout(() => {
-      if (key === 'smartInput') setShowSmartInput(true);
-      else if (key === 'scanReceipt') setShowReceipt(true);
+      if (key === 'smartInput') toast.show(i18n.t('comingSoonMessage'), 'info');
+      else if (key === 'scanReceipt') toast.show(i18n.t('comingSoonMessage'), 'info');
       else if (key === 'oneTimePayment') setShowAdd(true);
       else if (key === 'recurringPayment') setShowRecurring(true);
       else if (key === 'quickAdd') {
@@ -195,6 +198,7 @@ export default function AppNavigator() {
                   <Feather name={item.icon} size={22} color={item.color} />
                 </View>
                 <Text style={styles.menuText}>{i18n.t(item.key)}</Text>
+                {item.comingSoon && <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>}
               </TouchableOpacity>
             ))}
           </Animated.View>
@@ -350,6 +354,7 @@ const createStyles = () => StyleSheet.create({
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
   menuIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
+  comingSoonBadge: { color: colors.textMuted, fontSize: 10, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
 
   fabOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 },
   quickSelectSheet: { position: 'absolute', right: 24, left: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder, padding: 20 },

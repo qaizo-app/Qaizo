@@ -144,6 +144,8 @@ export default {
   inactive: 'Inactive',
   hiddenWhenOff: 'Hidden when off',
   comingSoon: 'Soon',
+  comingSoonTitle: 'Coming Soon',
+  comingSoonMessage: 'This feature is under development and will be available in the next update',
   accountHint: 'Tap → history · Long → edit',
 
   pension: 'Pension',
