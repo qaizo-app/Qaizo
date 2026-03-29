@@ -2,14 +2,16 @@
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
+import AddRecurringModal from '../components/AddRecurringModal';
+import AddTransactionModal from '../components/AddTransactionModal';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import MonthlyReportScreen from '../screens/MonthlyReportScreen';
@@ -17,8 +19,12 @@ import InvestmentsScreen from '../screens/InvestmentsScreen';
 import AIAdvisorScreen from '../screens/AIAdvisorScreen';
 import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import QuickAddModal from '../components/QuickAddModal';
+import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import SettingsScreen from '../screens/SettingsScreen';
+import SmartInputModal from '../components/SmartInputModal';
 import TransactionsScreen from '../screens/TransactionsScreen';
+import { useToast } from '../components/ToastProvider';
 
 const Tab = createBottomTabNavigator();
 const AccountsStack = createNativeStackNavigator();
@@ -47,7 +53,6 @@ function DashboardStackScreen() {
   );
 }
 
-// Пустой экран для таба "+" (нажатие перехватывается)
 function EmptyScreen() { return <View style={{ flex: 1, backgroundColor: colors.bg }} />; }
 
 const tabConfig = {
@@ -58,68 +63,137 @@ const tabConfig = {
   Calendar:     { icon: 'calendar',    labelKey: 'calendarView', color: '#a78bfa' },
 };
 
+const ADD_MENU = [
+  { key: 'smartInput',      icon: 'cpu',       color: '#a78bfa' },
+  { key: 'scanReceipt',     icon: 'camera',    color: colors.teal },
+  { key: 'oneTimePayment',  icon: 'plus-circle', color: colors.green },
+  { key: 'recurringPayment', icon: 'repeat',   color: '#60a5fa' },
+  { key: 'quickAdd',        icon: 'zap',       color: '#f59e0b' },
+];
+
 export default function AppNavigator() {
   const [, setLangVer] = useState(0);
   useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + Math.max(insets.bottom, 16);
   const styles = createStyles();
+  const toast = useToast();
+
+  // Add menu state
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [showSmartInput, setShowSmartInput] = useState(false);
+  const [showRecurring, setShowRecurring] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const openAddMenu = () => {
+    setShowAddMenu(true);
+    Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
+
+  const closeAddMenu = () => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
+      setShowAddMenu(false);
+    });
+  };
+
+  const handleMenuPress = (key) => {
+    closeAddMenu();
+    setTimeout(() => {
+      if (key === 'smartInput') setShowSmartInput(true);
+      else if (key === 'scanReceipt') setShowReceipt(true);
+      else if (key === 'oneTimePayment') setShowAdd(true);
+      else if (key === 'recurringPayment') setShowRecurring(true);
+      else if (key === 'quickAdd') setShowQuickAdd(true);
+    }, 200);
+  };
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => {
-        const cfg = tabConfig[route.name];
-        return {
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: colors.bg2,
-            borderTopColor: colors.divider,
-            borderTopWidth: 1,
-            height: tabBarHeight,
-            paddingTop: 8,
-            paddingBottom: Math.max(insets.bottom, 16),
-            paddingHorizontal: 4,
-          },
-          tabBarActiveTintColor: cfg.color,
-          tabBarInactiveTintColor: colors.textMuted,
-          tabBarIcon: ({ focused }) => {
-            if (route.name === 'Add') {
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => {
+          const cfg = tabConfig[route.name];
+          return {
+            headerShown: false,
+            tabBarStyle: {
+              backgroundColor: colors.bg2,
+              borderTopColor: colors.divider,
+              borderTopWidth: 1,
+              height: tabBarHeight,
+              paddingTop: 8,
+              paddingBottom: Math.max(insets.bottom, 16),
+              paddingHorizontal: 4,
+            },
+            tabBarActiveTintColor: cfg.color,
+            tabBarInactiveTintColor: colors.textMuted,
+            tabBarIcon: ({ focused }) => {
+              if (route.name === 'Add') {
+                return (
+                  <View style={styles.addBtn}>
+                    <Feather name="plus" size={28} color={colors.bg} />
+                  </View>
+                );
+              }
               return (
-                <View style={styles.addBtn}>
-                  <Feather name="plus" size={28} color={colors.bg} />
+                <View style={[styles.iconWrap, focused && { backgroundColor: cfg.color + '14' }]}>
+                  <Feather name={cfg.icon} size={focused ? 22 : 20} color={focused ? cfg.color : colors.textMuted} />
                 </View>
               );
-            }
-            return (
-              <View style={[styles.iconWrap, focused && { backgroundColor: cfg.color + '14' }]}>
-                <Feather name={cfg.icon} size={focused ? 22 : 20} color={focused ? cfg.color : colors.textMuted} />
-              </View>
-            );
-          },
-          tabBarLabel: ({ focused }) => {
-            if (route.name === 'Add') return null;
-            return (
-              <Text style={[styles.label, focused && { color: cfg.color, fontWeight: '700' }]}>
-                {i18n.t(cfg.labelKey)}
-              </Text>
-            );
-          },
-        };
-      }}
-    >
-      <Tab.Screen name="Dashboard" component={DashboardStackScreen} />
-      <Tab.Screen name="Transactions" component={TransactionsScreen} />
-      <Tab.Screen name="Add" component={EmptyScreen}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('Transactions', { openAdd: true });
-          },
-        })}
-      />
-      <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} />
-    </Tab.Navigator>
+            },
+            tabBarLabel: ({ focused }) => {
+              if (route.name === 'Add') return null;
+              return (
+                <Text style={[styles.label, focused && { color: cfg.color, fontWeight: '700' }]}>
+                  {i18n.t(cfg.labelKey)}
+                </Text>
+              );
+            },
+          };
+        }}
+      >
+        <Tab.Screen name="Dashboard" component={DashboardStackScreen} />
+        <Tab.Screen name="Transactions" component={TransactionsScreen} />
+        <Tab.Screen name="Add" component={EmptyScreen}
+          listeners={() => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              if (showAddMenu) closeAddMenu();
+              else openAddMenu();
+            },
+          })}
+        />
+        <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
+        <Tab.Screen name="Calendar" component={CalendarScreen} />
+      </Tab.Navigator>
+
+      {/* Add Menu Overlay */}
+      {showAddMenu && (
+        <Animated.View style={[styles.menuOverlay, { opacity: fadeAnim }]}>
+          <TouchableOpacity style={styles.menuOverlayBg} activeOpacity={1} onPress={closeAddMenu} />
+          <Animated.View style={[styles.menuContainer, {
+            transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) }],
+          }]}>
+            {ADD_MENU.map((item, idx) => (
+              <TouchableOpacity key={item.key} style={styles.menuItem} onPress={() => handleMenuPress(item.key)} activeOpacity={0.7}>
+                <View style={[styles.menuIcon, { backgroundColor: item.color + '20' }]}>
+                  <Feather name={item.icon} size={22} color={item.color} />
+                </View>
+                <Text style={styles.menuText}>{i18n.t(item.key)}</Text>
+              </TouchableOpacity>
+            ))}
+          </Animated.View>
+        </Animated.View>
+      )}
+
+      {/* Global Modals */}
+      <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} />
+      <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSave={() => setShowSmartInput(false)} />
+      <AddRecurringModal visible={showRecurring} onClose={() => setShowRecurring(false)} onSave={() => setShowRecurring(false)} />
+      <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />
+      <QuickAddModal visible={showQuickAdd} onClose={() => setShowQuickAdd(false)} onSave={() => setShowQuickAdd(false)} />
+    </View>
   );
 }
 
@@ -127,4 +201,11 @@ const createStyles = () => StyleSheet.create({
   iconWrap: { width: 40, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   label: { fontSize: 10, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
   addBtn: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', marginBottom: 20, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+
+  menuOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 },
+  menuOverlayBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  menuContainer: { position: 'absolute', bottom: 100, left: 20, right: 20, backgroundColor: colors.card, borderRadius: 20, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
+  menuIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
 });

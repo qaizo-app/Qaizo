@@ -578,49 +578,6 @@ export default function DashboardScreen() {
         })}
       </ScrollView>
 
-      {/* FAB Menu */}
-      {showFabMenu && (
-        <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowFabMenu(false)}>
-          <View style={st.fabMenu}>
-            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowReceipt(true); }}>
-              <Feather name="camera" size={18} color={colors.orange} />
-              <Text style={st.fabMenuTxt}>{i18n.t('scanReceipt')}</Text>
-            </TouchableOpacity>
-            <View style={st.fabMenuDivider} />
-            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowSmartInput(true); }}>
-              <Feather name="mic" size={18} color={colors.blue} />
-              <Text style={st.fabMenuTxt}>{i18n.t('smartInput')}</Text>
-            </TouchableOpacity>
-            <View style={st.fabMenuDivider} />
-            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowRecurring(true); }}>
-              <Feather name="repeat" size={18} color={colors.teal} />
-              <Text style={st.fabMenuTxt}>{i18n.t('recurringPayment')}</Text>
-            </TouchableOpacity>
-            <View style={st.fabMenuDivider} />
-            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowAdd(true); }}>
-              <Feather name="plus" size={18} color={colors.green} />
-              <Text style={st.fabMenuTxt}>{i18n.t('oneTimePayment')}</Text>
-            </TouchableOpacity>
-            <View style={st.fabMenuDivider} />
-            <TouchableOpacity style={st.fabMenuItem} onPress={() => { setShowFabMenu(false); setShowQuickSelect(true); }}>
-              <Feather name="zap" size={18} color={colors.yellow} />
-              <Text style={st.fabMenuTxt}>{i18n.t('quickAdd')}</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* FAB */}
-      <TouchableOpacity style={st.fab} onPress={() => {
-        if (showFabMenu || showQuickSelect || showAddTemplate) {
-          setShowFabMenu(false); setShowQuickSelect(false); setShowAddTemplate(false);
-        } else {
-          setShowFabMenu(true);
-        }
-      }} activeOpacity={0.8}>
-        <Feather name={showFabMenu || showQuickSelect || showAddTemplate ? 'x' : 'plus'} size={26} color={colors.bg} />
-      </TouchableOpacity>
-
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
