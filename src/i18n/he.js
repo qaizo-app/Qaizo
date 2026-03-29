@@ -456,7 +456,7 @@ export default {
   smartInputPlaceholder: 'לדוגמה: סופרמרקט 800 שקל...',
   smartExample1: 'סופרמרקט 450',
   smartExample2: 'קיבלתי משכורת 12000',
-  smartExample3: 'מונית אובר 35 שקל',
+  smartExample3: 'מונית 35 שקל',
   examples: 'דוגמאות',
   confirm: 'אישור',
 

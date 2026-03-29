@@ -457,7 +457,7 @@ export default {
   smartInputPlaceholder: 'e.g. Supermarket 800 shekels...',
   smartExample1: 'Supermarket 450',
   smartExample2: 'Salary received 12000',
-  smartExample3: 'Uber taxi 35 shekels',
+  smartExample3: 'Taxi 35 shekels',
   examples: 'Examples',
   confirm: 'Confirm',
 

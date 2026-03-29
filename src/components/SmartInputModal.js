@@ -125,10 +125,10 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                 i18n.t('smartExample2'),
                 i18n.t('smartExample3'),
               ].map((ex, idx) => (
-                <TouchableOpacity key={idx} onPress={() => handleTextChange(ex)} style={st.exRow}>
+                <View key={idx} style={st.exRow}>
                   <Feather name="corner-down-right" size={14} color={colors.textMuted} />
                   <Text style={st.exText}>{ex}</Text>
-                </TouchableOpacity>
+                </View>
               ))}
             </View>
           )}

@@ -465,7 +465,7 @@ export default {
   smartInputPlaceholder: 'напр. Супермаркет 800 шекелей...',
   smartExample1: 'Супермаркет 450',
   smartExample2: 'Получил зарплату 12000',
-  smartExample3: 'Такси Uber 35 шекелей',
+  smartExample3: 'Такси 35 шекелей',
   examples: 'Примеры',
   confirm: 'Подтвердить',
 
