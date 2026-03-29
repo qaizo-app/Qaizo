@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
+import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import ExportModal from '../components/ExportModal';
 import ImportModal from '../components/ImportModal';
 import i18n from '../i18n';
@@ -72,6 +73,7 @@ export default function SettingsScreen() {
 
   const [showClearData, setShowClearData] = useState(false);
   const [showLangRestart, setShowLangRestart] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const handleClearDataConfirm = async () => {
     await dataService.clearAllData();
     setShowClearData(false);
@@ -213,29 +215,16 @@ export default function SettingsScreen() {
         )}
 
         {/* Currency */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('cur')}>
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => setShowCurrencyPicker(true)}>
           <View style={styles.sectionLeft}>
             <Feather name="dollar-sign" size={18} color={colors.blue} />
             <Text style={styles.sectionText}>{i18n.t('currency')}</Text>
           </View>
           <View style={styles.sectionRight}>
             <Text style={styles.sectionValue}>{curSymbol} {CURRENCIES.find(c => c.symbol === curSymbol)?.code}</Text>
-            <Feather name={openSection === 'cur' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+            <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textMuted} />
           </View>
         </TouchableOpacity>
-        {openSection === 'cur' && (
-          <Card>
-            {CURRENCIES.map((cur, idx) => (
-              <TouchableOpacity key={cur.code} style={[styles.optRow, idx < CURRENCIES.length - 1 && styles.optBorder]}
-                onPress={() => changeCurrency(cur)}>
-                <Text style={styles.optText}>{cur.symbol} {cur.code}</Text>
-                <View style={[styles.radio, curSymbol === cur.symbol && styles.radioOn]}>
-                  {curSymbol === cur.symbol && <View style={styles.radioDot} />}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </Card>
-        )}
 
         {/* Week Start */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('week')}>
@@ -387,6 +376,11 @@ export default function SettingsScreen() {
         }}
         onCancel={() => setShowDeleteAccount(false)}
         icon="user-x" />
+
+      <CurrencyPickerModal visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        selected={CURRENCIES.find(c => c.symbol === curSymbol)?.code || 'ILS'}
+        onSelect={(cur) => changeCurrency(cur)} />
     </View>
   );
 }
