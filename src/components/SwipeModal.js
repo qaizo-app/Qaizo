@@ -2,6 +2,7 @@
 // v4: без Modal — чистый Animated.View, никакого мерцания
 import { useEffect, useRef } from 'react';
 import { Animated, BackHandler, Dimensions, KeyboardAvoidingView, PanResponder, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
 const SCREEN_H = Dimensions.get('window').height;
@@ -10,6 +11,7 @@ export default function SwipeModal({ visible, onClose, children }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const isClosing = useRef(false);
+  const insets = useSafeAreaInsets();
   const styles = createStyles();
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function SwipeModal({ visible, onClose, children }) {
         <View {...panResponder.panHandlers} style={styles.swipeZone}>
           <View style={styles.handle} />
         </View>
-        <View style={styles.content}>
+        <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}>
           {renderContent()}
         </View>
       </Animated.View>
@@ -119,6 +121,6 @@ const createStyles = () => StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    paddingBottom: 36,
+    paddingBottom: 20,
   },
 });
