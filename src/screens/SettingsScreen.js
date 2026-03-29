@@ -54,22 +54,24 @@ export default function SettingsScreen() {
     await dataService.saveSettings({ ...settings, weekStart: day });
   };
   const changeLang = async (code) => {
+    // Сохраняем СНАЧАЛА — forceRTL может перезагрузить приложение
+    await AsyncStorage.setItem('qaizo_lang_manual', 'true');
+    await AsyncStorage.setItem('qaizo_lang_code', code);
+    const settings = await dataService.getSettings();
+    await dataService.saveSettings({ ...settings, language: code });
+
     const rtlChanged = i18n.setLanguage(code);
     setLang(code);
     setOpenSection(null);
     setLangVersion(n => n + 1);
 
-    // Сохраняем язык + ставим флаг ручного выбора
-    const settings = await dataService.getSettings();
-    await dataService.saveSettings({ ...settings, language: code });
-    await AsyncStorage.setItem('qaizo_lang_manual', 'true');
-
     if (rtlChanged) {
-      Alert.alert('', i18n.t('langChanged'));
+      setShowLangRestart(true);
     }
   };
 
   const [showClearData, setShowClearData] = useState(false);
+  const [showLangRestart, setShowLangRestart] = useState(false);
   const handleClearDataConfirm = async () => {
     await dataService.clearAllData();
     setShowClearData(false);
@@ -343,6 +345,18 @@ export default function SettingsScreen() {
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
       <ImportModal visible={showImport} onClose={() => setShowImport(false)} onImported={() => toast.show(i18n.t('importDone'), 'success')} />
+
+      <ConfirmModal visible={showLangRestart}
+        title={i18n.t('langChanged')} message={i18n.t('restartApp')}
+        confirmText="OK" cancelText=""
+        onConfirm={() => {
+          setShowLangRestart(false);
+          import('expo-updates').then(({ reloadAsync }) => {
+            reloadAsync?.().catch(() => {});
+          }).catch(() => {});
+        }}
+        onCancel={() => setShowLangRestart(false)}
+        icon="globe" />
 
       <ConfirmModal visible={showClearData}
         title={i18n.t('clearData')} message={i18n.t('deleteAllData')}

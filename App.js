@@ -96,7 +96,10 @@ function AppInner() {
         }
 
         let lang;
-        if (manualFlag === 'true' && settings.language) {
+        const savedLangCode = await AsyncStorage.getItem('qaizo_lang_code');
+        if (manualFlag === 'true' && savedLangCode) {
+          lang = savedLangCode;
+        } else if (manualFlag === 'true' && settings.language) {
           lang = settings.language;
         } else {
           lang = detectSystemLanguage();
