@@ -230,6 +230,7 @@ export default {
   savedYesterday: 'Сэкономлено вчера',
   overspentYesterday: 'Перерасход вчера',
   crisisWarning: 'Постоянные расходы превышают доходы. Следите за бюджетом',
+  addIncomeHint: 'Добавьте регулярный доход (зарплату) для расчёта дневного бюджета',
   fixedExpenses: 'Постоянные расходы',
   upcomingBills: 'Предстоящие платежи',
   afterBills: 'После платежей',

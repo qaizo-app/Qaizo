@@ -221,6 +221,7 @@ export default {
   savedYesterday: 'חסכת אתמול',
   overspentYesterday: 'חריגה אתמול',
   crisisWarning: 'ההוצאות הקבועות עולות על ההכנסות. שים לב לתקציב',
+  addIncomeHint: 'הוסף הכנסה קבועה (משכורת) כדי לחשב תקציב יומי',
   fixedExpenses: 'הוצאות קבועות',
   upcomingBills: 'תשלומים קרובים',
   afterBills: 'אחרי תשלומים',

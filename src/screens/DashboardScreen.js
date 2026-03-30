@@ -319,8 +319,11 @@ export default function DashboardScreen() {
               const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
               const daysLeft = Math.max(lastDay - now.getDate(), 1);
 
-              // Шаг 1: Доход за месяц (реальные поступления + recurring income)
+              // === ДОХОД ===
+              // 1. Фактический доход этого месяца
               const monthIncome = totalIncome;
+
+              // 2. Ожидаемый recurring income (ещё не поступивший)
               const expectedRecurringIncome = recurring
                 .filter(r => r.isActive && r.type === 'income')
                 .filter(r => {
@@ -328,30 +331,47 @@ export default function DashboardScreen() {
                   return nd.getMonth() === now.getMonth() && nd.getFullYear() === now.getFullYear() && nd.getDate() > now.getDate();
                 })
                 .reduce((s, r) => s + r.amount, 0);
-              const totalMonthIncome = monthIncome + expectedRecurringIncome;
 
-              // Шаг 2: Обязательные расходы (recurring expenses на весь месяц)
+              // 3. Fallback: средний доход за 3 месяца (если нет recurring и мало дохода)
+              let avgIncome3m = 0;
+              if (monthIncome === 0 && expectedRecurringIncome === 0) {
+                let totalInc3m = 0; let months3m = 0;
+                for (let i = 1; i <= 3; i++) {
+                  const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                  const mInc = transactions
+                    .filter(t => t.type === 'income')
+                    .filter(t => { const d = new Date(t.date || t.createdAt); return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear(); })
+                    .reduce((s, t) => s + t.amount, 0);
+                  if (mInc > 0) { totalInc3m += mInc; months3m++; }
+                }
+                if (months3m > 0) avgIncome3m = Math.round(totalInc3m / months3m);
+              }
+
+              const totalMonthIncome = monthIncome + expectedRecurringIncome + avgIncome3m;
+              const hasNoIncomeData = totalMonthIncome === 0;
+
+              // === ОБЯЗАТЕЛЬНЫЕ РАСХОДЫ ===
               const allRecurringExpenses = recurring
                 .filter(r => r.isActive && r.type === 'expense')
                 .reduce((s, r) => s + r.amount, 0);
 
-              // Шаг 3: Пул на месяц
+              // === ПУЛ НА МЕСЯЦ ===
               const monthPool = totalMonthIncome - allRecurringExpenses;
 
-              // Шаг 4: Гибкие траты с начала месяца (не recurring)
-              const recurringCatIds = new Set(recurring.filter(r => r.isActive && r.type === 'expense').map(r => r.categoryId));
+              // === ГИБКИЕ ТРАТЫ (всё кроме recurring) ===
               const flexSpent = thisMonth
                 .filter(t => t.type === 'expense' && !t.isTransfer)
-                .reduce((s, t) => s + t.amount, 0) -
-                thisMonth
-                .filter(t => t.type === 'expense' && recurringCatIds.has(t.categoryId) && t.isRecurringPayment)
                 .reduce((s, t) => s + t.amount, 0);
 
-              // Шаг 5: Остаток / дни
+              // === ОСТАТОК / ДНИ ===
               const remainingPool = monthPool - flexSpent;
               const freeToday = Math.floor(remainingPool / daysLeft);
-              const isCrisis = monthPool <= 0;
-              const freeTodayColor = isCrisis ? colors.orange : freeToday > 200 ? colors.green : freeToday > 50 ? colors.yellow : colors.red;
+              const isCrisis = monthPool <= 0 && !hasNoIncomeData;
+              const freeTodayColor = hasNoIncomeData ? colors.textDim
+                : isCrisis ? colors.orange
+                : freeToday > 200 ? colors.green
+                : freeToday > 50 ? colors.yellow
+                : colors.red;
 
               // Spent today
               const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -376,12 +396,18 @@ export default function DashboardScreen() {
               return (
                 <Card key="freeMoneyToday">
                   <View style={st.freeTop}>
-                    <Feather name={isCrisis ? 'alert-triangle' : 'sun'} size={18} color={freeTodayColor} />
+                    <Feather name={hasNoIncomeData ? 'info' : isCrisis ? 'alert-triangle' : 'sun'} size={18} color={freeTodayColor} />
                     <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
                     <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
                   </View>
 
-                  {isCrisis && (
+                  {hasNoIncomeData && (
+                    <View style={{ backgroundColor: colors.blue + '12', borderRadius: 10, padding: 10, marginBottom: 8 }}>
+                      <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600' }}>{i18n.t('addIncomeHint')}</Text>
+                    </View>
+                  )}
+
+                  {isCrisis && !hasNoIncomeData && (
                     <View style={{ backgroundColor: colors.orange + '15', borderRadius: 10, padding: 10, marginBottom: 8 }}>
                       <Text style={{ color: colors.orange, fontSize: 12, fontWeight: '600' }}>{i18n.t('crisisWarning')}</Text>
                     </View>

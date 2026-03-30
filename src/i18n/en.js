@@ -221,6 +221,7 @@ export default {
   savedYesterday: 'Saved yesterday',
   overspentYesterday: 'Over yesterday',
   crisisWarning: 'Fixed expenses exceed income. Watch your budget',
+  addIncomeHint: 'Add recurring income (salary) to calculate daily budget',
   fixedExpenses: 'Fixed expenses',
   upcomingBills: 'Upcoming bills',
   afterBills: 'After bills',
