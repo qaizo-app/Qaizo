@@ -3,6 +3,7 @@
 import {
     GoogleAuthProvider,
     createUserWithEmailAndPassword,
+    deleteUser,
     onAuthStateChanged,
     sendPasswordResetEmail,
     signInWithCredential,
@@ -94,6 +95,19 @@ const authService = {
       return { success: false, error: 'Google sign-in cancelled' };
     } catch (e) {
       return { success: false, error: e.message || 'Google sign-in failed' };
+    }
+  },
+
+  // Удаление аккаунта (Apple requirement)
+  async deleteAccount() {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await deleteUser(user);
+      }
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.code === 'auth/requires-recent-login' ? 'reauth' : e.message };
     }
   },
 

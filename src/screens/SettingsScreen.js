@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
@@ -364,6 +364,15 @@ export default function SettingsScreen() {
         {openSection === 'about' && (
           <Card>
             <Text style={styles.aboutText}>{i18n.t('aboutText')}</Text>
+            <Text style={styles.aboutDisclaimer}>{i18n.t('notFinancialAdvice')}</Text>
+            <View style={{ gap: 8, marginTop: 12 }}>
+              <TouchableOpacity onPress={() => Linking.openURL('https://qaizo.app/privacy-policy.html')}>
+                <Text style={styles.aboutLink}>{i18n.t('privacyPolicy')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://qaizo.app/terms.html')}>
+                <Text style={styles.aboutLink}>{i18n.t('termsOfService')}</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.aboutCopy}>© 2026 Qaizo</Text>
           </Card>
         )}
@@ -395,9 +404,14 @@ export default function SettingsScreen() {
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={async () => {
           await dataService.clearAllData();
-          await authService.logout();
+          const result = await authService.deleteAccount();
+          if (!result.success && result.error === 'reauth') {
+            await authService.logout();
+            toast.show(i18n.t('reloginToDelete'), 'warning');
+          } else {
+            toast.show(i18n.t('accountDeleted'), 'success');
+          }
           setShowDeleteAccount(false);
-          toast.show(i18n.t('accountDeleted'), 'success');
         }}
         onCancel={() => setShowDeleteAccount(false)}
         icon="user-x" />
@@ -437,7 +451,9 @@ const createStyles = () => StyleSheet.create({
   aboutRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   aboutLogo: { color: colors.text, fontSize: 22, fontWeight: '800' },
   aboutVer: { color: colors.textMuted, fontSize: 12 },
-  aboutText: { color: colors.textDim, fontSize: 14, lineHeight: 22, marginBottom: 12 },
+  aboutText: { color: colors.textDim, fontSize: 14, lineHeight: 22, marginBottom: 8 },
+  aboutDisclaimer: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginBottom: 4 },
+  aboutLink: { color: colors.green, fontSize: 14, fontWeight: '600' },
   aboutCopy: { color: colors.textMuted, fontSize: 11 },
 
   // Account
