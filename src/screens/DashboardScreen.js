@@ -66,6 +66,7 @@ export default function DashboardScreen() {
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [budgetsExpanded, setBudgetsExpanded] = useState(false);
   const [monthlyExtra, setMonthlyExtra] = useState(0);
+  const [goals, setGoals] = useState([]);
   const bellAnim = useRef(new Animated.Value(1)).current;
   const toast = useToast();
 
@@ -88,14 +89,16 @@ export default function DashboardScreen() {
   const st = createSt();
 
   const loadData = async () => {
-    const [txs, bdg, rec, settings, accs, tpls] = await Promise.all([
+    const [txs, bdg, rec, settings, accs, tpls, gls] = await Promise.all([
       dataService.getTransactions(),
       dataService.getBudgets(),
       dataService.getRecurring(),
       dataService.getSettings(),
       dataService.getAccounts(),
       dataService.getQuickTemplates(),
+      dataService.getGoals(),
     ]);
+    setGoals(gls);
     if (settings.weekStart) setWeekStart(settings.weekStart);
     if (settings.dashLayout) setDashLayout(settings.dashLayout);
     setMonthlyExtra(settings.monthlyExtra || 0);
@@ -608,6 +611,33 @@ export default function DashboardScreen() {
                   <InteractiveBarChart data={barData} maxBar={maxBar} />
                 </Card>
               );
+            case 'goals':
+              if (goals.length === 0) return null;
+              return (
+                <Card key="goals">
+                  <TouchableOpacity style={st.blockTitleRow} onPress={() => navigation.navigate('Settings', { screen: 'Goals' })}>
+                    <Text style={st.blockTitle}>{i18n.t('goals')}</Text>
+                    <Feather name="chevron-right" size={18} color={colors.textMuted} />
+                  </TouchableOpacity>
+                  {goals.slice(0, 3).map(goal => {
+                    const saved = (goal.initialAmount || 0) + (goal.deposits || []).reduce((s, d) => s + d.amount, 0);
+                    const pct = goal.targetAmount > 0 ? Math.min(Math.round((saved / goal.targetAmount) * 100), 100) : 0;
+                    const gc = goal.color || '#34d399';
+                    return (
+                      <View key={goal.id} style={st.goalRow}>
+                        <View style={[st.goalDot, { backgroundColor: gc }]} />
+                        <View style={st.goalInfo}>
+                          <Text style={st.goalName} numberOfLines={1}>{goal.name}</Text>
+                          <View style={st.goalBar}>
+                            <View style={[st.goalBarFill, { width: `${pct}%`, backgroundColor: gc }]} />
+                          </View>
+                        </View>
+                        <Text style={[st.goalPct, { color: gc }]}>{pct}%</Text>
+                      </View>
+                    );
+                  })}
+                </Card>
+              );
             case 'recentTx':
               return (
                 <Card key="recentTx">
@@ -951,6 +981,14 @@ const createSt = () => StyleSheet.create({
   recSkip: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   recConfirm: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
   recSwipeBtn: { width: 60, justifyContent: 'center', alignItems: 'center' },
+
+  goalRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  goalDot: { width: 8, height: 8, borderRadius: 4 },
+  goalInfo: { flex: 1 },
+  goalName: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 4 },
+  goalBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
+  goalBarFill: { height: 6, borderRadius: 3 },
+  goalPct: { fontSize: 13, fontWeight: '700', width: 40, textAlign: 'right' },
   recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 

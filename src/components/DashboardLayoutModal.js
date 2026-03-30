@@ -24,6 +24,7 @@ export const DEFAULT_LAYOUT = [
   { id: 'pieChart', visible: true },
   { id: 'budgets', visible: true },
   { id: 'recurring', visible: true },
+  { id: 'goals', visible: true },
   { id: 'barChart', visible: true },
   { id: 'recentTx', visible: true },
 ];
