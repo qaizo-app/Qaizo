@@ -381,7 +381,7 @@ export default function SettingsScreen() {
                 <Feather name="mail" size={16} color={colors.green} />
                 <Text style={styles.contactTxt}>Email</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('https://wa.me/972500000000')}>
+              <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('https://wa.me/972586995577')}>
                 <Feather name="message-circle" size={16} color={colors.green} />
                 <Text style={styles.contactTxt}>WhatsApp</Text>
               </TouchableOpacity>
