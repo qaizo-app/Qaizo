@@ -72,7 +72,8 @@ export default function TransactionsScreen({ route }) {
   };
 
   // Фильтр по типу
-  let filtered = filter === 'all' ? transactions : transactions.filter(t => t.type === filter);
+  const sorted = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
+  let filtered = filter === 'all' ? sorted : sorted.filter(t => t.type === filter);
 
   // Поиск
   if (search.trim()) {
