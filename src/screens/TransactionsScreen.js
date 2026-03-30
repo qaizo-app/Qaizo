@@ -322,13 +322,19 @@ export default function TransactionsScreen({ route }) {
             </View>
           )}
 
-          {/* Clear button */}
-          {activeFilterCount > 0 && (
-            <TouchableOpacity style={styles.clearBtn} onPress={clearAllFilters}>
-              <Feather name="x" size={14} color={colors.red} />
-              <Text style={styles.clearText}>{i18n.t('clearFilters')} ({activeFilterCount})</Text>
+          {/* Action buttons */}
+          <View style={styles.filterBtnRow}>
+            {activeFilterCount > 0 && (
+              <TouchableOpacity style={styles.clearBtn} onPress={clearAllFilters}>
+                <Feather name="x" size={14} color={colors.red} />
+                <Text style={styles.clearText}>{i18n.t('clearFilters')}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.applyBtn} onPress={() => setShowFilters(false)}>
+              <Feather name="search" size={14} color={colors.bg} />
+              <Text style={styles.applyText}>{i18n.t('search')}</Text>
             </TouchableOpacity>
-          )}
+          </View>
         </View>
       )}
 
@@ -439,8 +445,11 @@ const createStyles = () => StyleSheet.create({
   chipRow: { flexDirection: i18n.row(), gap: 6 },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: colors.bg2, borderWidth: 1, borderColor: 'transparent', gap: 4 },
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '600', maxWidth: 80 },
-  clearBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 },
-  clearText: { color: colors.red, fontSize: 12, fontWeight: '600' },
+  filterBtnRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
+  clearBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder },
+  clearText: { color: colors.red, fontSize: 14, fontWeight: '600' },
+  applyBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.green },
+  applyText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
 
   summary: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 8 },
   summaryAmount: { fontSize: 16, fontWeight: '700', writingDirection: 'ltr' },
