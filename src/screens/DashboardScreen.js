@@ -489,8 +489,8 @@ export default function DashboardScreen() {
                     <Card>
                       <View style={st.blockTitleRow}>
                         <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
-                        <TouchableOpacity onPress={() => setShowRecurring(true)}>
-                          <Feather name="plus-circle" size={18} color={colors.green} />
+                        <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' }} onPress={() => setShowRecurring(true)}>
+                          <Feather name="plus" size={18} color={colors.green} />
                         </TouchableOpacity>
                       </View>
                       {upcoming.map(rec => {
@@ -893,8 +893,8 @@ const createSt = () => StyleSheet.create({
   recName: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
   recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
   recActions: { flexDirection: i18n.row(), gap: 8 },
-  recSkip: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
-  recConfirm: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
+  recSkip: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
+  recConfirm: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
   recSwipeBtn: { width: 60, justifyContent: 'center', alignItems: 'center' },
   recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },

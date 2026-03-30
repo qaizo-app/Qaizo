@@ -5,7 +5,7 @@ const darkColors = {
   bg: '#0a0e1a',
   bg2: '#0f1424',
   card: '#151c2f',
-  cardBorder: 'rgba(52, 211, 153, 0.10)',
+  cardBorder: 'rgba(52, 211, 153, 0.15)',
   cardHighlight: 'rgba(52, 211, 153, 0.06)',
 
   green: '#34d399',
