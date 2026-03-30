@@ -224,7 +224,6 @@ export default {
   addIncomeHint: 'הוסף הכנסה קבועה (משכורת) כדי לחשב תקציב יומי',
   monthlyExtra: 'תוספת חודשית',
   monthlyExtraHint: 'סכום נוסף מחסכונות שאתה מרשה לעצמך להוציא מעבר להכנסה',
-  saved: 'נשמר',
   fixedExpenses: 'הוצאות קבועות',
   upcomingBills: 'תשלומים קרובים',
   afterBills: 'אחרי תשלומים',

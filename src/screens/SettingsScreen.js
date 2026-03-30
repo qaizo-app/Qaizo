@@ -262,7 +262,7 @@ export default function SettingsScreen() {
           <Card>
             <Text style={{ color: colors.textDim, fontSize: 12, marginBottom: 10 }}>{i18n.t('monthlyExtraHint')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <TextInput style={[styles.extraInput, { flex: 1 }]} value={monthlyExtra} onChangeText={setMonthlyExtra}
+              <TextInput style={[styles.extraInput, { flex: 1 }]} value={String(monthlyExtra || '')} onChangeText={setMonthlyExtra}
                 keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
               <TouchableOpacity style={styles.extraSaveBtn} onPress={async () => {
                 const settings = await dataService.getSettings();

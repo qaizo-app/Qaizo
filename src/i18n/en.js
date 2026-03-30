@@ -224,7 +224,6 @@ export default {
   addIncomeHint: 'Add recurring income (salary) to calculate daily budget',
   monthlyExtra: 'Monthly extra',
   monthlyExtraHint: 'Extra amount from savings you allow yourself to spend beyond income',
-  saved: 'Saved',
   fixedExpenses: 'Fixed expenses',
   upcomingBills: 'Upcoming bills',
   afterBills: 'After bills',
