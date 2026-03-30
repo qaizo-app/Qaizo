@@ -79,7 +79,7 @@ const notificationService = {
 
       return true;
     } catch (e) {
-      console.error('scheduleRecurringNotifications:', e);
+      if (__DEV__) console.error('scheduleRecurringNotifications:', e);
       return false;
     }
   },
@@ -106,7 +106,7 @@ const notificationService = {
         },
       });
     } catch (e) {
-      console.error('scheduleStreakReminder:', e);
+      if (__DEV__) console.error('scheduleStreakReminder:', e);
     }
   },
 

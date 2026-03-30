@@ -469,7 +469,7 @@ async function pickAndParseFile() {
   try {
     content = await FileSystem.readAsStringAsync(file.uri);
   } catch (readErr) {
-    console.error('File read error:', readErr);
+    if (__DEV__) console.error('File read error:', readErr);
     return { success: false, error: 'read_error' };
   }
 
@@ -560,12 +560,6 @@ async function pickAndParseFile() {
     const cat = customCat || rawCat;
     if (cat) rawOtherCats[cat] = (rawOtherCats[cat] || 0) + 1;
   }
-  console.log('Headers:', headers.join(' | '));
-  console.log('HeaderMap category:', headerMap['category'], 'custom_category:', headerMap['custom_category']);
-  console.log(`Import stats: ${parsed.length} parsed, ${skippedTransfers} transfers, ${skippedZero} zero-amount, ${skippedShort} short lines, format=${format}`);
-  console.log('Categories:', JSON.stringify(catCounts));
-  console.log('Accounts:', JSON.stringify(acctCounts));
-  console.log('Raw CSV categories:', JSON.stringify(rawOtherCats));
 
   // Sample rows for preview
   const sampleRows = [];
@@ -592,7 +586,7 @@ async function pickAndParseFile() {
     autoMapping,
   };
   } catch (e) {
-    console.error('Import parse error:', e);
+    if (__DEV__) console.error('Import parse error:', e);
     return { success: false, error: e.message || 'parse_error' };
   }
 }
@@ -667,7 +661,6 @@ async function importTransactions(transactions) {
     if (result) imported++;
     else failed++;
   }
-  if (skippedDuplicates > 0) console.log(`Import: ${skippedDuplicates} duplicates skipped`);
   return { imported, failed, skippedDuplicates };
 }
 

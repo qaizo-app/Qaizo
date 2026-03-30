@@ -328,15 +328,12 @@ async function callGemini(prompt) {
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      console.warn('Gemini API error:', res.status, errText.slice(0, 200));
       return null;
     }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-    if (!text) console.warn('Gemini empty response:', JSON.stringify(data).slice(0, 300));
     return text;
   } catch (e) {
-    console.warn('Gemini API error:', e.message);
     return null;
   }
 }
@@ -470,7 +467,6 @@ No markdown, no explanation.` },
       }),
     });
     if (!res.ok) {
-      console.warn('Receipt scan error:', res.status);
       return null;
     }
     const data = await res.json();
@@ -478,7 +474,6 @@ No markdown, no explanation.` },
     const jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
     return JSON.parse(jsonStr);
   } catch (e) {
-    console.warn('Receipt scan error:', e.message);
     return null;
   }
 }

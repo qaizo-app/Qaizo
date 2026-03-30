@@ -141,7 +141,7 @@ async function updateStreaks(transactions) {
 
     return { streakData, newMilestone };
   } catch (e) {
-    console.error('streakService.updateStreaks:', e);
+    if (__DEV__) console.error('streakService.updateStreaks:', e);
     return { streakData: { currentStreak: 0, longestStreak: 0, lastActiveDate: null, underBudgetStreak: 0, longestUnderBudget: 0, milestones: [] }, newMilestone: null };
   }
 }

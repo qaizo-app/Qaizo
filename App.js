@@ -129,7 +129,7 @@ function AppInner() {
           }
         });
       } catch (e) {
-        console.error('Error loading:', e);
+        if (__DEV__) console.error('Error loading:', e);
       }
 
       // Инициализация уведомлений

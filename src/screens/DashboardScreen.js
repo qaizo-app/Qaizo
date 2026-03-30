@@ -95,7 +95,6 @@ export default function DashboardScreen() {
       dataService.getAccounts(),
       dataService.getQuickTemplates(),
     ]);
-    console.log('Dashboard loadData:', txs.length, 'txs,', Object.keys(bdg).length, 'budgets,', rec.length, 'recurring');
     if (settings.weekStart) setWeekStart(settings.weekStart);
     if (settings.dashLayout) setDashLayout(settings.dashLayout);
     setTransactions(txs);

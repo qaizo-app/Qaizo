@@ -55,7 +55,7 @@ export default function ExportModal({ visible, onClose, onResult }) {
       else if (format === 'pdf') await exportService.exportPDF(from, to);
       onResult?.('success');
     } catch (e) {
-      console.error('Export error:', e);
+      if (__DEV__) console.error('Export error:', e);
       if (e.message === 'NO_DATA') onResult?.('noData');
       else onResult?.('error');
     }

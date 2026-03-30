@@ -87,7 +87,7 @@ async function getDocData(colName, defaultVal) {
     const snap = await getDoc(userDoc(colName + '/data'));
     return snap.exists() ? snap.data().value : defaultVal;
   } catch (e) {
-    console.error(`Firestore getDocData(${colName}):`, e);
+    if (__DEV__) console.error(`Firestore getDocData(${colName}):`, e);
     return defaultVal;
   }
 }
@@ -97,7 +97,7 @@ async function setDocData(colName, value) {
     await setDoc(userDoc(colName + '/data'), { value, updatedAt: new Date().toISOString() });
     return true;
   } catch (e) {
-    console.error(`Firestore setDocData(${colName}):`, e);
+    if (__DEV__) console.error(`Firestore setDocData(${colName}):`, e);
     return false;
   }
 }
@@ -115,7 +115,7 @@ async function getColDocs(colName, defaultVal = []) {
       const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       return items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     } catch (e2) {
-      console.error(`Firestore getColDocs(${colName}):`, e2);
+      if (__DEV__) console.error(`Firestore getColDocs(${colName}):`, e2);
       return defaultVal;
     }
   }
@@ -149,7 +149,7 @@ async function updateAccountBalance(accountId, amount, type) {
       await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(updated));
     }
   } catch (e) {
-    console.error('Error updating account balance:', e);
+    if (__DEV__) console.error('Error updating account balance:', e);
   }
 }
 
@@ -159,14 +159,12 @@ const dataService = {
   // ─── TRANSACTIONS ────────────────────────────────────────
   async getTransactions() {
     const uid = getUid();
-    console.log('getTransactions uid:', uid ? 'logged in' : 'guest');
     if (uid) return getColDocs('transactions');
     try {
       const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
       const txs = data ? JSON.parse(data) : [];
-      console.log('getTransactions from AsyncStorage:', txs.length);
       return txs;
-    } catch (e) { console.error('getTransactions error:', e); return []; }
+    } catch (e) { if (__DEV__) console.error('getTransactions error:', e); return []; }
   },
 
   async addTransaction(transaction) {
@@ -183,7 +181,7 @@ const dataService = {
       }
       if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       return newTx;
-    } catch (e) { console.error('addTransaction:', e); return null; }
+    } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
   },
 
   async deleteTransaction(id) {
@@ -233,7 +231,7 @@ const dataService = {
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(filtered));
       }
       return true;
-    } catch (e) { console.error('deleteTransaction:', e); return false; }
+    } catch (e) { if (__DEV__) console.error('deleteTransaction:', e); return false; }
   },
 
   async updateTransaction(id, changes) {
@@ -263,7 +261,7 @@ const dataService = {
         if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
       return true;
-    } catch (e) { console.error('updateTransaction:', e); return false; }
+    } catch (e) { if (__DEV__) console.error('updateTransaction:', e); return false; }
   },
 
   // ─── ACCOUNTS ────────────────────────────────────────────
@@ -296,7 +294,7 @@ const dataService = {
         });
         await Promise.all(writes);
         return true;
-      } catch (e) { console.error('saveAccounts:', e); return false; }
+      } catch (e) { if (__DEV__) console.error('saveAccounts:', e); return false; }
     }
     try { await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts)); return true; } catch (e) { return false; }
   },
@@ -749,7 +747,7 @@ const dataService = {
       // Очищаем AsyncStorage после успешной миграции
       await AsyncStorage.multiRemove(Object.values(KEYS));
       return true;
-    } catch (e) { console.error('Migration error:', e); return false; }
+    } catch (e) { if (__DEV__) console.error('Migration error:', e); return false; }
   },
 
   async recalculateBalances() {

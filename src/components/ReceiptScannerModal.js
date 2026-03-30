@@ -66,7 +66,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
         setStep('pick');
       }
     } catch (e) {
-      console.error('Receipt scan error:', e);
+      if (__DEV__) console.error('Receipt scan error:', e);
       setError(i18n.t('scanFailed'));
       setStep('pick');
     }
