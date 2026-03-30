@@ -109,11 +109,6 @@ export default function AccountHistoryScreen({ route, navigation }) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={36} color={colors.textMuted} /><Text style={styles.emptyText}>{lang==='ru'?'Нет транзакций':'No transactions'}</Text></View>} />
 
-      <TouchableOpacity style={styles.fab} onPress={() => setShowAdd(true)} activeOpacity={0.8}>
-        <Feather name="plus" size={26} color={colors.bg} />
-      </TouchableOpacity>
-
-      {/* preselectedAccount — модалка не покажет выбор счёта */}
       <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
