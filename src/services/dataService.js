@@ -22,6 +22,7 @@ const KEYS = {
   STREAKS: 'qaizo_streaks',
   QUICK_TEMPLATES: 'qaizo_quick_templates',
   PROJECTS: 'qaizo_projects',
+  GOALS: 'qaizo_goals',
 };
 
 const DEFAULT_ACCOUNTS = [
@@ -442,6 +443,54 @@ const dataService = {
     await this.saveProjects(projects.filter(p => p.id !== id));
   },
 
+  // ─── GOALS (מטרות חיסכון) ─────────────────────────────────
+  async getGoals() {
+    const uid = getUid();
+    if (uid) return getDocData('goals', []);
+    try { const data = await AsyncStorage.getItem(KEYS.GOALS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
+  },
+
+  async saveGoals(goals) {
+    const uid = getUid();
+    if (uid) return setDocData('goals', goals);
+    try { await AsyncStorage.setItem(KEYS.GOALS, JSON.stringify(goals)); return true; } catch (e) { return false; }
+  },
+
+  async addGoal(goal) {
+    const goals = await this.getGoals();
+    const newGoal = { ...goal, id: generateId(), createdAt: new Date().toISOString(), deposits: [] };
+    goals.push(newGoal);
+    await this.saveGoals(goals);
+    return newGoal;
+  },
+
+  async updateGoal(id, changes) {
+    const goals = await this.getGoals();
+    const idx = goals.findIndex(g => g.id === id);
+    if (idx >= 0) {
+      goals[idx] = { ...goals[idx], ...changes };
+      await this.saveGoals(goals);
+    }
+    return goals;
+  },
+
+  async deleteGoal(id) {
+    const goals = await this.getGoals();
+    await this.saveGoals(goals.filter(g => g.id !== id));
+  },
+
+  async addGoalDeposit(goalId, amount, note) {
+    const goals = await this.getGoals();
+    const idx = goals.findIndex(g => g.id === goalId);
+    if (idx >= 0) {
+      const deposit = { id: generateId(), amount, note: note || '', date: new Date().toISOString() };
+      goals[idx].deposits = [...(goals[idx].deposits || []), deposit];
+      await this.saveGoals(goals);
+      return deposit;
+    }
+    return null;
+  },
+
   // ─── RECURRING PAYMENTS ──────────────────────────────────
   async getRecurring() {
     const uid = getUid();
@@ -666,7 +715,7 @@ const dataService = {
           const snap = await getDocs(userCol(col));
           await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
         }
-        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects'];
+        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals'];
         for (const name of singleDocs) {
           try { await deleteDoc(userDoc(name + '/data')); } catch (e) {}
         }
@@ -678,12 +727,12 @@ const dataService = {
 
   async exportData() {
     try {
-      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects] = await Promise.all([
+      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals] = await Promise.all([
         this.getTransactions(), this.getAccounts(), this.getInvestments(),
         this.getCategories(), this.getSettings(), this.getBudgets(),
-        this.getRecurring(), this.getTags(), this.getStreaks(), this.getProjects(),
+        this.getRecurring(), this.getTags(), this.getStreaks(), this.getProjects(), this.getGoals(),
       ]);
-      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, exportedAt: new Date().toISOString() };
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, exportedAt: new Date().toISOString() };
     } catch (e) { return null; }
   },
 
@@ -717,6 +766,7 @@ const dataService = {
         if (data.budgets) await this.saveBudgets(data.budgets);
         if (data.tags) await this.saveTags(data.tags);
         if (data.projects) await this.saveProjects(data.projects);
+        if (data.goals) await this.saveGoals(data.goals);
       } else {
         if (data.transactions) await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(data.transactions));
         if (data.accounts) await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(data.accounts));
@@ -727,6 +777,7 @@ const dataService = {
         if (data.recurring) await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(data.recurring));
         if (data.tags) await AsyncStorage.setItem(KEYS.TAGS, JSON.stringify(data.tags));
         if (data.projects) await AsyncStorage.setItem(KEYS.PROJECTS, JSON.stringify(data.projects));
+        if (data.goals) await AsyncStorage.setItem(KEYS.GOALS, JSON.stringify(data.goals));
       }
       return true;
     } catch (e) { return false; }

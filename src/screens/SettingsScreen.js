@@ -156,6 +156,15 @@ export default function SettingsScreen() {
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Goals */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Goals')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="target" size={18} color="#f59e0b" />
+            <Text style={styles.sectionText}>{i18n.t('goals')}</Text>
+          </View>
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Monthly Report */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('MonthlyReport')}>
           <View style={styles.sectionLeft}>
