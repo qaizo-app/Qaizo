@@ -219,6 +219,8 @@ export default {
   spentToday: 'הוצאות היום',
   savedYesterday: 'חסכת אתמול',
   overspentYesterday: 'חריגה אתמול',
+  crisisWarning: 'ההוצאות הקבועות עולות על ההכנסות. שים לב לתקציב',
+  fixedExpenses: 'הוצאות קבועות',
   upcomingBills: 'תשלומים קרובים',
   afterBills: 'אחרי תשלומים',
   nextPayment: 'תשלום הבא',

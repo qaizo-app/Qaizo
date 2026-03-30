@@ -316,22 +316,42 @@ export default function DashboardScreen() {
             case 'streak':
               return <StreakCard key="streak" streakData={streakData} transactions={transactions} weekStart={weekStart} />;
             case 'freeMoneyToday': {
-              if (balance <= 0) return null;
               const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
               const daysLeft = Math.max(lastDay - now.getDate(), 1);
 
-              // Upcoming recurring expenses this month
-              const upcomingExpenses = recurring
-                .filter(r => r.isActive && r.nextDate && r.type === 'expense')
+              // Шаг 1: Доход за месяц (реальные поступления + recurring income)
+              const monthIncome = totalIncome;
+              const expectedRecurringIncome = recurring
+                .filter(r => r.isActive && r.type === 'income')
                 .filter(r => {
                   const nd = new Date(r.nextDate);
                   return nd.getMonth() === now.getMonth() && nd.getFullYear() === now.getFullYear() && nd.getDate() > now.getDate();
                 })
                 .reduce((s, r) => s + r.amount, 0);
+              const totalMonthIncome = monthIncome + expectedRecurringIncome;
 
-              const balanceAfterBills = balance - upcomingExpenses;
-              const freeToday = Math.max(Math.floor(balanceAfterBills / daysLeft), 0);
-              const freeTodayColor = freeToday > 200 ? colors.green : freeToday > 50 ? colors.yellow : colors.red;
+              // Шаг 2: Обязательные расходы (recurring expenses на весь месяц)
+              const allRecurringExpenses = recurring
+                .filter(r => r.isActive && r.type === 'expense')
+                .reduce((s, r) => s + r.amount, 0);
+
+              // Шаг 3: Пул на месяц
+              const monthPool = totalMonthIncome - allRecurringExpenses;
+
+              // Шаг 4: Гибкие траты с начала месяца (не recurring)
+              const recurringCatIds = new Set(recurring.filter(r => r.isActive && r.type === 'expense').map(r => r.categoryId));
+              const flexSpent = thisMonth
+                .filter(t => t.type === 'expense' && !t.isTransfer)
+                .reduce((s, t) => s + t.amount, 0) -
+                thisMonth
+                .filter(t => t.type === 'expense' && recurringCatIds.has(t.categoryId) && t.isRecurringPayment)
+                .reduce((s, t) => s + t.amount, 0);
+
+              // Шаг 5: Остаток / дни
+              const remainingPool = monthPool - flexSpent;
+              const freeToday = Math.floor(remainingPool / daysLeft);
+              const isCrisis = monthPool <= 0;
+              const freeTodayColor = isCrisis ? colors.orange : freeToday > 200 ? colors.green : freeToday > 50 ? colors.yellow : colors.red;
 
               // Spent today
               const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -345,20 +365,28 @@ export default function DashboardScreen() {
                 .filter(t => t.type === 'expense')
                 .filter(t => { const d = new Date(t.date || t.createdAt); return d >= yStart && d < todayStart; })
                 .reduce((s, t) => s + t.amount, 0);
-              const yesterdayBudget = balanceAfterBills > 0 ? Math.floor((balanceAfterBills + spentToday) / (daysLeft + 1)) : 0;
+              const yesterdayBudget = remainingPool > 0 ? Math.floor((remainingPool + spentToday) / (daysLeft + 1)) : 0;
               const savedYesterday = yesterdayBudget - spentYesterday;
 
               // Progress bar: spent vs budget
-              const pct = freeToday > 0 ? Math.min(Math.round((spentToday / freeToday) * 100), 100) : 100;
+              const absFree = Math.abs(freeToday) || 1;
+              const pct = freeToday > 0 ? Math.min(Math.round((spentToday / absFree) * 100), 100) : 100;
               const barColor = pct > 80 ? colors.red : pct > 50 ? colors.yellow : colors.green;
 
               return (
                 <Card key="freeMoneyToday">
                   <View style={st.freeTop}>
-                    <Feather name="sun" size={18} color={freeTodayColor} />
+                    <Feather name={isCrisis ? 'alert-triangle' : 'sun'} size={18} color={freeTodayColor} />
                     <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
                     <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
                   </View>
+
+                  {isCrisis && (
+                    <View style={{ backgroundColor: colors.orange + '15', borderRadius: 10, padding: 10, marginBottom: 8 }}>
+                      <Text style={{ color: colors.orange, fontSize: 12, fontWeight: '600' }}>{i18n.t('crisisWarning')}</Text>
+                    </View>
+                  )}
+
                   <Amount value={freeToday} sign style={st.freeAmount} color={freeTodayColor} />
 
                   {/* Progress bar */}
@@ -374,10 +402,10 @@ export default function DashboardScreen() {
                         <Text style={st.freeDetailTxt}>{i18n.t('spentToday')}: {spentToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                       </View>
                     )}
-                    {upcomingExpenses > 0 && (
+                    {allRecurringExpenses > 0 && (
                       <View style={st.freeDetail}>
-                        <Feather name="clock" size={12} color={colors.orange} />
-                        <Text style={st.freeDetailTxt}>{i18n.t('upcomingBills')}: {upcomingExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                        <Feather name="repeat" size={12} color={colors.orange} />
+                        <Text style={st.freeDetailTxt}>{i18n.t('fixedExpenses')}: {allRecurringExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
                       </View>
                     )}
                     {savedYesterday !== 0 && spentYesterday > 0 && (

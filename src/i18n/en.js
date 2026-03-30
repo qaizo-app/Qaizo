@@ -219,6 +219,8 @@ export default {
   spentToday: 'Spent today',
   savedYesterday: 'Saved yesterday',
   overspentYesterday: 'Over yesterday',
+  crisisWarning: 'Fixed expenses exceed income. Watch your budget',
+  fixedExpenses: 'Fixed expenses',
   upcomingBills: 'Upcoming bills',
   afterBills: 'After bills',
   nextPayment: 'Next payment',

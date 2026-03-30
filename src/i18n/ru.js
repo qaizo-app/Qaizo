@@ -228,6 +228,8 @@ export default {
   spentToday: 'Потрачено сегодня',
   savedYesterday: 'Сэкономлено вчера',
   overspentYesterday: 'Перерасход вчера',
+  crisisWarning: 'Постоянные расходы превышают доходы. Следите за бюджетом',
+  fixedExpenses: 'Постоянные расходы',
   upcomingBills: 'Предстоящие платежи',
   afterBills: 'После платежей',
   nextPayment: 'Следующий платёж',
