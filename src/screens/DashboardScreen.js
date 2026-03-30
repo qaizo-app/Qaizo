@@ -100,7 +100,13 @@ export default function DashboardScreen() {
     ]);
     setGoals(gls);
     if (settings.weekStart) setWeekStart(settings.weekStart);
-    if (settings.dashLayout) setDashLayout(settings.dashLayout);
+    if (settings.dashLayout) {
+      // Merge saved layout with defaults (add new blocks that didn't exist before)
+      const saved = settings.dashLayout;
+      const savedIds = new Set(saved.map(b => b.id));
+      const merged = [...saved, ...DEFAULT_LAYOUT.filter(b => !savedIds.has(b.id))];
+      setDashLayout(merged);
+    }
     setMonthlyExtra(settings.monthlyExtra || 0);
     setTransactions(txs);
     setBudgets(bdg);
