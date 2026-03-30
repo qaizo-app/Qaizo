@@ -450,7 +450,7 @@ const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
+  title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1, textAlign: 'center' },
 
   sectionBtn: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
   sectionLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 12 },

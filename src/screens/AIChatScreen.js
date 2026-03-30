@@ -150,7 +150,7 @@ const createSt = () => StyleSheet.create({
   header: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  headerTitle: { color: colors.text, fontSize: 17, fontWeight: '700', flex: 1, textAlign: 'center' },
   headerSub: { color: colors.green, fontSize: 11, fontWeight: '600', marginTop: 1 },
 
   messagesList: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
