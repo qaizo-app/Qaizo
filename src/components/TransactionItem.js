@@ -91,7 +91,7 @@ const createStyles = () => StyleSheet.create({
   note: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: i18n.textAlign() },
   amountContainer: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
   amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3 },
-  date: { color: colors.textMuted, fontSize: 11, marginTop: 3 },
+  date: { color: colors.textMuted, fontSize: 11, marginTop: 3, alignSelf: 'flex-end' },
 
   actionsRow: { flexDirection: i18n.row() },
   actionBtn: {
