@@ -40,7 +40,7 @@ export default function InteractiveBarChart({ data, maxBar }) {
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.red }]} />
             <Text style={st.tooltipLabel}>{i18n.t('expenses')}:</Text>
-            <Amount value={selectedData.expense} style={st.tooltipVal} color={colors.red} />
+            <Amount value={-selectedData.expense} sign style={st.tooltipVal} color={colors.red} />
           </View>
         </View>
       )}
