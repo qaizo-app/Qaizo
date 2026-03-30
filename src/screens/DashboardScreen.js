@@ -295,14 +295,14 @@ export default function DashboardScreen() {
               return (
                 <Card key="balance" highlighted>
                   <Text style={st.balLabel}>{i18n.t('totalBalance')}</Text>
-                  <Amount value={balance} sign style={st.balAmount} color={balance >= 0 ? colors.text : colors.red} />
+                  <Amount value={balance} sign style={st.balAmount} color={balance >= 0 ? colors.text : colors.red} numberOfLines={1} adjustsFontSizeToFit />
                   <View style={st.incExpRow}>
                     <View style={st.incExpItem}>
                       <View style={st.incExpHead}>
                         <Feather name="trending-up" size={14} color={colors.green} />
                         <Text style={st.incLabel}> {i18n.t('income')}</Text>
                       </View>
-                      <Amount value={totalIncome} style={st.incAmount} color={colors.green} />
+                      <Amount value={totalIncome} style={st.incAmount} color={colors.green} numberOfLines={1} adjustsFontSizeToFit />
                     </View>
                     <View style={st.dividerV} />
                     <View style={st.incExpItem}>
@@ -310,7 +310,7 @@ export default function DashboardScreen() {
                         <Feather name="trending-down" size={14} color={colors.red} />
                         <Text style={st.expLabel}> {i18n.t('expenses')}</Text>
                       </View>
-                      <Amount value={-totalExpense} sign style={st.expAmount} color={colors.red} />
+                      <Amount value={-totalExpense} sign style={st.expAmount} color={colors.red} numberOfLines={1} adjustsFontSizeToFit />
                     </View>
                   </View>
                 </Card>
@@ -415,7 +415,7 @@ export default function DashboardScreen() {
                     </View>
                   )}
 
-                  <Amount value={freeToday} sign style={st.freeAmount} color={freeTodayColor} />
+                  <Amount value={freeToday} sign style={st.freeAmount} color={freeTodayColor} numberOfLines={1} adjustsFontSizeToFit />
 
                   {/* Progress bar */}
                   <View style={st.freeBar}>

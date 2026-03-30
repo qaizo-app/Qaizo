@@ -100,7 +100,7 @@ export default function AccountsScreen() {
           <MaterialCommunityIcons name={cfg.icon} size={16} color={cfg.color} />
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-        <Amount value={bal} sign style={styles.tileBalance} color={bal >= 0 ? colors.green : colors.red} />
+        <Amount value={bal} sign style={styles.tileBalance} color={bal >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
       </TouchableOpacity>
     );
   };
@@ -119,7 +119,7 @@ export default function AccountsScreen() {
         {/* Total */}
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
-          <Amount value={totalBalance} sign style={styles.totalAmount} color={totalBalance >= 0 ? colors.green : colors.red} />
+          <Amount value={totalBalance} sign style={styles.totalAmount} color={totalBalance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
         </View>
 
         {/* Hint */}
