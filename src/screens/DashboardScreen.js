@@ -615,7 +615,7 @@ export default function DashboardScreen() {
               if (goals.length === 0) return null;
               return (
                 <Card key="goals">
-                  <TouchableOpacity style={st.blockTitleRow} onPress={() => navigation.navigate('Settings', { screen: 'Goals' })}>
+                  <TouchableOpacity style={st.blockTitleRow} onPress={() => navigation.navigate('Goals')}>
                     <Text style={st.blockTitle}>{i18n.t('goals')}</Text>
                     <Feather name="chevron-right" size={18} color={colors.textMuted} />
                   </TouchableOpacity>
