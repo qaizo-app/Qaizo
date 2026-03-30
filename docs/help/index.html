@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qaizo - Help / עזרה / Помощь</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e1a; color: #cbd5e1; line-height: 1.7; padding: 40px 20px; }
+    .container { max-width: 720px; margin: 0 auto; }
+    .logo { color: #f1f5f9; font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; direction: ltr; text-align: center; }
+    .logo span { color: #34d399; }
+    .subtitle { color: #64748b; font-size: 14px; margin-bottom: 24px; text-align: center; }
+    .lang-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 32px; }
+    .lang-tab { padding: 8px 20px; border-radius: 10px; background: #151c2f; border: 1px solid rgba(52,211,153,0.1); color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .lang-tab.active { background: rgba(52,211,153,0.1); color: #34d399; border-color: #34d399; }
+    h1 { color: #f1f5f9; font-size: 24px; font-weight: 700; margin-bottom: 24px; text-align: center; }
+    .section { background: #151c2f; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(52,211,153,0.1); }
+    .section-title { color: #34d399; font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .section-icon { font-size: 20px; }
+    .tip { font-size: 14px; margin-bottom: 8px; padding-right: 8px; }
+    .tip:before { content: "•"; color: #34d399; margin-left: 8px; }
+    .contact { text-align: center; margin-top: 32px; }
+    .contact a { display: inline-block; padding: 12px 24px; border-radius: 12px; background: rgba(52,211,153,0.1); color: #34d399; font-weight: 600; text-decoration: none; margin: 4px; }
+    .contact a:hover { background: rgba(52,211,153,0.2); }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); color: #64748b; font-size: 13px; text-align: center; }
+    .lang-content { display: none; }
+    .lang-content.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo"><span>Q</span>aizo</div>
+    <div class="subtitle">Smarter every day.</div>
+
+    <div class="lang-tabs">
+      <a class="lang-tab active" onclick="switchLang('he')" id="tab-he">עברית</a>
+      <a class="lang-tab" onclick="switchLang('ru')" id="tab-ru">Русский</a>
+      <a class="lang-tab" onclick="switchLang('en')" id="tab-en">English</a>
+    </div>
+
+    <!-- HEBREW -->
+    <div class="lang-content active" id="lang-he" dir="rtl">
+      <h1>עזרה</h1>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">🏠</span> מסך ראשי</div>
+        <p class="tip">צפה ביתרה הכוללת, הכנסות והוצאות החודש</p>
+        <p class="tip">לחץ על תקציבים כדי לראות פירוט לפי קטגוריות</p>
+        <p class="tip">"כסף פנוי להיום" מחושב לפי הכנסות פחות הוצאות קבועות</p>
+        <p class="tip">לחץ על ⚙️ כדי להיכנס להגדרות</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">➕</span> הוספת תנועה</div>
+        <p class="tip">לחץ על כפתור + במרכז הסרגל התחתון</p>
+        <p class="tip">בחר בין הוצאה, הכנסה או העברה בין חשבונות</p>
+        <p class="tip">לחץ על קטגוריה לבחירה מרשימה מלאה עם חיפוש</p>
+        <p class="tip">שייך תנועה לפרויקט בשדה פרויקט</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📋</span> תנועות</div>
+        <p class="tip">החלק שמאלה למחיקה או עריכה של תנועה</p>
+        <p class="tip">לחץ על סינון כדי לסנן לפי תאריך, קטגוריה, חשבון או פרויקט</p>
+        <p class="tip">חיפוש עובד לפי שם, סכום, קטגוריה ותגיות</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">💳</span> חשבונות</div>
+        <p class="tip">לחיצה → היסטוריית תנועות של החשבון</p>
+        <p class="tip">לחיצה ארוכה → עריכת פרטי החשבון</p>
+        <p class="tip">הגדר מסגרת אשראי ומועד חיוב לכרטיסי אשראי</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📅</span> לוח שנה</div>
+        <p class="tip">נקודות ירוקות = הכנסה, אדומות = הוצאה</p>
+        <p class="tip">לחץ על יום כדי לראות את התנועות שלו</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">🎯</span> מטרות חיסכון</div>
+        <p class="tip">צור מטרה עם סכום יעד ותאריך</p>
+        <p class="tip">לחץ על מטרה להפקדה</p>
+        <p class="tip">לחיצה ארוכה לעריכה או מחיקה</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📂</span> פרויקטים</div>
+        <p class="tip">צור פרויקט (טיול, שיפוץ) ושייך אליו תנועות</p>
+        <p class="tip">לחץ על פרויקט לצפייה בכל התנועות שלו</p>
+      </div>
+    </div>
+
+    <!-- RUSSIAN -->
+    <div class="lang-content" id="lang-ru" dir="ltr">
+      <h1>Помощь</h1>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">🏠</span> Главный экран</div>
+        <p class="tip">Общий баланс, доходы и расходы за месяц</p>
+        <p class="tip">Нажмите на бюджеты для просмотра по категориям</p>
+        <p class="tip">"Свободные деньги" рассчитываются по доходу минус постоянные расходы</p>
+        <p class="tip">⚙️ — настройки, 🔔 — уведомления</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">➕</span> Добавление транзакции</div>
+        <p class="tip">Нажмите + в центре нижней панели</p>
+        <p class="tip">Выберите: расход, доход или перевод между счетами</p>
+        <p class="tip">Нажмите на категорию для выбора из полного списка с поиском</p>
+        <p class="tip">Привяжите транзакцию к проекту</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📋</span> Транзакции</div>
+        <p class="tip">Свайп влево — удаление или редактирование</p>
+        <p class="tip">Фильтры: дата, категория, счёт, проект</p>
+        <p class="tip">Поиск по имени, сумме, категории и тегам</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">💳</span> Счета</div>
+        <p class="tip">Нажатие → история транзакций счёта</p>
+        <p class="tip">Долгое нажатие → редактирование</p>
+        <p class="tip">Настройте лимит и дату списания для кредитных карт</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📅</span> Календарь</div>
+        <p class="tip">Зелёные точки = доход, красные = расход</p>
+        <p class="tip">Нажмите на день для просмотра транзакций</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">🎯</span> Цели накоплений</div>
+        <p class="tip">Создайте цель с суммой и датой</p>
+        <p class="tip">Нажмите на цель для внесения</p>
+        <p class="tip">Долгое нажатие — редактирование или удаление</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📂</span> Проекты</div>
+        <p class="tip">Создайте проект (поездка, ремонт) и привяжите транзакции</p>
+        <p class="tip">Нажмите на проект для просмотра транзакций</p>
+      </div>
+    </div>
+
+    <!-- ENGLISH -->
+    <div class="lang-content" id="lang-en" dir="ltr">
+      <h1>Help</h1>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">🏠</span> Home Screen</div>
+        <p class="tip">View total balance, income and expenses this month</p>
+        <p class="tip">Tap budgets to see breakdown by category</p>
+        <p class="tip">"Free money today" is calculated from income minus fixed expenses</p>
+        <p class="tip">Tap ⚙️ for settings, 🔔 for notifications</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">➕</span> Add Transaction</div>
+        <p class="tip">Tap the + button in the center of the bottom bar</p>
+        <p class="tip">Choose between expense, income or transfer</p>
+        <p class="tip">Tap category to pick from the full list with search</p>
+        <p class="tip">Assign a transaction to a project</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📋</span> Transactions</div>
+        <p class="tip">Swipe left to delete or edit a transaction</p>
+        <p class="tip">Filter by date, category, account or project</p>
+        <p class="tip">Search by name, amount, category and tags</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">💳</span> Accounts</div>
+        <p class="tip">Tap → account transaction history</p>
+        <p class="tip">Long press → edit account details</p>
+        <p class="tip">Set credit limit and billing day for credit cards</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📅</span> Calendar</div>
+        <p class="tip">Green dots = income, red dots = expense</p>
+        <p class="tip">Tap a day to see its transactions</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">🎯</span> Savings Goals</div>
+        <p class="tip">Create a goal with target amount and date</p>
+        <p class="tip">Tap a goal to make a deposit</p>
+        <p class="tip">Long press to edit or delete</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📂</span> Projects</div>
+        <p class="tip">Create a project (trip, renovation) and assign transactions</p>
+        <p class="tip">Tap a project to see all its transactions</p>
+      </div>
+    </div>
+
+    <div class="contact">
+      <p style="color: #94a3b8; margin-bottom: 12px;">Contact / צור קשר / Связаться</p>
+      <a href="mailto:support@qaizo.app">📧 Email</a>
+      <a href="https://wa.me/972586995577">💬 WhatsApp</a>
+    </div>
+
+    <div class="footer">
+      <p>&copy; 2026 Qaizo. All rights reserved.</p>
+      <p><a href="/" style="color:#34d399;">Home</a> &middot; <a href="/privacy-policy.html" style="color:#34d399;">Privacy</a> &middot; <a href="/terms.html" style="color:#34d399;">Terms</a></p>
+    </div>
+  </div>
+
+  <script>
+    function switchLang(lang) {
+      document.querySelectorAll('.lang-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+      document.getElementById('tab-' + lang).classList.add('active');
+      document.querySelector('html').dir = lang === 'he' ? 'rtl' : 'ltr';
+    }
+  </script>
+</body>
+</html>
