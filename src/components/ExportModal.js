@@ -109,7 +109,7 @@ const createSt = () => StyleSheet.create({
   clearDatesTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
 
   formats: { flexDirection: 'row', gap: 12, marginBottom: 20 },
-  fmtBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, gap: 8 },
+  fmtBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, gap: 8, borderWidth: 1, borderColor: colors.cardBorder },
   fmtTxt: { color: colors.text, fontSize: 14, fontWeight: '700' },
 
   cancelBtn: { alignItems: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder },
