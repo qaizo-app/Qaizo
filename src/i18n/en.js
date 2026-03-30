@@ -140,6 +140,7 @@ export default {
   balance: 'Balance',
   creditLimit: 'Limit',
   overdraft: 'Overdraft',
+  billingDay: 'Billing day',
   active: 'Active',
   inactive: 'Inactive',
   hiddenWhenOff: 'Hidden when off',

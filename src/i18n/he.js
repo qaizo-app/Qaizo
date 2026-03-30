@@ -140,6 +140,7 @@ export default {
   balance: 'יתרה',
   creditLimit: 'מסגרת',
   overdraft: 'אוברדרפט',
+  billingDay: 'מועד חיוב',
   active: 'פעיל',
   inactive: 'לא פעילים',
   hiddenWhenOff: 'לא פעילים מוסתרים',

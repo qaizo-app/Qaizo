@@ -40,6 +40,7 @@ export default function AccountsScreen() {
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [balance, setBalance] = useState('0');
   const [overdraft, setOverdraft] = useState('');
+  const [billingDay, setBillingDay] = useState(10);
   const [isActive, setIsActive] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const styles = createStyles();
@@ -69,16 +70,16 @@ export default function AccountsScreen() {
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber||'');
     setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(String(acc.balance||0));
-    setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setIsActive(acc.isActive!==false); setShowEdit(true);
+    setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false); setShowEdit(true);
   };
   const openAdd = () => {
     setEditAccount(null); setName(''); setAccountNumber(''); setType('bank');
-    setCurrency(sym()); setBalance('0'); setOverdraft(''); setIsActive(true); setShowEdit(true);
+    setCurrency(sym()); setBalance('0'); setOverdraft(''); setBillingDay(10); setIsActive(true); setShowEdit(true);
   };
   const handleSave = async () => {
     if (!name.trim()) return;
     const cfg = accountTypeConfig[type]||accountTypeConfig.bank;
-    const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat(balance)||0, overdraft:overdraft?parseFloat(overdraft):null, isActive, icon:cfg.icon };
+    const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat(balance)||0, overdraft:overdraft?parseFloat(overdraft):null, billingDay: type==='credit'?billingDay:null, isActive, icon:cfg.icon };
     if (editAccount) await dataService.updateAccount(editAccount.id, data);
     else await dataService.addAccount(data);
     setShowEdit(false); await loadData();
@@ -218,10 +219,28 @@ export default function AccountsScreen() {
             </View>
 
             {(type==='bank'||type==='credit')&&(
-              <>
-                <Text style={styles.fieldLabel}>{type==='credit'?i18n.t('creditLimit'):i18n.t('overdraft')}</Text>
-                <TextInput style={styles.input} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
-              </>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fieldLabel}>{type==='credit'?i18n.t('creditLimit'):i18n.t('overdraft')}</Text>
+                  <TextInput style={styles.input} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
+                </View>
+                {type==='credit'&&(
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.fieldLabel}>{i18n.t('billingDay')}</Text>
+                    <View style={styles.billingRow}>
+                      {[2,10,15,20].map(d=>{
+                        const sel = billingDay===d;
+                        return (
+                          <TouchableOpacity key={d} style={[styles.billingBtn, sel&&{borderColor:tc,backgroundColor:`${tc}12`}]}
+                            onPress={()=>setBillingDay(d)}>
+                            <Text style={[styles.billingTxt, sel&&{color:tc}]}>{d}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+              </View>
             )}
 
             <View style={styles.toggleRow}>
@@ -283,6 +302,9 @@ const createStyles = () => StyleSheet.create({
   currPickerBtn:{flexDirection:'row',alignItems:'center',backgroundColor:colors.card,borderRadius:14,padding:14,marginBottom:16,borderWidth:1,borderColor:colors.cardBorder,gap:12},
   currPickerSymbol:{color:colors.text,fontSize:20,fontWeight:'700',width:36,textAlign:'center'},
   currPickerCode:{color:colors.textSecondary,fontSize:16,fontWeight:'600',flex:1},
+  billingRow:{flexDirection:'row',gap:8,marginBottom:16},
+  billingBtn:{flex:1,paddingVertical:12,borderRadius:12,backgroundColor:colors.card,borderWidth:1.5,borderColor:'transparent',alignItems:'center'},
+  billingTxt:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
   balRow:{flexDirection:i18n.row(),alignItems:'center',marginBottom:16},
   balCur:{fontSize:28,fontWeight:'700',marginEnd:8},
   balInput:{flex:1,color:colors.text,fontSize:28,fontWeight:'700'},
