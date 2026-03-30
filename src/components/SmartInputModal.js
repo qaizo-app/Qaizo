@@ -7,7 +7,8 @@ import i18n from '../i18n';
 import aiService from '../services/aiService';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
-import { fmt, sym } from '../utils/currency';
+import { fmt } from '../utils/currency';
+import Amount from './Amount';
 
 export default function SmartInputModal({ visible, onClose, onSaved }) {
   const [text, setText] = useState('');
@@ -145,9 +146,12 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                   {parsed.recipient ? <Text style={st.resultRecipient}>{parsed.recipient}</Text> : null}
                 </View>
                 <View>
-                  <Text style={[st.resultAmount, { color: parsed.type === 'income' ? colors.green : colors.red }]}>
-                    {parsed.type === 'income' ? '+' : '-'}{fmt(parsed.amount)}
-                  </Text>
+                  <Amount
+                    value={parsed.type === 'expense' ? -parsed.amount : parsed.amount}
+                    sign={parsed.type === 'expense'}
+                    style={st.resultAmount}
+                    color={parsed.type === 'income' ? colors.green : colors.red}
+                  />
                   <Text style={st.resultType}>
                     {parsed.type === 'income' ? i18n.t('income') : i18n.t('expense')}
                   </Text>

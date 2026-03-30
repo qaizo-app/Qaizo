@@ -9,6 +9,7 @@ import i18n from '../i18n';
 import aiService from '../services/aiService';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
+import Amount from '../components/Amount';
 import { fmt } from '../utils/currency';
 
 export default function AIAdvisorScreen() {
@@ -83,12 +84,12 @@ export default function AIAdvisorScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryValue, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit>{fmt(income || 0)}</Text>
+              <Amount value={income || 0} style={[st.summaryValue, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit />
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryValue, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>{fmt(expense || 0)}</Text>
+              <Amount value={expense || 0} style={[st.summaryValue, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit />
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
@@ -109,7 +110,7 @@ export default function AIAdvisorScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={st.dailyLabel}>{i18n.t('aiDailyBudget')}</Text>
-                <Text style={st.dailyAmount}>{fmt(daily.dailyBudget)}<Text style={st.dailySub}> / {i18n.t('day')}</Text></Text>
+                <Text style={st.dailyAmount}><Amount value={daily.dailyBudget} style={st.dailyAmount} /><Text style={st.dailySub}> / {i18n.t('day')}</Text></Text>
                 <Text style={st.dailyMeta}>
                   {daily.daysLeft} {i18n.t('daysLeft')} · {i18n.t('remaining')}: {fmt(daily.remaining)}
                 </Text>
@@ -138,24 +139,24 @@ export default function AIAdvisorScreen() {
               <View style={st.taxGrid}>
                 <View style={st.taxItem}>
                   <Text style={st.taxItemLabel}>{i18n.t('grossIncome')}</Text>
-                  <Text style={[st.taxItemValue, { color: colors.green }]}>{fmt(taxReserve.grossIncome)}</Text>
+                  <Amount value={taxReserve.grossIncome} style={st.taxItemValue} color={colors.green} />
                 </View>
                 <View style={st.taxItem}>
                   <Text style={st.taxItemLabel}>{i18n.t('maam')} (17%)</Text>
-                  <Text style={[st.taxItemValue, { color: colors.red }]}>-{fmt(taxReserve.maam)}</Text>
+                  <Amount value={-taxReserve.maam} sign style={st.taxItemValue} color={colors.red} />
                 </View>
                 <View style={st.taxItem}>
                   <Text style={st.taxItemLabel}>{i18n.t('incomeTax')} (~10%)</Text>
-                  <Text style={[st.taxItemValue, { color: colors.red }]}>-{fmt(taxReserve.incomeTax)}</Text>
+                  <Amount value={-taxReserve.incomeTax} sign style={st.taxItemValue} color={colors.red} />
                 </View>
                 <View style={st.taxItem}>
                   <Text style={st.taxItemLabel}>{i18n.t('bituachLeumi')} (~7%)</Text>
-                  <Text style={[st.taxItemValue, { color: colors.red }]}>-{fmt(taxReserve.bituach)}</Text>
+                  <Amount value={-taxReserve.bituach} sign style={st.taxItemValue} color={colors.red} />
                 </View>
               </View>
               <View style={st.taxTotal}>
                 <Text style={st.taxTotalLabel}>{i18n.t('netIncome')}</Text>
-                <Text style={st.taxTotalValue}>{fmt(taxReserve.netIncome)}</Text>
+                <Amount value={taxReserve.netIncome} style={st.taxTotalValue} />
               </View>
               <View style={st.taxBar}>
                 <View style={[st.taxBarFill, { flex: taxReserve.netIncome, backgroundColor: colors.green }]} />
@@ -180,19 +181,17 @@ export default function AIAdvisorScreen() {
               <View style={st.cfSummary}>
                 <View style={st.cfItem}>
                   <Text style={st.cfLabel}>{i18n.t('currentBalance')}</Text>
-                  <Text style={[st.cfValue, { color: colors.green }]}>{fmt(cashFlow.currentBalance)}</Text>
+                  <Amount value={cashFlow.currentBalance} style={st.cfValue} color={colors.green} />
                 </View>
                 <Feather name="minus" size={16} color={colors.textMuted} />
                 <View style={st.cfItem}>
                   <Text style={st.cfLabel}>{i18n.t('upcoming')}</Text>
-                  <Text style={[st.cfValue, { color: colors.red }]}>{fmt(cashFlow.totalUpcoming)}</Text>
+                  <Amount value={cashFlow.totalUpcoming} style={st.cfValue} color={colors.red} />
                 </View>
                 <Feather name="arrow-right" size={16} color={colors.textMuted} />
                 <View style={st.cfItem}>
                   <Text style={st.cfLabel}>{i18n.t('projected')}</Text>
-                  <Text style={[st.cfValue, { color: cashFlow.projectedBalance >= 0 ? colors.green : colors.red }]}>
-                    {fmt(cashFlow.projectedBalance)}
-                  </Text>
+                  <Amount value={cashFlow.projectedBalance} style={st.cfValue} color={cashFlow.projectedBalance >= 0 ? colors.green : colors.red} />
                 </View>
               </View>
               {cashFlow.isAtRisk && (
@@ -205,9 +204,12 @@ export default function AIAdvisorScreen() {
                 <View key={idx} style={st.cfRow}>
                   <Text style={st.cfDate}>{item.date}</Text>
                   <Text style={st.cfName}>{i18n.t(item.name) || item.name}</Text>
-                  <Text style={[st.cfAmount, { color: item.type === 'expense' ? colors.red : colors.green }]}>
-                    {item.type === 'expense' ? '-' : '+'}{fmt(item.amount)}
-                  </Text>
+                  <Amount
+                    value={item.type === 'expense' ? -item.amount : item.amount}
+                    sign={item.type === 'expense'}
+                    style={st.cfAmount}
+                    color={item.type === 'expense' ? colors.red : colors.green}
+                  />
                 </View>
               ))}
             </Card>

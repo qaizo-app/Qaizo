@@ -3,11 +3,11 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Amount from '../components/Amount';
 import Card from '../components/Card';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
-import { sym } from '../utils/currency';
 
 export default function InvestmentsScreen() {
   const navigation = useNavigation();
@@ -52,14 +52,10 @@ export default function InvestmentsScreen() {
 
         <Card style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalInvested')}</Text>
-          <Text style={styles.totalAmount} numberOfLines={1} adjustsFontSizeToFit>
-            {totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-          </Text>
+          <Amount value={totalInvested} style={styles.totalAmount} numberOfLines={1} adjustsFontSizeToFit />
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>{i18n.t('monthlyContribution')}</Text>
-            <Text style={styles.monthlyAmount}>
-              {totalMonthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-            </Text>
+            <Amount value={totalMonthly} style={styles.monthlyAmount} />
           </View>
         </Card>
 
@@ -74,9 +70,7 @@ export default function InvestmentsScreen() {
                 <Text style={styles.invType}>{i18n.t(inv.type)}</Text>
               </View>
               <View style={styles.invAmounts}>
-                <Text style={styles.invBalance} numberOfLines={1} adjustsFontSizeToFit>
-                  {(inv.balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                </Text>
+                <Amount value={inv.balance || 0} style={styles.invBalance} numberOfLines={1} adjustsFontSizeToFit />
                 {inv.monthly > 0 && (
                   <Text style={styles.invMonthly}>+{inv.monthly.toLocaleString()} / {i18n.t('month')}</Text>
                 )}

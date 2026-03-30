@@ -6,7 +6,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import i18n from '../i18n';
 import importService from '../services/importService';
 import { colors } from '../theme/colors';
-import { sym } from '../utils/currency';
+import Amount from './Amount';
 import SwipeModal from './SwipeModal';
 
 const FIELDS = ['date', 'amount', 'type', 'category', 'payee', 'note'];
@@ -198,11 +198,11 @@ export default function ImportModal({ visible, onClose, onImported }) {
               <View style={st.summaryRow}>
                 <View style={st.summaryItem}>
                   <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-                  <Text style={[st.summaryVal, { color: colors.green }]}>+{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                  <Amount value={totalIncome} style={st.summaryVal} color={colors.green} />
                 </View>
                 <View style={st.summaryItem}>
                   <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-                  <Text style={[st.summaryVal, { color: colors.red }]}>-{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                  <Amount value={-totalExpense} sign style={st.summaryVal} color={colors.red} />
                 </View>
               </View>
 
@@ -211,9 +211,12 @@ export default function ImportModal({ visible, onClose, onImported }) {
                   <View key={idx} style={st.previewRow}>
                     <Text style={st.previewDate}>{tx.date.slice(0, 10)}</Text>
                     <Text style={st.previewName} numberOfLines={1}>{tx.recipient || i18n.t(tx.categoryId)}</Text>
-                    <Text style={[st.previewAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
-                      {tx.type === 'income' ? '+' : '-'}{tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                    </Text>
+                    <Amount
+                      value={tx.type === 'expense' ? -tx.amount : tx.amount}
+                      sign={tx.type === 'expense'}
+                      style={st.previewAmt}
+                      color={tx.type === 'income' ? colors.green : colors.red}
+                    />
                   </View>
                 ))}
                 {parseResult.transactions.length > 10 && (

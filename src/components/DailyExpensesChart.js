@@ -2,6 +2,7 @@
 // Interactive daily expenses bar chart with tap-to-show amount per day
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Amount from './Amount';
 import { colors } from '../theme/colors';
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
@@ -21,7 +22,7 @@ export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) 
       {selectedDay !== null && dailyExp[selectedDay] > 0 && (
         <View style={st.tooltip}>
           <Text style={st.tooltipDay}>{selectedDay + 1}</Text>
-          <Text style={st.tooltipAmount}>{dailyExp[selectedDay].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+          <Amount value={dailyExp[selectedDay]} style={st.tooltipAmount} />
         </View>
       )}
 
