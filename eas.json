@@ -22,6 +22,16 @@
     },
     "production": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAP3qu6pOnmc-JQxt4LtXMX_0UYUAnWYUE",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "qaizo-ece06.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "qaizo-ece06",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "qaizo-ece06.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "568492177874",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:568492177874:web:019151972555cba53b700b",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyCP5jtAWH-GoGCQ9qWZHUgTDkww9dWp_Ak",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com"
+      },
       "android": {
         "buildType": "apk"
       }
