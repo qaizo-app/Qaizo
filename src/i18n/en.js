@@ -525,4 +525,45 @@ export default {
   day: 'day',
   remaining: 'Left',
   upcoming: 'Upcoming',
+
+  // Help
+  helpDashboardTitle: 'Home Screen',
+  helpDashTip1: 'View total balance, income and expenses this month',
+  helpDashTip2: 'Tap budgets to see breakdown by category',
+  helpDashTip3: '"Free money today" is calculated from income minus fixed expenses',
+  helpDashTip4: 'Tap ⚙️ for settings, 🔔 for notifications',
+
+  helpTransactionsTitle: 'Transactions',
+  helpTxTip1: 'Swipe left to delete or edit a transaction',
+  helpTxTip2: 'Tap filter to filter by date, category, account or project',
+  helpTxTip3: 'Search works by name, amount, category and tags',
+
+  helpAccountsTitle: 'Accounts',
+  helpAccTip1: 'Tap → account transaction history',
+  helpAccTip2: 'Long press → edit account details',
+  helpAccTip3: 'Set credit limit and billing day for credit cards',
+
+  helpCalendarTitle: 'Calendar',
+  helpCalTip1: 'Green dots = income, red dots = expense',
+  helpCalTip2: 'Tap a day to see its transactions',
+
+  helpSettingsTitle: 'Settings',
+  helpSetTip1: 'Change language, currency and week start day',
+  helpSetTip2: 'Set monthly extra from savings for daily budget',
+  helpSetTip3: 'Export and import data in CSV/Excel/PDF format',
+
+  helpProjectsTitle: 'Projects',
+  helpProjTip1: 'Create a project (trip, renovation) and assign transactions to it',
+  helpProjTip2: 'Tap a project to see all its transactions',
+  helpProjTip3: 'Long press to edit or delete',
+
+  helpCategoriesTitle: 'Categories',
+  helpCatTip1: 'Add custom subcategories',
+  helpCatTip2: 'Change icon and color for each group',
+
+  helpAddTitle: 'Add Transaction',
+  helpAddTip1: 'Choose between expense, income or transfer between accounts',
+  helpAddTip2: 'Tap category to pick from the full list with search',
+  helpAddTip3: 'Assign a transaction to a project in the project field',
+  helpAddTip4: 'Tap "More" to add tags and notes',
 };
