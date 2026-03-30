@@ -52,7 +52,7 @@ export function setCurrency(symbol, code) {
 }
 
 export function sym() {
-  return _symbol;
+  return `\u200e${_symbol}`;
 }
 
 export function code() {
