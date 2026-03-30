@@ -59,7 +59,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
         </View>
         <View style={styles.amountContainer}>
           <Text style={[styles.amount, { color: amountColor }]}>
-            {sign}{Math.abs(transaction.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
+            {`\u200e${sign}${Math.abs(transaction.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()}`}
           </Text>
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
         </View>

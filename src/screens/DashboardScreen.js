@@ -520,7 +520,7 @@ export default function DashboardScreen() {
                               <View style={st.recInfo}>
                                 <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
                                 <Text style={st.recMeta}>
-                                  {rec.type === 'expense' ? '-' : '+'}{rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} · {dateLabel}
+                                  {`\u200e${rec.type === 'expense' ? '-' : '+'}${rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()} · ${dateLabel}`}
                                 </Text>
                               </View>
                               <View style={st.recActions}>

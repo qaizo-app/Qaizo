@@ -64,12 +64,12 @@ export function fmtNum(amount) {
 }
 
 export function fmt(amount) {
-  return `${fmtNum(amount)} ${_symbol}`;
+  return `\u200e${fmtNum(amount)} ${_symbol}`;
 }
 
 export function fmtSigned(amount, type) {
   const sign = type === 'income' ? '+' : type === 'expense' ? '-' : '';
-  return `${sign}${fmtNum(amount)} ${_symbol}`;
+  return `\u200e${sign}${fmtNum(amount)} ${_symbol}`;
 }
 
 // Конвертация между валютами
