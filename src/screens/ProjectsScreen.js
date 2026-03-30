@@ -110,10 +110,6 @@ export default function ProjectsScreen() {
           <View style={st.empty}>
             <Feather name="folder" size={48} color={colors.textMuted} />
             <Text style={st.emptyText}>{i18n.t('noProjects')}</Text>
-            <TouchableOpacity style={st.emptyBtn} onPress={openAdd}>
-              <Feather name="plus" size={16} color={colors.bg} />
-              <Text style={st.emptyBtnText}>{i18n.t('newProject')}</Text>
-            </TouchableOpacity>
           </View>
         )}
 
