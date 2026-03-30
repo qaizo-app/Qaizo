@@ -460,7 +460,7 @@ export default function DashboardScreen() {
                                   </>
                                 ) : (
                                   <>
-                                    <Text style={st.budgetAmount}>{spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                                    <Amount value={spent} style={st.budgetAmount} />
                                     <Feather name="plus-circle" size={14} color={colors.textMuted} style={{ marginStart: 6 }} />
                                   </>
                                 )}

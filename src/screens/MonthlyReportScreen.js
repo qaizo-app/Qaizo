@@ -4,12 +4,12 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Amount from '../components/Amount';
 import Card from '../components/Card';
 import DailyExpensesChart from '../components/DailyExpensesChart';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
-import { sym } from '../utils/currency';
 
 const SW = Dimensions.get('window').width;
 
@@ -129,17 +129,17 @@ export default function MonthlyReportScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit>{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Amount value={totalIncome} style={st.summaryAmount} color={colors.green} numberOfLines={1} adjustsFontSizeToFit />
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryAmount, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Amount value={totalExpense} style={st.summaryAmount} color={colors.red} numberOfLines={1} adjustsFontSizeToFit />
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('balance')}</Text>
-              <Text style={[st.summaryAmount, { color: balance >= 0 ? colors.green : colors.red }]} numberOfLines={1} adjustsFontSizeToFit>{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Amount value={balance} style={st.summaryAmount} color={balance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
             </View>
           </View>
         </Card>
@@ -154,7 +154,7 @@ export default function MonthlyReportScreen() {
             </View>
             <View style={st.statBox}>
               <Feather name="activity" size={16} color={colors.teal} />
-              <Text style={st.statValue}>{avgDaily.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+              <Amount value={avgDaily} style={st.statValue} />
               <Text style={st.statLabel}>{i18n.t('avgPerDay')}</Text>
             </View>
             <View style={st.statBox}>
@@ -199,7 +199,7 @@ export default function MonthlyReportScreen() {
                     </View>
                     <View style={st.catRight}>
                       <Text style={st.catPct}>{pct}%</Text>
-                      <Text style={st.catAmount}>{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                      <Amount value={amount} style={st.catAmount} />
                     </View>
                   </View>
                 );
@@ -222,7 +222,7 @@ export default function MonthlyReportScreen() {
                     <Feather name="user" size={14} color={colors.textMuted} />
                     <Text style={st.catName}>{name}</Text>
                   </View>
-                  <Text style={st.catAmount}>{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                  <Amount value={amount} style={st.catAmount} />
                 </View>
               ))}
             </Card>
@@ -244,7 +244,7 @@ export default function MonthlyReportScreen() {
                       <View style={[st.catDot, { backgroundColor: cfg.color }]} />
                       <Text style={st.catName}>{i18n.t(cat)}</Text>
                     </View>
-                    <Text style={[st.catAmount, { color: colors.green }]}>{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                    <Amount value={amount} style={st.catAmount} color={colors.green} />
                   </View>
                 );
               })}

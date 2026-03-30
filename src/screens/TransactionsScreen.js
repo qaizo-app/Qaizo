@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
+import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
 import DatePickerModal from '../components/DatePickerModal';
 import TransactionItem from '../components/TransactionItem';
@@ -338,9 +339,7 @@ export default function TransactionsScreen({ route }) {
               {i18n.t('projectTotal')}: {projects.find(p => p.id === selProjects[0])?.name}
             </Text>
           )}
-          <Text style={[styles.summaryAmount, { color: totalFiltered >= 0 ? colors.green : colors.red }]}>
-            {totalFiltered.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-          </Text>
+          <Amount value={totalFiltered} style={styles.summaryAmount} color={totalFiltered >= 0 ? colors.green : colors.red} />
           {!showSearch && !showFilters && (
             <Text style={styles.hint}>
               ← {i18n.t('swipeHint')}

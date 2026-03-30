@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
-import { sym } from '../utils/currency';
 import i18n from '../i18n';
+import Amount from './Amount';
 
 function formatAmount(n) {
   if (n >= 10000) return `${Math.round(n / 1000)}k`;
@@ -35,12 +35,12 @@ export default function InteractiveBarChart({ data, maxBar }) {
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.green }]} />
             <Text style={st.tooltipLabel}>{i18n.t('income')}:</Text>
-            <Text style={[st.tooltipVal, { color: colors.green }]}>{selectedData.income.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+            <Amount value={selectedData.income} style={st.tooltipVal} color={colors.green} />
           </View>
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.red }]} />
             <Text style={st.tooltipLabel}>{i18n.t('expenses')}:</Text>
-            <Text style={[st.tooltipVal, { color: colors.red }]}>{selectedData.expense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+            <Amount value={selectedData.expense} style={st.tooltipVal} color={colors.red} />
           </View>
         </View>
       )}

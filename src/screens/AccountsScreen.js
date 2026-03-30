@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
@@ -119,7 +120,7 @@ export default function AccountsScreen() {
         {/* Total */}
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
-          <Text style={[styles.totalAmount, { color: totalBalance >= 0 ? colors.text : colors.red }]}>{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+          <Amount value={totalBalance} style={styles.totalAmount} color={totalBalance >= 0 ? colors.text : colors.red} />
         </View>
 
         {/* Hint */}
@@ -135,7 +136,7 @@ export default function AccountsScreen() {
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ }} />
                 <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
-                <Text style={[styles.groupSum, { color: sum >= 0 ? colors.textDim : colors.red }]}>{sum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                <Amount value={sum} style={styles.groupSum} color={sum >= 0 ? colors.textDim : colors.red} />
               </View>
               <View style={styles.tilesRow}>
                 {accs.map(renderTile)}

@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
-import { sym } from '../utils/currency';
+import Amount from './Amount';
 import SwipeModal from './SwipeModal';
 
 export default function RecurringDetailModal({ visible, item, onClose, onConfirm, onSkip, onDelete, onEdit }) {
@@ -79,9 +79,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Text style={st.title}>{item.recipient || i18n.t(item.categoryId)}</Text>
               <Text style={st.subtitle}>{i18n.t(item.categoryId)}</Text>
             </View>
-            <Text style={[st.amount, { color: item.type === 'expense' ? colors.red : colors.green }]}>
-              {item.type === 'expense' ? '-' : '+'}{item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-            </Text>
+            <Amount value={item.type === 'expense' ? -item.amount : item.amount} sign style={st.amount} color={item.type === 'expense' ? colors.red : colors.green} />
           </View>
 
           {/* Инфо */}
@@ -141,9 +139,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               {history.slice(0, 12).map((tx, idx) => (
                 <View key={tx.id || idx} style={[st.historyRow, idx < history.length - 1 && st.historyBorder]}>
                   <Text style={st.historyDate}>{formatDate(tx.date || tx.createdAt)}</Text>
-                  <Text style={[st.historyAmount, { color: tx.type === 'expense' ? colors.red : colors.green }]}>
-                    {tx.type === 'expense' ? '-' : '+'}{tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                  </Text>
+                  <Amount value={tx.type === 'expense' ? -tx.amount : tx.amount} sign style={st.historyAmount} color={tx.type === 'expense' ? colors.red : colors.green} />
                 </View>
               ))}
             </View>

@@ -4,12 +4,12 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Amount from '../components/Amount';
 import Card from '../components/Card';
 import CategoryIcon from '../components/CategoryIcon';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
-import { sym } from '../utils/currency';
 
 const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -100,16 +100,12 @@ export default function CalendarScreen() {
           <View style={st.summaryRow}>
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-              <Text style={[st.summaryVal, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit>
-                +{formatAmount(monthIncome)} {sym()}
-              </Text>
+              <Amount value={monthIncome} sign style={st.summaryVal} color={colors.green} numberOfLines={1} adjustsFontSizeToFit />
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Text style={[st.summaryVal, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>
-                -{formatAmount(monthExpense)} {sym()}
-              </Text>
+              <Amount value={-monthExpense} sign style={st.summaryVal} color={colors.red} numberOfLines={1} adjustsFontSizeToFit />
             </View>
           </View>
         </Card>
@@ -190,9 +186,7 @@ export default function CalendarScreen() {
                     <Text style={st.txCat}>{i18n.t(tx.categoryId)}</Text>
                     {tx.recipient ? <Text style={st.txRecipient} numberOfLines={1}>{tx.recipient}</Text> : null}
                   </View>
-                  <Text style={[st.txAmount, { color: tx.type === 'income' ? colors.green : colors.red }]}>
-                    {tx.type === 'income' ? '+' : '-'}{formatAmount(tx.amount)} {sym()}
-                  </Text>
+                  <Amount value={tx.type === 'income' ? tx.amount : -tx.amount} sign style={st.txAmount} color={tx.type === 'income' ? colors.green : colors.red} />
                 </View>
               ))
             ) : (

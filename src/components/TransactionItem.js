@@ -6,7 +6,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
-import { sym } from '../utils/currency';
+import Amount from './Amount';
 import CategoryIcon from './CategoryIcon';
 
 export default function TransactionItem({ transaction, onDelete, onEdit, onDuplicate }) {
@@ -14,7 +14,6 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
   const styles = createStyles();
   const isTransfer = !!transaction.isTransfer;
   const isIncome = transaction.type === 'income';
-  const sign = isTransfer ? '' : isIncome ? '+' : '-';
   const amountColor = isTransfer ? colors.blue : isIncome ? colors.green : colors.red;
 
   const closeSwipe = () => swipeRef.current?.close();
@@ -58,9 +57,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
           </Text>
         </View>
         <View style={styles.amountContainer}>
-          <Text style={[styles.amount, { color: amountColor }]}>
-            {sign}{Math.abs(transaction.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-          </Text>
+          <Amount value={isIncome ? transaction.amount : isTransfer ? transaction.amount : -transaction.amount} sign={!isTransfer} style={styles.amount} color={amountColor} />
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
         </View>
       </View>
