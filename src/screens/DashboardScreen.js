@@ -138,7 +138,7 @@ export default function DashboardScreen() {
   const totalIncome = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpense;
-  const recentTx = transactions.slice(0, 5);
+  const recentTx = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || '')).slice(0, 5);
 
   // PIE CHART
   const catTotals = {};
