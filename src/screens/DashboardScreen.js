@@ -25,6 +25,7 @@ import dataService from '../services/dataService';
 import streakService from '../services/streakService';
 import { useToast } from '../components/ToastProvider';
 import notificationService from '../services/notificationService';
+import Amount from '../components/Amount';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 
@@ -293,14 +294,14 @@ export default function DashboardScreen() {
               return (
                 <Card key="balance" highlighted>
                   <Text style={st.balLabel}>{i18n.t('totalBalance')}</Text>
-                  <Text style={[st.balAmount, { color: balance >= 0 ? colors.text : colors.red }]}>{balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                  <Amount value={balance} style={st.balAmount} color={balance >= 0 ? colors.text : colors.red} />
                   <View style={st.incExpRow}>
                     <View style={st.incExpItem}>
                       <View style={st.incExpHead}>
                         <Feather name="trending-up" size={14} color={colors.green} />
                         <Text style={st.incLabel}> {i18n.t('income')}</Text>
                       </View>
-                      <Text style={st.incAmount}>{totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                      <Amount value={totalIncome} style={st.incAmount} color={colors.green} />
                     </View>
                     <View style={st.dividerV} />
                     <View style={st.incExpItem}>
@@ -308,7 +309,7 @@ export default function DashboardScreen() {
                         <Feather name="trending-down" size={14} color={colors.red} />
                         <Text style={st.expLabel}> {i18n.t('expenses')}</Text>
                       </View>
-                      <Text style={st.expAmount}>{totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                      <Amount value={totalExpense} style={st.expAmount} color={colors.red} />
                     </View>
                   </View>
                 </Card>
@@ -359,9 +360,7 @@ export default function DashboardScreen() {
                     <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
                     <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
                   </View>
-                  <Text style={[st.freeAmount, { color: freeTodayColor }]}>
-                    {freeToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                  </Text>
+                  <Amount value={freeToday} style={st.freeAmount} color={freeTodayColor} />
 
                   {/* Progress bar */}
                   <View style={st.freeBar}>

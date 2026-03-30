@@ -2,6 +2,7 @@
 // Interactive SVG pie chart with tap-to-select segments
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Amount from './Amount';
 import Svg, { G, Path, Circle } from 'react-native-svg';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
@@ -125,12 +126,12 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
           <View style={[st.centerLabel, { width: size, height: size }]} pointerEvents="none">
             {selectedItem ? (
               <>
-                <Text style={st.centerAmount}>{selectedItem.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                <Amount value={selectedItem.amount} style={st.centerAmount} />
                 <Text style={st.centerPct}>{Math.round(selectedItem.pct * 100)}%</Text>
               </>
             ) : (
               <>
-                <Text style={st.centerAmount}>{total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                <Amount value={total} style={st.centerAmount} />
               </>
             )}
           </View>
@@ -148,29 +149,12 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
               onPress={() => handlePress(slice.idx)}
               activeOpacity={0.7}
             >
-              {rtl() ? (
-                <>
-                  <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
-                  <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
-                    {slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                  </Text>
-                  <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
-                    {slice.name}
-                  </Text>
-                  <View style={[st.legendDot, { backgroundColor: slice.color }]} />
-                </>
-              ) : (
-                <>
-                  <View style={[st.legendDot, { backgroundColor: slice.color }]} />
-                  <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
-                    {slice.name}
-                  </Text>
-                  <Text style={[st.legendAmount, isSelected && st.legendAmountActive]}>
-                    {slice.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                  </Text>
-                  <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
-                </>
-              )}
+              <View style={[st.legendDot, { backgroundColor: slice.color }]} />
+              <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
+                {slice.name}
+              </Text>
+              <Amount value={slice.amount} style={[st.legendAmount, isSelected && st.legendAmountActive]} />
+              <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
             </TouchableOpacity>
           );
         })}
