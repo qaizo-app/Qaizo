@@ -59,7 +59,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
         </View>
         <View style={styles.amountContainer}>
           <Text style={[styles.amount, { color: amountColor }]}>
-            {`\u200e${sign}${Math.abs(transaction.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()}`}
+            {sign}{Math.abs(transaction.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
           </Text>
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
         </View>
@@ -90,7 +90,7 @@ const createStyles = () => StyleSheet.create({
   category: { color: colors.text, fontSize: 15, fontWeight: '600', letterSpacing: -0.2, textAlign: i18n.textAlign() },
   note: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: i18n.textAlign() },
   amountContainer: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
-  amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3 },
+  amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3, writingDirection: 'ltr' },
   date: { color: colors.textMuted, fontSize: 11, marginTop: 3, alignSelf: 'flex-end' },
 
   actionsRow: { flexDirection: i18n.row() },

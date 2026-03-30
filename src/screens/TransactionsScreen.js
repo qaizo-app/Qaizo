@@ -443,7 +443,7 @@ const createStyles = () => StyleSheet.create({
   clearText: { color: colors.red, fontSize: 12, fontWeight: '600' },
 
   summary: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 8 },
-  summaryAmount: { fontSize: 16, fontWeight: '700' },
+  summaryAmount: { fontSize: 16, fontWeight: '700', writingDirection: 'ltr' },
   hint: { color: colors.textMuted, fontSize: 11, opacity: 0.6 },
 
   list: { paddingHorizontal: 20, paddingBottom: 120 },

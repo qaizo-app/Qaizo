@@ -520,7 +520,7 @@ export default function DashboardScreen() {
                               <View style={st.recInfo}>
                                 <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
                                 <Text style={st.recMeta}>
-                                  {`\u200e${rec.type === 'expense' ? '-' : '+'}${rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${sym()} · ${dateLabel}`}
+                                  {rec.type === 'expense' ? '-' : '+'}{rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} · {dateLabel}
                                 </Text>
                               </View>
                               <View style={st.recActions}>
@@ -813,15 +813,15 @@ const createSt = () => StyleSheet.create({
   subtitle: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   balLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
-  balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, textAlign: i18n.isRTL() ? 'right' : 'left' },
+  balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
   incExpRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
   incExpItem: { flex: 1 },
   incExpHead: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 6 },
   dividerV: { width: 1, height: 40, backgroundColor: colors.divider, marginHorizontal: 16 },
   incLabel: { color: colors.green, fontSize: 12, fontWeight: '600' },
-  incAmount: { color: colors.green, fontSize: 20, fontWeight: '700', paddingStart: 4 },
+  incAmount: { color: colors.green, fontSize: 20, fontWeight: '700', paddingStart: 4, writingDirection: 'ltr' },
   expLabel: { color: colors.red, fontSize: 12, fontWeight: '600' },
-  expAmount: { color: colors.red, fontSize: 20, fontWeight: '700', paddingStart: 4 },
+  expAmount: { color: colors.red, fontSize: 20, fontWeight: '700', paddingStart: 4, writingDirection: 'ltr' },
   blockTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   seeAll: { color: colors.green, fontSize: 13, fontWeight: '600' },
@@ -829,10 +829,10 @@ const createSt = () => StyleSheet.create({
   budgetTitleRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   totalBudgetRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   totalBudgetLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600', writingDirection: 'ltr' },
   barBgThick: { height: 10, backgroundColor: colors.bg2, borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
   barFillThick: { height: 10, borderRadius: 5 },
-  totalBudgetLeft: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+  totalBudgetLeft: { color: colors.textMuted, fontSize: 12, fontWeight: '500', writingDirection: 'ltr' },
   budgetRow: { marginBottom: 16 },
   budgetInfo: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   budgetLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
@@ -840,7 +840,7 @@ const createSt = () => StyleSheet.create({
   budgetDot: { width: 8, height: 8, borderRadius: 4 },
   budgetCat: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   budgetPct: { fontSize: 13, fontWeight: '700', marginEnd: 8 },
-  budgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  budgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600', writingDirection: 'ltr' },
   barBg: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: 6, borderRadius: 3 },
   empty: { alignItems: 'center', paddingVertical: 36 },
@@ -879,7 +879,7 @@ const createSt = () => StyleSheet.create({
   freeTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   freeLabel: { color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 },
   freeDays: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
-  freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
+  freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 8, writingDirection: 'ltr' },
   freeBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden', marginBottom: 10 },
   freeBarFill: { height: 6, borderRadius: 3 },
   freeDetails: { gap: 4 },
@@ -891,7 +891,7 @@ const createSt = () => StyleSheet.create({
   recIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   recInfo: { flex: 1 },
   recName: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
-  recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
+  recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2, writingDirection: 'ltr' },
   recActions: { flexDirection: i18n.row(), gap: 8 },
   recSkip: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   recConfirm: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },

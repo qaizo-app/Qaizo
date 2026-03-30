@@ -214,7 +214,7 @@ const createSt = () => StyleSheet.create({
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, height: 30, backgroundColor: colors.divider },
   summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
-  summaryVal: { fontSize: 15, fontWeight: '800' },
+  summaryVal: { fontSize: 15, fontWeight: '800', writingDirection: 'ltr' },
 
   navRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   navBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
@@ -242,6 +242,6 @@ const createSt = () => StyleSheet.create({
   txInfo: { flex: 1 },
   txCat: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   txRecipient: { color: colors.textMuted, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
-  txAmount: { fontSize: 14, fontWeight: '700' },
+  txAmount: { fontSize: 14, fontWeight: '700', writingDirection: 'ltr' },
   emptyTxt: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 16 },
 });

@@ -52,7 +52,7 @@ export function setCurrency(symbol, code) {
 }
 
 export function sym() {
-  return `\u200e${_symbol}`;
+  return _symbol;
 }
 
 export function code() {
@@ -64,12 +64,12 @@ export function fmtNum(amount) {
 }
 
 export function fmt(amount) {
-  return `\u200e${fmtNum(amount)} ${_symbol}`;
+  return `${fmtNum(amount)} ${_symbol}`;
 }
 
 export function fmtSigned(amount, type) {
   const sign = type === 'income' ? '+' : type === 'expense' ? '-' : '';
-  return `\u200e${sign}${fmtNum(amount)} ${_symbol}`;
+  return `${sign}${fmtNum(amount)} ${_symbol}`;
 }
 
 // Конвертация между валютами
