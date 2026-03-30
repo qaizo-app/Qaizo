@@ -14,8 +14,18 @@ import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 
-const ICON_OPTIONS = ['target','star','globe','home','truck','book-open','heart','gift','award','sun','camera','music','briefcase','cpu','flag','umbrella'];
-const COLOR_OPTIONS = ['#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#f59e0b','#2dd4bf','#22d3ee','#fb7185','#c084fc'];
+const ICON_OPTIONS = [
+  'target','star','globe','home','briefcase','gift','heart',
+  'flag','map-pin','sun','umbrella','camera','music',
+  'truck','tool','package','award','layers','coffee','book-open',
+  'users','zap','shield','cpu','smartphone','key','archive','box',
+];
+
+const COLOR_OPTIONS = [
+  '#fb7185','#f97316','#f59e0b','#fbbf24','#a3e635','#34d399','#2dd4bf',
+  '#22d3ee','#60a5fa','#818cf8','#a78bfa','#c084fc','#f472b6','#ec4899',
+  '#ef4444','#64748b',
+];
 
 export default function GoalsScreen() {
   const navigation = useNavigation();
@@ -174,12 +184,11 @@ export default function GoalsScreen() {
       </ScrollView>
 
       {/* Add/Edit Modal */}
-      <SwipeModal visible={showModal} onClose={() => setShowModal(false)}>
-        <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
-          <Text style={st.modalTitle}>{editGoal ? i18n.t('goal') : i18n.t('newGoal')}</Text>
-
+      <SwipeModal visible={showModal} onClose={() => setShowModal(false)} title={editGoal ? i18n.t('goal') : i18n.t('newGoal')}>
+        <ScrollView style={st.form} showsVerticalScrollIndicator={false}>
+          <Text style={st.label}>{i18n.t('goalName')}</Text>
           <TextInput style={st.input} value={name} onChangeText={setName}
-            placeholder={i18n.t('goalName')} placeholderTextColor={colors.textMuted} />
+            placeholder={i18n.t('goalName')} placeholderTextColor={colors.textMuted} autoFocus />
 
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View style={{ flex: 1 }}>
@@ -307,19 +316,19 @@ const createSt = () => StyleSheet.create({
   progressFill: { height: 10, borderRadius: 5 },
   progressPct: { fontSize: 13, fontWeight: '700', textAlign: 'right' },
 
-  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, marginTop: 8 },
-  input: { backgroundColor: colors.bg2, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder },
-  dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, minHeight: 44, borderWidth: 1, borderColor: colors.cardBorder, gap: 8, marginBottom: 12 },
+  form: { paddingHorizontal: 24, paddingBottom: 30 },
+  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
+  input: { color: colors.text, fontSize: 16, backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder },
+  dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
   dateTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
 
-  iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   iconBtn: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg2, borderWidth: 1.5, borderColor: 'transparent' },
-  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  colorBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 3, borderColor: 'transparent' },
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  colorBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, transform: [{ scale: 1.15 }] },
 
-  btnRow: { flexDirection: 'row', gap: 12, paddingTop: 16 },
+  btnRow: { flexDirection: 'row', gap: 12, paddingTop: 24 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelBtnText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
