@@ -1,55 +1,35 @@
 // src/components/ExportModal.js
-// Модалка экспорта — выбор формата + диапазон дат
+// Экспорт — выбор дат + формат, SwipeModal
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import exportService from '../services/exportService';
 import { colors } from '../theme/colors';
-
-const PERIODS = [
-  { key: 'thisMonth', label: () => i18n.t('thisMonth') },
-  { key: 'lastMonth', label: () => i18n.t('lastMonth') },
-  { key: 'last3', label: () => i18n.t('last3Months') },
-  { key: 'thisYear', label: () => i18n.t('thisYear') },
-  { key: 'all', label: () => i18n.t('allTime') },
-];
-
-function getDateRange(key) {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-
-  switch (key) {
-    case 'thisMonth':
-      return { from: `${y}-${String(m + 1).padStart(2, '0')}-01`, to: null };
-    case 'lastMonth': {
-      const pm = m === 0 ? 11 : m - 1;
-      const py = m === 0 ? y - 1 : y;
-      const lastDay = new Date(py, pm + 1, 0).getDate();
-      return { from: `${py}-${String(pm + 1).padStart(2, '0')}-01`, to: `${py}-${String(pm + 1).padStart(2, '0')}-${lastDay}` };
-    }
-    case 'last3': {
-      const d = new Date(y, m - 2, 1);
-      return { from: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`, to: null };
-    }
-    case 'thisYear':
-      return { from: `${y}-01-01`, to: null };
-    case 'all':
-    default:
-      return { from: null, to: null };
-  }
-}
+import DatePickerModal from './DatePickerModal';
+import SwipeModal from './SwipeModal';
 
 export default function ExportModal({ visible, onClose, onResult }) {
-  const [period, setPeriod] = useState('thisMonth');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showCalFrom, setShowCalFrom] = useState(false);
+  const [showCalTo, setShowCalTo] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [weekStart, setWeekStart] = useState('sunday');
+  const lang = i18n.getLanguage();
   const st = createSt();
+
+  const fmtDate = (d) => {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    return `${day}.${m}.${y}`;
+  };
 
   const handleExport = async (format) => {
     setLoading(true);
     try {
-      const { from, to } = getDateRange(period);
+      const from = dateFrom || null;
+      const to = dateTo || null;
       if (format === 'csv') await exportService.exportCSV(from, to);
       else if (format === 'xls') await exportService.exportXLS(from, to);
       else if (format === 'pdf') await exportService.exportPDF(from, to);
@@ -64,65 +44,71 @@ export default function ExportModal({ visible, onClose, onResult }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <TouchableOpacity style={st.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity style={st.sheet} activeOpacity={1}>
-          <Text style={st.title}>{i18n.t('exportData')}</Text>
+    <>
+    <SwipeModal visible={visible} onClose={onClose}>
+      <View>
+        <Text style={st.title}>{i18n.t('exportData')}</Text>
 
-          {/* Период */}
-          <Text style={st.label}>{i18n.t('period')}</Text>
-          <View style={st.periods}>
-            {PERIODS.map(p => (
-              <TouchableOpacity key={p.key}
-                style={[st.periodBtn, period === p.key && st.periodBtnActive]}
-                onPress={() => setPeriod(p.key)}>
-                <Text style={[st.periodTxt, period === p.key && st.periodTxtActive]}>
-                  {p.label()}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Форматы */}
-          <Text style={st.label}>{i18n.t('format')}</Text>
-          <View style={st.formats}>
-            <TouchableOpacity style={st.fmtBtn} onPress={() => handleExport('csv')} disabled={loading}>
-              <Feather name="file-text" size={22} color={colors.green} />
-              <Text style={st.fmtTxt}>CSV</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={st.fmtBtn} onPress={() => handleExport('xls')} disabled={loading}>
-              <Feather name="grid" size={22} color={colors.teal} />
-              <Text style={st.fmtTxt}>Excel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={st.fmtBtn} onPress={() => handleExport('pdf')} disabled={loading}>
-              <Feather name="file" size={22} color={colors.red} />
-              <Text style={st.fmtTxt}>PDF</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={st.cancelBtn} onPress={onClose}>
-            <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
+        {/* Date range */}
+        <Text style={st.label}>{i18n.t('period')}</Text>
+        <View style={st.dateRow}>
+          <TouchableOpacity style={st.dateBtn} onPress={() => setShowCalFrom(true)}>
+            <Feather name="calendar" size={14} color={colors.green} />
+            <Text style={st.dateTxt}>{dateFrom ? fmtDate(dateFrom) : i18n.t('dateFrom')}</Text>
           </TouchableOpacity>
+          <Text style={st.dateSep}>—</Text>
+          <TouchableOpacity style={st.dateBtn} onPress={() => setShowCalTo(true)}>
+            <Feather name="calendar" size={14} color={colors.green} />
+            <Text style={st.dateTxt}>{dateTo ? fmtDate(dateTo) : i18n.t('dateTo')}</Text>
+          </TouchableOpacity>
+        </View>
+        {(dateFrom || dateTo) && (
+          <TouchableOpacity onPress={() => { setDateFrom(''); setDateTo(''); }} style={st.clearDates}>
+            <Feather name="x" size={12} color={colors.textMuted} />
+            <Text style={st.clearDatesTxt}>{i18n.t('allTime')}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Formats */}
+        <Text style={st.label}>{i18n.t('format')}</Text>
+        <View style={st.formats}>
+          <TouchableOpacity style={st.fmtBtn} onPress={() => handleExport('csv')} disabled={loading}>
+            <Feather name="file-text" size={22} color={colors.green} />
+            <Text style={st.fmtTxt}>CSV</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={st.fmtBtn} onPress={() => handleExport('xls')} disabled={loading}>
+            <Feather name="grid" size={22} color={colors.teal} />
+            <Text style={st.fmtTxt}>Excel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={st.fmtBtn} onPress={() => handleExport('pdf')} disabled={loading}>
+            <Feather name="file" size={22} color={colors.red} />
+            <Text style={st.fmtTxt}>PDF</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={st.cancelBtn} onPress={onClose}>
+          <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
         </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
+      </View>
+    </SwipeModal>
+    <DatePickerModal visible={showCalFrom} onClose={() => setShowCalFrom(false)} onSelect={d => setDateFrom(d)} selectedDate={dateFrom} lang={lang} weekStart={weekStart} />
+    <DatePickerModal visible={showCalTo} onClose={() => setShowCalTo(false)} onSelect={d => setDateTo(d)} selectedDate={dateTo} lang={lang} weekStart={weekStart} />
+    </>
   );
 }
 
 const createSt = () => StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20 },
+  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, marginTop: 8 },
 
-  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: i18n.textAlign() },
-  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, marginTop: 8, textAlign: i18n.textAlign() },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  dateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.bg2, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.cardBorder },
+  dateTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
+  dateSep: { color: colors.textMuted, fontSize: 16 },
+  clearDates: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
+  clearDatesTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
 
-  periods: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  periodBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg2, borderWidth: 1, borderColor: 'transparent' },
-  periodBtnActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  periodTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
-  periodTxtActive: { color: colors.green },
-
-  formats: { flexDirection: i18n.row(), gap: 12, marginBottom: 20 },
+  formats: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   fmtBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, gap: 8 },
   fmtTxt: { color: colors.text, fontSize: 14, fontWeight: '700' },
 
