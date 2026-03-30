@@ -16,8 +16,8 @@ describe('colors / theme', () => {
   test('applyTheme("light") switches to light palette', () => {
     applyTheme('light');
     expect(getCurrentTheme()).toBe('light');
-    expect(colors.bg).toBe('#f8fafc');
-    expect(colors.text).toBe('#0f172a');
+    expect(colors.bg).toBe('#eef0f5');
+    expect(colors.text).toBe('#1a1e2e');
   });
 
   test('applyTheme("dark") switches back to dark palette', () => {
@@ -32,7 +32,7 @@ describe('colors / theme', () => {
     const ref = colors;
     applyTheme('light');
     expect(ref).toBe(colors);
-    expect(ref.bg).toBe('#f8fafc');
+    expect(ref.bg).toBe('#eef0f5');
   });
 
   // ─── color properties ──────────────────────────
