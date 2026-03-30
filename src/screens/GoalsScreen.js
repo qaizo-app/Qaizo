@@ -175,7 +175,7 @@ export default function GoalsScreen() {
 
       {/* Add/Edit Modal */}
       <SwipeModal visible={showModal} onClose={() => setShowModal(false)}>
-        <View>
+        <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
           <Text style={st.modalTitle}>{editGoal ? i18n.t('goal') : i18n.t('newGoal')}</Text>
 
           <TextInput style={st.input} value={name} onChangeText={setName}
@@ -227,7 +227,7 @@ export default function GoalsScreen() {
               <Text style={st.saveBtnText}>{i18n.t('save')}</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </SwipeModal>
 
       {/* Deposit Modal */}
