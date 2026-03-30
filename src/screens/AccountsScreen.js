@@ -94,15 +94,13 @@ export default function AccountsScreen() {
     const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
     const bal = acc.balance || 0;
     return (
-      <TouchableOpacity key={acc.id} style={[styles.tile, i18n.isRTL() ? { borderRightColor: cfg.color, borderRightWidth: 3 } : { borderLeftColor: cfg.color, borderLeftWidth: 3 }]}
+      <TouchableOpacity key={acc.id} style={[styles.tile, { borderLeftColor: cfg.color, borderLeftWidth: 3 }]}
         onPress={() => openHistory(acc)} onLongPress={() => openEdit(acc)} activeOpacity={0.7}>
         <View style={styles.tileTop}>
           <MaterialCommunityIcons name={cfg.icon} size={16} color={cfg.color} />
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-        <Text style={[styles.tileBalance, { color: bal >= 0 ? colors.green : colors.red, writingDirection: 'ltr' }]}>
-          {bal < 0 ? '-' : ''}{Math.abs(bal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {acc.currency||sym()}
-        </Text>
+        <Amount value={bal} sign style={styles.tileBalance} color={bal >= 0 ? colors.green : colors.red} />
       </TouchableOpacity>
     );
   };
@@ -169,7 +167,7 @@ export default function AccountsScreen() {
             </View>
             <View style={styles.tilesRow}>
               {inactive.map(acc => (
-                <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, i18n.isRTL() ? { borderRightColor: colors.textMuted, borderRightWidth: 3 } : { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
+                <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
                   <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{(acc.balance||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {acc.currency||sym()}</Text>
