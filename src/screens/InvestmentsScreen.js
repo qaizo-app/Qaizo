@@ -48,6 +48,7 @@ export default function InvestmentsScreen() {
             <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>{i18n.t('investments')}</Text>
+          <View style={{ width: 44 }} />
         </View>
 
         <Card style={styles.totalCard}>
@@ -95,7 +96,7 @@ export default function InvestmentsScreen() {
 
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1, textAlign: 'center' },
   totalCard: { marginHorizontal: 20, borderWidth: 1, borderColor: 'rgba(52,211,153,0.12)' },

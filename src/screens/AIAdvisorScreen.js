@@ -77,6 +77,7 @@ export default function AIAdvisorScreen() {
             <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('advisor')}</Text>
+          <View style={{ width: 44 }} />
         </View>
 
         {/* ─── Summary ──────────────────────── */}
@@ -305,7 +306,7 @@ export default function AIAdvisorScreen() {
 
 const createStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1, textAlign: 'center' },
   loadingText: { color: colors.textMuted, fontSize: 14, marginTop: 12 },

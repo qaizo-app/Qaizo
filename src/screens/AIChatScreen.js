@@ -78,7 +78,7 @@ export default function AIChatScreen() {
           <Text style={st.headerTitle}>{i18n.t('aiChat')}</Text>
           <Text style={st.headerSub}>Qaizo AI</Text>
         </View>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       {/* Messages */}

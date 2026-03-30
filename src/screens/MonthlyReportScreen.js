@@ -111,6 +111,7 @@ export default function MonthlyReportScreen() {
             <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('monthlyReport')}</Text>
+          <View style={{ width: 44 }} />
         </View>
 
         <View style={st.monthNav}>
@@ -267,7 +268,7 @@ export default function MonthlyReportScreen() {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', marginEnd: 14, borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1, textAlign: 'center' },
 
