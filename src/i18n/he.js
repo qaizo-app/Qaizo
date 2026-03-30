@@ -307,6 +307,8 @@ export default {
   notFinancialAdvice: 'האפליקציה אינה מספקת ייעוץ פיננסי מקצועי. התובנות הן לצרכי מעקב בלבד.',
   privacyPolicy: 'מדיניות פרטיות',
   termsOfService: 'תנאי שימוש',
+  help: 'עזרה',
+  contactUs: 'צור קשר',
   calendarView: 'לוח שנה',
   aiChat: 'צ\'אט AI',
   aiChatWelcome: 'שאלו אותי כל שאלה על הכספים שלכם',

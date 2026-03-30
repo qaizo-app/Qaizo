@@ -316,6 +316,8 @@ export default {
   notFinancialAdvice: 'Приложение не является финансовой консультацией. Данные предоставлены для отслеживания.',
   privacyPolicy: 'Политика конфиденциальности',
   termsOfService: 'Условия использования',
+  help: 'Помощь',
+  contactUs: 'Связаться с нами',
   calendarView: 'Календарь',
   aiChat: 'ИИ Чат',
   aiChatWelcome: 'Спросите меня о ваших финансах',

@@ -372,6 +372,19 @@ export default function SettingsScreen() {
               <TouchableOpacity onPress={() => Linking.openURL('https://qaizo.app/terms.html')}>
                 <Text style={styles.aboutLink}>{i18n.t('termsOfService')}</Text>
               </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://qaizo.app/help')}>
+                <Text style={styles.aboutLink}>{i18n.t('help')}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+              <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('mailto:support@qaizo.app')}>
+                <Feather name="mail" size={16} color={colors.green} />
+                <Text style={styles.contactTxt}>Email</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('https://wa.me/972500000000')}>
+                <Feather name="message-circle" size={16} color={colors.green} />
+                <Text style={styles.contactTxt}>WhatsApp</Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.aboutCopy}>© 2026 Qaizo</Text>
           </Card>
@@ -454,6 +467,8 @@ const createStyles = () => StyleSheet.create({
   aboutText: { color: colors.textDim, fontSize: 14, lineHeight: 22, marginBottom: 8 },
   aboutDisclaimer: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginBottom: 4 },
   aboutLink: { color: colors.green, fontSize: 14, fontWeight: '600' },
+  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.greenSoft },
+  contactTxt: { color: colors.green, fontSize: 14, fontWeight: '600' },
   aboutCopy: { color: colors.textMuted, fontSize: 11 },
 
   // Account

@@ -308,6 +308,8 @@ export default {
   notFinancialAdvice: 'This app does not provide professional financial advice. Insights are for tracking purposes only.',
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
+  help: 'Help',
+  contactUs: 'Contact Us',
   calendarView: 'Calendar',
   aiChat: 'AI Chat',
   aiChatWelcome: 'Ask me anything about your finances',
