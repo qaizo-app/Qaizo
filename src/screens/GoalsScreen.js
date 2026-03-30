@@ -316,6 +316,7 @@ const createSt = () => StyleSheet.create({
   progressFill: { height: 10, borderRadius: 5 },
   progressPct: { fontSize: 13, fontWeight: '700', textAlign: 'right' },
 
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16, paddingHorizontal: 24 },
   form: { paddingHorizontal: 24, paddingBottom: 30 },
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
   input: { color: colors.text, fontSize: 16, backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder },
