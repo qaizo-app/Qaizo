@@ -106,7 +106,7 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Feather name={"arrow-left"} size={22} color={colors.text} />
+            <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>⚙️ {settingsTitle}</Text>
         </View>

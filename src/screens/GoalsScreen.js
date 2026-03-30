@@ -118,7 +118,7 @@ export default function GoalsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={st.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
-            <Feather name="arrow-left" size={22} color={colors.text} />
+            <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('goals')}</Text>
           <TouchableOpacity style={st.addBtn} onPress={openAdd}>

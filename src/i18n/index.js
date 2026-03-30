@@ -53,6 +53,8 @@ const i18n = {
   // RTL handled by I18nManager — always return 'row'
   row() { return 'row'; },
   textAlign() { return currentLang === 'he' ? 'right' : 'left'; },
+  // Back arrow icon — depends on SYSTEM RTL (I18nManager flips layout but not icons)
+  backIcon() { return I18nManager.isRTL ? 'arrow-right' : 'arrow-left'; },
 };
 
 export default i18n;
