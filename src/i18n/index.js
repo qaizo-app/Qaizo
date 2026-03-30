@@ -55,6 +55,8 @@ const i18n = {
   textAlign() { return currentLang === 'he' ? 'right' : 'left'; },
   // Back arrow icon — depends on SYSTEM RTL (I18nManager flips layout but not icons)
   backIcon() { return I18nManager.isRTL ? 'arrow-right' : 'arrow-left'; },
+  chevronLeft() { return I18nManager.isRTL ? 'chevron-right' : 'chevron-left'; },
+  chevronRight() { return I18nManager.isRTL ? 'chevron-left' : 'chevron-right'; },
 };
 
 export default i18n;

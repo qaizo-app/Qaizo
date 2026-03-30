@@ -116,12 +116,12 @@ export default function MonthlyReportScreen() {
 
         <View style={st.monthNav}>
           <TouchableOpacity style={st.navBtn} onPress={() => setMonthOffset(monthOffset - 1)}>
-            <Feather name='chevron-left' size={22} color={colors.textDim} />
+            <Feather name={i18n.chevronLeft()} size={22} color={colors.textDim} />
           </TouchableOpacity>
           <Text style={st.monthLabel}>{monthLabel}</Text>
           <TouchableOpacity style={[st.navBtn, isCurrentMonth && { opacity: 0.3 }]}
             onPress={() => !isCurrentMonth && setMonthOffset(monthOffset + 1)} disabled={isCurrentMonth}>
-            <Feather name='chevron-right' size={22} color={colors.textDim} />
+            <Feather name={i18n.chevronRight()} size={22} color={colors.textDim} />
           </TouchableOpacity>
         </View>
 

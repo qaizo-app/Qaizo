@@ -74,11 +74,11 @@ export default function DatePickerModal({ visible, onClose, onSelect, selectedDa
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
-              <Feather name="chevron-left" size={22} color={colors.text} />
+              <Feather name={i18n.chevronLeft()} size={22} color={colors.text} />
             </TouchableOpacity>
             <Text style={styles.monthTitle}>{months[viewMonth]} {viewYear}</Text>
             <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
-              <Feather name="chevron-right" size={22} color={colors.text} />
+              <Feather name={i18n.chevronRight()} size={22} color={colors.text} />
             </TouchableOpacity>
           </View>
 
