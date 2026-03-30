@@ -305,7 +305,7 @@ const createStyles = () => StyleSheet.create({
   billingTxt:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
   balRow:{flexDirection:i18n.row(),alignItems:'center',marginBottom:16},
   balCur:{fontSize:28,fontWeight:'700',marginEnd:8},
-  balInput:{flex:1,color:colors.text,fontSize:28,fontWeight:'700'},
+  balInput:{flex:1,color:colors.text,fontSize:28,fontWeight:'700',writingDirection:'ltr',textAlign:'left'},
   toggleRow:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingVertical:16,marginBottom:8,borderTopWidth:1,borderTopColor:colors.divider},
   toggleLabel:{color:colors.text,fontSize:15,fontWeight:'600'},
   toggleSub:{color:colors.textMuted,fontSize:11,marginTop:2},
