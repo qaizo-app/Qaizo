@@ -134,12 +134,12 @@ export default function MonthlyReportScreen() {
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-              <Amount value={totalExpense} style={st.summaryAmount} color={colors.red} numberOfLines={1} adjustsFontSizeToFit />
+              <Amount value={-totalExpense} sign style={st.summaryAmount} color={colors.red} numberOfLines={1} adjustsFontSizeToFit />
             </View>
             <View style={st.summaryDivider} />
             <View style={st.summaryItem}>
               <Text style={st.summaryLabel}>{i18n.t('balance')}</Text>
-              <Amount value={balance} style={st.summaryAmount} color={balance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
+              <Amount value={balance} sign style={st.summaryAmount} color={balance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
             </View>
           </View>
         </Card>

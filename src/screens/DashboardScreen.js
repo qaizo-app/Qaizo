@@ -294,7 +294,7 @@ export default function DashboardScreen() {
               return (
                 <Card key="balance" highlighted>
                   <Text style={st.balLabel}>{i18n.t('totalBalance')}</Text>
-                  <Amount value={balance} style={st.balAmount} color={balance >= 0 ? colors.text : colors.red} />
+                  <Amount value={balance} sign style={st.balAmount} color={balance >= 0 ? colors.text : colors.red} />
                   <View style={st.incExpRow}>
                     <View style={st.incExpItem}>
                       <View style={st.incExpHead}>
@@ -309,7 +309,7 @@ export default function DashboardScreen() {
                         <Feather name="trending-down" size={14} color={colors.red} />
                         <Text style={st.expLabel}> {i18n.t('expenses')}</Text>
                       </View>
-                      <Amount value={totalExpense} style={st.expAmount} color={colors.red} />
+                      <Amount value={-totalExpense} sign style={st.expAmount} color={colors.red} />
                     </View>
                   </View>
                 </Card>
@@ -518,9 +518,10 @@ export default function DashboardScreen() {
                               </View>
                               <View style={st.recInfo}>
                                 <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
-                                <Text style={st.recMeta}>
-                                  {rec.type === 'expense' ? '-' : '+'}{rec.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()} · {dateLabel}
-                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                                  <Amount value={rec.type === 'expense' ? -rec.amount : rec.amount} sign style={st.recMeta} color={rec.type === 'expense' ? colors.red : colors.green} />
+                                  <Text style={st.recMeta}> · {dateLabel}</Text>
+                                </View>
                               </View>
                               <View style={st.recActions}>
                                 <TouchableOpacity style={st.recSkip} onPress={() => handleSkipRecurring(rec.id)}>
