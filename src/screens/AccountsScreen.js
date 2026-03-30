@@ -136,7 +136,7 @@ export default function AccountsScreen() {
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ }} />
                 <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
-                <Amount value={sum} style={styles.groupSum} color={sum >= 0 ? colors.textDim : colors.red} />
+                <Amount value={sum} sign style={styles.groupSum} color={sum >= 0 ? colors.textDim : colors.red} />
               </View>
               <View style={styles.tilesRow}>
                 {accs.map(renderTile)}

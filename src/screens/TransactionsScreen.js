@@ -339,7 +339,7 @@ export default function TransactionsScreen({ route }) {
               {i18n.t('projectTotal')}: {projects.find(p => p.id === selProjects[0])?.name}
             </Text>
           )}
-          <Amount value={totalFiltered} style={styles.summaryAmount} color={totalFiltered >= 0 ? colors.green : colors.red} />
+          <Amount value={totalFiltered} sign style={styles.summaryAmount} color={totalFiltered >= 0 ? colors.green : colors.red} />
           {!showSearch && !showFilters && (
             <Text style={styles.hint}>
               ← {i18n.t('swipeHint')}

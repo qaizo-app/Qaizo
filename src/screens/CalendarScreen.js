@@ -169,10 +169,10 @@ export default function CalendarScreen() {
               {dayData[selectedDate] && (
                 <View style={st.dayTotals}>
                   {dayData[selectedDate].income > 0 && (
-                    <Text style={[st.dayTotal, { color: colors.green }]}>+{formatAmount(dayData[selectedDate].income)}</Text>
+                    <Amount value={dayData[selectedDate].income} style={st.dayTotal} color={colors.green} />
                   )}
                   {dayData[selectedDate].expense > 0 && (
-                    <Text style={[st.dayTotal, { color: colors.red }]}>-{formatAmount(dayData[selectedDate].expense)}</Text>
+                    <Amount value={-dayData[selectedDate].expense} sign style={st.dayTotal} color={colors.red} />
                   )}
                 </View>
               )}

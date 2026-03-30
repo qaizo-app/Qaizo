@@ -360,7 +360,7 @@ export default function DashboardScreen() {
                     <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
                     <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
                   </View>
-                  <Amount value={freeToday} style={st.freeAmount} color={freeTodayColor} />
+                  <Amount value={freeToday} sign style={st.freeAmount} color={freeTodayColor} />
 
                   {/* Progress bar */}
                   <View style={st.freeBar}>
