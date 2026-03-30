@@ -346,7 +346,7 @@ export default function AppNavigator() {
 const createStyles = () => StyleSheet.create({
   iconWrap: { width: 40, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   label: { fontSize: 10, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
-  addBtn: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', marginBottom: 20, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+  addBtn: { width: 52, height: 52, borderRadius: 16, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', marginBottom: 20, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
 
   menuOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 },
   menuOverlayBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
