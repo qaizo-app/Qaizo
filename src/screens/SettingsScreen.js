@@ -28,6 +28,7 @@ export default function SettingsScreen() {
   const [showImport, setShowImport] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
+  const [monthlyExtra, setMonthlyExtra] = useState('');
   const [langVersion, setLangVersion] = useState(0);
   const currentUser = authService.getCurrentUser();
   const toast = useToast();
@@ -35,7 +36,10 @@ export default function SettingsScreen() {
 
   // Загрузить weekStart из настроек
   useEffect(() => {
-    dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
+    dataService.getSettings().then(s => {
+      if (s.weekStart) setWeekStart(s.weekStart);
+      if (s.monthlyExtra) setMonthlyExtra(String(s.monthlyExtra));
+    });
   }, []);
 
   const toggle = (s) => setOpenSection(openSection === s ? null : s);
@@ -243,6 +247,35 @@ export default function SettingsScreen() {
           </Card>
         )}
 
+        {/* Monthly Extra */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('extra')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="plus-circle" size={18} color={colors.green} />
+            <Text style={styles.sectionText}>{i18n.t('monthlyExtra')}</Text>
+          </View>
+          <View style={styles.sectionRight}>
+            <Text style={styles.sectionValue}>{monthlyExtra ? `${monthlyExtra} ${sym()}` : '—'}</Text>
+            <Feather name={openSection === 'extra' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+          </View>
+        </TouchableOpacity>
+        {openSection === 'extra' && (
+          <Card>
+            <Text style={{ color: colors.textDim, fontSize: 12, marginBottom: 10 }}>{i18n.t('monthlyExtraHint')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <TextInput style={[styles.extraInput, { flex: 1 }]} value={monthlyExtra} onChangeText={setMonthlyExtra}
+                keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
+              <TouchableOpacity style={styles.extraSaveBtn} onPress={async () => {
+                const settings = await dataService.getSettings();
+                await dataService.saveSettings({ ...settings, monthlyExtra: parseFloat(monthlyExtra) || 0 });
+                setOpenSection(null);
+                toast.show(i18n.t('saved'), 'success');
+              }}>
+                <Feather name="check" size={18} color={colors.bg} />
+              </TouchableOpacity>
+            </View>
+          </Card>
+        )}
+
         {/* Data */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('data')}>
           <View style={styles.sectionLeft}>
@@ -389,6 +422,8 @@ const createStyles = () => StyleSheet.create({
   sectionRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   sectionValue: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
   comingSoonBadge: { color: colors.textMuted, fontSize: 11, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden' },
+  extraInput: { backgroundColor: colors.bg, borderRadius: 12, padding: 14, color: colors.text, fontSize: 18, fontWeight: '700', borderWidth: 1, borderColor: colors.cardBorder, writingDirection: 'ltr' },
+  extraSaveBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
   optRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 16, gap: 12 },
   optBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },

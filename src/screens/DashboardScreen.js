@@ -65,6 +65,7 @@ export default function DashboardScreen() {
   const [dashLayout, setDashLayout] = useState(DEFAULT_LAYOUT);
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [budgetsExpanded, setBudgetsExpanded] = useState(false);
+  const [monthlyExtra, setMonthlyExtra] = useState(0);
   const bellAnim = useRef(new Animated.Value(1)).current;
   const toast = useToast();
 
@@ -97,6 +98,7 @@ export default function DashboardScreen() {
     ]);
     if (settings.weekStart) setWeekStart(settings.weekStart);
     if (settings.dashLayout) setDashLayout(settings.dashLayout);
+    setMonthlyExtra(settings.monthlyExtra || 0);
     setTransactions(txs);
     setBudgets(bdg);
     setAccounts(accs.filter(a => a.isActive !== false));
@@ -356,7 +358,7 @@ export default function DashboardScreen() {
                 .reduce((s, r) => s + r.amount, 0);
 
               // === ПУЛ НА МЕСЯЦ ===
-              const monthPool = totalMonthIncome - allRecurringExpenses;
+              const monthPool = totalMonthIncome - allRecurringExpenses + monthlyExtra;
 
               // === ГИБКИЕ ТРАТЫ (всё кроме recurring) ===
               const flexSpent = thisMonth
