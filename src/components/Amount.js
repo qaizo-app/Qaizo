@@ -10,10 +10,7 @@ export default function Amount({ value, sign, style, color, numberOfLines, adjus
   const formatted = abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   let prefix = '';
-  if (sign) {
-    if (num < 0) prefix = '-';
-    else if (num > 0) prefix = '+';
-  }
+  if (sign && num < 0) prefix = '-';
 
   // \u200e = LTR mark — forces correct order: -123.45 ₪
   const text = `\u200e${prefix}${formatted} ${sym()}`;

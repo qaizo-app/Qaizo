@@ -297,7 +297,7 @@ const createStyles = () => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 22, fontWeight: '800', flex: 1, textAlign: 'center' },
-  addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
+  addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
   groupRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 20, marginTop: 8, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10 },
   groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },

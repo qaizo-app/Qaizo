@@ -212,7 +212,7 @@ const createSt = () => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },
-  addBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
+  addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
   empty: { alignItems: 'center', marginTop: 80, gap: 16 },
   emptyText: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },
