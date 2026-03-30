@@ -75,7 +75,7 @@ export default function SwipeModal({ visible, onClose, children }) {
       </TouchableWithoutFeedback>
 
       {/* Модалка */}
-      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 16) + 40 }]}>
         <View {...panResponder.panHandlers} style={styles.swipeZone}>
           <View style={styles.handle} />
         </View>
