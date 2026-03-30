@@ -13,11 +13,19 @@
     "preview": {
       "developmentClient": false,
       "distribution": "internal",
+      "env": {
+        "EXPO_NO_DEV_CLIENT": "true"
+      },
       "android": {
         "buildType": "apk"
       }
     },
-    "production": {}
+    "production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    }
   },
   "submit": {
     "production": {}
