@@ -69,6 +69,7 @@ export default {
   goalReached: 'הגעת למטרה!',
   monthlyNeeded: 'חיסכון חודשי נדרש',
   goalProgress: 'התקדמות',
+  selectDate: 'בחר תאריך',
   project: 'פרויקט',
   newProject: 'פרויקט חדש',
   projectName: 'שם הפרויקט',

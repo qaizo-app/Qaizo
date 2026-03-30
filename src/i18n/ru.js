@@ -74,6 +74,7 @@ export default {
   goalReached: 'Цель достигнута!',
   monthlyNeeded: 'Нужно откладывать в месяц',
   goalProgress: 'Прогресс',
+  selectDate: 'Выберите дату',
   project: 'Проект',
   newProject: 'Новый проект',
   projectName: 'Название проекта',

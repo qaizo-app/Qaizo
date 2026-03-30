@@ -69,6 +69,7 @@ export default {
   goalReached: 'Goal reached!',
   monthlyNeeded: 'Monthly savings needed',
   goalProgress: 'Progress',
+  selectDate: 'Select date',
   project: 'Project',
   newProject: 'New Project',
   projectName: 'Project name',
