@@ -104,8 +104,7 @@ const createStyles = () => StyleSheet.create({
     backgroundColor: colors.bg2,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '92%',
-    overflow: 'hidden',
+    maxHeight: '90%',
   },
   swipeZone: {
     height: 36,
