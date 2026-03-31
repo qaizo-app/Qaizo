@@ -7,7 +7,9 @@ import { Swipeable } from 'react-native-gesture-handler';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
 import Amount from './Amount';
-import CategoryIcon from './CategoryIcon';
+import { getCatName } from './CategoryPickerModal';
+import CategoryIcon, { getCachedGroups } from './CategoryIcon';
+
 
 export default function TransactionItem({ transaction, onDelete, onEdit, onDuplicate }) {
   const swipeRef = useRef(null);
@@ -51,7 +53,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
       <View style={styles.container}>
         <CategoryIcon categoryId={transaction.categoryId} size="medium" />
         <View style={styles.info}>
-          <Text style={styles.category}>{i18n.t(transaction.categoryId) || transaction.categoryId}</Text>
+          <Text style={styles.category}>{getCatName(transaction.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
           <Text style={styles.note} numberOfLines={1}>
             {transaction.note || ''}
           </Text>
