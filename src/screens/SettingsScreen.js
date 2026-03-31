@@ -407,13 +407,22 @@ export default function SettingsScreen() {
       <ConfirmModal visible={showLangRestart}
         title={i18n.t('langChanged')} message={i18n.t('restartApp')}
         confirmText="OK" cancelText=""
-        onConfirm={() => {
+        onConfirm={async () => {
           setShowLangRestart(false);
-          import('expo-updates').then(({ reloadAsync }) => {
-            reloadAsync?.().catch(() => {});
-          }).catch(() => {});
+          // Apply language change
+          const code = await AsyncStorage.getItem('qaizo_lang_code');
+          if (code) { i18n.setLanguage(code); setLang(code); setLangVersion(n => n + 1); }
+          // Try reload
+          try {
+            const { reloadAsync } = await import('expo-updates');
+            await reloadAsync?.();
+          } catch (e) {}
         }}
-        onCancel={() => setShowLangRestart(false)}
+        onCancel={async () => {
+          setShowLangRestart(false);
+          const code = await AsyncStorage.getItem('qaizo_lang_code');
+          if (code) { i18n.setLanguage(code); setLang(code); setLangVersion(n => n + 1); }
+        }}
         icon="globe" />
 
       <ConfirmModal visible={showClearData}
