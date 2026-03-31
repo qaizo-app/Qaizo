@@ -181,7 +181,7 @@ export default function AccountsScreen() {
       {/* Edit/Add */}
       <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)}>
         {({ close }) => (
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 20 }}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 150 }}>
             <Text style={styles.modalTitle}>{editAccount ? editAccount.name : (i18n.t('newAccount'))}</Text>
 
             <Text style={styles.fieldLabel}>{i18n.t('type')}</Text>
