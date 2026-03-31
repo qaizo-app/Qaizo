@@ -3,6 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Animated, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
@@ -57,6 +58,7 @@ export default function OnboardingScreen({ onDone }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   const onViewRef = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
@@ -126,7 +128,7 @@ export default function OnboardingScreen({ onDone }) {
       />
 
       {/* Пагинация + кнопки */}
-      <View style={st.bottom}>
+      <View style={[st.bottom, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}>
         {/* Точки */}
         <View style={st.dots}>
           {SLIDES.map((s, i) => {
@@ -177,7 +179,7 @@ const createSt = () => StyleSheet.create({
   featureDot: { width: 6, height: 6, borderRadius: 3 },
   featureText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', flexShrink: 1, textAlign: i18n.textAlign() },
 
-  bottom: { paddingHorizontal: 24, paddingBottom: 40 },
+  bottom: { paddingHorizontal: 24 },
   dots: { flexDirection: i18n.row(), justifyContent: 'center', gap: 8, marginBottom: 24 },
   dot: { width: 8, height: 8, borderRadius: 4 },
 
