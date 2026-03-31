@@ -85,7 +85,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     if (!amount || parseFloat(amount) <= 0) return;
     const txDate = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
     if (isEdit) {
-      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount), categoryId, recipient, icon: categoryConfig[categoryId]?.icon || 'circle', note, tags, date: txDate, account: selAcc, projectId: selProject || null });
+      const ci = getCatIcon(categoryId, catGroups);
+      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
     } else if (type === 'transfer') {
       if (selAcc === toAcc) return;
       const fn = accounts.find(a => a.id === selAcc)?.name || '';
@@ -94,7 +95,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags });
       await dataService.addTransaction({ type: 'income', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags });
     } else {
-      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, icon: categoryConfig[categoryId]?.icon || 'circle', recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
+      const ci2 = getCatIcon(categoryId, catGroups);
+      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
     }
     onSave?.(); onClose?.();
   };
