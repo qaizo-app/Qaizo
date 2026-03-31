@@ -123,7 +123,7 @@ export default function CategoriesScreen() {
   const toggleGroup = (id) => setExpandedGroup(expandedGroup === id ? null : id);
   const getName = (nameObj) => {
     if (typeof nameObj === 'string') return nameObj;
-    return nameObj?.[lang] || nameObj?.en || '';
+    return nameObj?.[lang] || nameObj?.en || nameObj?.ru || nameObj?.he || (nameObj ? Object.values(nameObj)[0] : '') || '';
   };
 
   const openAddGroup = () => {

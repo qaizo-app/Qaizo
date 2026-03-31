@@ -78,15 +78,20 @@ export const DEFAULT_GROUPS = [
     ]},
 ];
 
+function anyName(nameObj, lang) {
+  if (!nameObj) return null;
+  return nameObj[lang] || nameObj.en || nameObj.ru || nameObj.he || Object.values(nameObj)[0] || null;
+}
+
 export function getCatName(id, groups, lang) {
   // Try i18n first
   const translated = i18n.t(id);
   if (translated !== id) return translated;
-  // Search in groups
+  // Search in groups — fallback to any available language
   for (const g of groups) {
-    if (g.id === id && g.name) return g.name[lang] || g.name.en || id;
+    if (g.id === id && g.name) return anyName(g.name, lang) || id;
     for (const s of (g.subs || [])) {
-      if (s.id === id && s.name) return s.name[lang] || s.name.en || id;
+      if (s.id === id && s.name) return anyName(s.name, lang) || id;
     }
   }
   return id;
