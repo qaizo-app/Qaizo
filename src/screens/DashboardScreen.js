@@ -121,7 +121,12 @@ export default function DashboardScreen() {
 
   };
 
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  useFocusEffect(useCallback(() => {
+    loadData();
+    // Retry after auth may have restored session
+    const timer = setTimeout(() => loadData(), 1500);
+    return () => clearTimeout(timer);
+  }, []));
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') loadData();
