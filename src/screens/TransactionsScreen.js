@@ -393,7 +393,7 @@ export default function TransactionsScreen({ route }) {
       <ConfirmModal
         visible={!!deleteTarget}
         title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${deleteTarget.categoryName || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)}
       />

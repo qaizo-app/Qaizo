@@ -113,7 +113,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${deleteTarget.categoryName || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </GestureHandlerRootView>
