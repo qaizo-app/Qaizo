@@ -406,7 +406,7 @@ export default function SettingsScreen() {
 
       <ConfirmModal visible={showLangRestart}
         title={i18n.t('langChanged')} message={i18n.t('restartApp')}
-        confirmText="OK" cancelText=""
+        confirmText="OK" cancelText={null}
         onConfirm={async () => {
           setShowLangRestart(false);
           // Apply language change

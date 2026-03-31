@@ -23,9 +23,11 @@ export default function ConfirmModal({
           {message ? <Text style={styles.message}>{message}</Text> : null}
  
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-              <Text style={styles.cancelText}>{cancelText}</Text>
-            </TouchableOpacity>
+            {cancelText ? (
+              <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
+                <Text style={styles.cancelText}>{cancelText}</Text>
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity
               style={[styles.confirmBtn, { backgroundColor: confirmColor }]}
               onPress={onConfirm}
