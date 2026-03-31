@@ -540,6 +540,7 @@ export default {
   blockBudgets: 'תקציבים',
   blockRecurring: 'תשלומים קרובים',
   blockBarChart: '6 חודשים',
+  blockGoals: 'מטרות חיסכון',
   blockRecentTx: 'תנועות אחרונות',
   savings: 'חיסכון',
   day: 'יום',

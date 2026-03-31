@@ -549,6 +549,7 @@ export default {
   blockBudgets: 'Бюджеты',
   blockRecurring: 'Предстоящие платежи',
   blockBarChart: '6 месяцев',
+  blockGoals: 'Цели накоплений',
   blockRecentTx: 'Последние транзакции',
   savings: 'Сбережения',
   day: 'день',

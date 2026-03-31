@@ -541,6 +541,7 @@ export default {
   blockBudgets: 'Budgets',
   blockRecurring: 'Upcoming Payments',
   blockBarChart: '6 Months',
+  blockGoals: 'Savings Goals',
   blockRecentTx: 'Recent Transactions',
   savings: 'Savings',
   day: 'day',
