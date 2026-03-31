@@ -640,26 +640,32 @@ async function importTransactions(transactions) {
     await dataService.saveAccounts(updatedAccounts);
   }
 
+  // Prepare all transactions first
+  const toImport = [];
   for (const tx of transactions) {
-    // Resolve account
     if (tx._accountName) {
       tx.account = accountMap[tx._accountName.toLowerCase()] || null;
       delete tx._accountName;
     }
     delete tx._accountType;
 
-    // Check for duplicates
     const txDate = (tx.date || '').slice(0, 10);
     const txKey = `${txDate}|${tx.amount}|${tx.categoryId}|${tx.type}`;
     if (existingKeys.has(txKey)) {
       skippedDuplicates++;
       continue;
     }
-    existingKeys.add(txKey); // prevent duplicates within same import batch
+    existingKeys.add(txKey);
+    toImport.push({ ...tx, createdAt: tx.date || new Date().toISOString() });
+  }
 
-    const result = await dataService.addTransaction(tx);
-    if (result) imported++;
-    else failed++;
+  // Batch import — write all at once to AsyncStorage, or in chunks to Firestore
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < toImport.length; i += BATCH_SIZE) {
+    const batch = toImport.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(batch.map(tx => dataService.addTransaction(tx)));
+    imported += results.filter(r => r).length;
+    failed += results.filter(r => !r).length;
   }
   return { imported, failed, skippedDuplicates };
 }

@@ -58,6 +58,7 @@ export default function ImportModal({ visible, onClose, onImported }) {
   };
 
   const handleClose = () => {
+    if (step === 'importing') return; // Don't close during import
     setStep('pick');
     setParseResult(null);
     setMapping({});
