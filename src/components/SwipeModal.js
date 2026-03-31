@@ -1,7 +1,7 @@
 // src/components/SwipeModal.js
 // v4: без Modal — чистый Animated.View, никакого мерцания
 import { useEffect, useRef } from 'react';
-import { Animated, BackHandler, Dimensions, KeyboardAvoidingView, PanResponder, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, BackHandler, Dimensions, Keyboard, KeyboardAvoidingView, PanResponder, Platform, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
@@ -70,19 +70,21 @@ export default function SwipeModal({ visible, onClose, children }) {
   return (
     <View style={styles.fullscreen}>
       {/* Тёмный фон */}
-      <TouchableWithoutFeedback onPress={doClose}>
+      <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); doClose(); }}>
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
       </TouchableWithoutFeedback>
 
       {/* Модалка */}
-      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 16) + 40 }]}>
-        <View {...panResponder.panHandlers} style={styles.swipeZone}>
-          <View style={styles.handle} />
-        </View>
-        <View style={styles.content}>
-          {renderContent()}
-        </View>
-      </Animated.View>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ justifyContent: 'flex-end' }}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 16) + 40 }]}>
+          <View {...panResponder.panHandlers} style={styles.swipeZone}>
+            <View style={styles.handle} />
+          </View>
+          <View style={styles.content}>
+            {renderContent()}
+          </View>
+        </Animated.View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
