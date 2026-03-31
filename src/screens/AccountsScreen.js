@@ -69,7 +69,7 @@ export default function AccountsScreen() {
   const openHistory = (acc) => navigation.navigate('AccountHistory', { account: acc });
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber||'');
-    setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(String(acc.balance||0));
+    setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(String(parseFloat((acc.balance||0).toFixed(2))));
     setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false); setShowEdit(true);
   };
   const openAdd = () => {
