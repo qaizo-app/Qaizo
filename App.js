@@ -172,28 +172,34 @@ function AppInner() {
 
   if (screen === 'onboarding') {
     return (
+      <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
         <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
         <OnboardingScreen onDone={handleOnboardingDone} />
       </GestureHandlerRootView>
+      </SafeAreaProvider>
     );
   }
 
   if (screen === 'wizard') {
     return (
+      <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
         <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
         <SetupWizardScreen onDone={handleWizardDone} />
       </GestureHandlerRootView>
+      </SafeAreaProvider>
     );
   }
 
   if (screen === 'auth') {
     return (
+      <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
         <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
         <AuthScreen onSkip={handleSkipAuth} />
       </GestureHandlerRootView>
+      </SafeAreaProvider>
     );
   }
 
