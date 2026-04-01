@@ -18,6 +18,7 @@ export default function AuthScreen({ onSkip }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showResetSent, setShowResetSent] = useState(false);
+  const [showVerifyEmail, setShowVerifyEmail] = useState(false);
   const st = createSt();
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -31,7 +32,14 @@ export default function AuthScreen({ onSkip }) {
     setError('');
     const result = await authService.login(email.trim(), password);
     setLoading(false);
-    if (!result.success) setError(result.error);
+    if (result.success) {
+      if (!result.user.emailVerified) {
+        await authService.logout();
+        setShowVerifyEmail(true);
+      }
+    } else {
+      setError(result.error);
+    }
   };
 
   const handleRegister = async () => {
@@ -43,7 +51,12 @@ export default function AuthScreen({ onSkip }) {
     setError('');
     const result = await authService.register(email.trim(), password, name.trim() || null);
     setLoading(false);
-    if (!result.success) setError(result.error);
+    if (result.success) {
+      await authService.logout();
+      setShowVerifyEmail(true);
+    } else {
+      setError(result.error);
+    }
   };
 
   const handleReset = async () => {
@@ -224,6 +237,32 @@ export default function AuthScreen({ onSkip }) {
         confirmColor={colors.green}
         onConfirm={() => { setShowResetSent(false); setMode('login'); }}
         onCancel={() => { setShowResetSent(false); setMode('login'); }}
+        icon="mail" />
+
+      <ConfirmModal visible={showVerifyEmail}
+        title={i18n.t('verifyEmailTitle')} message={i18n.t('verifyEmailMessage')}
+        confirmText={i18n.t('verifyDone')} cancelText={i18n.t('resendEmail')}
+        confirmColor={colors.green}
+        onConfirm={async () => {
+          // Try login again to check verification
+          setShowVerifyEmail(false);
+          setMode('login');
+        }}
+        onCancel={async () => {
+          // Resend verification email
+          try {
+            const result = await authService.login(email.trim(), password);
+            if (result.success) {
+              let lang = 'en';
+              try { lang = i18n.getLanguage(); } catch (e) {}
+              const { sendEmailVerification: sendVerif } = require('firebase/auth');
+              const { auth: fbAuth } = require('../config/firebase');
+              fbAuth.languageCode = lang;
+              await sendVerif(result.user);
+              await authService.logout();
+            }
+          } catch (e) {}
+        }}
         icon="mail" />
     </KeyboardAvoidingView>
   );
