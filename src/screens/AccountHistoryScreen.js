@@ -85,7 +85,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerName}>{account.name}</Text>
-          <Text style={styles.headerType}>{account.accountNumber ? `${account.accountNumber} · ` : ''}{account.type}</Text>
+          <Text style={styles.headerType}>{account.accountNumber ? `${account.accountNumber} · ` : ''}{i18n.t(account.type)}</Text>
         </View>
         <View style={[styles.headerIcon, { backgroundColor: `${cfg.color}18` }]}>
           <MaterialCommunityIcons name={cfg.icon} size={22} color={cfg.color} />
@@ -101,13 +101,13 @@ export default function AccountHistoryScreen({ route, navigation }) {
       </View>
 
       <View style={styles.countRow}>
-        <Text style={styles.countText}>{lang==='ru'?'Транзакции':'Transactions'}</Text>
+        <Text style={styles.countText}>{i18n.t('transactions')}</Text>
         <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
       </View>
 
       <FlatList data={withBalance} keyExtractor={item=>item.id} renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={36} color={colors.textMuted} /><Text style={styles.emptyText}>{lang==='ru'?'Нет транзакций':'No transactions'}</Text></View>} />
+        ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={36} color={colors.textMuted} /><Text style={styles.emptyText}>{i18n.t('noTransactions')}</Text></View>} />
 
       <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
