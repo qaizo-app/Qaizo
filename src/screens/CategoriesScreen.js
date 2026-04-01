@@ -1,6 +1,6 @@
 // src/screens/CategoriesScreen.js
 // Управление категориями: группы + подкатегории, добавление, редактирование
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,16 +11,17 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 
+// Icons prefixed with 'mci:' use MaterialCommunityIcons, others use Feather
 const ICONS_BY_GROUP = {
-  food: ['shopping-cart','coffee','shopping-bag','zap','package','box','truck','smile'],
-  transport: ['navigation','truck','map-pin','droplet','compass','tool','shield','key'],
-  home: ['home','key','tool','zap','droplet','sun','moon','umbrella','wind','globe','wifi','phone'],
-  health: ['heart','activity','thermometer','smile','shield','plus-circle','clipboard'],
-  entertainment: ['film','music','camera','tv','headphones','play','radio','star','award','flag'],
-  travel: ['globe','navigation','map-pin','compass','camera','sun','umbrella','coffee'],
-  kids: ['smile','book-open','gift','star','music','award','shopping-bag','heart'],
-  personal: ['shopping-bag','scissors','star','gift','eye','tag','feather','smile'],
-  income_group: ['briefcase','dollar-sign','trending-up','credit-card','home','tool','package','tag','percent'],
+  food: ['shopping-cart','coffee','mci:food-apple','mci:beer','mci:bottle-wine','mci:pizza','mci:hamburger','mci:fish','mci:ice-cream','mci:cup','mci:silverware-fork-knife','mci:microwave'],
+  transport: ['navigation','mci:gas-station','mci:car-wash','mci:parking','mci:bus','mci:train','mci:taxi','mci:bicycle','truck','map-pin','tool','mci:engine'],
+  home: ['home','key','mci:sofa','mci:bed','mci:shower','mci:washing-machine','mci:lightbulb','mci:water','zap','wifi','tool','umbrella'],
+  health: ['heart','activity','mci:pill','mci:tooth','mci:hospital-box','mci:stethoscope','mci:dumbbell','mci:yoga','mci:spa','mci:hair-dryer','scissors','thermometer'],
+  entertainment: ['film','music','mci:gamepad-variant','mci:dice-5','mci:cards','mci:ticket','mci:television','mci:headphones','camera','mci:guitar-acoustic','mci:palette','star'],
+  travel: ['globe','navigation','map-pin','compass','mci:airplane','mci:bag-suitcase','mci:hotel','camera','sun','coffee','umbrella','mci:passport'],
+  kids: ['smile','mci:baby-bottle','mci:teddy-bear','mci:puzzle','mci:toy-brick','book-open','mci:balloon','mci:bicycle','gift','star','music','heart'],
+  personal: ['shopping-bag','mci:tshirt-crew','mci:shoe-heel','mci:ring','mci:necklace','mci:lipstick','scissors','mci:glasses','mci:watch','gift','tag','mci:hanger'],
+  income_group: ['briefcase','dollar-sign','trending-up','mci:cash','mci:piggy-bank','mci:bank','mci:calculator','mci:receipt','credit-card','home','tag','percent'],
 };
 
 const ALL_ICONS = [
@@ -28,12 +29,21 @@ const ALL_ICONS = [
   'navigation','truck','map-pin','compass','droplet',
   'home','key','tool','umbrella','sun','moon','wind',
   'heart','activity','thermometer','scissors','smile','feather',
-  'smartphone','monitor','cpu','tv','headphones','wifi','phone','bluetooth',
+  'smartphone','monitor','cpu','tv','headphones','wifi','phone',
   'dollar-sign','credit-card','trending-up','percent','briefcase','clipboard',
   'film','music','camera','book','book-open','target','award','flag',
   'users','user','gift','mail','message-circle','send',
   'shield','star','tag','globe','package','box','archive','layers','grid',
-  'bell','clock','lock','eye','alert-triangle','hash','paperclip','download',
+  'bell','clock','lock','eye','alert-triangle',
+  'mci:food-apple','mci:beer','mci:bottle-wine','mci:pizza','mci:hamburger',
+  'mci:gas-station','mci:car-wash','mci:parking','mci:bus','mci:train','mci:taxi',
+  'mci:sofa','mci:bed','mci:washing-machine','mci:lightbulb',
+  'mci:pill','mci:tooth','mci:dumbbell','mci:yoga','mci:spa','mci:hair-dryer',
+  'mci:gamepad-variant','mci:dice-5','mci:cards','mci:ticket','mci:guitar-acoustic',
+  'mci:tshirt-crew','mci:shoe-heel','mci:ring','mci:lipstick','mci:glasses','mci:watch',
+  'mci:cash','mci:piggy-bank','mci:bank','mci:calculator','mci:receipt',
+  'mci:baby-bottle','mci:teddy-bear','mci:puzzle','mci:toy-brick','mci:balloon',
+  'mci:airplane','mci:bag-suitcase','mci:passport','mci:hanger','mci:necklace',
 ];
 
 const COLOR_OPTIONS = [
@@ -272,7 +282,10 @@ export default function CategoriesScreen() {
               {(editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS).map(ic => (
                 <TouchableOpacity key={ic} style={[styles.iconBtn, editIcon === ic && { borderColor: editColor, backgroundColor: `${editColor}15` }]}
                   onPress={() => setEditIcon(ic)}>
-                  <Feather name={ic} size={18} color={editIcon === ic ? editColor : colors.textMuted} />
+                  {ic.startsWith('mci:')
+                    ? <MaterialCommunityIcons name={ic.slice(4)} size={20} color={editIcon === ic ? editColor : colors.textMuted} />
+                    : <Feather name={ic} size={18} color={editIcon === ic ? editColor : colors.textMuted} />
+                  }
                 </TouchableOpacity>
               ))}
             </View>

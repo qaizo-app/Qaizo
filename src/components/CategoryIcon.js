@@ -1,6 +1,6 @@
 // src/components/CategoryIcon.js
 // Монохромные контурные иконки вместо эмодзи
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
@@ -39,7 +39,10 @@ export default function CategoryIcon({ categoryId, size = 'medium', type }) {
       width: s.box, height: s.box, borderRadius: s.radius,
       backgroundColor: bgColor,
     }]}>
-      <Feather name={icon} size={s.icon} color={iconColor} />
+      {icon.startsWith('mci:')
+        ? <MaterialCommunityIcons name={icon.slice(4)} size={s.icon} color={iconColor} />
+        : <Feather name={icon} size={s.icon} color={iconColor} />
+      }
     </View>
   );
 }
