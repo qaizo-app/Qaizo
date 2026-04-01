@@ -127,6 +127,9 @@ const authService = {
   // Сброс пароля
   async resetPassword(email) {
     try {
+      let lang = 'en';
+      try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
+      auth.languageCode = lang;
       await sendPasswordResetEmail(auth, email);
       return { success: true };
     } catch (e) {
