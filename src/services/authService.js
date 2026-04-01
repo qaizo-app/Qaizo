@@ -5,6 +5,7 @@ import {
     createUserWithEmailAndPassword,
     deleteUser,
     onAuthStateChanged,
+    sendEmailVerification,
     sendPasswordResetEmail,
     signInWithCredential,
     signInWithEmailAndPassword,
@@ -41,6 +42,11 @@ const authService = {
       if (displayName) {
         await updateProfile(cred.user, { displayName });
       }
+      // Send verification email in app language
+      let lang = 'en';
+      try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
+      auth.languageCode = lang;
+      try { await sendEmailVerification(cred.user); } catch (e) {}
       return { success: true, user: cred.user };
     } catch (e) {
       return { success: false, error: getErrorMessage(e.code) };
