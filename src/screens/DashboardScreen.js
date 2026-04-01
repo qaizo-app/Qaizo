@@ -166,11 +166,15 @@ export default function DashboardScreen() {
     const cat = t.categoryId || 'other';
     catTotals[cat] = (catTotals[cat] || 0) + t.amount;
   });
+  // Build category name lookup from transactions
+  const catNameMap = {};
+  thisMonth.forEach(t => { if (t.categoryName) catNameMap[t.categoryId] = t.categoryName; });
+
   const pieData = Object.entries(catTotals)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
     .map(([cat, amount]) => ({
-      name: i18n.t(cat),
+      name: catNameMap[cat] || i18n.t(cat),
       amount,
       color: categoryConfig[cat]?.color || '#64748b',
       legendFontColor: colors.textDim,
@@ -525,7 +529,7 @@ export default function DashboardScreen() {
                             <View style={st.budgetInfo}>
                               <View style={st.budgetLeft}>
                                 <View style={[st.budgetDot, { backgroundColor: cfg.color }]} />
-                                <Text style={st.budgetCat}>{i18n.t(cat)}</Text>
+                                <Text style={st.budgetCat}>{catNameMap[cat] || i18n.t(cat)}</Text>
                               </View>
                               <View style={st.budgetRight}>
                                 {hb ? (
