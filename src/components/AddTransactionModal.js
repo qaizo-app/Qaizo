@@ -117,7 +117,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     <>
       <SwipeModal visible={visible} onClose={onClose}>
         {({ close }) => (
-          <View>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={st.title}>{title}</Text>
 
             <View style={st.typeRow}>
@@ -145,7 +145,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
+            <View>
               {!hasPre && type !== 'transfer' && (
                 <>
                   <Text style={st.label}>{accLabel}</Text>
@@ -291,7 +291,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                     placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} multiline />
                 </>
               )}
-            </ScrollView>
+            </View>
 
             <View style={st.btnRow}>
               <TouchableOpacity style={st.cancelBtn} onPress={close}>
@@ -303,7 +303,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 <Text style={st.saveTxt}>{isEdit ? title : i18n.t('save')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         )}
       </SwipeModal>
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
