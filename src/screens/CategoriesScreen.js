@@ -1,6 +1,6 @@
 // src/screens/CategoriesScreen.js
 // Управление категориями: группы + подкатегории, добавление, редактирование
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,17 +11,17 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 
-// Icons prefixed with 'mci:' use MaterialCommunityIcons, others use Feather
+// Icons prefixed with 'ion:' use Ionicons outline, others use Feather
 const ICONS_BY_GROUP = {
-  food: ['shopping-cart','coffee','mci:food-apple','mci:beer','mci:bottle-wine','mci:pizza','mci:hamburger','mci:fish','mci:ice-cream','mci:cup','mci:silverware-fork-knife','mci:microwave'],
-  transport: ['navigation','mci:gas-station','mci:car-wash','mci:parking','mci:bus','mci:train','mci:taxi','mci:bicycle','truck','map-pin','tool','mci:engine'],
-  home: ['home','key','mci:sofa','mci:bed','mci:shower','mci:washing-machine','mci:lightbulb','mci:water','zap','wifi','tool','umbrella'],
-  health: ['heart','activity','mci:pill','mci:tooth','mci:hospital-box','mci:stethoscope','mci:dumbbell','mci:yoga','mci:spa','mci:hair-dryer','scissors','thermometer'],
-  entertainment: ['film','music','mci:gamepad-variant','mci:dice-5','mci:cards','mci:ticket','mci:television','mci:headphones','camera','mci:guitar-acoustic','mci:palette','star'],
-  travel: ['globe','navigation','map-pin','compass','mci:airplane','mci:bag-suitcase','mci:hotel','camera','sun','coffee','umbrella','mci:passport'],
-  kids: ['smile','mci:baby-bottle','mci:teddy-bear','mci:puzzle','mci:toy-brick','book-open','mci:balloon','mci:bicycle','gift','star','music','heart'],
-  personal: ['shopping-bag','mci:tshirt-crew','mci:shoe-heel','mci:ring','mci:necklace','mci:lipstick','scissors','mci:glasses','mci:watch','gift','tag','mci:hanger'],
-  income_group: ['briefcase','dollar-sign','trending-up','mci:cash','mci:piggy-bank','mci:bank','mci:calculator','mci:receipt','credit-card','home','tag','percent'],
+  food: ['shopping-cart','coffee','ion:pizza-outline','ion:beer-outline','ion:wine-outline','ion:fast-food-outline','ion:ice-cream-outline','ion:cafe-outline','ion:restaurant-outline','ion:fish-outline','ion:nutrition-outline','ion:cart-outline'],
+  transport: ['navigation','ion:car-outline','ion:bus-outline','ion:train-outline','ion:bicycle-outline','ion:airplane-outline','map-pin','truck','droplet','tool','shield','ion:boat-outline'],
+  home: ['home','key','ion:water-outline','ion:flash-outline','wifi','tool','umbrella','sun','moon','phone','ion:leaf-outline','ion:thermometer-outline'],
+  health: ['heart','activity','ion:medical-outline','ion:fitness-outline','ion:bandage-outline','thermometer','scissors','smile','ion:body-outline','ion:eye-outline','shield','ion:pulse-outline'],
+  entertainment: ['film','music','ion:game-controller-outline','ion:dice-outline','ion:ticket-outline','ion:tv-outline','headphones','camera','ion:musical-notes-outline','star','award','ion:color-palette-outline'],
+  travel: ['globe','navigation','map-pin','compass','ion:airplane-outline','ion:bed-outline','camera','sun','coffee','umbrella','ion:map-outline','ion:compass-outline'],
+  kids: ['smile','ion:happy-outline','gift','book-open','star','music','ion:balloon-outline','ion:bicycle-outline','ion:color-palette-outline','heart','award','ion:paw-outline'],
+  personal: ['shopping-bag','ion:shirt-outline','ion:glasses-outline','ion:watch-outline','scissors','gift','tag','eye','star','ion:leaf-outline','feather','smile'],
+  income_group: ['briefcase','dollar-sign','trending-up','ion:cash-outline','ion:wallet-outline','ion:calculator-outline','ion:receipt-outline','credit-card','home','tag','percent','ion:card-outline'],
 };
 
 const ALL_ICONS = [
@@ -35,15 +35,16 @@ const ALL_ICONS = [
   'users','user','gift','mail','message-circle','send',
   'shield','star','tag','globe','package','box','archive','layers','grid',
   'bell','clock','lock','eye','alert-triangle',
-  'mci:food-apple','mci:beer','mci:bottle-wine','mci:pizza','mci:hamburger',
-  'mci:gas-station','mci:car-wash','mci:parking','mci:bus','mci:train','mci:taxi',
-  'mci:sofa','mci:bed','mci:washing-machine','mci:lightbulb',
-  'mci:pill','mci:tooth','mci:dumbbell','mci:yoga','mci:spa','mci:hair-dryer',
-  'mci:gamepad-variant','mci:dice-5','mci:cards','mci:ticket','mci:guitar-acoustic',
-  'mci:tshirt-crew','mci:shoe-heel','mci:ring','mci:lipstick','mci:glasses','mci:watch',
-  'mci:cash','mci:piggy-bank','mci:bank','mci:calculator','mci:receipt',
-  'mci:baby-bottle','mci:teddy-bear','mci:puzzle','mci:toy-brick','mci:balloon',
-  'mci:airplane','mci:bag-suitcase','mci:passport','mci:hanger','mci:necklace',
+  'ion:pizza-outline','ion:beer-outline','ion:wine-outline','ion:fast-food-outline',
+  'ion:ice-cream-outline','ion:cafe-outline','ion:restaurant-outline','ion:fish-outline',
+  'ion:car-outline','ion:bus-outline','ion:train-outline','ion:bicycle-outline','ion:airplane-outline',
+  'ion:water-outline','ion:flash-outline','ion:leaf-outline',
+  'ion:medical-outline','ion:fitness-outline','ion:bandage-outline','ion:body-outline',
+  'ion:game-controller-outline','ion:dice-outline','ion:ticket-outline','ion:tv-outline',
+  'ion:shirt-outline','ion:glasses-outline','ion:watch-outline',
+  'ion:cash-outline','ion:wallet-outline','ion:calculator-outline','ion:receipt-outline',
+  'ion:paw-outline','ion:happy-outline','ion:balloon-outline',
+  'ion:bed-outline','ion:map-outline',
 ];
 
 const COLOR_OPTIONS = [
@@ -282,8 +283,8 @@ export default function CategoriesScreen() {
               {(editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS).map(ic => (
                 <TouchableOpacity key={ic} style={[styles.iconBtn, editIcon === ic && { borderColor: editColor, backgroundColor: `${editColor}15` }]}
                   onPress={() => setEditIcon(ic)}>
-                  {ic.startsWith('mci:')
-                    ? <MaterialCommunityIcons name={ic.slice(4)} size={20} color={editIcon === ic ? editColor : colors.textMuted} />
+                  {ic.startsWith('ion:')
+                    ? <Ionicons name={ic.slice(4)} size={20} color={editIcon === ic ? editColor : colors.textMuted} />
                     : <Feather name={ic} size={18} color={editIcon === ic ? editColor : colors.textMuted} />
                   }
                 </TouchableOpacity>
