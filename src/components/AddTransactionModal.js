@@ -34,6 +34,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [projects, setProjects] = useState([]);
   const [selProject, setSelProject] = useState('');
   const [weekStart, setWeekStart] = useState('sunday');
+  const [knownRecipients, setKnownRecipients] = useState([]);
+  const [showRecipients, setShowRecipients] = useState(false);
   const isEdit = !!editTransaction;
   const lang = i18n.getLanguage();
   const hasPre = !!preselectedAccount;
@@ -46,6 +48,10 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags(), dataService.getProjects()]).then(([accs, txs, savedTags, projs]) => {
         setProjects([...projs].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
         setUserTags(savedTags);
+        // Collect unique recipients
+        const recs = {};
+        txs.forEach(tx => { if (tx.recipient) recs[tx.recipient] = (recs[tx.recipient]||0) + 1; });
+        setKnownRecipients(Object.entries(recs).sort((a, b) => b[1] - a[1]).map(e => e[0]));
         const usage = {};
         txs.forEach(tx => { usage[tx.account] = (usage[tx.account]||0)+1; });
         let sorted = [...accs].filter(a => a.isActive !== false).sort((a, b) => (usage[b.id]||0) - (usage[a.id]||0));
@@ -139,7 +145,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 260 }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
               {!hasPre && type !== 'transfer' && (
                 <>
                   <Text style={st.label}>{accLabel}</Text>
@@ -189,8 +195,24 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 </>
               )}
 
-              <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
+              <TextInput style={st.input} value={recipient}
+                onChangeText={(t) => { setRecipient(t); setShowRecipients(t.length > 0); }}
+                onFocus={() => { if (recipient.length === 0 && knownRecipients.length > 0) setShowRecipients(true); }}
+                onBlur={() => setTimeout(() => setShowRecipients(false), 200)}
                 placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
+              {showRecipients && knownRecipients.filter(r => !recipient || r.toLowerCase().includes(recipient.toLowerCase())).length > 0 && (
+                <View style={st.recipientList}>
+                  {knownRecipients
+                    .filter(r => !recipient || r.toLowerCase().includes(recipient.toLowerCase()))
+                    .slice(0, 5)
+                    .map(r => (
+                      <TouchableOpacity key={r} style={st.recipientItem}
+                        onPress={() => { setRecipient(r); setShowRecipients(false); }}>
+                        <Text style={st.recipientText}>{r}</Text>
+                      </TouchableOpacity>
+                    ))}
+                </View>
+              )}
 
               {/* Project */}
               <Text style={st.label}>{i18n.t('project')}</Text>
@@ -308,6 +330,9 @@ const createSt = () => StyleSheet.create({
   catPickerIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   catPickerText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 15, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
+  recipientList: { backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, marginTop: -8, marginBottom: 10, overflow: 'hidden' },
+  recipientItem: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  recipientText: { color: colors.text, fontSize: 14, fontWeight: '500' },
   moreBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', paddingVertical: 8, marginBottom: 8 },
   moreTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginStart: 4 },
   tagsRow: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 12 },
