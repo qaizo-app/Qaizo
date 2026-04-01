@@ -123,13 +123,19 @@ function AppInner() {
           } else if (u && !u.emailVerified) {
             // Залогинен но email не подтверждён — показать auth
             setScreen('auth');
-          } else if (onboardingDone !== 'true') {
+          } else {
+            // Re-read flags (may have changed during session)
+            const currentOnboarding = await AsyncStorage.getItem(ONBOARDING_KEY);
+            const currentSkipped = await AsyncStorage.getItem(AUTH_SKIPPED_KEY);
+            const currentWizard = await AsyncStorage.getItem(WIZARD_KEY);
+            if (currentOnboarding !== 'true') {
             setScreen('onboarding');
-          } else if (skipped === 'true') {
-            if (wizardDone !== 'true') setScreen('wizard');
+          } else if (currentSkipped === 'true') {
+            if (currentWizard !== 'true') setScreen('wizard');
             else setScreen('app');
           } else {
             setScreen('auth');
+          }
           }
         });
       } catch (e) {
