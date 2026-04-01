@@ -75,7 +75,7 @@ export default function SwipeModal({ visible, onClose, children }) {
       </TouchableWithoutFeedback>
 
       {/* Модалка */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ justifyContent: 'flex-end' }}>
+      <KeyboardAvoidingView behavior="padding" style={{ justifyContent: 'flex-end', flex: 1 }}>
         <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 16) + 40 }]}>
           <View {...panResponder.panHandlers} style={styles.swipeZone}>
             <View style={styles.handle} />
