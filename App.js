@@ -112,6 +112,7 @@ function AppInner() {
 
         // Всегда слушаем auth — даже если флаги сброшены, юзер может быть залогинен
         unsubAuth = authService.onAuthChanged(async (u) => {
+          if (u) try { await u.reload(); } catch (e) {}
           setUser(u);
           if (u && u.emailVerified) {
             // Залогинен + email подтверждён
