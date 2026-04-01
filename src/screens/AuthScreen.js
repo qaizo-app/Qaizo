@@ -33,10 +33,13 @@ export default function AuthScreen({ onSkip }) {
     const result = await authService.login(email.trim(), password);
     setLoading(false);
     if (result.success) {
+      // Reload user to get fresh emailVerified status
+      await result.user.reload();
       if (!result.user.emailVerified) {
         await authService.logout();
         setShowVerifyEmail(true);
       }
+      // If verified, onAuthChanged in App.js will handle navigation
     } else {
       setError(result.error);
     }
