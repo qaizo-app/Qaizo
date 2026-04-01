@@ -73,7 +73,7 @@ export default function MonthlyReportScreen() {
   // Топ получатели
   const recipTotals = {};
   expTxs.forEach(t => {
-    const r = t.recipient || i18n.t(t.categoryId) || i18n.t('other');
+    const r = t.recipient || t.categoryName || i18n.t(t.categoryId) || i18n.t('other');
     recipTotals[r] = (recipTotals[r] || 0) + t.amount;
   });
   const topRecipients = Object.entries(recipTotals)

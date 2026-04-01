@@ -46,7 +46,7 @@ function buildRows(transactions, accMap) {
   return transactions.map(tx => ({
     date: formatDate(tx.date || tx.createdAt),
     type: tx.type,
-    category: i18n.t(tx.categoryId) || tx.categoryId,
+    category: tx.categoryName || i18n.t(tx.categoryId) || tx.categoryId,
     amount: tx.amount,
     account: accMap[tx.account] || '',
     payee: tx.recipient || '',

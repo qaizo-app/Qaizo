@@ -76,8 +76,8 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Feather name={cfg.icon || 'repeat'} size={24} color={cfg.color} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.title}>{item.recipient || i18n.t(item.categoryId)}</Text>
-              <Text style={st.subtitle}>{i18n.t(item.categoryId)}</Text>
+              <Text style={st.title}>{item.recipient || item.categoryName || i18n.t(item.categoryId)}</Text>
+              <Text style={st.subtitle}>{item.categoryName || i18n.t(item.categoryId)}</Text>
             </View>
             <Amount value={item.type === 'expense' ? -item.amount : item.amount} sign style={st.amount} color={item.type === 'expense' ? colors.red : colors.green} />
           </View>

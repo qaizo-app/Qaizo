@@ -592,7 +592,7 @@ export default function DashboardScreen() {
                                 <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
                               </View>
                               <View style={st.recInfo}>
-                                <Text style={st.recName}>{rec.recipient || i18n.t(rec.categoryId)}</Text>
+                                <Text style={st.recName}>{rec.recipient || rec.categoryName || i18n.t(rec.categoryId)}</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                                   <Amount value={rec.type === 'expense' ? -rec.amount : rec.amount} sign style={st.recMeta} color={rec.type === 'expense' ? colors.red : colors.green} />
                                   <Text style={st.recMeta}> · {dateLabel}</Text>

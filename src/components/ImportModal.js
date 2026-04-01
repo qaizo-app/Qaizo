@@ -211,7 +211,7 @@ export default function ImportModal({ visible, onClose, onImported }) {
                 {parseResult.transactions.slice(0, 10).map((tx, idx) => (
                   <View key={idx} style={st.previewRow}>
                     <Text style={st.previewDate}>{tx.date.slice(0, 10)}</Text>
-                    <Text style={st.previewName} numberOfLines={1}>{tx.recipient || i18n.t(tx.categoryId)}</Text>
+                    <Text style={st.previewName} numberOfLines={1}>{tx.recipient || tx.categoryName || i18n.t(tx.categoryId)}</Text>
                     <Amount
                       value={tx.type === 'expense' ? -tx.amount : tx.amount}
                       sign={tx.type === 'expense'}
