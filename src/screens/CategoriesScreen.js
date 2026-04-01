@@ -12,11 +12,25 @@ import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 
 const ICON_OPTIONS = [
-  'home','shopping-cart','coffee','navigation','droplet','heart','smartphone',
-  'zap','shopping-bag','smile','film','book-open','scissors','cpu','shield',
-  'key','map-pin','users','briefcase','tool','package','plus-circle',
-  'truck','gift','music','camera','sun','moon','umbrella','star',
-  'globe','award','target','flag','layers','grid','box','archive',
+  // Food & Drink
+  'shopping-cart','coffee','shopping-bag','zap',
+  // Transport
+  'navigation','truck','map-pin','compass','droplet',
+  // Home & Bills
+  'home','key','tool','umbrella','sun','moon','wind',
+  // Health & Beauty
+  'heart','activity','thermometer','scissors','smile','feather',
+  // Tech & Communication
+  'smartphone','monitor','cpu','tv','headphones','wifi','phone','bluetooth',
+  // Finance & Work
+  'dollar-sign','credit-card','trending-up','percent','briefcase','clipboard',
+  // Entertainment & Hobbies
+  'film','music','camera','book','book-open','target','award','flag','compass',
+  // People & Social
+  'users','user','gift','mail','message-circle','send',
+  // Other
+  'shield','star','tag','globe','package','box','archive','layers','grid',
+  'bell','clock','lock','eye','alert-triangle','hash','paperclip','download',
 ];
 
 const COLOR_OPTIONS = [

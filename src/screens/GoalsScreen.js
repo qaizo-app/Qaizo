@@ -19,6 +19,8 @@ const ICON_OPTIONS = [
   'flag','map-pin','sun','umbrella','camera','music',
   'truck','tool','package','award','layers','coffee','book-open',
   'users','zap','shield','cpu','smartphone','key','archive','box',
+  'navigation','droplet','dollar-sign','credit-card','trending-up',
+  'activity','scissors','monitor','tv','phone','tag','compass',
 ];
 
 const COLOR_OPTIONS = [
