@@ -2,7 +2,8 @@
 // Логин / Регистрация — тёмная тема
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useToast } from '../components/ToastProvider';
 import i18n from '../i18n';
 import authService from '../services/authService';
 import { colors } from '../theme/colors';
@@ -16,6 +17,7 @@ export default function AuthScreen({ onSkip }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const toast = useToast();
   const st = createSt();
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -51,7 +53,7 @@ export default function AuthScreen({ onSkip }) {
     const result = await authService.resetPassword(email.trim());
     setLoading(false);
     if (result.success) {
-      Alert.alert('', i18n.t('resetSent'));
+      toast.show(i18n.t('resetSent'), 'success');
       setMode('login');
     } else {
       setError(result.error);
