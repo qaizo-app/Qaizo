@@ -67,7 +67,7 @@ const authService = {
     }
   },
 
-  // Google Sign-In
+  // Google Sign-In (with PKCE — required by Google since 2025)
   async loginWithGoogle() {
     try {
       const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
@@ -83,14 +83,27 @@ const authService = {
         clientId,
         redirectUri,
         scopes: ['openid', 'profile', 'email'],
-        responseType: AuthSession.ResponseType.IdToken,
-        usePKCE: false,
+        responseType: AuthSession.ResponseType.Code,
+        usePKCE: true,
       });
       const result = await request.promptAsync(discovery);
-      if (result.type === 'success' && result.params?.id_token) {
-        const credential = GoogleAuthProvider.credential(result.params.id_token);
-        const cred = await signInWithCredential(auth, credential);
-        return { success: true, user: cred.user };
+      if (result.type === 'success' && result.params?.code) {
+        // Exchange code for tokens
+        const tokenResult = await AuthSession.exchangeCodeAsync(
+          {
+            clientId,
+            code: result.params.code,
+            redirectUri,
+            extraParams: { code_verifier: request.codeVerifier },
+          },
+          discovery,
+        );
+        if (tokenResult.idToken) {
+          const credential = GoogleAuthProvider.credential(tokenResult.idToken);
+          const cred = await signInWithCredential(auth, credential);
+          return { success: true, user: cred.user };
+        }
+        return { success: false, error: 'No ID token received' };
       }
       return { success: false, error: 'Google sign-in cancelled' };
     } catch (e) {
