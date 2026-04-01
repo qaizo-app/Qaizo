@@ -206,7 +206,7 @@ export default {
   clearAll: 'Clear all',
   recalculate: 'Recalculate balances',
   balancesRecalculated: 'Balances recalculated',
-  langChanged: 'Language changed. Close and reopen the app',
+  langChanged: 'Language changed',
   about: 'About',
 
   // Recurring

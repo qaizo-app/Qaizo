@@ -215,7 +215,7 @@ export default {
   clearAll: 'Очистить все',
   recalculate: 'Пересчитать балансы',
   balancesRecalculated: 'Балансы пересчитаны',
-  langChanged: 'Язык изменён. Закройте и откройте приложение заново',
+  langChanged: 'Язык изменён',
   about: 'О приложении',
 
   // Recurring

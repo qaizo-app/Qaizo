@@ -206,7 +206,7 @@ export default {
   clearAll: 'נקה הכל',
   recalculate: 'חשב יתרות מחדש',
   balancesRecalculated: 'יתרות חושבו מחדש',
-  langChanged: 'השפה שונתה. סגור ופתח מחדש את האפליקציה',
+  langChanged: 'השפה שונתה',
   about: 'אודות',
 
   // Recurring
