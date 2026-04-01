@@ -11,24 +11,27 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 
-const ICON_OPTIONS = [
-  // Food & Drink
+const ICONS_BY_GROUP = {
+  food: ['shopping-cart','coffee','shopping-bag','zap','package','box','truck','smile'],
+  transport: ['navigation','truck','map-pin','droplet','compass','tool','shield','key'],
+  home: ['home','key','tool','zap','droplet','sun','moon','umbrella','wind','globe','wifi','phone'],
+  health: ['heart','activity','thermometer','smile','shield','plus-circle','clipboard'],
+  entertainment: ['film','music','camera','tv','headphones','play','radio','star','award','flag'],
+  travel: ['globe','navigation','map-pin','compass','camera','sun','umbrella','coffee'],
+  kids: ['smile','book-open','gift','star','music','award','shopping-bag','heart'],
+  personal: ['shopping-bag','scissors','star','gift','eye','tag','feather','smile'],
+  income_group: ['briefcase','dollar-sign','trending-up','credit-card','home','tool','package','tag','percent'],
+};
+
+const ALL_ICONS = [
   'shopping-cart','coffee','shopping-bag','zap',
-  // Transport
   'navigation','truck','map-pin','compass','droplet',
-  // Home & Bills
   'home','key','tool','umbrella','sun','moon','wind',
-  // Health & Beauty
   'heart','activity','thermometer','scissors','smile','feather',
-  // Tech & Communication
   'smartphone','monitor','cpu','tv','headphones','wifi','phone','bluetooth',
-  // Finance & Work
   'dollar-sign','credit-card','trending-up','percent','briefcase','clipboard',
-  // Entertainment & Hobbies
-  'film','music','camera','book','book-open','target','award','flag','compass',
-  // People & Social
+  'film','music','camera','book','book-open','target','award','flag',
   'users','user','gift','mail','message-circle','send',
-  // Other
   'shield','star','tag','globe','package','box','archive','layers','grid',
   'bell','clock','lock','eye','alert-triangle','hash','paperclip','download',
 ];
@@ -266,7 +269,7 @@ export default function CategoriesScreen() {
 
             <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
             <View style={styles.iconGrid}>
-              {ICON_OPTIONS.map(ic => (
+              {(editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS).map(ic => (
                 <TouchableOpacity key={ic} style={[styles.iconBtn, editIcon === ic && { borderColor: editColor, backgroundColor: `${editColor}15` }]}
                   onPress={() => setEditIcon(ic)}>
                   <Feather name={ic} size={18} color={editIcon === ic ? editColor : colors.textMuted} />
