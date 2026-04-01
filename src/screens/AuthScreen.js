@@ -3,7 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useToast } from '../components/ToastProvider';
+import ConfirmModal from '../components/ConfirmModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
 import { colors } from '../theme/colors';
@@ -17,7 +17,7 @@ export default function AuthScreen({ onSkip }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const toast = useToast();
+  const [showResetSent, setShowResetSent] = useState(false);
   const st = createSt();
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -53,8 +53,7 @@ export default function AuthScreen({ onSkip }) {
     const result = await authService.resetPassword(email.trim());
     setLoading(false);
     if (result.success) {
-      toast.show(i18n.t('resetSent'), 'success');
-      setMode('login');
+      setShowResetSent(true);
     } else {
       setError(result.error);
     }
@@ -218,6 +217,13 @@ export default function AuthScreen({ onSkip }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <ConfirmModal visible={showResetSent}
+        title={i18n.t('resetSent')} message={email}
+        confirmText="OK" cancelText={null}
+        onConfirm={() => { setShowResetSent(false); setMode('login'); }}
+        onCancel={() => { setShowResetSent(false); setMode('login'); }}
+        icon="mail" />
     </KeyboardAvoidingView>
   );
 }
