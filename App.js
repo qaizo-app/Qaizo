@@ -113,12 +113,15 @@ function AppInner() {
         // Всегда слушаем auth — даже если флаги сброшены, юзер может быть залогинен
         unsubAuth = authService.onAuthChanged(async (u) => {
           setUser(u);
-          if (u) {
-            // Залогинен — пропускаем онбординг и auth, восстанавливаем флаги
+          if (u && u.emailVerified) {
+            // Залогинен + email подтверждён
             if (onboardingDone !== 'true') await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
             try { await dataService.migrateToFirestore(); } catch (e) {}
             if (wizardDone !== 'true') setScreen('wizard');
             else setScreen('app');
+          } else if (u && !u.emailVerified) {
+            // Залогинен но email не подтверждён — показать auth
+            setScreen('auth');
           } else if (onboardingDone !== 'true') {
             setScreen('onboarding');
           } else if (skipped === 'true') {
