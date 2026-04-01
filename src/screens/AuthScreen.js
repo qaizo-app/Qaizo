@@ -221,6 +221,7 @@ export default function AuthScreen({ onSkip }) {
       <ConfirmModal visible={showResetSent}
         title={i18n.t('resetSent')} message={email}
         confirmText="OK" cancelText={null}
+        confirmColor={colors.green}
         onConfirm={() => { setShowResetSent(false); setMode('login'); }}
         onCancel={() => { setShowResetSent(false); setMode('login'); }}
         icon="mail" />
