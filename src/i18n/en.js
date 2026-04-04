@@ -8,6 +8,12 @@ export default {
 
   totalBalance: 'Total Balance',
   endOfMonthForecast: 'End of month forecast',
+  contractEnd: 'Contract end date',
+  optional: 'Optional',
+  notifications: 'Notifications',
+  notifyBeforePayment: 'Reminder day before payment',
+  contractEndingSoon: 'Contract ending soon',
+  contractEndsIn30: '30 days left — check new terms',
   income: 'Income',
   expenses: 'Expenses',
   thisMonth: 'This Month',

@@ -8,6 +8,12 @@ export default {
 
   totalBalance: 'יתרה כוללת',
   endOfMonthForecast: 'תחזית סוף חודש',
+  contractEnd: 'תאריך סיום חוזה',
+  optional: 'אופציונלי',
+  notifications: 'התראות',
+  notifyBeforePayment: 'תזכורת יום לפני תשלום',
+  contractEndingSoon: 'חוזה מסתיים בקרוב',
+  contractEndsIn30: 'נשארו 30 יום — בדוק תנאים חדשים',
   income: 'הכנסות',
   expenses: 'הוצאות',
   thisMonth: 'החודש',

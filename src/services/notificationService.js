@@ -32,7 +32,7 @@ const notificationService = {
       await Notifications.cancelAllScheduledNotificationsAsync();
 
       const recurring = await dataService.getRecurring();
-      const active = recurring.filter(r => r.isActive && r.nextDate);
+      const active = recurring.filter(r => r.isActive && r.nextDate && r.notify !== false);
 
       for (const rec of active) {
         const nextDate = new Date(rec.nextDate + 'T09:00:00');
@@ -74,6 +74,29 @@ const notificationService = {
               channelId: 'payments',
             },
           });
+        }
+
+
+        // Contract end reminder (30 days before)
+        if (rec.contractEndDate) {
+          const contractEnd = new Date(rec.contractEndDate + 'T10:00:00');
+          const reminderDate = new Date(contractEnd);
+          reminderDate.setDate(reminderDate.getDate() - 30);
+          if (reminderDate > now) {
+            const secondsUntil = Math.floor((reminderDate.getTime() - now.getTime()) / 1000);
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: i18n.t('contractEndingSoon'),
+                body: `${rec.recipient || i18n.t(rec.categoryId)} — ${i18n.t('contractEndsIn30')}`,
+                data: { recurringId: rec.id, type: 'contract_end' },
+              },
+              trigger: {
+                type: 'timeInterval',
+                seconds: secondsUntil,
+                channelId: 'payments',
+              },
+            });
+          }
         }
       }
 

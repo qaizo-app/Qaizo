@@ -2,12 +2,13 @@
 // Модал создания запланированного платежа
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
+import DatePickerModal from './DatePickerModal';
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -30,6 +31,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [totalCount, setTotalCount] = useState('12');
   const [endDate, setEndDate] = useState('');
   const [showSchedule, setShowSchedule] = useState(false);
+  const [notify, setNotify] = useState(true);
+  const [contractEndDate, setContractEndDate] = useState('');
+  const [showContractCal, setShowContractCal] = useState(false);
   const isEdit = !!editItem;
   const st = createSt();
 
@@ -51,10 +55,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           setEndType(editItem.endType || 'none');
           setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
           setEndDate(editItem.endDate || '');
+          setNotify(editItem.notify !== false);
+          setContractEndDate(editItem.contractEndDate || '');
         } else {
           setType('expense'); setAmount(''); setCategoryId('rent');
           setRecipient(''); setNote(''); setIntervalMonths(1);
           setStartDate(''); setEndType('none'); setTotalCount('12'); setEndDate('');
+          setNotify(true); setContractEndDate('');
           if (active.length > 0) setSelAcc(active[0].id);
         }
       });
@@ -88,6 +95,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       endType,
       totalCount: endType === 'count' ? parseInt(totalCount, 10) || 12 : null,
       endDate: endType === 'date' ? endDate : null,
+      notify,
+      contractEndDate: contractEndDate || null,
     };
 
     if (isEdit) {
@@ -215,6 +224,29 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           <TextInput style={st.input} value={note} onChangeText={setNote}
             placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} />
 
+          {/* תאריך סיום חוזה */}
+          <Text style={st.label}>{i18n.t('contractEnd')}</Text>
+          <TouchableOpacity style={st.dateBtn} onPress={() => setShowContractCal(true)}>
+            <Feather name="calendar" size={14} color={colors.textMuted} />
+            <Text style={st.dateTxt}>{contractEndDate ? (() => { const [y,m,d] = contractEndDate.split('-'); return `${d}.${m}.${y}`; })() : i18n.t('optional')}</Text>
+            {contractEndDate ? (
+              <TouchableOpacity onPress={() => setContractEndDate('')} style={{ marginStart: 'auto' }}>
+                <Feather name="x" size={14} color={colors.textMuted} />
+              </TouchableOpacity>
+            ) : null}
+          </TouchableOpacity>
+
+          {/* התראות */}
+          <View style={st.toggleRow}>
+            <View>
+              <Text style={st.toggleLabel}>{i18n.t('notifications')}</Text>
+              <Text style={st.toggleSub}>{i18n.t('notifyBeforePayment')}</Text>
+            </View>
+            <Switch value={notify} onValueChange={setNotify}
+              trackColor={{ false: colors.card, true: `${tc}40` }}
+              thumbColor={notify ? tc : colors.textMuted} />
+          </View>
+
           {/* Кнопки */}
           <View style={st.btnRow}>
             <TouchableOpacity style={st.cancelBtn} onPress={close}>
@@ -242,6 +274,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       )}
     </SwipeModal>
     <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
+    <DatePickerModal visible={showContractCal} onClose={() => setShowContractCal(false)} onSelect={d => setContractEndDate(d)} selectedDate={contractEndDate} lang={i18n.getLanguage()} weekStart="sunday" />
     </>
   );
 }
@@ -265,6 +298,11 @@ const createSt = () => StyleSheet.create({
   scheduleTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
   cancelBtn: { flex: 1, paddingVertical: 18, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 8, marginBottom: 12 },
+  dateTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
+  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, marginBottom: 8 },
+  toggleLabel: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  toggleSub: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 18, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   saveTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },

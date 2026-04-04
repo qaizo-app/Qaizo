@@ -10,6 +10,12 @@ export default {
   // Dashboard
   totalBalance: 'Общий баланс',
   endOfMonthForecast: 'Прогноз на конец месяца',
+  contractEnd: 'Дата окончания контракта',
+  optional: 'Необязательно',
+  notifications: 'Уведомления',
+  notifyBeforePayment: 'Напоминание за день до платежа',
+  contractEndingSoon: 'Контракт скоро заканчивается',
+  contractEndsIn30: 'Осталось 30 дней — проверьте новые условия',
   income: 'Доходы',
   expenses: 'Расходы',
   thisMonth: 'Этот месяц',
