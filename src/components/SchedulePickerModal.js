@@ -277,6 +277,9 @@ const createSt = () => StyleSheet.create({
   chipTxtActiveAlt: { color: colors.teal },
 
   endRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 8, marginTop: 4 },
+  sectionLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
+  endBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 8, marginBottom: 12 },
+  endBtnTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
   endLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
   endInput: { backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, color: colors.text, fontSize: 14, borderWidth: 1, borderColor: colors.cardBorder, width: 70 },
 
