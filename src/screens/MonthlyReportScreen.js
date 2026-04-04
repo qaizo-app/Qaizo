@@ -171,23 +171,16 @@ export default function MonthlyReportScreen() {
 
         {/* Мини-график расходов по дням */}
         {totalExpense > 0 && (
-          <>
-            <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>{i18n.t('dailyExpenses')}</Text>
-            </View>
             <Card>
+              <Text style={st.cardTitle}>{i18n.t('dailyExpenses')}</Text>
               <DailyExpensesChart dailyExp={dailyExp} avgDaily={avgDaily} daysInMonth={daysInMonth} />
             </Card>
-          </>
         )}
 
         {/* Топ расходы по категориям */}
         {topCats.length > 0 && (
-          <>
-            <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>{i18n.t('topExpenseCategories')}</Text>
-            </View>
             <Card>
+              <Text style={st.cardTitle}>{i18n.t('topExpenseCategories')}</Text>
               {topCats.map(([cat, amount], idx) => {
                 const cfg = categoryConfig[cat] || categoryConfig.other;
                 const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
@@ -206,16 +199,12 @@ export default function MonthlyReportScreen() {
                 );
               })}
             </Card>
-          </>
         )}
 
         {/* Топ получатели */}
         {topRecipients.length > 0 && (
-          <>
-            <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>{i18n.t('topPayees')}</Text>
-            </View>
             <Card>
+              <Text style={st.cardTitle}>{i18n.t('topPayees')}</Text>
               {topRecipients.map(([name, amount], idx) => (
                 <View key={name} style={st.catRow}>
                   <View style={st.catLeft}>
@@ -227,16 +216,12 @@ export default function MonthlyReportScreen() {
                 </View>
               ))}
             </Card>
-          </>
         )}
 
         {/* Доходы по категориям */}
         {topIncCats.length > 0 && (
-          <>
-            <View style={st.sectionHeader}>
-              <Text style={st.sectionTitle}>{i18n.t('incomeBreakdown')}</Text>
-            </View>
             <Card>
+              <Text style={st.cardTitle}>{i18n.t('incomeBreakdown')}</Text>
               {topIncCats.map(([cat, amount]) => {
                 const cfg = categoryConfig[cat] || categoryConfig.other;
                 return (
@@ -250,7 +235,6 @@ export default function MonthlyReportScreen() {
                 );
               })}
             </Card>
-          </>
         )}
 
         {/* Пусто */}
@@ -287,8 +271,7 @@ const createSt = () => StyleSheet.create({
   statValue: { color: colors.text, fontSize: 16, fontWeight: '800' },
   statLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'center' },
 
-  sectionHeader: { paddingHorizontal: 24, marginTop: 24, marginBottom: 10 },
-  sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, textAlign: i18n.textAlign() },
+  cardTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
 
   catRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
   catLeft: { flexDirection: i18n.row(), alignItems: 'center', flex: 1, gap: 8 },
