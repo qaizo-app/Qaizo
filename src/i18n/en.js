@@ -592,4 +592,23 @@ export default {
   helpAddTip2: 'Tap category to pick from the full list with search',
   helpAddTip3: 'Assign a transaction to a project in the project field',
   helpAddTip4: 'Tap "More" to add tags and notes',
+
+  // Analytics
+  analytics: 'Analytics',
+  financialScore: 'Financial Score',
+  insights: 'Insights',
+  monthComparison: 'Month Comparison',
+  topPayees: 'Top Payees',
+  expenseByDay: 'Expenses by Day',
+  vsLastMonth: 'vs last month',
+  insightCategorySpike: '{pct}% increase in {category}',
+  insightSpendingPace: 'Spent {pctSpent}% of income in {pctMonth}% of the month',
+  insightUnusualTx: 'Unusual transaction: {amount} ₪ in {category}',
+  insightGoalAtRisk: '{name}: need {needed} ₪/month to reach on time',
+  insightGoodSaving: 'Great! Saved {pct}% of income this month',
+  noInsights: 'No new insights',
+  scoreExcellent: 'Excellent',
+  scoreGood: 'Good',
+  scoreFair: 'Fair',
+  scorePoor: 'Needs improvement',
 };

@@ -591,4 +591,23 @@ export default {
   helpAddTip2: 'לחץ על קטגוריה לבחירה מהרשימה המלאה עם חיפוש',
   helpAddTip3: 'שייך תנועה לפרויקט בשדה פרויקט',
   helpAddTip4: 'לחץ "עוד" להוספת תגיות והערות',
+
+  // Analytics
+  analytics: 'אנליטיקה',
+  financialScore: 'ציון פיננסי',
+  insights: 'תובנות',
+  monthComparison: 'השוואת חודשים',
+  topPayees: 'מוטבים מובילים',
+  expenseByDay: 'הוצאות לפי יום',
+  vsLastMonth: 'מול חודש קודם',
+  insightCategorySpike: 'עלייה של {pct}% ב{category}',
+  insightSpendingPace: 'הוצאת {pctSpent}% מההכנסה ב-{pctMonth}% מהחודש',
+  insightUnusualTx: 'עסקה חריגה: {amount} ₪ ב{category}',
+  insightGoalAtRisk: '{name}: צריך {needed} ₪/חודש כדי להגיע בזמן',
+  insightGoodSaving: 'מצוין! חסכת {pct}% מההכנסה החודש',
+  noInsights: 'אין תובנות חדשות',
+  scoreExcellent: 'מצוין',
+  scoreGood: 'טוב',
+  scoreFair: 'סביר',
+  scorePoor: 'צריך שיפור',
 };

@@ -559,4 +559,23 @@ export default {
   day: 'день',
   remaining: 'Осталось',
   upcoming: 'Предстоящие',
+
+  // Analytics
+  analytics: 'Аналитика',
+  financialScore: 'Финансовый рейтинг',
+  insights: 'Инсайты',
+  monthComparison: 'Сравнение месяцев',
+  topPayees: 'Топ получателей',
+  expenseByDay: 'Расходы по дням',
+  vsLastMonth: 'к прошлому месяцу',
+  insightCategorySpike: 'Рост {pct}% в категории {category}',
+  insightSpendingPace: 'Потрачено {pctSpent}% дохода за {pctMonth}% месяца',
+  insightUnusualTx: 'Необычная транзакция: {amount} ₪ в {category}',
+  insightGoalAtRisk: '{name}: нужно {needed} ₪/мес чтобы успеть',
+  insightGoodSaving: 'Отлично! Сэкономлено {pct}% дохода в этом месяце',
+  noInsights: 'Нет новых инсайтов',
+  scoreExcellent: 'Отлично',
+  scoreGood: 'Хорошо',
+  scoreFair: 'Нормально',
+  scorePoor: 'Нужно улучшить',
 };

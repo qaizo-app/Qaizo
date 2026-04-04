@@ -166,6 +166,15 @@ export default function SettingsScreen() {
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Analytics */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Analytics')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="bar-chart-2" size={18} color="#22d3ee" />
+            <Text style={styles.sectionText}>{i18n.t('analytics')}</Text>
+          </View>
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Monthly Report */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('MonthlyReport')}>
           <View style={styles.sectionLeft}>
