@@ -140,7 +140,7 @@ export default function ProjectsScreen() {
 
       {/* Add/Edit Modal */}
       <SwipeModal visible={showModal} onClose={() => setShowModal(false)} title={editProject ? i18n.t('project') : i18n.t('newProject')}>
-        <View style={st.form}>
+        <ScrollView style={st.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={st.label}>{i18n.t('projectName')}</Text>
           <TextInput style={st.input} value={name} onChangeText={setName}
             placeholder={i18n.t('projectName')} placeholderTextColor={colors.textMuted}
@@ -173,7 +173,7 @@ export default function ProjectsScreen() {
               <Text style={st.saveBtnText}>{i18n.t('save')}</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </SwipeModal>
 
       {/* Long press menu */}
