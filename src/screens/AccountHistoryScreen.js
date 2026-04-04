@@ -122,7 +122,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
 const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
   header:{flexDirection:'row',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:16},
-  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',borderWidth:1,borderColor:colors.cardBorder},
+  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',marginEnd:14,borderWidth:1,borderColor:colors.cardBorder},
   headerInfo:{flex:1},
   headerName:{color:colors.text,fontSize:20,fontWeight:'700'},
   headerType:{color:colors.textMuted,fontSize:13,marginTop:2},
