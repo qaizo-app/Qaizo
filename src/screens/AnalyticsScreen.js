@@ -1,7 +1,7 @@
 // src/screens/AnalyticsScreen.js
 // Аналитика — инсайты, ציון פיננסי, графики
 import React, { useCallback, useState } from 'react';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -10,6 +10,8 @@ import Card from '../components/Card';
 import i18n from '../i18n';
 import analyticsService from '../services/analyticsService';
 import dataService from '../services/dataService';
+import badgeService from '../services/badgeService';
+import streakService from '../services/streakService';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 
@@ -20,6 +22,7 @@ export default function AnalyticsScreen() {
   const [topPayees, setTopPayees] = useState([]);
   const [monthCompare, setMonthCompare] = useState([]);
   const [dayData, setDayData] = useState([]);
+  const [earnedBadges, setEarnedBadges] = useState([]);
   const st = createSt();
   const lang = i18n.getLanguage();
 
@@ -37,8 +40,10 @@ export default function AnalyticsScreen() {
         dataService.getGoals(),
       ]);
       const recurring = await dataService.getRecurring();
+      const streakData = await streakService.calculateStreak(txs);
       setInsights(analyticsService.generateInsights(txs, recurring, budgets, goals));
       setScore(analyticsService.getFinancialScore(txs, budgets, goals));
+      setEarnedBadges(badgeService.getEarnedBadges(streakData, txs, budgets, goals));
       setTopPayees(analyticsService.getTopPayees(txs, 1));
       setMonthCompare(analyticsService.getMonthComparison(txs));
       setDayData(analyticsService.getExpenseByDayOfWeek(txs, 3));
@@ -84,6 +89,28 @@ export default function AnalyticsScreen() {
                 <View style={[st.scoreBarFill, { width: `${score}%`, backgroundColor: scoreColor }]} />
               </View>
             </View>
+          </View>
+        </Card>
+
+        {/* הישגים */}
+        <Card>
+          <Text style={st.sectionTitle}>{i18n.t('badges')}</Text>
+          <View style={st.badgeGrid}>
+            {badgeService.getAllBadges().map(badge => {
+              const isEarned = earnedBadges.includes(badge.id);
+              const isIon = badge.icon.startsWith('ion:');
+              return (
+                <View key={badge.id} style={[st.badgeItem, !isEarned && st.badgeLocked]}>
+                  <View style={[st.badgeIcon, { backgroundColor: isEarned ? badge.color + '20' : colors.bg2 }]}>
+                    {isIon
+                      ? <Ionicons name={badge.icon.slice(4)} size={22} color={isEarned ? badge.color : colors.textMuted} />
+                      : <Feather name={badge.icon} size={20} color={isEarned ? badge.color : colors.textMuted} />
+                    }
+                  </View>
+                  <Text style={[st.badgeLabel, isEarned && { color: colors.text }]} numberOfLines={2}>{i18n.t(badge.titleKey)}</Text>
+                </View>
+              );
+            })}
           </View>
         </Card>
 
@@ -169,6 +196,13 @@ const createSt = () => StyleSheet.create({
 
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 16 },
+
+  // Badges
+  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  badgeItem: { width: '18%', alignItems: 'center', gap: 4, paddingVertical: 8 },
+  badgeLocked: { opacity: 0.35 },
+  badgeIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  badgeLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'center' },
 
   // Score
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
