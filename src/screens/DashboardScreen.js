@@ -342,7 +342,7 @@ export default function DashboardScreen() {
                   {(() => {
                     const dayOfMonth = now.getDate();
                     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                    if (dayOfMonth < 5 || totalExpense === 0) return null;
+                    if (dayOfMonth < 3 || totalExpense === 0) return null;
                     const dailyRate = totalExpense / dayOfMonth;
                     const projectedExpense = Math.round(dailyRate * daysInMonth);
                     const projectedBalance = totalIncome - projectedExpense;
