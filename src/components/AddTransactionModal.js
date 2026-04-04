@@ -342,8 +342,8 @@ const createSt = () => StyleSheet.create({
   newTagInput: { color: colors.text, fontSize: 13, paddingVertical: 8, minWidth: 80, maxWidth: 120 },
   newTagBtn: { paddingHorizontal: 10, paddingVertical: 8 },
   btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
-  cancelBtn: { flex: 1, paddingVertical: 18, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
-  saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 18, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   saveTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

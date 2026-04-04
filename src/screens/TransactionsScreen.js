@@ -375,7 +375,7 @@ export default function TransactionsScreen({ route }) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Feather name={search || activeFilterCount > 0 ? 'search' : 'inbox'} size={40} color={colors.textMuted} />
+            <Feather name={search || activeFilterCount > 0 ? 'search' : 'inbox'} size={48} color={colors.textMuted} />
             <Text style={styles.emptyText}>
               {search || activeFilterCount > 0 ? i18n.t('noResults') : i18n.t('noTransactions')}
             </Text>

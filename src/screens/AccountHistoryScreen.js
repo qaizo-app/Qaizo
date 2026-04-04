@@ -11,6 +11,7 @@ import TransactionItem from '../components/TransactionItem';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
+import Amount from '../components/Amount';
 import { sym } from '../utils/currency';
 
 export default function AccountHistoryScreen({ route, navigation }) {
@@ -71,7 +72,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onDuplicate={handleDuplicate} />
       <View style={styles.balLine}>
         <Text style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]}>
-          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: {item.runningBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {account.currency||sym()}
+          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: <Amount value={item.runningBalance} style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]} />
         </Text>
       </View>
     </View>
@@ -94,10 +95,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       <View style={styles.balCard}>
         <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
-        <Text style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]}>
-          {currentBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {account.currency||sym()}
-        </Text>
-        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: {account.overdraft.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {account.currency||sym()}</Text>}
+        <Amount value={currentBalance} style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} />
+        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: <Amount value={account.overdraft} style={styles.odText} /></Text>}
       </View>
 
       <View style={styles.countRow}>
@@ -107,7 +106,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       <FlatList data={withBalance} keyExtractor={item=>item.id} renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={36} color={colors.textMuted} /><Text style={styles.emptyText}>{i18n.t('noTransactions')}</Text></View>} />
+        ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={48} color={colors.textMuted} /><Text style={styles.emptyText}>{i18n.t('noTransactions')}</Text></View>} />
 
       <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
@@ -122,8 +121,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
 const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
-  header:{flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:56,paddingBottom:16},
-  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',marginEnd:14,borderWidth:1,borderColor:colors.cardBorder},
+  header:{flexDirection:'row',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:16},
+  backBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.card,justifyContent:'center',alignItems:'center',borderWidth:1,borderColor:colors.cardBorder},
   headerInfo:{flex:1},
   headerName:{color:colors.text,fontSize:20,fontWeight:'700'},
   headerType:{color:colors.textMuted,fontSize:13,marginTop:2},

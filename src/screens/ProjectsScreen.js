@@ -9,6 +9,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
+import Amount from '../components/Amount';
 import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 
@@ -128,7 +129,7 @@ export default function ProjectsScreen() {
               <View style={st.projectInfo}>
                 <Text style={st.projectName}>{proj.name}</Text>
                 <Text style={st.projectMeta}>
-                  {count} {i18n.t('transactions').toLowerCase()} · {total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}
+                  {count} {i18n.t('transactions').toLowerCase()} · <Amount value={total} style={st.projectMeta} />
                 </Text>
               </View>
               <Feather name={'chevron-right'} size={18} color={colors.textMuted} />

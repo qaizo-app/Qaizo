@@ -170,7 +170,7 @@ export default function AccountsScreen() {
                 <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Text style={[styles.tileBalance, { color: colors.textMuted }]}>{(acc.balance||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {acc.currency||sym()}</Text>
+                  <Amount value={acc.balance||0} style={[styles.tileBalance, { color: colors.textMuted }]} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -269,7 +269,7 @@ export default function AccountsScreen() {
 
 const createStyles = () => StyleSheet.create({
   container:{flex:1,backgroundColor:colors.bg},
-  header:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:12},
+  header:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingHorizontal:24,paddingTop:60,paddingBottom:16},
   title:{color:colors.text,fontSize:24,fontWeight:'800',textAlign:i18n.textAlign()},
   addBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.green,justifyContent:'center',alignItems:'center'},
 
@@ -314,5 +314,5 @@ const createStyles = () => StyleSheet.create({
   cancelBtn:{flex:1,paddingVertical:16,borderRadius:14,backgroundColor:colors.card,alignItems:'center',borderWidth:1,borderColor:colors.cardBorder},
   cancelText:{color:colors.textDim,fontSize:16,fontWeight:'600'},
   saveBtn:{flex:2,flexDirection:i18n.row(),paddingVertical:16,borderRadius:14,alignItems:'center',justifyContent:'center'},
-  saveText:{color:'#fff',fontSize:16,fontWeight:'700'},
+  saveText:{color:colors.bg,fontSize:16,fontWeight:'700'},
 });

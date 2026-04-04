@@ -164,7 +164,7 @@ export default function GoalsScreen() {
                   <Text style={st.goalName}>{goal.name}</Text>
                   <Text style={st.goalMeta}>
                     {goal.targetDate ? dd : ''}{goal.targetDate && monthly ? ' · ' : ''}
-                    {monthly ? `${i18n.t('monthlyNeeded')}: ${monthly.toLocaleString()} ${sym()}` : ''}
+                    {monthly ? <Text>{i18n.t('monthlyNeeded')}: <Amount value={monthly} style={st.goalMeta} /></Text> : ''}
                   </Text>
                 </View>
                 {reached && <Feather name="check-circle" size={22} color={colors.green} />}
