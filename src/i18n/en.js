@@ -7,6 +7,7 @@ export default {
   advisor: 'Advisor',
 
   totalBalance: 'Total Balance',
+  endOfMonthForecast: 'End of month forecast',
   income: 'Income',
   expenses: 'Expenses',
   thisMonth: 'This Month',

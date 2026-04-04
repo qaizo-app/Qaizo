@@ -337,6 +337,23 @@ export default function DashboardScreen() {
                       <Amount value={-totalExpense} sign style={st.expAmount} color={colors.red} numberOfLines={1} adjustsFontSizeToFit />
                     </View>
                   </View>
+
+                  {/* תחזית סוף חודש */}
+                  {(() => {
+                    const dayOfMonth = now.getDate();
+                    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                    if (dayOfMonth < 5 || totalExpense === 0) return null;
+                    const dailyRate = totalExpense / dayOfMonth;
+                    const projectedExpense = Math.round(dailyRate * daysInMonth);
+                    const projectedBalance = totalIncome - projectedExpense;
+                    return (
+                      <View style={st.forecastRow}>
+                        <Feather name="activity" size={14} color={colors.textMuted} />
+                        <Text style={st.forecastText}>{i18n.t('endOfMonthForecast')}: </Text>
+                        <Amount value={projectedBalance} sign style={st.forecastAmount} color={projectedBalance >= 0 ? colors.green : colors.red} numberOfLines={1} />
+                      </View>
+                    );
+                  })()}
                 </Card>
               );
             case 'streak':
@@ -920,6 +937,9 @@ const createSt = () => StyleSheet.create({
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   balLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
   balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
+  forecastRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider },
+  forecastText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
+  forecastAmount: { fontSize: 14, fontWeight: '700' },
   incExpRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
   incExpItem: { flex: 1 },
   incExpHead: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 6 },

@@ -9,6 +9,7 @@ export default {
 
   // Dashboard
   totalBalance: 'Общий баланс',
+  endOfMonthForecast: 'Прогноз на конец месяца',
   income: 'Доходы',
   expenses: 'Расходы',
   thisMonth: 'Этот месяц',

@@ -7,6 +7,7 @@ export default {
   advisor: 'יועץ',
 
   totalBalance: 'יתרה כוללת',
+  endOfMonthForecast: 'תחזית סוף חודש',
   income: 'הכנסות',
   expenses: 'הוצאות',
   thisMonth: 'החודש',
