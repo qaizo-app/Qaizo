@@ -65,6 +65,7 @@ export default function DashboardScreen() {
   const [dashLayout, setDashLayout] = useState(DEFAULT_LAYOUT);
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [budgetsExpanded, setBudgetsExpanded] = useState(false);
+  const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [monthlyExtra, setMonthlyExtra] = useState(0);
   const [goals, setGoals] = useState([]);
   const bellAnim = useRef(new Animated.Value(1)).current;
@@ -653,11 +654,11 @@ export default function DashboardScreen() {
               if (goals.length === 0) return null;
               return (
                 <Card key="goals">
-                  <TouchableOpacity style={st.blockTitleRow} onPress={() => navigation.navigate('Goals')}>
+                  <TouchableOpacity style={st.blockTitleRow} onPress={() => setGoalsExpanded(!goalsExpanded)}>
                     <Text style={st.blockTitle}>{i18n.t('goals')}</Text>
-                    <Feather name="chevron-right" size={18} color={colors.textMuted} />
+                    <Feather name={goalsExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
                   </TouchableOpacity>
-                  {goals.slice(0, 3).map(goal => {
+                  {goalsExpanded && goals.slice(0, 3).map(goal => {
                     const saved = (goal.initialAmount || 0) + (goal.deposits || []).reduce((s, d) => s + d.amount, 0);
                     const pct = goal.targetAmount > 0 ? Math.min(Math.round((saved / goal.targetAmount) * 100), 100) : 0;
                     const gc = goal.color || '#34d399';
