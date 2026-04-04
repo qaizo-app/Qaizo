@@ -122,8 +122,7 @@ export default function AuthScreen({ onSkip }) {
             <TextInput style={st.input} value={name} onChangeText={setName}
               placeholder={i18n.t('yourName')} placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
-              autoComplete="off" importantForAutofill="noExcludeDescendants"
-              textContentType="none" />
+              autoComplete="name" textContentType="name" />
           </View>
         )}
 
@@ -133,8 +132,7 @@ export default function AuthScreen({ onSkip }) {
           <TextInput style={st.input} value={email} onChangeText={setEmail}
             placeholder={i18n.t('emailPlaceholder')} placeholderTextColor={colors.textMuted}
             keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
-            autoComplete="off" importantForAutofill="noExcludeDescendants"
-            textContentType="none" />
+            autoComplete="email" textContentType="emailAddress" />
         </View>
 
         {/* Пароль (не для сброса) */}
@@ -145,8 +143,7 @@ export default function AuthScreen({ onSkip }) {
               <TextInput style={st.input} value={password} onChangeText={setPassword}
                 placeholder={i18n.t('password')} placeholderTextColor={colors.textMuted}
                 secureTextEntry={!showPass} autoCapitalize="none"
-                autoComplete="off" importantForAutofill="noExcludeDescendants"
-                textContentType="none" />
+                autoComplete="password" textContentType="password" />
               <TouchableOpacity onPress={() => setShowPass(!showPass)} style={st.eyeBtn}>
                 <Feather name={showPass ? 'eye-off' : 'eye'} size={18} color={colors.textMuted} />
               </TouchableOpacity>
@@ -171,8 +168,7 @@ export default function AuthScreen({ onSkip }) {
                 <TextInput style={st.input} value={confirmPass} onChangeText={setConfirmPass}
                   placeholder={i18n.t('confirmPassword')} placeholderTextColor={colors.textMuted}
                   secureTextEntry={!showPass} autoCapitalize="none"
-                  autoComplete="off" importantForAutofill="noExcludeDescendants"
-                  textContentType="none" />
+                  autoComplete="password" textContentType="newPassword" />
               </View>
             )}
           </>
