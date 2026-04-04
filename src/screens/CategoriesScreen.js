@@ -13,38 +13,53 @@ import { colors } from '../theme/colors';
 
 // Icons prefixed with 'ion:' use Ionicons outline, others use Feather
 const ICONS_BY_GROUP = {
-  food: ['shopping-cart','coffee','ion:pizza-outline','ion:beer-outline','ion:wine-outline','ion:fast-food-outline','ion:ice-cream-outline','ion:cafe-outline','ion:restaurant-outline','ion:fish-outline','ion:nutrition-outline','ion:cart-outline'],
-  transport: ['navigation','ion:car-outline','ion:bus-outline','ion:train-outline','ion:bicycle-outline','ion:airplane-outline','map-pin','truck','droplet','tool','shield','ion:boat-outline'],
-  home: ['home','key','ion:water-outline','ion:flash-outline','wifi','tool','umbrella','sun','moon','phone','ion:leaf-outline','ion:thermometer-outline'],
-  health: ['heart','activity','ion:medical-outline','ion:fitness-outline','ion:bandage-outline','thermometer','scissors','smile','ion:body-outline','ion:eye-outline','shield','ion:pulse-outline'],
-  entertainment: ['film','music','ion:game-controller-outline','ion:dice-outline','ion:ticket-outline','ion:tv-outline','headphones','camera','ion:musical-notes-outline','star','award','ion:color-palette-outline'],
-  travel: ['globe','navigation','map-pin','compass','ion:airplane-outline','ion:bed-outline','camera','sun','coffee','umbrella','ion:map-outline','ion:compass-outline'],
-  kids: ['smile','ion:happy-outline','gift','book-open','star','music','ion:balloon-outline','ion:bicycle-outline','ion:color-palette-outline','heart','award','ion:paw-outline'],
-  personal: ['shopping-bag','ion:shirt-outline','ion:glasses-outline','ion:watch-outline','scissors','gift','tag','eye','star','ion:leaf-outline','feather','smile'],
-  income_group: ['briefcase','dollar-sign','trending-up','ion:cash-outline','ion:wallet-outline','ion:calculator-outline','ion:receipt-outline','credit-card','home','tag','percent','ion:card-outline'],
+  food: ['shopping-cart','coffee','ion:pizza-outline','ion:beer-outline','ion:wine-outline','ion:fast-food-outline','ion:ice-cream-outline','ion:cafe-outline','ion:restaurant-outline','ion:fish-outline','ion:nutrition-outline','ion:cart-outline','ion:basket-outline','ion:egg-outline','ion:leaf-outline','ion:flame-outline','ion:water-outline','ion:bag-outline','ion:storefront-outline','droplet','package'],
+  transport: ['navigation','ion:car-outline','ion:bus-outline','ion:train-outline','ion:bicycle-outline','ion:airplane-outline','map-pin','truck','droplet','tool','shield','ion:boat-outline','ion:subway-outline','ion:speedometer-outline','ion:navigate-outline','ion:compass-outline','ion:location-outline','ion:trail-sign-outline','ion:map-outline','compass','key'],
+  home: ['home','key','ion:water-outline','ion:flash-outline','wifi','tool','umbrella','sun','moon','phone','ion:leaf-outline','ion:thermometer-outline','ion:bulb-outline','ion:flame-outline','ion:sunny-outline','ion:cloudy-outline','ion:rainy-outline','ion:snow-outline','ion:desktop-outline','ion:laptop-outline','ion:phone-portrait-outline'],
+  health: ['heart','activity','ion:medical-outline','ion:fitness-outline','ion:bandage-outline','thermometer','scissors','smile','ion:body-outline','ion:eye-outline','shield','ion:pulse-outline','ion:barbell-outline','ion:medkit-outline','ion:walk-outline','ion:happy-outline','ion:sad-outline','ion:ear-outline','ion:hand-left-outline','ion:accessibility-outline','ion:heart-outline'],
+  entertainment: ['film','music','ion:game-controller-outline','ion:dice-outline','ion:ticket-outline','ion:tv-outline','headphones','camera','ion:musical-notes-outline','star','award','ion:color-palette-outline','ion:brush-outline','ion:easel-outline','ion:newspaper-outline','ion:library-outline','ion:book-outline','ion:albums-outline','ion:mic-outline','ion:headset-outline','ion:musical-note-outline'],
+  travel: ['globe','navigation','map-pin','compass','ion:airplane-outline','ion:bed-outline','camera','sun','coffee','umbrella','ion:map-outline','ion:compass-outline','ion:earth-outline','ion:flag-outline','ion:trail-sign-outline','ion:wallet-outline','ion:card-outline','ion:briefcase-outline','ion:rocket-outline','ion:navigate-outline','ion:sunny-outline'],
+  kids: ['smile','ion:happy-outline','gift','book-open','star','music','ion:balloon-outline','ion:bicycle-outline','ion:color-palette-outline','heart','award','ion:paw-outline','ion:football-outline','ion:basketball-outline','ion:tennisball-outline','ion:school-outline','ion:book-outline','ion:pencil-outline','ion:musical-notes-outline','ion:sparkles-outline','ion:gift-outline'],
+  personal: ['shopping-bag','ion:shirt-outline','ion:glasses-outline','ion:watch-outline','scissors','gift','tag','eye','star','ion:leaf-outline','feather','smile','ion:cut-outline','ion:bag-handle-outline','ion:rose-outline','ion:diamond-outline','ion:footsteps-outline','ion:finger-print-outline','ion:umbrella-outline','ion:ribbon-outline','ion:accessibility-outline'],
+  income_group: ['briefcase','dollar-sign','trending-up','ion:cash-outline','ion:wallet-outline','ion:calculator-outline','ion:receipt-outline','credit-card','home','tag','percent','ion:card-outline','ion:stats-chart-outline','ion:bar-chart-outline','ion:storefront-outline','ion:build-outline','ion:hammer-outline','ion:construct-outline','ion:key-outline','ion:home-outline','ion:briefcase-outline'],
 };
 
 const ALL_ICONS = [
-  'shopping-cart','coffee','shopping-bag','zap',
-  'navigation','truck','map-pin','compass','droplet',
-  'home','key','tool','umbrella','sun','moon','wind',
-  'heart','activity','thermometer','scissors','smile','feather',
-  'smartphone','monitor','cpu','tv','headphones','wifi','phone',
+  // Feather
+  'shopping-cart','coffee','shopping-bag','zap','navigation','truck','map-pin','compass','droplet',
+  'home','key','tool','umbrella','sun','moon','wind','heart','activity','thermometer','scissors',
+  'smile','feather','smartphone','monitor','cpu','tv','headphones','wifi','phone',
   'dollar-sign','credit-card','trending-up','percent','briefcase','clipboard',
   'film','music','camera','book','book-open','target','award','flag',
   'users','user','gift','mail','message-circle','send',
   'shield','star','tag','globe','package','box','archive','layers','grid',
   'bell','clock','lock','eye','alert-triangle',
+  // Ionicons — food
   'ion:pizza-outline','ion:beer-outline','ion:wine-outline','ion:fast-food-outline',
   'ion:ice-cream-outline','ion:cafe-outline','ion:restaurant-outline','ion:fish-outline',
-  'ion:car-outline','ion:bus-outline','ion:train-outline','ion:bicycle-outline','ion:airplane-outline',
-  'ion:water-outline','ion:flash-outline','ion:leaf-outline',
+  'ion:nutrition-outline','ion:basket-outline','ion:egg-outline','ion:storefront-outline',
+  // Ionicons — transport
+  'ion:car-outline','ion:bus-outline','ion:train-outline','ion:bicycle-outline',
+  'ion:airplane-outline','ion:boat-outline','ion:subway-outline','ion:speedometer-outline',
+  // Ionicons — home
+  'ion:water-outline','ion:flash-outline','ion:leaf-outline','ion:bulb-outline',
+  'ion:flame-outline','ion:thermometer-outline','ion:desktop-outline','ion:laptop-outline',
+  // Ionicons — health
   'ion:medical-outline','ion:fitness-outline','ion:bandage-outline','ion:body-outline',
+  'ion:barbell-outline','ion:medkit-outline','ion:walk-outline','ion:pulse-outline',
+  // Ionicons — entertainment
   'ion:game-controller-outline','ion:dice-outline','ion:ticket-outline','ion:tv-outline',
-  'ion:shirt-outline','ion:glasses-outline','ion:watch-outline',
+  'ion:musical-notes-outline','ion:mic-outline','ion:color-palette-outline','ion:brush-outline',
+  // Ionicons — personal
+  'ion:shirt-outline','ion:glasses-outline','ion:watch-outline','ion:diamond-outline',
+  'ion:rose-outline','ion:bag-handle-outline','ion:ribbon-outline','ion:footsteps-outline',
+  // Ionicons — finance
   'ion:cash-outline','ion:wallet-outline','ion:calculator-outline','ion:receipt-outline',
-  'ion:paw-outline','ion:happy-outline','ion:balloon-outline',
-  'ion:bed-outline','ion:map-outline',
+  'ion:card-outline','ion:stats-chart-outline','ion:bar-chart-outline',
+  // Ionicons — kids & misc
+  'ion:paw-outline','ion:happy-outline','ion:balloon-outline','ion:school-outline',
+  'ion:football-outline','ion:basketball-outline','ion:sparkles-outline',
+  'ion:bed-outline','ion:map-outline','ion:earth-outline','ion:rocket-outline',
 ];
 
 const COLOR_OPTIONS = [
