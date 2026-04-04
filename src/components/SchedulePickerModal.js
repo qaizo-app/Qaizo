@@ -128,11 +128,11 @@ export default function SchedulePickerModal({
             {/* Calendar header */}
             <View style={st.calHeader}>
               <TouchableOpacity onPress={prevMonth} style={st.navBtn}>
-                <Feather name="chevron-left" size={20} color={colors.text} />
+                <Feather name={i18n.chevronLeft()} size={20} color={colors.text} />
               </TouchableOpacity>
               <Text style={st.monthTitle}>{mNames[viewMonth]} {viewYear}</Text>
               <TouchableOpacity onPress={nextMonth} style={st.navBtn}>
-                <Feather name="chevron-right" size={20} color={colors.text} />
+                <Feather name={i18n.chevronRight()} size={20} color={colors.text} />
               </TouchableOpacity>
             </View>
 
