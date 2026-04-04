@@ -25,6 +25,7 @@ function formatDateShort(dateStr, lang) {
 export default function SchedulePickerModal({
   visible, onClose, onSave,
   initialDate, initialInterval, initialEndType, initialTotalCount, initialEndDate,
+  initialContractEndDate,
   lang = 'ru', weekStart = 'sunday',
 }) {
   const today = new Date();
@@ -36,7 +37,8 @@ export default function SchedulePickerModal({
   const [endType, setEndType] = useState(initialEndType || 'none');
   const [totalCount, setTotalCount] = useState(initialTotalCount || '12');
   const [endDate, setEndDate] = useState(initialEndDate || '');
-  const [pickMode, setPickMode] = useState('start'); // 'start' or 'end'
+  const [contractEnd, setContractEnd] = useState(initialContractEndDate || '');
+  const [pickMode, setPickMode] = useState('start'); // 'start', 'end', or 'contract'
   const scrollRef = useRef(null);
   const st = createSt();
 
@@ -78,6 +80,9 @@ export default function SchedulePickerModal({
     if (pickMode === 'end') {
       setEndDate(dateStr);
       setPickMode('start');
+    } else if (pickMode === 'contract') {
+      setContractEnd(dateStr);
+      setPickMode('start');
     } else {
       setSelectedDate(dateStr);
     }
@@ -91,7 +96,7 @@ export default function SchedulePickerModal({
   };
 
   const handleSave = () => {
-    onSave({ date: selectedDate, intervalMonths, endType, totalCount: endType === 'count' ? totalCount : null, endDate: endType === 'date' ? endDate : null });
+    onSave({ date: selectedDate, intervalMonths, endType, totalCount: endType === 'count' ? totalCount : null, endDate: endType === 'date' ? endDate : null, contractEndDate: contractEnd || null });
     onClose();
   };
 
@@ -104,7 +109,7 @@ export default function SchedulePickerModal({
     return `${m}`;
   };
 
-  const accentColor = pickMode === 'end' ? colors.teal : colors.green;
+  const accentColor = pickMode === 'end' ? colors.teal : pickMode === 'contract' ? colors.orange : colors.green;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -203,6 +208,21 @@ export default function SchedulePickerModal({
                 {pickMode === 'end' && <View style={st.pickingDot} />}
               </TouchableOpacity>
             )}
+
+            {/* Contract end date */}
+            <Text style={st.sectionLabel}>{i18n.t('contractEnd')}</Text>
+            <TouchableOpacity style={[st.endBtn, pickMode === 'contract' && { borderColor: colors.orange }]}
+              onPress={() => setPickMode(pickMode === 'contract' ? 'start' : 'contract')}>
+              <Feather name="file-text" size={14} color={contractEnd ? colors.orange : colors.textMuted} />
+              <Text style={[st.endBtnTxt, contractEnd && { color: colors.orange }]}>
+                {contractEnd ? formatDateShort(contractEnd, lang) : i18n.t('optional')}
+              </Text>
+              {contractEnd ? (
+                <TouchableOpacity onPress={() => setContractEnd('')} style={{ marginStart: 'auto' }}>
+                  <Feather name="x" size={14} color={colors.textMuted} />
+                </TouchableOpacity>
+              ) : null}
+            </TouchableOpacity>
 
           </ScrollView>
 

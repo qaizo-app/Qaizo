@@ -8,7 +8,6 @@ import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
-import DatePickerModal from './DatePickerModal';
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -33,7 +32,6 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [showSchedule, setShowSchedule] = useState(false);
   const [notify, setNotify] = useState(true);
   const [contractEndDate, setContractEndDate] = useState('');
-  const [showContractCal, setShowContractCal] = useState(false);
   const isEdit = !!editItem;
   const st = createSt();
 
@@ -137,6 +135,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     setEndType(schedule.endType);
     if (schedule.totalCount) setTotalCount(schedule.totalCount);
     if (schedule.endDate) setEndDate(schedule.endDate);
+    if (schedule.contractEndDate !== undefined) setContractEndDate(schedule.contractEndDate || '');
   };
 
   // Build schedule summary text
@@ -224,18 +223,6 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           <TextInput style={st.input} value={note} onChangeText={setNote}
             placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} />
 
-          {/* תאריך סיום חוזה */}
-          <Text style={st.label}>{i18n.t('contractEnd')}</Text>
-          <TouchableOpacity style={st.dateBtn} onPress={() => setShowContractCal(true)}>
-            <Feather name="calendar" size={14} color={colors.textMuted} />
-            <Text style={st.dateTxt}>{contractEndDate ? (() => { const [y,m,d] = contractEndDate.split('-'); return `${d}.${m}.${y}`; })() : i18n.t('optional')}</Text>
-            {contractEndDate ? (
-              <TouchableOpacity onPress={() => setContractEndDate('')} style={{ marginStart: 'auto' }}>
-                <Feather name="x" size={14} color={colors.textMuted} />
-              </TouchableOpacity>
-            ) : null}
-          </TouchableOpacity>
-
           {/* התראות */}
           <View style={st.toggleRow}>
             <View>
@@ -268,13 +255,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
             initialEndType={endType}
             initialTotalCount={totalCount}
             initialEndDate={endDate}
+            initialContractEndDate={contractEndDate}
             lang={i18n.getLanguage()}
           />
         </ScrollView>
       )}
     </SwipeModal>
     <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
-    <DatePickerModal visible={showContractCal} onClose={() => setShowContractCal(false)} onSelect={d => setContractEndDate(d)} selectedDate={contractEndDate} lang={i18n.getLanguage()} weekStart="sunday" />
     </>
   );
 }
