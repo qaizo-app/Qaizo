@@ -149,6 +149,7 @@ function AppInner() {
         if (granted) {
           await notificationService.scheduleRecurringNotifications();
           await notificationService.scheduleStreakReminder();
+          await notificationService.scheduleWeeklySummary();
         }
       } catch (e) {}
 

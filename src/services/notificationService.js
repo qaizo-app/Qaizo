@@ -133,6 +133,53 @@ const notificationService = {
     }
   },
 
+  // סיכום שבועי — כל ראשון ב-10:00
+  async scheduleWeeklySummary() {
+    try {
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      const hasWeekly = scheduled.some(n => n.content.data?.type === 'weekly_summary');
+      if (hasWeekly) return;
+
+      // Calculate this week's expenses
+      const txs = await dataService.getTransactions();
+      const now = new Date();
+      const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+      const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+      const thisWeek = txs.filter(t => {
+        const d = new Date(t.date || t.createdAt);
+        return t.type === 'expense' && d >= weekAgo;
+      }).reduce((s, t) => s + t.amount, 0);
+
+      const lastWeek = txs.filter(t => {
+        const d = new Date(t.date || t.createdAt);
+        return t.type === 'expense' && d >= twoWeeksAgo && d < weekAgo;
+      }).reduce((s, t) => s + t.amount, 0);
+
+      const diff = lastWeek - thisWeek;
+      const body = diff > 0
+        ? i18n.t('weeklySummaryGood').replace('{amount}', Math.round(thisWeek)).replace('{saved}', Math.round(diff))
+        : i18n.t('weeklySummaryBad').replace('{amount}', Math.round(thisWeek)).replace('{extra}', Math.round(Math.abs(diff)));
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: i18n.t('weeklySummaryTitle'),
+          body,
+          data: { type: 'weekly_summary' },
+        },
+        trigger: {
+          type: 'weekly',
+          weekday: 1, // Sunday
+          hour: 10,
+          minute: 0,
+          channelId: 'payments',
+        },
+      });
+    } catch (e) {
+      if (__DEV__) console.error('scheduleWeeklySummary:', e);
+    }
+  },
+
   // Отменить все уведомления
   async cancelAll() {
     await Notifications.cancelAllScheduledNotificationsAsync();
