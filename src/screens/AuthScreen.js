@@ -2,7 +2,7 @@
 // Логин / Регистрация — тёмная тема
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ConfirmModal from '../components/ConfirmModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
@@ -98,7 +98,8 @@ export default function AuthScreen({ onSkip }) {
 
         {/* Лого */}
         <View style={st.logoWrap}>
-          <Text style={st.logo}><Text style={{ color: tc }}>Q</Text>aizo</Text>
+          <Image source={require('../../assets/images/icon.png')} style={st.logoImg} />
+          <Text style={st.logo}>Qaizo</Text>
           <Text style={st.slogan}>Smarter every day.</Text>
         </View>
 
@@ -272,7 +273,8 @@ const createSt = () => StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 40 },
 
   logoWrap: { alignItems: 'center', marginBottom: 40 },
-  logo: { color: colors.text, fontSize: 42, fontWeight: '800', letterSpacing: -2 },
+  logoImg: { width: 80, height: 80, borderRadius: 20, marginBottom: 6 },
+  logo: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
   title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24 },

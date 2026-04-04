@@ -133,7 +133,7 @@ export default function TransactionsScreen({ route }) {
     await dataService.addTransaction({
       ...tx, id: undefined, createdAt: undefined,
       date: new Date().toISOString(),
-      note: tx.note ? `${tx.note} (copy)` : '(copy)',
+      note: tx.note ? `${tx.note} (${i18n.t('copy')})` : `(${i18n.t('copy')})`,
     });
     await loadData();
   };

@@ -88,7 +88,7 @@ export default function AccountsScreen() {
     if (deleteTarget) { await dataService.deleteAccount(deleteTarget.id); setDeleteTarget(null); setShowEdit(false); await loadData(); }
   };
 
-  const tc = accountTypeConfig[type]?.color || '#60a5fa';
+  const tc = accountTypeConfig[type]?.color || colors.blue;
 
   const renderTile = (acc) => {
     const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
@@ -146,13 +146,13 @@ export default function AccountsScreen() {
 
         {/* Crypto */}
         <View style={styles.groupHeader}>
-          <MaterialCommunityIcons name="bitcoin" size={14} color="#f59e0b" style={{ }} />
-          <Text style={[styles.groupTitle, { color: '#f59e0b' }]}>{typeLabel('crypto')}</Text>
+          <MaterialCommunityIcons name="bitcoin" size={14} color={colors.orange} style={{ }} />
+          <Text style={[styles.groupTitle, { color: colors.orange }]}>{typeLabel('crypto')}</Text>
           <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
         </View>
         <View style={styles.tilesRow}>
-          <View style={[styles.tile, { borderLeftColor: '#f59e0b', borderLeftWidth: 3, opacity: 0.4 }]}>
-            <MaterialCommunityIcons name="bitcoin" size={16} color="#f59e0b" />
+          <View style={[styles.tile, { borderLeftColor: colors.orange, borderLeftWidth: 3, opacity: 0.4 }]}>
+            <MaterialCommunityIcons name="bitcoin" size={16} color={colors.orange} />
             <Text style={[styles.tileName, { color: colors.textMuted }]}>{i18n.t('comingSoon')}</Text>
             <Text style={[styles.tileBalance, { color: colors.textMuted }]}>—</Text>
           </View>
@@ -198,7 +198,7 @@ export default function AccountsScreen() {
             </ScrollView>
 
             <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Mizrahi, Visa 3324..." placeholderTextColor={colors.textMuted} />
+            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder={i18n.t('accountNamePlaceholder')} placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>{i18n.t('number')}</Text>
             <TextInput style={styles.input} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
@@ -252,7 +252,7 @@ export default function AccountsScreen() {
             <View style={styles.btnRow}>
               {editAccount&&(<TouchableOpacity style={styles.delBtn} onPress={()=>setDeleteTarget(editAccount)}><Feather name="trash-2" size={20} color={colors.red} /></TouchableOpacity>)}
               <TouchableOpacity style={styles.cancelBtn} onPress={close}><Text style={styles.cancelText}>{i18n.t('cancel')}</Text></TouchableOpacity>
-              <TouchableOpacity style={[styles.saveBtn,{backgroundColor:tc,opacity:name.trim()?1:0.35}]} onPress={handleSave} disabled={!name.trim()}><Feather name="check" size={18} color="#fff" /><Text style={styles.saveText}> {i18n.t('save')}</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.saveBtn,{backgroundColor:tc,opacity:name.trim()?1:0.35}]} onPress={handleSave} disabled={!name.trim()}><Feather name="check" size={18} color={colors.bg} /><Text style={styles.saveText}> {i18n.t('save')}</Text></TouchableOpacity>
             </View>
           </ScrollView>
         )}
@@ -273,7 +273,7 @@ const createStyles = () => StyleSheet.create({
   title:{color:colors.text,fontSize:24,fontWeight:'800',textAlign:i18n.textAlign()},
   addBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.green,justifyContent:'center',alignItems:'center'},
 
-  totalCard:{marginHorizontal:24,marginBottom:8,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:'rgba(52,211,153,0.15)'},
+  totalCard:{marginHorizontal:24,marginBottom:8,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:colors.greenSoft},
   totalLabel:{color:colors.textDim,fontSize:13,marginBottom:6,textAlign:i18n.textAlign()},
   totalAmount:{fontSize:32,fontWeight:'800',textAlign:i18n.textAlign()},
 
@@ -289,8 +289,8 @@ const createStyles = () => StyleSheet.create({
   tileName:{color:colors.textSecondary,fontSize:12,fontWeight:'600',marginBottom:4,textAlign:i18n.textAlign()},
   tileBalance:{color:colors.text,fontSize:15,fontWeight:'700',textAlign:i18n.textAlign()},
 
-  v2Badge:{backgroundColor:'rgba(245,158,11,0.15)',paddingHorizontal:8,paddingVertical:2,borderRadius:6},
-  v2Text:{color:'#f59e0b',fontSize:10,fontWeight:'700'},
+  v2Badge:{backgroundColor:colors.orange + '25',paddingHorizontal:8,paddingVertical:2,borderRadius:6},
+  v2Text:{color:colors.orange,fontSize:10,fontWeight:'700'},
 
   modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20,textAlign:i18n.textAlign()},
   fieldLabel:{color:colors.textDim,fontSize:11,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4,textAlign:i18n.textAlign()},

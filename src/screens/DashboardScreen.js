@@ -3,7 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, AppState, Dimensions, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, AppState, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
 import AddRecurringModal from '../components/AddRecurringModal';
@@ -66,6 +66,7 @@ export default function DashboardScreen() {
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [budgetsExpanded, setBudgetsExpanded] = useState(false);
   const [goalsExpanded, setGoalsExpanded] = useState(false);
+  const [freeExpanded, setFreeExpanded] = useState(false);
   const [monthlyExtra, setMonthlyExtra] = useState(0);
   const [goals, setGoals] = useState([]);
   const bellAnim = useRef(new Animated.Value(1)).current;
@@ -159,7 +160,7 @@ export default function DashboardScreen() {
   const totalIncome = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpense;
-  const recentTx = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || '')).slice(0, 5);
+  const recentTx = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || '')).slice(0, 3);
 
   // PIE CHART
   const catTotals = {};
@@ -289,9 +290,12 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 120 }}>
 
         <View style={st.header}>
-          <View>
-            <Text style={st.logo}><Text style={{ color: colors.green }}>Q</Text>aizo</Text>
-            <Text style={st.subtitle}>{dateStr}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Image source={require('../../assets/images/icon.png')} style={st.logoImg} />
+            <View>
+              <Text style={st.logo}>Qaizo</Text>
+              <Text style={st.subtitle}>{dateStr}</Text>
+            </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
@@ -439,11 +443,12 @@ export default function DashboardScreen() {
 
               return (
                 <Card key="freeMoneyToday">
-                  <View style={st.freeTop}>
+                  <TouchableOpacity style={st.freeTop} onPress={() => setFreeExpanded(!freeExpanded)} activeOpacity={0.7}>
                     <Feather name={hasNoIncomeData ? 'info' : isCrisis ? 'alert-triangle' : 'sun'} size={18} color={freeTodayColor} />
                     <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
                     <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
-                  </View>
+                    <Feather name={freeExpanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
 
                   {hasNoIncomeData && (
                     <View style={{ backgroundColor: colors.blue + '12', borderRadius: 10, padding: 10, marginBottom: 8 }}>
@@ -464,29 +469,31 @@ export default function DashboardScreen() {
                     <View style={[st.freeBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
                   </View>
 
-                  {/* Details row */}
-                  <View style={st.freeDetails}>
-                    {spentToday > 0 && (
-                      <View style={st.freeDetail}>
-                        <Feather name="shopping-cart" size={12} color={colors.red} />
-                        <Text style={st.freeDetailTxt}>{i18n.t('spentToday')}: {spentToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
-                      </View>
-                    )}
-                    {allRecurringExpenses > 0 && (
-                      <View style={st.freeDetail}>
-                        <Feather name="repeat" size={12} color={colors.orange} />
-                        <Text style={st.freeDetailTxt}>{i18n.t('fixedExpenses')}: {allRecurringExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
-                      </View>
-                    )}
-                    {savedYesterday !== 0 && spentYesterday > 0 && (
-                      <View style={st.freeDetail}>
-                        <Feather name={savedYesterday > 0 ? 'trending-down' : 'trending-up'} size={12} color={savedYesterday > 0 ? colors.green : colors.red} />
-                        <Text style={[st.freeDetailTxt, { color: savedYesterday > 0 ? colors.green : colors.red }]}>
-                          {savedYesterday > 0 ? i18n.t('savedYesterday') : i18n.t('overspentYesterday')}: {Math.abs(savedYesterday).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
+                  {/* Details row — collapsed by default */}
+                  {freeExpanded && (
+                    <View style={st.freeDetails}>
+                      {spentToday > 0 && (
+                        <View style={st.freeDetail}>
+                          <Feather name="shopping-cart" size={12} color={colors.red} />
+                          <Text style={st.freeDetailTxt}>{i18n.t('spentToday')}: {spentToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                        </View>
+                      )}
+                      {allRecurringExpenses > 0 && (
+                        <View style={st.freeDetail}>
+                          <Feather name="repeat" size={12} color={colors.orange} />
+                          <Text style={st.freeDetailTxt}>{i18n.t('fixedExpenses')}: {allRecurringExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}</Text>
+                        </View>
+                      )}
+                      {savedYesterday !== 0 && spentYesterday > 0 && (
+                        <View style={st.freeDetail}>
+                          <Feather name={savedYesterday > 0 ? 'trending-down' : 'trending-up'} size={12} color={savedYesterday > 0 ? colors.green : colors.red} />
+                          <Text style={[st.freeDetailTxt, { color: savedYesterday > 0 ? colors.green : colors.red }]}>
+                            {savedYesterday > 0 ? i18n.t('savedYesterday') : i18n.t('overspentYesterday')}: {Math.abs(savedYesterday).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </Card>
               );
             }
@@ -930,7 +937,8 @@ export default function DashboardScreen() {
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
-  logo: { color: colors.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 },
+  logoImg: { width: 38, height: 38, borderRadius: 10 },
+  logo: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: -1 },
   subtitle: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   balLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },

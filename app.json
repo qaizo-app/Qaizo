@@ -8,7 +8,7 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#080b14"
+      "backgroundColor": "#151a28"
     },
     "icon": "./assets/images/icon.png",
     "scheme": "qaizo",

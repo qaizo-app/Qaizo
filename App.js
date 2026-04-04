@@ -3,8 +3,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
-import { useEffect, useState } from 'react';
-import { I18nManager, StatusBar, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, I18nManager, StatusBar, StyleSheet, View } from 'react-native';
 
 // Global RTL patch: I18nManager flips textAlign ('right' becomes 'left')
 // So we REMOVE explicit textAlign:'right' and let the system handle alignment
@@ -37,6 +37,8 @@ import SetupWizardScreen from './src/screens/SetupWizardScreen';
 import authService from './src/services/authService';
 import dataService from './src/services/dataService';
 import notificationService from './src/services/notificationService';
+import securityService from './src/services/securityService';
+import PinScreen from './src/screens/PinScreen';
 import { colors } from './src/theme/colors';
 import { CURRENCIES, setCurrency } from './src/utils/currency';
 import { ToastProvider } from './src/components/ToastProvider';
@@ -65,6 +67,7 @@ function AppInner() {
   const [screen, setScreen] = useState('app');
   const [user, setUser] = useState(null);
   const [authSkipped, setAuthSkipped] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   const navTheme = {
     ...DefaultTheme,
@@ -153,10 +156,27 @@ function AppInner() {
         }
       } catch (e) {}
 
+      // Check PIN lock
+      const pinOn = await securityService.isPinEnabled();
+      if (pinOn) setLocked(true);
+
       setReady(true);
     })();
 
-    return () => { if (unsubAuth) unsubAuth(); };
+    // Re-lock when app comes from background
+    const appStateRef = { current: AppState.currentState };
+    const appStateSub = AppState.addEventListener('change', async (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        const pinOn = await securityService.isPinEnabled();
+        if (pinOn) setLocked(true);
+      }
+      appStateRef.current = nextState;
+    });
+
+    return () => {
+      if (unsubAuth) unsubAuth();
+      appStateSub.remove();
+    };
   }, []);
 
   const handleOnboardingDone = async () => {
@@ -179,6 +199,17 @@ function AppInner() {
 
   if (!ready) {
     return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
+  }
+
+  if (locked) {
+    return (
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
+          <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
+          <PinScreen mode="unlock" onSuccess={() => setLocked(false)} />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    );
   }
 
   if (screen === 'onboarding') {

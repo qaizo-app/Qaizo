@@ -4,15 +4,17 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
+import PinScreen from './PinScreen';
 import ExportModal from '../components/ExportModal';
 import ImportModal from '../components/ImportModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
 import dataService from '../services/dataService';
+import securityService from '../services/securityService';
 import { useToast } from '../components/ToastProvider';
 import { colors } from '../theme/colors';
 import { CURRENCIES, setCurrency, sym } from '../utils/currency';
@@ -34,12 +36,15 @@ export default function SettingsScreen() {
   const toast = useToast();
   const styles = createStyles();
 
-  // Загрузить weekStart из настроек
+  // Загрузить weekStart + PIN status
   useEffect(() => {
     dataService.getSettings().then(s => {
       if (s.weekStart) setWeekStart(s.weekStart);
       if (s.monthlyExtra) setMonthlyExtra(String(s.monthlyExtra));
     });
+    securityService.isPinEnabled().then(setPinEnabled);
+    securityService.isBiometricEnabled().then(setBioEnabled);
+    securityService.isBiometricAvailable().then(setBioAvailable);
   }, []);
 
   const toggle = (s) => setOpenSection(openSection === s ? null : s);
@@ -79,6 +84,10 @@ export default function SettingsScreen() {
     }
   };
 
+  const [pinEnabled, setPinEnabled] = useState(false);
+  const [bioEnabled, setBioEnabled] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(null); // 'setup' | 'remove' | null
   const [showClearData, setShowClearData] = useState(false);
   const [showLangRestart, setShowLangRestart] = useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
@@ -112,34 +121,9 @@ export default function SettingsScreen() {
           <View style={{ width: 44 }} />
         </View>
 
-        {/* AI Advisor */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
-          <View style={styles.sectionLeft}>
-            <Feather name="cpu" size={18} color={colors.green} />
-            <Text style={styles.sectionText}>{i18n.t('advisor')}</Text>
-          </View>
-          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
-        </TouchableOpacity>
+        {/* ═══ TOOLS ═══ */}
+        <Text style={styles.groupTitle}>{i18n.t('settingsTools')}</Text>
 
-        {/* AI Chat */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
-          <View style={styles.sectionLeft}>
-            <Feather name="message-circle" size={18} color={colors.green} />
-            <Text style={styles.sectionText}>{i18n.t('aiChat')}</Text>
-          </View>
-          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
-        </TouchableOpacity>
-
-        {/* Investments */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Investments')}>
-          <View style={styles.sectionLeft}>
-            <Feather name="trending-up" size={18} color={colors.teal} />
-            <Text style={styles.sectionText}>{i18n.t('investments')}</Text>
-          </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        {/* Categories */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Categories')}>
           <View style={styles.sectionLeft}>
             <Feather name="grid" size={18} color={colors.teal} />
@@ -148,7 +132,6 @@ export default function SettingsScreen() {
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
-        {/* Projects */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Projects')}>
           <View style={styles.sectionLeft}>
             <Feather name="folder" size={18} color="#a78bfa" />
@@ -157,7 +140,6 @@ export default function SettingsScreen() {
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
-        {/* Goals */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Goals')}>
           <View style={styles.sectionLeft}>
             <Feather name="target" size={18} color="#f59e0b" />
@@ -166,7 +148,14 @@ export default function SettingsScreen() {
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
-        {/* Analytics */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Investments')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="trending-up" size={18} color={colors.teal} />
+            <Text style={styles.sectionText}>{i18n.t('investments')}</Text>
+          </View>
+          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Analytics')}>
           <View style={styles.sectionLeft}>
             <Feather name="bar-chart-2" size={18} color="#22d3ee" />
@@ -175,7 +164,6 @@ export default function SettingsScreen() {
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
-        {/* Monthly Report */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('MonthlyReport')}>
           <View style={styles.sectionLeft}>
             <Feather name="file-text" size={18} color={colors.blue} />
@@ -183,6 +171,9 @@ export default function SettingsScreen() {
           </View>
           <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
         </TouchableOpacity>
+
+        {/* ═══ PREFERENCES ═══ */}
+        <Text style={styles.groupTitle}>{i18n.t('settingsPreferences')}</Text>
 
         {/* Language */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('lang')}>
@@ -292,6 +283,60 @@ export default function SettingsScreen() {
                 <Feather name="check" size={18} color={colors.bg} />
               </TouchableOpacity>
             </View>
+          </Card>
+        )}
+
+        {/* ═══ DATA & SECURITY ═══ */}
+        <Text style={styles.groupTitle}>{i18n.t('settingsDataSection')}</Text>
+
+        {/* Security */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('security')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="shield" size={18} color={colors.orange} />
+            <Text style={styles.sectionText}>{i18n.t('security')}</Text>
+          </View>
+          <Feather name={openSection === 'security' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+        {openSection === 'security' && (
+          <Card>
+            <View style={[styles.optRow, styles.optBorder]}>
+              <Feather name="lock" size={18} color={colors.green} />
+              <Text style={styles.optText}>{i18n.t('pinCode')}</Text>
+              <Switch
+                value={pinEnabled}
+                onValueChange={(val) => {
+                  if (val) setShowPinModal('setup');
+                  else setShowPinModal('remove');
+                }}
+                trackColor={{ false: colors.bg2, true: colors.greenSoft }}
+                thumbColor={pinEnabled ? colors.green : colors.textMuted}
+              />
+            </View>
+            {pinEnabled && bioAvailable && (
+              <View style={styles.optRow}>
+                <Feather name="smartphone" size={18} color={colors.teal} />
+                <Text style={styles.optText}>{i18n.t('biometricLock')}</Text>
+                <Switch
+                  value={bioEnabled}
+                  onValueChange={async (val) => {
+                    if (val) {
+                      const ok = await securityService.authenticateWithBiometric(i18n.t('biometricLock'));
+                      if (ok) {
+                        await securityService.setBiometricEnabled(true);
+                        setBioEnabled(true);
+                        toast.show(i18n.t('biometricEnabled'), 'success');
+                      }
+                    } else {
+                      await securityService.setBiometricEnabled(false);
+                      setBioEnabled(false);
+                      toast.show(i18n.t('biometricDisabled'), 'info');
+                    }
+                  }}
+                  trackColor={{ false: colors.bg2, true: colors.greenSoft }}
+                  thumbColor={bioEnabled ? colors.green : colors.textMuted}
+                />
+              </View>
+            )}
           </Card>
         )}
 
@@ -408,6 +453,34 @@ export default function SettingsScreen() {
             <Text style={styles.aboutCopy}>© 2026 Qaizo</Text>
           </Card>
         )}
+
+        {/* ═══ COMING SOON ═══ */}
+        <Text style={styles.groupTitle}>{i18n.t('comingSoon')}</Text>
+
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="cpu" size={18} color={colors.textMuted} />
+            <Text style={[styles.sectionText, { color: colors.textDim }]}>{i18n.t('advisor')}</Text>
+          </View>
+          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="message-circle" size={18} color={colors.textMuted} />
+            <Text style={[styles.sectionText, { color: colors.textDim }]}>{i18n.t('aiChat')}</Text>
+          </View>
+          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="camera" size={18} color={colors.textMuted} />
+            <Text style={[styles.sectionText, { color: colors.textDim }]}>{i18n.t('scanReceipt')}</Text>
+          </View>
+          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
+        </TouchableOpacity>
+
       </ScrollView>
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
@@ -457,6 +530,24 @@ export default function SettingsScreen() {
         onCancel={() => setShowDeleteAccount(false)}
         icon="user-x" />
 
+      <Modal visible={showPinModal !== null} animationType="slide">
+        <PinScreen
+          mode={showPinModal || 'setup'}
+          onSuccess={() => {
+            if (showPinModal === 'setup') {
+              setPinEnabled(true);
+              toast.show(i18n.t('pinEnabled'), 'success');
+            } else {
+              setPinEnabled(false);
+              setBioEnabled(false);
+              toast.show(i18n.t('pinDisabled'), 'info');
+            }
+            setShowPinModal(null);
+          }}
+          onCancel={() => setShowPinModal(null)}
+        />
+      </Modal>
+
       <CurrencyPickerModal visible={showCurrencyPicker}
         onClose={() => setShowCurrencyPicker(false)}
         selected={CURRENCIES.find(c => c.symbol === curSymbol)?.code || 'ILS'}
@@ -471,6 +562,7 @@ const createStyles = () => StyleSheet.create({
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1, textAlign: 'center' },
 
+  groupTitle: { color: colors.textMuted, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginHorizontal: 24, marginTop: 24, marginBottom: 4 },
   sectionBtn: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
   sectionLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 12 },
   sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },

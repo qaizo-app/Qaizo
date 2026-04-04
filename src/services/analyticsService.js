@@ -230,6 +230,133 @@ const analyticsService = {
     return days.map((total, idx) => ({ day: idx, total, avg: counts[idx] > 0 ? Math.round(total / counts[idx]) : 0 }));
   },
 
+  // === Balance history (line chart data) ===
+  getBalanceHistory(transactions, periodDays = 30) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() - periodDays);
+
+    // Sort all txs by date
+    const sorted = [...transactions]
+      .filter(t => new Date(t.date || t.createdAt) <= now)
+      .sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt));
+
+    // Calculate running balance from beginning
+    let runningBalance = 0;
+    const balanceByDate = {};
+
+    sorted.forEach(tx => {
+      const d = new Date(tx.date || tx.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (tx.type === 'income') runningBalance += tx.amount;
+      else if (tx.type === 'expense') runningBalance -= tx.amount;
+      else if (tx.type === 'transfer') {} // skip transfers
+      balanceByDate[key] = runningBalance;
+    });
+
+    // Fill in the period days
+    const points = [];
+    let lastBalance = 0;
+
+    // Find balance at start of period
+    const allDates = Object.keys(balanceByDate).sort();
+    for (const d of allDates) {
+      if (d <= `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`) {
+        lastBalance = balanceByDate[d];
+      }
+    }
+
+    for (let i = 0; i <= periodDays; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (balanceByDate[key] !== undefined) lastBalance = balanceByDate[key];
+      points.push({ date: key, day: d.getDate(), balance: lastBalance });
+    }
+
+    return points;
+  },
+
+  // === Cash Flow (daily income vs expense) ===
+  getCashFlow(transactions, periodDays = 30) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() - periodDays);
+
+    const data = [];
+    for (let i = 0; i <= periodDays; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+      const dayTxs = transactions.filter(tx => {
+        const td = new Date(tx.date || tx.createdAt);
+        return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate();
+      });
+
+      const income = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const expense = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+      data.push({ date: key, day: d.getDate(), income, expense, net: income - expense });
+    }
+    return data;
+  },
+
+  // === Quick Stats ===
+  getQuickStats(transactions, periodDays = 30) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() - periodDays);
+
+    const periodTxs = transactions.filter(t => {
+      const d = new Date(t.date || t.createdAt);
+      return d >= start && d <= now;
+    });
+
+    const prevStart = new Date(start);
+    prevStart.setDate(prevStart.getDate() - periodDays);
+    const prevTxs = transactions.filter(t => {
+      const d = new Date(t.date || t.createdAt);
+      return d >= prevStart && d < start;
+    });
+
+    const incomeCount = periodTxs.filter(t => t.type === 'income').length;
+    const expenseCount = periodTxs.filter(t => t.type === 'expense').length;
+    const totalIncome = periodTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const totalExpense = periodTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const prevIncome = prevTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const prevExpense = prevTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    const activeDays = new Set(periodTxs.map(t => {
+      const d = new Date(t.date || t.createdAt);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    })).size;
+
+    return {
+      totalTx: periodTxs.length,
+      incomeCount,
+      expenseCount,
+      totalIncome,
+      totalExpense,
+      netFlow: totalIncome - totalExpense,
+      avgPerDay: activeDays > 0 ? Math.round(totalExpense / Math.max(periodDays, 1)) : 0,
+      avgPerTx: expenseCount > 0 ? Math.round(totalExpense / expenseCount) : 0,
+      incomeChange: prevIncome > 0 ? Math.round(((totalIncome - prevIncome) / prevIncome) * 100) : 0,
+      expenseChange: prevExpense > 0 ? Math.round(((totalExpense - prevExpense) / prevExpense) * 100) : 0,
+    };
+  },
+
+  // === Filter transactions by period ===
+  filterByPeriod(transactions, periodDays) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() - periodDays);
+    return transactions.filter(t => {
+      const d = new Date(t.date || t.createdAt);
+      return d >= start && d <= now;
+    });
+  },
+
   // === ציון פיננסי (0-100) ===
   getFinancialScore(transactions, budgets, goals) {
     const now = new Date();

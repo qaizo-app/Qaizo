@@ -74,8 +74,6 @@ const ADD_MENU = [
   { key: 'oneTimePayment',  icon: 'plus-circle', color: colors.green },
   { key: 'recurringPayment', icon: 'repeat',   color: '#60a5fa' },
   { key: 'quickAdd',        icon: 'zap',       color: '#f59e0b' },
-  { key: 'smartInput',      icon: 'cpu',       color: '#a78bfa', comingSoon: true },
-  { key: 'scanReceipt',     icon: 'camera',    color: colors.teal, comingSoon: true },
 ];
 
 export default function AppNavigator() {

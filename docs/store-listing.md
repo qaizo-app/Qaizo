@@ -35,6 +35,8 @@ Qaizo is a powerful personal finance app designed for the Israeli market. Track 
 • 🌍 3 languages — Hebrew, Russian, English (RTL support)
 • 📤 Export to CSV, Excel, PDF
 • 📥 Import from CSV/Excel (Wallet, Bluecoins, bank formats)
+• 🔐 PIN code lock for app security
+• 📊 Advanced analytics — balance history, cash flow charts, period selector (7D-1Y)
 • 🔒 Firebase Auth with email verification
 • ☁️ Cloud sync — your data on any device
 
@@ -42,7 +44,6 @@ Qaizo is a powerful personal finance app designed for the Israeli market. Track 
 • 🤖 AI-powered smart input — type "coffee 25 shekels" and it's categorized
 • 📸 Receipt scanner with Gemini Vision AI
 • 💬 AI financial advisor chat
-• 🔐 PIN code / biometric lock
 
 Qaizo does NOT provide professional financial advice. All insights are for tracking purposes only.
 
@@ -65,6 +66,8 @@ Qaizo הוא אפליקציית ניהול פיננסי אישי חכמה, מו�
 • 🌍 3 שפות — עברית, רוסית, אנגלית (תמיכה מלאה ב-RTL)
 • 📤 ייצוא ל-CSV, Excel, PDF
 • 📥 ייבוא מ-CSV/Excel
+• 🔐 נעילת PIN לאבטחת האפליקציה
+• 📊 אנליטיקה מתקדמת — דינמיקת יתרה, תזרים מזומנים, בחירת תקופה
 • 🔒 אימות Firebase עם אימות אימייל
 • ☁️ סנכרון ענן — הנתונים שלך בכל מכשיר
 
@@ -89,6 +92,8 @@ Qaizo — умное приложение для управления личны
 • 🌍 3 языка — иврит, русский, английский (поддержка RTL)
 • 📤 Экспорт в CSV, Excel, PDF
 • 📥 Импорт из CSV/Excel
+• 🔐 PIN-код для защиты приложения
+• 📊 Продвинутая аналитика — динамика баланса, денежный поток, выбор периода
 • 🔒 Firebase Auth с подтверждением email
 • ☁️ Облачная синхронизация
 
