@@ -157,41 +157,42 @@ export default function CalendarScreen() {
               );
             })}
           </View>
+
+          {/* Day summary inside calendar card */}
+          {selectedDate && dayData[selectedDate] && (
+            <View style={st.daySummary}>
+              <Text style={st.daySummaryDate}>{selectedDate} {months[viewMonth]}</Text>
+              <View style={st.daySummaryAmounts}>
+                {dayData[selectedDate].income > 0 && (
+                  <View style={st.daySummaryItem}>
+                    <Feather name="trending-up" size={12} color={colors.green} />
+                    <Amount value={dayData[selectedDate].income} style={st.daySummaryVal} color={colors.green} />
+                  </View>
+                )}
+                {dayData[selectedDate].expense > 0 && (
+                  <View style={st.daySummaryItem}>
+                    <Feather name="trending-down" size={12} color={colors.red} />
+                    <Amount value={-dayData[selectedDate].expense} sign style={st.daySummaryVal} color={colors.red} />
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
         </Card>
 
         {/* Selected day transactions */}
-        {selectedDate && (
-          <Card style={{ marginHorizontal: 20, marginTop: 12 }}>
-            <View style={st.dayHeader}>
-              <Text style={st.dayTitle}>
-                {selectedDate} {months[viewMonth]}
-              </Text>
-              {dayData[selectedDate] && (
-                <View style={st.dayTotals}>
-                  {dayData[selectedDate].income > 0 && (
-                    <Amount value={dayData[selectedDate].income} style={st.dayTotal} color={colors.green} />
-                  )}
-                  {dayData[selectedDate].expense > 0 && (
-                    <Amount value={-dayData[selectedDate].expense} sign style={st.dayTotal} color={colors.red} />
-                  )}
+        {selectedDate && selectedTxs.length > 0 && (
+          <Card style={{ marginTop: 12 }}>
+            {selectedTxs.map((tx, idx) => (
+              <View key={tx.id || idx} style={[st.txRow, idx < selectedTxs.length - 1 && st.txBorder]}>
+                <CategoryIcon categoryId={tx.categoryId} size="small" />
+                <View style={st.txInfo}>
+                  <Text style={st.txCat}>{tx.categoryName || i18n.t(tx.categoryId)}</Text>
+                  {tx.recipient ? <Text style={st.txRecipient} numberOfLines={1}>{tx.recipient}</Text> : null}
                 </View>
-              )}
-            </View>
-
-            {selectedTxs.length > 0 ? (
-              selectedTxs.map((tx, idx) => (
-                <View key={tx.id || idx} style={[st.txRow, idx < selectedTxs.length - 1 && st.txBorder]}>
-                  <CategoryIcon categoryId={tx.categoryId} size="small" />
-                  <View style={st.txInfo}>
-                    <Text style={st.txCat}>{tx.categoryName || i18n.t(tx.categoryId)}</Text>
-                    {tx.recipient ? <Text style={st.txRecipient} numberOfLines={1}>{tx.recipient}</Text> : null}
-                  </View>
-                  <Amount value={tx.type === 'income' ? tx.amount : -tx.amount} sign style={st.txAmount} color={tx.type === 'income' ? colors.green : colors.red} />
-                </View>
-              ))
-            ) : (
-              <Text style={st.emptyTxt}>{i18n.t('noTransactions')}</Text>
-            )}
+                <Amount value={tx.type === 'income' ? tx.amount : -tx.amount} sign style={st.txAmount} color={tx.type === 'income' ? colors.green : colors.red} />
+              </View>
+            ))}
           </Card>
         )}
       </ScrollView>
@@ -226,10 +227,11 @@ const createSt = () => StyleSheet.create({
   cellAmounts: { flexDirection: 'row', gap: 2, marginTop: 2 },
   cellDot: { width: 5, height: 5, borderRadius: 3 },
 
-  dayHeader: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  dayTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  dayTotals: { flexDirection: i18n.row(), gap: 10 },
-  dayTotal: { fontSize: 13, fontWeight: '700' },
+  daySummary: { marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  daySummaryDate: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  daySummaryAmounts: { flexDirection: 'row', gap: 12 },
+  daySummaryItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  daySummaryVal: { fontSize: 14, fontWeight: '700' },
 
   txRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 12, paddingVertical: 10 },
   txBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
