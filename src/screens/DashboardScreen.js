@@ -680,10 +680,7 @@ export default function DashboardScreen() {
             case 'recentTx':
               return (
                 <Card key="recentTx">
-                  <View style={st.blockTitleRow}>
-                    <Text style={st.blockTitle}>{i18n.t('recentTransactions')}</Text>
-                    <TouchableOpacity onPress={() => navigation.getParent()?.navigate('Transactions')}><Text style={st.seeAll}>{i18n.t('seeAll')}</Text></TouchableOpacity>
-                  </View>
+                  <Text style={st.blockTitle}>{i18n.t('recentTransactions')}</Text>
                   {recentTx.length > 0 ? recentTx.map(tx => (
                       <TransactionItem key={tx.id} transaction={tx}
                         onDelete={t => setDeleteTarget(t)}
