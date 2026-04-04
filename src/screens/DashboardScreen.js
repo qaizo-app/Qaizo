@@ -682,7 +682,7 @@ export default function DashboardScreen() {
                 <Card key="recentTx">
                   <View style={st.blockTitleRow}>
                     <Text style={st.blockTitle}>{i18n.t('recentTransactions')}</Text>
-                    <TouchableOpacity><Text style={st.seeAll}>{i18n.t('seeAll')}</Text></TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.getParent()?.navigate('Transactions')}><Text style={st.seeAll}>{i18n.t('seeAll')}</Text></TouchableOpacity>
                   </View>
                   {recentTx.length > 0 ? recentTx.map(tx => (
                       <TransactionItem key={tx.id} transaction={tx}
