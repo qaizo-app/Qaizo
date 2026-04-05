@@ -175,10 +175,14 @@ export default function CalculatorModal({ visible, onClose, onResult, initialVal
             </View>
           ))}
 
-          {/* Done button */}
+          {/* Done button — show calculated result */}
           <TouchableOpacity style={st.doneBtn} onPress={handleDone} activeOpacity={0.8}>
             <Feather name="check" size={20} color={colors.bg} />
-            <Text style={st.doneTxt}>{display || '0'}</Text>
+            <Text style={st.doneTxt}>
+              {prevValue !== null && operator
+                ? String(Math.round(calculate(prevValue, display, operator) * 100) / 100)
+                : display || '0'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

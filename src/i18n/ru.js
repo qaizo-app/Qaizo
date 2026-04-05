@@ -610,6 +610,7 @@ export default {
   badge500Tx: '500 транзакций!',
 
   copy: 'копия',
+  loading: 'Загрузка...',
   shoppingList: 'Список покупок',
   mostBought: 'Частые',
   byPrice: 'По цене',

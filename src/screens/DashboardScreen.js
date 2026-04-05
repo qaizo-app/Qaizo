@@ -37,6 +37,7 @@ export default function DashboardScreen() {
   const [budgets, setBudgets] = useState({});
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [budgetModal, setBudgetModal] = useState(null);
@@ -91,6 +92,10 @@ export default function DashboardScreen() {
   const st = createSt();
 
   const loadData = async () => {
+    // Wait for auth — don't load with zeros
+    const uid = require('../services/authService').default.getUid();
+    if (!uid) return;
+
     const [txs, bdg, rec, settings, accs, tpls, gls] = await Promise.all([
       dataService.getTransactions(),
       dataService.getBudgets(),
@@ -120,13 +125,15 @@ export default function DashboardScreen() {
     const result = await streakService.updateStreaks(txs);
     setStreakData(result.streakData);
     if (result.newMilestone) setNewMilestone(result.newMilestone);
-
+    if (txs.length > 0 || accs.length > 0) setLoading(false);
   };
 
   useFocusEffect(useCallback(() => {
     loadData();
     // Retry after auth may have restored session
-    const timer = setTimeout(() => loadData(), 1500);
+    const timer = setTimeout(() => {
+      loadData().then(() => setLoading(false));
+    }, 2000);
     return () => clearTimeout(timer);
   }, []));
   useEffect(() => {
@@ -282,6 +289,15 @@ export default function DashboardScreen() {
     .filter(r => r.isActive && r.nextDate)
     .filter(r => new Date(r.nextDate) <= in30)
     .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate));
+
+  if (loading) {
+    return (
+      <View style={[st.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Image source={require('../../assets/images/icon.png')} style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 16 }} />
+        <Text style={{ color: colors.textMuted, fontSize: 14 }}>{i18n.t('loading')}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={st.container}>

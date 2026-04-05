@@ -643,6 +643,7 @@ export default {
   badge500Tx: '500 Transactions!',
 
   copy: 'copy',
+  loading: 'Loading...',
   shoppingList: 'Shopping List',
   mostBought: 'Most bought',
   byPrice: 'By price',

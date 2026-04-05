@@ -642,6 +642,7 @@ export default {
   badge500Tx: '500 תנועות!',
 
   copy: 'עותק',
+  loading: '...טוען',
   shoppingList: 'רשימת קניות',
   mostBought: 'הכי נקנה',
   byPrice: 'לפי מחיר',
