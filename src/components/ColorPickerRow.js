@@ -84,7 +84,7 @@ export default function ColorPickerRow({ selected, onSelect }) {
               <Text style={st.sectionLabel}>{i18n.t('gradients') || 'Gradients'}</Text>
               <View style={st.grid}>
                 {GRADIENTS.map((g, idx) => (
-                  <TouchableOpacity key={idx}
+                  <TouchableOpacity key={`grad-${idx}`}
                     style={[st.colorBtn, selected === g[0] && st.colorBtnActive]}
                     onPress={() => { onSelect(g[0]); setExpanded(false); }}>
                     <View style={{ flex: 1, flexDirection: 'row', borderRadius: 14, overflow: 'hidden' }}>

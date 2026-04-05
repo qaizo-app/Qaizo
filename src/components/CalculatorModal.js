@@ -1,6 +1,6 @@
 // src/components/CalculatorModal.js
 // Встроенный калькулятор для поля суммы
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -18,6 +18,16 @@ export default function CalculatorModal({ visible, onClose, onResult, initialVal
   const [prevValue, setPrevValue] = useState(null);
   const [operator, setOperator] = useState(null);
   const [waitingForNext, setWaitingForNext] = useState(false);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (visible) {
+      setDisplay('');
+      setPrevValue(null);
+      setOperator(null);
+      setWaitingForNext(false);
+    }
+  }, [visible]);
 
   const isOp = (key) => ['+', '−', '×', '÷'].includes(key);
 
@@ -77,6 +87,10 @@ export default function CalculatorModal({ visible, onClose, onResult, initialVal
         const rounded = Math.round(result * 100) / 100;
         setPrevValue(String(rounded));
         setDisplay(String(rounded));
+      } else if (waitingForNext) {
+        // Just change operator (e.g. 5 + then -)
+        setOperator(key);
+        return;
       } else {
         setPrevValue(display || '0');
       }

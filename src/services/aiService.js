@@ -545,9 +545,9 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
       }
     }
 
-    // Validate
-    if (!parsed.total && !parsed.store && !parsed.items?.length) {
-      if (__DEV__) console.error('scanReceipt: empty result');
+    // Validate — need at least total or store
+    if (!parsed.total && !parsed.store) {
+      if (__DEV__) console.error('scanReceipt: no total or store found');
       return null;
     }
 
@@ -602,7 +602,13 @@ Return ONLY JSON array: [{"name":"product name","price":12.90}]` },
       if (lastBrace > 0) jsonStr = jsonStr.substring(0, lastBrace + 1) + ']';
     }
 
-    const parsed = JSON.parse(jsonStr);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      if (__DEV__) console.error('scanReceiptItems JSON parse error:', parseErr, 'raw:', jsonStr.slice(0, 200));
+      return [];
+    }
     return Array.isArray(parsed) ? parsed.filter(i => i.name && i.price) : [];
   } catch (e) {
     if (__DEV__) console.error('scanReceiptItems error:', e);

@@ -59,8 +59,8 @@ export default function ShoppingListScreen() {
       const sorted = [...item.history].sort((a, b) => b.date.localeCompare(a.date));
       const lastPrice = sorted[0]?.price || 0;
       const prevPrice = sorted[1]?.price || 0;
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
       const avgPrice = prices.length > 0 ? Math.round(prices.reduce((s, p) => s + p, 0) / prices.length * 100) / 100 : 0;
       const change = prevPrice > 0 ? Math.round(((lastPrice - prevPrice) / prevPrice) * 100) : 0;
 

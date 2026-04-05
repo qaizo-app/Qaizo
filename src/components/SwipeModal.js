@@ -105,7 +105,7 @@ const createStyles = () => StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     flex: 1,
-    marginTop: '12%',
+    marginTop: Math.round(SCREEN_H * 0.12),
   },
   swipeZone: {
     height: 36,

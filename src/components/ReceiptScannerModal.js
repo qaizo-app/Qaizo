@@ -2,7 +2,7 @@
 // Scan receipt with camera or gallery → Gemini Vision → create transaction
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import aiService from '../services/aiService';
@@ -27,12 +27,14 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
   const st = createSt();
 
   // Load accounts when modal opens
-  const loadAccounts = async () => {
-    const accs = await dataService.getAccounts();
-    setAccounts(accs);
-    if (accs.length > 0 && !selAcc) setSelAcc(accs[0].id);
-  };
-  if (visible && accounts.length === 0) loadAccounts();
+  useEffect(() => {
+    if (visible) {
+      dataService.getAccounts().then(accs => {
+        setAccounts(accs);
+        if (accs.length > 0) setSelAcc(accs[0].id);
+      });
+    }
+  }, [visible]);
 
   const reset = () => {
     setStep('pick');

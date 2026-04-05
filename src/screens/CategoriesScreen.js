@@ -224,11 +224,11 @@ export default function CategoriesScreen() {
     try {
       const txs = await dataService.getTransactions();
       const affected = txs.filter(t => t.categoryId === deleteTarget.id);
-      if (affected.length > 0) {
-        for (const tx of affected) {
-          await dataService.updateTransaction({ ...tx, categoryId: 'other', categoryName: null });
-        }
-      }
+      const updates = affected.map(tx =>
+        dataService.updateTransaction({ ...tx, categoryId: 'other', categoryName: null })
+          .catch(e => { if (__DEV__) console.error('Failed to update tx:', tx.id, e); })
+      );
+      await Promise.all(updates);
     } catch (e) {
       if (__DEV__) console.error('Failed to reassign transactions:', e);
     }
@@ -275,10 +275,15 @@ export default function CategoriesScreen() {
                 {group.subs.map(sub => (
                   <TouchableOpacity key={sub.id} style={styles.subRow} onPress={() => openEditSub(sub, group)}
                     onLongPress={async () => {
-                      const txs = await dataService.getTransactions();
-                      const count = txs.filter(t => t.categoryId === sub.id).length;
-                      setDeleteTxCount(count);
-                      setDeleteTarget({ id: sub.id, parentId: group.id, name: getName(sub.name) });
+                      try {
+                        const txs = await dataService.getTransactions();
+                        const count = txs.filter(t => t.categoryId === sub.id).length;
+                        setDeleteTxCount(count);
+                        setDeleteTarget({ id: sub.id, parentId: group.id, name: getName(sub.name) });
+                      } catch (e) {
+                        setDeleteTxCount(0);
+                        setDeleteTarget({ id: sub.id, parentId: group.id, name: getName(sub.name) });
+                      }
                     }}>
                     <View style={[styles.subIcon, { backgroundColor: `${group.color}10` }]}>
                       <Feather name={sub.icon} size={14} color={group.color} />
