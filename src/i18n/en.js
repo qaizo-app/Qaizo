@@ -643,6 +643,8 @@ export default {
   badge500Tx: '500 Transactions!',
 
   copy: 'copy',
+  gradients: 'Gradients',
+  showMore: 'Show more',
   accountNamePlaceholder: 'Bank name, card number...',
 
   // Settings groups

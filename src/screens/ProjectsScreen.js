@@ -5,7 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import ColorPickerRow from '../components/ColorPickerRow';
 import ConfirmModal from '../components/ConfirmModal';
+import IconGrid from '../components/IconGrid';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
@@ -140,29 +142,19 @@ export default function ProjectsScreen() {
 
       {/* Add/Edit Modal */}
       <SwipeModal visible={showModal} onClose={() => setShowModal(false)} title={editProject ? i18n.t('project') : i18n.t('newProject')}>
-        <ScrollView style={st.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={st.label}>{i18n.t('projectName')}</Text>
-          <TextInput style={st.input} value={name} onChangeText={setName}
-            placeholder={i18n.t('projectName')} placeholderTextColor={colors.textMuted}
-            autoFocus />
+        <View style={{ flex: 1 }}>
+          <ScrollView style={st.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <Text style={st.label}>{i18n.t('projectName')}</Text>
+            <TextInput style={st.input} value={name} onChangeText={setName}
+              placeholder={i18n.t('projectName')} placeholderTextColor={colors.textMuted}
+              autoFocus />
 
-          <Text style={st.label}>{i18n.t('icon')}</Text>
-          <View style={st.iconGrid}>
-            {ICON_OPTIONS.map(ic => (
-              <TouchableOpacity key={ic} style={[st.iconBtn, icon === ic && { borderColor: selColor, backgroundColor: selColor + '20' }]}
-                onPress={() => setIcon(ic)}>
-                <Feather name={ic} size={20} color={icon === ic ? selColor : colors.textMuted} />
-              </TouchableOpacity>
-            ))}
-          </View>
+            <Text style={st.label}>{i18n.t('icon')}</Text>
+            <IconGrid icons={ICON_OPTIONS} selected={icon} color={selColor} onSelect={setIcon} />
 
-          <Text style={st.label}>{i18n.t('color')}</Text>
-          <View style={st.colorGrid}>
-            {COLOR_OPTIONS.map(c => (
-              <TouchableOpacity key={c} style={[st.colorBtn, { backgroundColor: c }, selColor === c && st.colorBtnActive]}
-                onPress={() => setSelColor(c)} />
-            ))}
-          </View>
+            <Text style={[st.label, { marginTop: 16 }]}>{i18n.t('color')}</Text>
+            <ColorPickerRow selected={selColor} onSelect={setSelColor} />
+          </ScrollView>
 
           <View style={st.btnRow}>
             <TouchableOpacity style={st.cancelBtn} onPress={() => setShowModal(false)}>
@@ -173,7 +165,7 @@ export default function ProjectsScreen() {
               <Text style={st.saveBtnText}>{i18n.t('save')}</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </SwipeModal>
 
       {/* Long press menu */}
@@ -235,7 +227,7 @@ const createSt = () => StyleSheet.create({
   colorBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, transform: [{ scale: 1.15 }] },
 
-  btnRow: { flexDirection: 'row', gap: 12, paddingTop: 24 },
+  btnRow: { flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelBtnText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },

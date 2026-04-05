@@ -9,6 +9,7 @@ import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
+import CalculatorModal from './CalculatorModal';
 import SwipeModal from './SwipeModal';
 
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
@@ -29,6 +30,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showMore, setShowMore] = useState(false);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
+  const [showCalc, setShowCalc] = useState(false);
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);
   const [projects, setProjects] = useState([]);
@@ -139,6 +141,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             <View style={st.amtRow}>
               <Text style={[st.cur, { color: tc }]}>{sym()}</Text>
               <TextInput style={st.amtIn} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
+              <TouchableOpacity style={st.calcBtn} onPress={() => setShowCalc(true)}>
+                <MaterialCommunityIcons name="calculator-variant-outline" size={18} color={colors.textDim} />
+              </TouchableOpacity>
               <TouchableOpacity style={st.dateBtn} onPress={() => setShowCal(true)}>
                 <Feather name="calendar" size={14} color={colors.green} />
                 <Text style={st.dateTxt}>{dd || i18n.t('date')}</Text>
@@ -308,6 +313,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       </SwipeModal>
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
       <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
+      <CalculatorModal visible={showCalc} onClose={() => setShowCalc(false)} initialValue={amount}
+        onResult={(val) => setAmount(val)} />
     </>
   );
 }
@@ -320,6 +327,7 @@ const createSt = () => StyleSheet.create({
   amtRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 16, gap: 12, backgroundColor: colors.bg2, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder },
   cur: { fontSize: 34, fontWeight: '800' },
   amtIn: { flex: 1, color: colors.text, fontSize: 40, fontWeight: '800', letterSpacing: -1 },
+  calcBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   dateBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, minHeight: 44, borderWidth: 1, borderColor: colors.cardBorder, gap: 6 },
   dateTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 8, textAlign: i18n.textAlign() },
@@ -341,7 +349,7 @@ const createSt = () => StyleSheet.create({
   newTagWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder, paddingStart: 10 },
   newTagInput: { color: colors.text, fontSize: 13, paddingVertical: 8, minWidth: 80, maxWidth: 120 },
   newTagBtn: { paddingHorizontal: 10, paddingVertical: 8 },
-  btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
+  btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8, paddingBottom: 8 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

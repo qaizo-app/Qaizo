@@ -5,7 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import ColorPickerRow from '../components/ColorPickerRow';
 import ConfirmModal from '../components/ConfirmModal';
+import IconGrid from '../components/IconGrid';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
@@ -281,42 +283,30 @@ export default function CategoriesScreen() {
       {/* Edit modal */}
       <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)}>
         {({ close }) => (
-          <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 20 }}>
-            <Text style={styles.modalTitle}>
-              {editItem ? i18n.t('edit') : i18n.t('add')}
-              {editParent ? ` → ${getName(editParent.name)}` : ''}
-            </Text>
+          <View style={{ flex: 1 }}>
+            <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 8 }}>
+              <Text style={styles.modalTitle}>
+                {editItem ? i18n.t('edit') : i18n.t('add')}
+                {editParent ? ` → ${getName(editParent.name)}` : ''}
+              </Text>
 
-            <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
-            <TextInput style={styles.input} value={editName} onChangeText={setEditName}
-              placeholder={i18n.t('categoryName')}
-              placeholderTextColor={colors.textMuted} />
+              <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
+              <TextInput style={styles.input} value={editName} onChangeText={setEditName}
+                placeholder={i18n.t('categoryName')}
+                placeholderTextColor={colors.textMuted} />
 
-            <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
-            <View style={styles.iconGrid}>
-              {(editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS).map(ic => (
-                <TouchableOpacity key={ic} style={[styles.iconBtn, editIcon === ic && { borderColor: editColor, backgroundColor: `${editColor}15` }]}
-                  onPress={() => setEditIcon(ic)}>
-                  {ic.startsWith('ion:')
-                    ? <Ionicons name={ic.slice(4)} size={20} color={editIcon === ic ? editColor : colors.textMuted} />
-                    : <Feather name={ic} size={18} color={editIcon === ic ? editColor : colors.textMuted} />
-                  }
-                </TouchableOpacity>
-              ))}
-            </View>
+              <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
+              <IconGrid icons={editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS}
+                selected={editIcon} color={editColor} onSelect={setEditIcon} />
 
-            {!editParent && (
-              <>
-                <Text style={styles.fieldLabel}>{i18n.t('color')}</Text>
-                <View style={styles.colorGrid}>
-                  {COLOR_OPTIONS.map(c => (
-                    <TouchableOpacity key={c} style={[styles.colorBtn, { backgroundColor: c }, editColor === c && styles.colorBtnActive]}
-                      onPress={() => setEditColor(c)} />
-                  ))}
-                </View>
-              </>
-            )}
+              {!editParent && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 16 }]}>{i18n.t('color')}</Text>
+                  <ColorPickerRow selected={editColor} onSelect={setEditColor} />
+                </>
+              )}
+            </ScrollView>
 
             <View style={styles.btnRow}>
               <TouchableOpacity style={styles.cancelBtn} onPress={close}>
@@ -327,7 +317,7 @@ export default function CategoriesScreen() {
                 <Text style={styles.saveText}> {i18n.t('save')}</Text>
               </TouchableOpacity>
             </View>
-          </ScrollView>
+          </View>
         )}
       </SwipeModal>
 
@@ -369,7 +359,7 @@ const createStyles = () => StyleSheet.create({
   colorBtn: { width: 32, height: 32, borderRadius: 10, borderWidth: 2, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, borderWidth: 3 },
 
-  btnRow: { flexDirection: i18n.row(), gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
+  btnRow: { flexDirection: i18n.row(), gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.card, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   cancelText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

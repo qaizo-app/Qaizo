@@ -76,7 +76,7 @@ export default function SwipeModal({ visible, onClose, children }) {
 
       {/* Модалка */}
       <KeyboardAvoidingView behavior="padding" style={{ justifyContent: 'flex-end', flex: 1 }}>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 16) + 40 }]}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: Math.max(insets.bottom, 12) }]}>
           <View {...panResponder.panHandlers} style={styles.swipeZone}>
             <View style={styles.handle} />
           </View>
@@ -104,7 +104,8 @@ const createStyles = () => StyleSheet.create({
     backgroundColor: colors.bg2,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '90%',
+    flex: 1,
+    marginTop: '12%',
   },
   swipeZone: {
     height: 36,
@@ -119,6 +120,7 @@ const createStyles = () => StyleSheet.create({
     opacity: 0.5,
   },
   content: {
+    flex: 1,
     paddingHorizontal: 24,
     paddingBottom: 20,
   },

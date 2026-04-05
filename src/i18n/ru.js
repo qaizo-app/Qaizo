@@ -610,6 +610,8 @@ export default {
   badge500Tx: '500 транзакций!',
 
   copy: 'копия',
+  gradients: 'Градиенты',
+  showMore: 'Показать ещё',
   accountNamePlaceholder: 'Название банка, номер карты...',
 
   // Settings groups

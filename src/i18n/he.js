@@ -642,6 +642,8 @@ export default {
   badge500Tx: '500 תנועות!',
 
   copy: 'עותק',
+  gradients: 'גרדיאנטים',
+  showMore: 'הצג עוד',
   accountNamePlaceholder: 'שם בנק, מספר כרטיס...',
 
   // Settings groups

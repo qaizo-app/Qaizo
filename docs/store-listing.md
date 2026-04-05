@@ -6,104 +6,156 @@ Qaizo — Smart Finance Manager
 ## Short Description (80 chars max)
 
 **English:**
-Smart finance tracking with AI insights, budgets, goals & analytics
+Smart finance tracking with budgets, goals, analytics & insights
 
 **Hebrew:**
-ניהול פיננסי חכם עם תובנות AI, תקציבים, מטרות ואנליטיקה
+ניהול פיננסי חכם עם תקציבים, מטרות חיסכון, אנליטיקה ותובנות
 
 **Russian:**
-Умное управление финансами с AI, бюджеты, цели и аналитика
+Умный учёт финансов с бюджетами, целями, аналитикой и инсайтами
 
 ## Full Description
 
 ### English:
-Qaizo is a powerful personal finance app designed for the Israeli market. Track your income and expenses, set budgets, save for goals, and get smart insights — all in one beautiful app.
+Qaizo is a smart and easy-to-use app for tracking your finances, budgets and savings.
 
-**Key Features:**
-• 📊 Dashboard with total balance, income/expense breakdown, and end-of-month forecast
-• 💰 Smart "Free Money Today" calculator based on your income and fixed expenses
-• 🎯 Savings goals with progress tracking and monthly targets
-• 📋 Transaction management with search, filters, and project tagging
-• 📅 Calendar view with daily income/expense dots
-• 🏆 Achievements & badges — gamification to motivate saving
-• 📈 Analytics — financial score, insights, month comparison, top payees
-• 🔄 Recurring payments with contract end dates and reminders
-• 📂 Projects — track expenses across accounts (trips, renovations)
-• 🏷️ 40+ categories with custom subcategories and icons
-• 💳 Multiple accounts — bank, credit card, cash, crypto, investments
-• 🌙 Dark & light themes
-• 🌍 3 languages — Hebrew, Russian, English (RTL support)
-• 📤 Export to CSV, Excel, PDF
-• 📥 Import from CSV/Excel (Wallet, Bluecoins, bank formats)
-• 🔐 PIN code lock for app security
-• 📊 Advanced analytics — balance history, cash flow charts, period selector (7D-1Y)
-• 🔒 Firebase Auth with email verification
-• ☁️ Cloud sync — your data on any device
+Qaizo helps you take full control of your finances without taking up much of your time. Adding a transaction takes just two taps, and the smart "Free Money Today" calculator tells you exactly how much you can spend right now without going over budget. No need to open your banking app to understand your financial situation — Qaizo shows the full picture in one place.
 
-**Coming Soon:**
-• 🤖 AI-powered smart input — type "coffee 25 shekels" and it's categorized
-• 📸 Receipt scanner with Gemini Vision AI
-• 💬 AI financial advisor chat
+- Simple interface:
+Adding a transaction takes just two taps. The built-in calculator helps you quickly figure out percentages or fees without leaving the app;
 
-Qaizo does NOT provide professional financial advice. All insights are for tracking purposes only.
+- Visual analytics:
+Interactive charts show your balance history, cash flow, expenses by category and month-over-month comparison. Choose any period — from 7 days to a full year;
+
+- Smart budgeting:
+Set budgets by category and get alerts when you exceed them. "Free Money Today" is a unique calculation showing how much you can spend today without hurting your budget;
+
+- Savings goals:
+Create goals with a target amount and date, track your progress and make deposits. The app tells you how much you need to save each month;
+
+- Personalization:
+Over 40 ready-made categories with icons, or create your own with custom colors and names. Dark and light themes to suit your style;
+
+- Multiple accounts:
+Track bank accounts, credit cards, cash, crypto and investments — all in one app;
+
+- Reminders:
+Set up recurring payments with automatic reminders. Add a contract end date — the app will alert you 30 days in advance;
+
+- Projects:
+Track expenses for a vacation, renovation or any other project separately from your main budget;
+
+- Achievements:
+Earn badges for daily tracking, saving money and reaching goals. Gamification keeps you motivated to manage your finances every day;
+
+- Security:
+Protect the app with a PIN code. Your data syncs through the cloud and is available on any device;
+
+- Three languages:
+Full support for Hebrew, Russian and English, including right-to-left interface;
+
+- Export & import:
+Export your data to CSV, Excel or PDF. Import from other apps.
+
+Coming soon: smart text input, receipt scanner and AI financial advisor.
+
+Qaizo does NOT provide professional financial advice.
 
 ### Hebrew:
-Qaizo הוא אפליקציית ניהול פיננסי אישי חכמה, מותאמת לשוק הישראלי. עקוב אחרי הכנסות והוצאות, הגדר תקציבים, חסוך למטרות וקבל תובנות חכמות — הכל באפליקציה אחת יפה.
+Qaizo הוא אפליקציה חכמה ונוחה לניהול הפיננסים, התקציבים והחסכונות שלך.
 
-**תכונות עיקריות:**
-• 📊 דשבורד עם יתרה כוללת, פילוח הכנסות/הוצאות ותחזית סוף חודש
-• 💰 "כסף פנוי להיום" — חישוב חכם מבוסס הכנסות והוצאות קבועות
-• 🎯 מטרות חיסכון עם מעקב התקדמות ויעדים חודשיים
-• 📋 ניהול תנועות עם חיפוש, פילטרים ושיוך לפרויקטים
-• 📅 לוח שנה עם נקודות הכנסה/הוצאה יומיות
-• 🏆 הישגים ותגמולים — גיימיפיקציה שמעודדת חיסכון
-• 📈 אנליטיקה — ציון פיננסי, תובנות, השוואת חודשים, מוטבים מובילים
-• 🔄 תשלומים קבועים עם תאריכי סיום חוזה ותזכורות
-• 📂 פרויקטים — מעקב הוצאות מכמה חשבונות (טיולים, שיפוצים)
-• 🏷️ 40+ קטגוריות עם תת-קטגוריות ואייקונים מותאמים
-• 💳 חשבונות מרובים — בנק, אשראי, מזומן, קריפטו, השקעות
-• 🌙 נושא כהה ובהיר
-• 🌍 3 שפות — עברית, רוסית, אנגלית (תמיכה מלאה ב-RTL)
-• 📤 ייצוא ל-CSV, Excel, PDF
-• 📥 ייבוא מ-CSV/Excel
-• 🔐 נעילת PIN לאבטחת האפליקציה
-• 📊 אנליטיקה מתקדמת — דינמיקת יתרה, תזרים מזומנים, בחירת תקופה
-• 🔒 אימות Firebase עם אימות אימייל
-• ☁️ סנכרון ענן — הנתונים שלך בכל מכשיר
+Qaizo יעזור לך לקחת שליטה מלאה על הכספים שלך, בלי לבזבז הרבה זמן. הוספת תנועה לוקחת שני לחיצות בלבד, והמחשבון החכם "כסף פנוי להיום" מראה בדיוק כמה אפשר להוציא עכשיו בלי לחרוג מהתקציב. לא צריך לפתוח אפליקציה של הבנק כדי להבין את המצב הפיננסי — Qaizo מראה את התמונה המלאה במקום אחד.
+
+ממשק פשוט:
+הוספת תנועה בשני לחיצות. מחשבון מובנה עוזר לחשב אחוזים ועמלות בלי לצאת מהאפליקציה
+
+אנליטיקה ויזואלית:
+גרפים אינטראקטיביים מראים דינמיקת יתרה, תזרים מזומנים, הוצאות לפי קטגוריות והשוואה לחודש קודם. בחר תקופה מ-7 ימים עד שנה
+
+תקציב חכם:
+הגדר תקציבים לפי קטגוריה וקבל התראות כשחורגים. כסף פנוי להיום — חישוב ייחודי שמראה כמה אפשר להוציא היום בלי לפגוע בתקציב
+
+מטרות חיסכון:
+צור מטרות עם סכום יעד ותאריך, עקוב אחרי ההתקדמות והפקד כספים. האפליקציה מחשבת כמה צריך לחסוך כל חודש
+
+התאמה אישית:
+יותר מ-40 קטגוריות מוכנות עם אייקונים, או צור משלך עם צבעים ושמות מותאמים. נושא כהה ובהיר לבחירתך
+
+חשבונות מרובים:
+עקוב אחרי חשבונות בנק, כרטיסי אשראי, מזומן, קריפטו והשקעות — הכל באפליקציה אחת
+
+תזכורות:
+הגדר תשלומים קבועים עם תזכורות אוטומטיות. הוסף תאריך סיום חוזה — האפליקציה תתריע 30 יום מראש
+
+פרויקטים:
+עקוב אחרי הוצאות לחופשה, שיפוץ או כל פרויקט אחר בנפרד מהתקציב הראשי
+
+הישגים:
+צבור תגים על מעקב יומי, חיסכון והשגת מטרות. גיימיפיקציה שמניעה אותך לנהל כספים כל יום
+
+אבטחה:
+הגן על האפליקציה עם קוד PIN. הנתונים מסונכרנים דרך הענן וזמינים בכל מכשיר
+
+שלוש שפות:
+תמיכה מלאה בעברית, רוסית ואנגלית, כולל ממשק מימין לשמאל
+
+ייצוא וייבוא:
+ייצא נתונים ל-CSV, Excel או PDF. ייבא מאפליקציות אחרות
+
+בקרוב: קלט חכם בטקסט, סריקת קבלות ויועץ פיננסי AI.
 
 האפליקציה אינה מספקת ייעוץ פיננסי מקצועי.
 
 ### Russian:
-Qaizo — умное приложение для управления личными финансами, разработанное для израильского рынка. Отслеживайте доходы и расходы, устанавливайте бюджеты, копите на цели и получайте умные рекомендации — всё в одном красивом приложении.
+Qaizo — умное и удобное приложение для учёта финансов, бюджетов и накоплений.
 
-**Основные функции:**
-• 📊 Дашборд с общим балансом, разбивкой доходов/расходов и прогнозом на конец месяца
-• 💰 «Свободные деньги на сегодня» — умный расчёт на основе доходов и постоянных расходов
-• 🎯 Цели накоплений с отслеживанием прогресса и месячными целями
-• 📋 Управление транзакциями с поиском, фильтрами и привязкой к проектам
-• 📅 Календарь с точками доходов/расходов по дням
-• 🏆 Достижения и награды — геймификация для мотивации
-• 📈 Аналитика — финансовый рейтинг, инсайты, сравнение месяцев, топ получателей
-• 🔄 Регулярные платежи с датами окончания контрактов и напоминаниями
-• 📂 Проекты — отслеживание расходов с нескольких счетов (поездки, ремонт)
-• 🏷️ 40+ категорий с подкатегориями и иконками
-• 💳 Несколько счетов — банк, кредитка, наличные, крипто, инвестиции
-• 🌙 Тёмная и светлая темы
-• 🌍 3 языка — иврит, русский, английский (поддержка RTL)
-• 📤 Экспорт в CSV, Excel, PDF
-• 📥 Импорт из CSV/Excel
-• 🔐 PIN-код для защиты приложения
-• 📊 Продвинутая аналитика — динамика баланса, денежный поток, выбор периода
-• 🔒 Firebase Auth с подтверждением email
-• ☁️ Облачная синхронизация
+Qaizo поможет вам взять под полный контроль свои финансы, при этом не отнимая много времени. Добавление транзакции занимает буквально два клика, а умный калькулятор "Свободные деньги на сегодня" подскажет, сколько вы можете потратить прямо сейчас, не выходя за рамки бюджета. Вам больше не нужно открывать банковское приложение, чтобы понять своё финансовое положение — Qaizo покажет полную картину в одном месте.
 
-Приложение не предоставляет профессиональных финансовых консультаций.
+- Простой интерфейс:
+Добавление транзакции — буквально в два клика. Встроенный калькулятор поможет быстро посчитать проценты или комиссии, не выходя из приложения;
+
+- Наглядная аналитика:
+Интерактивные графики покажут динамику баланса, денежный поток, расходы по категориям и сравнение с прошлым месяцем. Выбирайте период — от 7 дней до года;
+
+- Умный бюджет:
+Установите бюджеты по категориям и получайте предупреждения при превышении. "Свободные деньги на сегодня" — уникальный расчёт, показывающий сколько можно потратить сегодня без ущерба для бюджета;
+
+- Цели накоплений:
+Создавайте цели с суммой и датой, отслеживайте прогресс и вносите депозиты. Приложение подскажет, сколько нужно откладывать ежемесячно;
+
+- Персонализация:
+Более 40 готовых категорий с иконками, или создавайте свои с уникальными цветами и названиями. Тёмная и светлая темы на ваш выбор;
+
+- Несколько счетов:
+Ведите учёт по банковским счетам, кредитным картам, наличным, криптовалюте и инвестициям — всё в одном приложении;
+
+- Напоминания:
+Настройте регулярные платежи с автоматическими напоминаниями. Добавьте дату окончания контракта — приложение предупредит за 30 дней;
+
+- Проекты:
+Отслеживайте расходы на отпуск, ремонт или любой другой проект отдельно от основного бюджета;
+
+- Достижения:
+Зарабатывайте значки за ежедневный учёт, экономию и достижение целей. Геймификация мотивирует вести финансы каждый день;
+
+- Безопасность:
+Защитите приложение PIN-кодом. Данные синхронизируются через облако и доступны на любом устройстве;
+
+- Три языка:
+Полная поддержка иврита, русского и английского, включая интерфейс справа налево;
+
+- Экспорт и импорт:
+Экспортируйте данные в CSV, Excel или PDF. Импортируйте из других приложений.
+
+Скоро: умный ввод текстом, сканер чеков и финансовый советник на базе AI.
+
+Qaizo не предоставляет профессиональных финансовых консультаций.
 
 ## Category
 Finance
 
 ## Tags/Keywords
-finance, budget, expense tracker, savings, money manager, Israeli shekel, חשבונות, תקציב, הוצאות, חיסכון
+finance, budget, expense tracker, savings, money manager, personal finance, budget planner, spending tracker, financial analytics, recurring payments, savings goals, PIN lock, categories, projects, achievements, multi-currency, Hebrew, Russian, English, RTL
 
 ## Content Rating
 Everyone (no violence, no gambling, no sensitive content)
@@ -114,4 +166,3 @@ Everyone (no violence, no gambling, no sensitive content)
 - Data can be deleted: Yes (Settings > Delete Account)
 - Data is NOT shared with third parties
 - Data is NOT used for advertising
-- AI features send anonymized data to Google Gemini for processing (when enabled)
