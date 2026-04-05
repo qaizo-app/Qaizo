@@ -23,6 +23,7 @@ import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
+import ShoppingListScreen from '../screens/ShoppingListScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import ProjectsScreen from '../screens/ProjectsScreen';
 import QuickAddModal from '../components/QuickAddModal';
@@ -55,6 +56,7 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="Projects" component={ProjectsScreen} />
       <DashboardStack.Screen name="Goals" component={GoalsScreen} />
       <DashboardStack.Screen name="Analytics" component={AnalyticsScreen} />
+      <DashboardStack.Screen name="ShoppingList" component={ShoppingListScreen} />
       <DashboardStack.Screen name="AIChat" component={AIChatScreen} />
     </DashboardStack.Navigator>
   );
@@ -74,6 +76,7 @@ const ADD_MENU = [
   { key: 'oneTimePayment',  icon: 'plus-circle', color: colors.green },
   { key: 'recurringPayment', icon: 'repeat',   color: '#60a5fa' },
   { key: 'quickAdd',        icon: 'zap',       color: '#f59e0b' },
+  { key: 'scanReceipt',     icon: 'camera',    color: colors.teal },
 ];
 
 export default function AppNavigator() {
@@ -116,7 +119,7 @@ export default function AppNavigator() {
     closeAddMenu();
     setTimeout(() => {
       if (key === 'smartInput') toast.show(i18n.t('comingSoonMessage'), 'info');
-      else if (key === 'scanReceipt') toast.show(i18n.t('comingSoonMessage'), 'info');
+      else if (key === 'scanReceipt') setShowReceipt(true);
       else if (key === 'oneTimePayment') setShowAdd(true);
       else if (key === 'recurringPayment') setShowRecurring(true);
       else if (key === 'quickAdd') {

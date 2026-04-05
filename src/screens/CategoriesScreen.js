@@ -162,6 +162,7 @@ export default function CategoriesScreen() {
   const [editIcon, setEditIcon] = useState('circle');
   const [editColor, setEditColor] = useState('#60a5fa');
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTxCount, setDeleteTxCount] = useState(0);
   const lang = i18n.getLanguage();
   const styles = createStyles();
 
@@ -217,8 +218,21 @@ export default function CategoriesScreen() {
     setShowEdit(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
+    // Move transactions from deleted category to 'other'
+    try {
+      const txs = await dataService.getTransactions();
+      const affected = txs.filter(t => t.categoryId === deleteTarget.id);
+      if (affected.length > 0) {
+        for (const tx of affected) {
+          await dataService.updateTransaction({ ...tx, categoryId: 'other', categoryName: null });
+        }
+      }
+    } catch (e) {
+      if (__DEV__) console.error('Failed to reassign transactions:', e);
+    }
+
     let newGroups = [...groups];
     if (deleteTarget.parentId) {
       const gIdx = newGroups.findIndex(g => g.id === deleteTarget.parentId);
@@ -260,7 +274,12 @@ export default function CategoriesScreen() {
               <View style={styles.subsContainer}>
                 {group.subs.map(sub => (
                   <TouchableOpacity key={sub.id} style={styles.subRow} onPress={() => openEditSub(sub, group)}
-                    onLongPress={() => setDeleteTarget({ id: sub.id, parentId: group.id, name: getName(sub.name) })}>
+                    onLongPress={async () => {
+                      const txs = await dataService.getTransactions();
+                      const count = txs.filter(t => t.categoryId === sub.id).length;
+                      setDeleteTxCount(count);
+                      setDeleteTarget({ id: sub.id, parentId: group.id, name: getName(sub.name) });
+                    }}>
                     <View style={[styles.subIcon, { backgroundColor: `${group.color}10` }]}>
                       <Feather name={sub.icon} size={14} color={group.color} />
                     </View>
@@ -321,7 +340,8 @@ export default function CategoriesScreen() {
         )}
       </SwipeModal>
 
-      <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')} message={deleteTarget?.name || ''}
+      <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
+        message={deleteTarget?.name + (deleteTxCount > 0 ? '\n' + i18n.t('deleteCategoryWarning').replace('{count}', deleteTxCount) : '') || ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
     </View>

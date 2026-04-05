@@ -441,40 +441,172 @@ No markdown, no explanation, only the JSON array.`;
 }
 
 // ─── Receipt Scanner ────────────────────────────────────
-async function scanReceipt(imageBase64, lang) {
-  if (!GEMINI_API_KEY) return null;
-  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+async function scanReceipt(imageInput, lang) {
+  if (!GEMINI_API_KEY) {
+    if (__DEV__) console.error('scanReceipt: no API key');
+    return null;
+  }
   try {
+    // Support single string or array of base64 strings
+    const imageList = Array.isArray(imageInput) ? imageInput : [imageInput];
+
+    const detectMime = (b64) => {
+      if (b64.startsWith('/9j/')) return 'image/jpeg';
+      if (b64.startsWith('iVBOR')) return 'image/png';
+      if (b64.startsWith('JVBER')) return 'application/pdf';
+      if (b64.startsWith('UklGR')) return 'image/webp';
+      return 'image/jpeg';
+    };
+
+    const imageParts = imageList.map(b64 => ({
+      inlineData: { mimeType: detectMime(b64), data: b64 }
+    }));
+
+    if (__DEV__) console.log('scanReceipt:', imageList.length, 'images, sizes:', imageList.map(b => b.length));
+
+    const multiImageHint = imageList.length > 1
+      ? `These ${imageList.length} images are parts of the SAME receipt. Combine all items and find the total from the last image.`
+      : '';
+
     const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: `Analyze this receipt/invoice image and extract:
-1. total - the total amount paid (number only)
-2. store - store/business name
-3. date - date on receipt (YYYY-MM-DD format), or null if not visible
-4. items - array of {name, price} for individual items (max 5 main items)
-5. category - best matching category from: food, restaurant, fuel, transport, health, phone, utilities, clothing, household, kids, entertainment, education, cosmetics, electronics, insurance, rent, other
-
-Return ONLY valid JSON: {"total": number, "store": "string", "date": "string|null", "items": [{name,price}], "category": "string"}
-No markdown, no explanation.` },
-            { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } },
+            { text: `You are a receipt scanner. Analyze this receipt carefully.
+${multiImageHint}
+Extract:
+- total: the TOTAL/סה"כ amount (number). Look for words like Total, סה"כ, סהכ, Итого
+- store: business name, usually at the top of receipt
+- date: look for date on receipt, return as YYYY-MM-DD. Look for dd/mm/yyyy or dd.mm.yyyy format
+- category: classify the business. Supermarket/grocery = "food". Restaurant/cafe = "restaurant". Gas station = "fuel". Pharmacy = "health". Use: food,restaurant,fuel,transport,health,phone,utilities,clothing,household,kids,entertainment,education,cosmetics,electronics,insurance,rent,other
+Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","category":"food"}` },
+            ...imageParts,
           ],
         }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+        generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
       }),
     });
+
     if (!res.ok) {
+      const errText = await res.text();
+      if (__DEV__) console.error('scanReceipt API error:', res.status, errText);
       return null;
     }
+
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
-    return JSON.parse(jsonStr);
+    if (__DEV__) console.log('scanReceipt response:', text);
+
+    let jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+
+    // Fix truncated JSON
+    if (jsonStr && !jsonStr.endsWith('}')) {
+      if (__DEV__) console.log('scanReceipt: fixing truncated JSON');
+      // Try to extract what we can before items array
+      const itemsIdx = jsonStr.indexOf('"items"');
+      if (itemsIdx > 0) {
+        // Cut off items and close JSON
+        const beforeItems = jsonStr.substring(0, itemsIdx).replace(/,\s*$/, '');
+        jsonStr = beforeItems + '}';
+      } else {
+        // Remove incomplete last field
+        const lastComma = jsonStr.lastIndexOf(',');
+        const lastBrace = jsonStr.lastIndexOf('}');
+        if (lastComma > lastBrace) jsonStr = jsonStr.substring(0, lastComma);
+        // Close open brackets
+        const opens = (jsonStr.match(/\[/g) || []).length;
+        const closes = (jsonStr.match(/\]/g) || []).length;
+        for (let i = 0; i < opens - closes; i++) jsonStr += ']';
+        if (!jsonStr.endsWith('}')) jsonStr += '}';
+      }
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      if (__DEV__) console.error('scanReceipt: JSON parse failed, trying regex extraction');
+      // Last resort — extract total/store/category with regex
+      const totalMatch = jsonStr.match(/"total"\s*:\s*([\d.]+)/);
+      const storeMatch = jsonStr.match(/"store"\s*:\s*"([^"]+)"/);
+      const catMatch = jsonStr.match(/"category"\s*:\s*"([^"]+)"/);
+      const dateMatch = jsonStr.match(/"date"\s*:\s*"([^"]+)"/);
+      if (totalMatch) {
+        parsed = {
+          total: parseFloat(totalMatch[1]),
+          store: storeMatch ? storeMatch[1] : '',
+          category: catMatch ? catMatch[1] : 'other',
+          date: dateMatch ? dateMatch[1] : null,
+        };
+      } else {
+        return null;
+      }
+    }
+
+    // Validate
+    if (!parsed.total && !parsed.store && !parsed.items?.length) {
+      if (__DEV__) console.error('scanReceipt: empty result');
+      return null;
+    }
+
+    return parsed;
   } catch (e) {
+    if (__DEV__) console.error('scanReceipt error:', e);
     return null;
+  }
+}
+
+// ─── Receipt Items (separate request for long receipts) ──
+async function scanReceiptItems(imageInput) {
+  if (!GEMINI_API_KEY) return [];
+  try {
+    const imageList = Array.isArray(imageInput) ? imageInput : [imageInput];
+    const detectMime = (b64) => {
+      if (b64.startsWith('/9j/')) return 'image/jpeg';
+      if (b64.startsWith('iVBOR')) return 'image/png';
+      if (b64.startsWith('JVBER')) return 'application/pdf';
+      return 'image/jpeg';
+    };
+    const imageParts = imageList.map(b64 => ({
+      inlineData: { mimeType: detectMime(b64), data: b64 }
+    }));
+
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: `List ALL purchased items from this receipt with their prices.
+The receipt may be wrinkled or slightly blurry — do your best to read each item.
+Each item: name = product name as printed on receipt (keep original language).
+Price = number only, no currency.
+Return ONLY JSON array: [{"name":"product name","price":12.90}]` },
+            ...imageParts,
+          ],
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
+      }),
+    });
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+
+    // Fix truncated array
+    if (jsonStr.startsWith('[') && !jsonStr.endsWith(']')) {
+      const lastBrace = jsonStr.lastIndexOf('}');
+      if (lastBrace > 0) jsonStr = jsonStr.substring(0, lastBrace + 1) + ']';
+    }
+
+    const parsed = JSON.parse(jsonStr);
+    return Array.isArray(parsed) ? parsed.filter(i => i.name && i.price) : [];
+  } catch (e) {
+    if (__DEV__) console.error('scanReceiptItems error:', e);
+    return [];
   }
 }
 
@@ -604,6 +736,7 @@ export default {
   getPersonalAdvice,
   chatWithAI,
   scanReceipt,
+  scanReceiptItems,
   callGemini,
   MAAM_RATE,
   ESTIMATED_INCOME_TAX,

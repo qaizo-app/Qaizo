@@ -130,8 +130,9 @@ export default function TransactionsScreen({ route }) {
   };
 
   const handleDuplicate = async (tx) => {
+    const { id, createdAt, ...rest } = tx;
     await dataService.addTransaction({
-      ...tx, id: undefined, createdAt: undefined,
+      ...rest,
       date: new Date().toISOString(),
       note: tx.note ? `${tx.note} (${i18n.t('copy')})` : `(${i18n.t('copy')})`,
     });

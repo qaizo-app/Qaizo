@@ -305,7 +305,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount) > 0 ? 1 : 0.35 }]}
                 onPress={handleSave} disabled={!amount || parseFloat(amount) <= 0}>
                 <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
-                <Text style={st.saveTxt}>{isEdit ? title : i18n.t('save')}</Text>
+                <Text style={st.saveTxt}>{i18n.t('save')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -324,12 +324,12 @@ const createSt = () => StyleSheet.create({
   typeRow: { flexDirection: i18n.row(), marginBottom: 20, backgroundColor: colors.card, borderRadius: 14, padding: 4 },
   typeBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 12, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   typeTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
-  amtRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 16, gap: 12, backgroundColor: colors.bg2, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder },
-  cur: { fontSize: 34, fontWeight: '800' },
-  amtIn: { flex: 1, color: colors.text, fontSize: 40, fontWeight: '800', letterSpacing: -1 },
-  calcBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
-  dateBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, minHeight: 44, borderWidth: 1, borderColor: colors.cardBorder, gap: 6 },
-  dateTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  amtRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 16, gap: 8, backgroundColor: colors.bg2, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.cardBorder },
+  cur: { fontSize: 28, fontWeight: '800' },
+  amtIn: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1, minWidth: 60 },
+  calcBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  dateBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 10, minHeight: 34, borderWidth: 1, borderColor: colors.cardBorder, gap: 4 },
+  dateTxt: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 8, textAlign: i18n.textAlign() },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginStart: 6 },
