@@ -117,7 +117,7 @@ export default function SettingsScreen() {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>⚙️ {settingsTitle}</Text>
+          <Text style={styles.title}>{settingsTitle}</Text>
           <View style={{ width: 44 }} />
         </View>
 

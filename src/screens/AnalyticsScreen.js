@@ -26,12 +26,14 @@ const PERIODS = [
   { key: '1y', days: 365, label: '1Y' },
 ];
 
-const TABS = ['overview', 'expenses', 'trends'];
+const TABS = ['overview', 'expenses', 'income', 'trends'];
 
 export default function AnalyticsScreen() {
   const navigation = useNavigation();
   const [tab, setTab] = useState('overview');
   const [periodIdx, setPeriodIdx] = useState(1); // default 30d
+  const [monthOffset, setMonthOffset] = useState(0); // 0=current, -1=prev, etc
+  const [periodMode, setPeriodMode] = useState('range'); // 'range' or 'month'
   const [allTxs, setAllTxs] = useState([]);
 
   // Overview data
@@ -40,6 +42,9 @@ export default function AnalyticsScreen() {
   const [earnedBadges, setEarnedBadges] = useState([]);
 
   // Expenses data
+  const [incomePieData, setIncomePieData] = useState([]);
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
   const [pieData, setPieData] = useState([]);
   const [topPayees, setTopPayees] = useState([]);
   const [monthCompare, setMonthCompare] = useState([]);
@@ -63,7 +68,30 @@ export default function AnalyticsScreen() {
 
   useFocusEffect(useCallback(() => {
     loadData();
-  }, [periodIdx]));
+  }, [periodIdx, monthOffset, periodMode]));
+
+  // Get period days based on mode
+  const getEffectiveDays = () => {
+    if (periodMode === 'month') {
+      const now = new Date();
+      const m = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+      const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+      return daysInMonth;
+    }
+    return period.days;
+  };
+
+  // Get month label for display
+  const getMonthLabel = () => {
+    const now = new Date();
+    const m = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+    const monthNames = lang === 'he'
+      ? ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
+      : lang === 'ru'
+      ? ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
+      : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return `${monthNames[m.getMonth()]} ${m.getFullYear()}`;
+  };
 
   const loadData = async () => {
     try {
@@ -75,7 +103,7 @@ export default function AnalyticsScreen() {
       const recurring = await dataService.getRecurring();
       setAllTxs(txs);
 
-      if (__DEV__) console.log('Analytics: loaded', txs.length, 'txs, period:', period.days, 'days');
+      if (__DEV__) console.log('Analytics: loaded', txs.length, 'txs, period:', getEffectiveDays(), 'days');
 
       // Overview
       try {
@@ -88,13 +116,16 @@ export default function AnalyticsScreen() {
       // Expenses
       try {
         // Pie chart data — group by category for period
-        const periodTxs = analyticsService.filterByPeriod(txs, period.days);
+        const periodTxs = analyticsService.filterByPeriod(txs, getEffectiveDays());
+        const PIE_COLORS = ['#fb7185', '#34d399', '#60a5fa', '#fbbf24', '#a78bfa', '#22d3ee', '#f472b6', '#4ade80'];
+        const INC_COLORS = ['#34d399', '#22d3ee', '#60a5fa', '#a78bfa', '#4ade80', '#2dd4bf', '#fbbf24', '#818cf8'];
+
+        // Expenses pie
         const catTotals = {};
         periodTxs.filter(t => t.type === 'expense').forEach(t => {
           const cat = t.categoryId || 'other';
           catTotals[cat] = (catTotals[cat] || 0) + t.amount;
         });
-        const PIE_COLORS = ['#fb7185', '#34d399', '#60a5fa', '#fbbf24', '#a78bfa', '#22d3ee', '#f472b6', '#4ade80'];
         const pie = Object.entries(catTotals)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 8)
@@ -105,26 +136,46 @@ export default function AnalyticsScreen() {
           }));
         setPieData(pie);
 
-        setTopPayees(analyticsService.getTopPayees(txs, Math.max(1, Math.ceil(period.days / 30))));
+        // Income pie
+        const incTotals = {};
+        periodTxs.filter(t => t.type === 'income').forEach(t => {
+          const cat = t.categoryId || 'other_income';
+          incTotals[cat] = (incTotals[cat] || 0) + t.amount;
+        });
+        const incPie = Object.entries(incTotals)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([cat, amount], idx) => ({
+            name: i18n.t(cat) !== cat ? i18n.t(cat) : cat,
+            amount,
+            color: INC_COLORS[idx % INC_COLORS.length],
+          }));
+        setIncomePieData(incPie);
+
+        // Totals
+        setTotalIncome(periodTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0));
+        setTotalExpense(periodTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0));
+
+        setTopPayees(analyticsService.getTopPayees(txs, Math.max(1, Math.ceil(getEffectiveDays() / 30))));
         setMonthCompare(analyticsService.getMonthComparison(txs));
-        setDayData(analyticsService.getExpenseByDayOfWeek(txs, Math.max(1, Math.ceil(period.days / 30))));
+        setDayData(analyticsService.getExpenseByDayOfWeek(txs, Math.max(1, Math.ceil(getEffectiveDays() / 30))));
       } catch (e) { if (__DEV__) console.error('Analytics expenses error:', e); }
 
       // Trends
       try {
-        const bh = analyticsService.getBalanceHistory(txs, period.days);
+        const bh = analyticsService.getBalanceHistory(txs, getEffectiveDays());
         if (__DEV__) console.log('Balance history:', bh.length, 'points');
         setBalanceHistory(bh);
       } catch (e) { if (__DEV__) console.error('Balance history error:', e); }
 
       try {
-        const cf = analyticsService.getCashFlow(txs, period.days);
+        const cf = analyticsService.getCashFlow(txs, getEffectiveDays());
         if (__DEV__) console.log('Cash flow:', cf.length, 'points');
         setCashFlowData(cf);
       } catch (e) { if (__DEV__) console.error('Cash flow error:', e); }
 
       try {
-        const qs = analyticsService.getQuickStats(txs, period.days);
+        const qs = analyticsService.getQuickStats(txs, getEffectiveDays());
         setQuickStats(qs);
       } catch (e) { if (__DEV__) console.error('Quick stats error:', e); }
 
@@ -176,17 +227,36 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* Period selector */}
+        {periodMode === 'month' ? (
+          <View style={st.monthRow}>
+            <TouchableOpacity onPress={() => setMonthOffset(monthOffset - 1)} style={st.monthArrow}>
+              <Feather name={i18n.chevronLeft()} size={20} color={colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPeriodMode('range')} style={st.monthLabel}>
+              <Text style={st.monthText}>{getMonthLabel()}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => monthOffset < 0 ? setMonthOffset(monthOffset + 1) : null}
+              style={[st.monthArrow, monthOffset >= 0 && { opacity: 0.3 }]}>
+              <Feather name={i18n.chevronRight()} size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        ) : (
         <View style={st.periodRow}>
           {PERIODS.map((p, idx) => (
             <TouchableOpacity key={p.key}
-              style={[st.periodBtn, periodIdx === idx && st.periodActive]}
-              onPress={() => setPeriodIdx(idx)} activeOpacity={0.7}>
-              <Text style={[st.periodText, periodIdx === idx && st.periodTextActive]}>
+              style={[st.periodBtn, periodIdx === idx && periodMode === 'range' && st.periodActive]}
+              onPress={() => { setPeriodMode('range'); setPeriodIdx(idx); }} activeOpacity={0.7}>
+              <Text style={[st.periodText, periodIdx === idx && periodMode === 'range' && st.periodTextActive]}>
                 {p.label}
               </Text>
             </TouchableOpacity>
           ))}
+          <TouchableOpacity style={[st.periodBtn, periodMode === 'month' && st.periodActive]}
+            onPress={() => { setPeriodMode('month'); setMonthOffset(0); }} activeOpacity={0.7}>
+            <Feather name="calendar" size={16} color={periodMode === 'month' ? colors.bg : colors.text} />
+          </TouchableOpacity>
         </View>
+        )}
 
         {/* Tabs */}
         <View style={st.tabsRow}>
@@ -194,7 +264,7 @@ export default function AnalyticsScreen() {
             <TouchableOpacity key={t} style={[st.tabBtn, tab === t && st.tabActive]}
               onPress={() => setTab(t)} activeOpacity={0.7}>
               <Text style={[st.tabText, tab === t && st.tabTextActive]}>
-                {i18n.t(t === 'overview' ? 'tabOverview' : t === 'expenses' ? 'tabExpenses' : 'tabTrends')}
+                {i18n.t(t === 'overview' ? 'tabOverview' : t === 'expenses' ? 'tabExpenses' : t === 'income' ? 'income' : 'tabTrends')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -263,11 +333,21 @@ export default function AnalyticsScreen() {
         {/* === EXPENSES TAB === */}
         {tab === 'expenses' && (
           <>
-            {pieData.length === 0 && monthCompare.length === 0 && topPayees.length === 0 && (
+            {pieData.length === 0 && incomePieData.length === 0 && (
               <Card><Text style={st.emptyText}>{i18n.t('noInsights')}</Text></Card>
             )}
 
-            {/* Pie chart */}
+            {/* Expense total */}
+            {totalExpense > 0 && (
+              <Card>
+                <View style={st.totalRow}>
+                  <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
+                  <Amount value={totalExpense} style={[st.summaryAmount, { color: colors.red }]} />
+                </View>
+              </Card>
+            )}
+
+            {/* Expense pie chart */}
             {pieData.length > 0 && (
               <Card>
                 <Text style={st.sectionTitle}>{i18n.t('expensesByCategory')}</Text>
@@ -343,6 +423,33 @@ export default function AnalyticsScreen() {
                   ))}
                 </View>
               </Card>
+            )}
+          </>
+        )}
+
+        {/* === INCOME TAB === */}
+        {tab === 'income' && (
+          <>
+            {/* Income total */}
+            {totalIncome > 0 && (
+              <Card>
+                <View style={st.totalRow}>
+                  <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
+                  <Amount value={totalIncome} style={[st.summaryAmount, { color: colors.green }]} />
+                </View>
+              </Card>
+            )}
+
+            {/* Income pie chart */}
+            {incomePieData.length > 0 && (
+              <Card>
+                <Text style={st.sectionTitle}>{i18n.t('incomeByCategory')}</Text>
+                <InteractivePieChart data={incomePieData} />
+              </Card>
+            )}
+
+            {incomePieData.length === 0 && (
+              <Card><Text style={st.emptyText}>{i18n.t('noInsights')}</Text></Card>
             )}
           </>
         )}
@@ -463,11 +570,20 @@ const createSt = () => StyleSheet.create({
   tabTextActive: { color: colors.bg, fontWeight: '700' },
 
   // Period selector
+  monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 12, gap: 12 },
+  monthArrow: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  monthLabel: { paddingHorizontal: 20, paddingVertical: 8, backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder },
+  monthText: { color: colors.text, fontSize: 15, fontWeight: '600' },
   periodRow: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.cardBorder },
   periodBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
   periodActive: { backgroundColor: colors.green },
   periodText: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
   periodTextActive: { color: colors.bg, fontWeight: '700' },
+
+  // Income/Expense summary
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  summaryLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
+  summaryAmount: { fontSize: 22, fontWeight: '800' },
 
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 16 },
@@ -518,7 +634,7 @@ const createSt = () => StyleSheet.create({
   dayCol: { flex: 1, alignItems: 'center' },
   dayAmount: { color: colors.textMuted, fontSize: 9, fontWeight: '600', marginBottom: 4 },
   dayBarBg: { width: '100%', height: 80, backgroundColor: colors.bg2, borderRadius: 6, justifyContent: 'flex-end', overflow: 'hidden' },
-  dayBarFill: { width: '100%', backgroundColor: colors.green, borderRadius: 6 },
+  dayBarFill: { width: '100%', backgroundColor: colors.red, borderRadius: 6 },
   dayLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', marginTop: 4 },
 
   // Account balances

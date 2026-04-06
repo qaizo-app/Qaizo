@@ -502,7 +502,7 @@ export default function DashboardScreen() {
                       )}
                       {savedYesterday !== 0 && spentYesterday > 0 && (
                         <View style={st.freeDetail}>
-                          <Feather name={savedYesterday > 0 ? 'trending-down' : 'trending-up'} size={12} color={savedYesterday > 0 ? colors.green : colors.red} />
+                          <Feather name={savedYesterday > 0 ? 'trending-up' : 'trending-down'} size={12} color={savedYesterday > 0 ? colors.green : colors.red} />
                           <Text style={[st.freeDetailTxt, { color: savedYesterday > 0 ? colors.green : colors.red }]}>
                             {savedYesterday > 0 ? i18n.t('savedYesterday') : i18n.t('overspentYesterday')}: {Math.abs(savedYesterday).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {sym()}
                           </Text>
