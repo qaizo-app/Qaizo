@@ -314,6 +314,9 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('AIChat')}>
+            <Feather name="cpu" size={18} color={colors.green} />
+          </TouchableOpacity>
           <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
             <Feather name="settings" size={18} color={colors.textDim} />
           </TouchableOpacity>

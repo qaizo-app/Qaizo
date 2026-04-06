@@ -340,6 +340,7 @@ export default {
   aiChatHint: 'אני יכול לנתח הוצאות, להשוות חודשים, להציע חיסכון ועוד.',
   aiThinking: 'חושב...',
   askQuestion: 'שאלו שאלה...',
+  listening: 'מקשיב...',
   scanReceipt: 'סריקת קבלה',
   takePhoto: 'צלם תמונה',
   fromGallery: 'מהגלריה',

@@ -341,6 +341,7 @@ export default {
   aiChatHint: 'I can analyze your spending, compare months, suggest savings, and more.',
   aiThinking: 'Thinking...',
   askQuestion: 'Ask a question...',
+  listening: 'Listening...',
   scanReceipt: 'Scan Receipt',
   takePhoto: 'Take Photo',
   fromGallery: 'From Gallery',

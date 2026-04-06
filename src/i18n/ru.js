@@ -349,6 +349,7 @@ export default {
   aiChatHint: 'Я могу анализировать расходы, сравнивать месяцы, предлагать экономию и многое другое.',
   aiThinking: 'Думаю...',
   askQuestion: 'Задайте вопрос...',
+  listening: 'Слушаю...',
   scanReceipt: 'Сканировать чек',
   takePhoto: 'Сфотографировать',
   fromGallery: 'Из галереи',

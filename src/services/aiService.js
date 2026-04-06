@@ -315,7 +315,7 @@ function generateInsights(transactions, budgets, accounts, recurring) {
 }
 
 // ─── Gemini API ─────────────────────────────────────────
-async function callGemini(prompt) {
+async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) {
   if (!GEMINI_API_KEY) return null;
   try {
     const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
@@ -323,7 +323,7 @@ async function callGemini(prompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
+        generationConfig: { temperature, maxOutputTokens: maxTokens },
       }),
     });
     if (!res.ok) {
@@ -617,6 +617,104 @@ Return ONLY JSON array: [{"name":"product name","price":12.90}]` },
 }
 
 // ─── AI Chat ────────────────────────────────────────────
+// ─── Интерпретация запроса для графика ──────────────────
+async function interpretChartQuery(question, transactions, lang) {
+  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+
+  const prompt = `You are a financial data query interpreter. Analyze the user's question and determine if they want to SEE/VISUALIZE data (chart needed) or just get a text answer.
+
+User's question: "${question}"
+Language: ${langMap[lang] || 'English'}
+
+If the user asks to SHOW, DISPLAY, VISUALIZE, or asks "how much" with a time range — they want a chart.
+Examples that need charts: "show expenses last 3 days", "כמה הוצאות ב3 ימים", "покажи расходы за неделю", "compare income vs expenses this month"
+Examples that DON'T need charts: "how can I save?", "what's my biggest expense?", "give me advice"
+
+Respond ONLY with valid JSON, no markdown:
+{"needsChart": true/false, "chartType": "bar"|"pie"|"cashflow", "days": number, "filter": "expense"|"income"|"both", "categoryFilter": "category_id or null", "title": "short chart title in user's language"}
+
+Rules:
+- "bar" for daily amounts over time
+- "pie" for category breakdown
+- "cashflow" for income vs expense comparison
+- days: extract from question (3 days=3, week=7, month=30, 2 weeks=14)
+- If no time specified, default to 7
+- title should be concise (3-5 words) in ${langMap[lang] || 'English'}
+- If needsChart is false, other fields can be null`;
+
+  try {
+    const result = await callGemini(prompt);
+    if (!result) return null;
+    const clean = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const parsed = JSON.parse(clean);
+    if (!parsed.needsChart) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Подготовка данных для графика ──────────────────────
+function buildChartData(chartParams, transactions) {
+  const { chartType, days, filter } = chartParams;
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(start.getDate() - days);
+
+  const filtered = transactions.filter(t => {
+    const d = new Date(t.date || t.createdAt);
+    return d >= start && d <= now;
+  });
+
+  if (chartType === 'pie') {
+    // Category breakdown
+    const typeFilter = filter === 'income' ? 'income' : 'expense';
+    const catTotals = {};
+    filtered.filter(t => t.type === typeFilter).forEach(t => {
+      catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
+    });
+    return {
+      type: 'pie',
+      data: Object.entries(catTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([name, amount]) => ({ name, amount })),
+    };
+  }
+
+  if (chartType === 'cashflow') {
+    // Daily income vs expense
+    const data = [];
+    for (let i = 0; i <= days; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const dayTxs = filtered.filter(tx => {
+        const td = new Date(tx.date || tx.createdAt);
+        return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate();
+      });
+      const income = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const expense = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      data.push({ day: d.getDate(), date: `${d.getMonth() + 1}/${d.getDate()}`, income, expense });
+    }
+    return { type: 'cashflow', data, totalIncome: data.reduce((s, d) => s + d.income, 0), totalExpense: data.reduce((s, d) => s + d.expense, 0) };
+  }
+
+  // Default: bar chart (daily amounts)
+  const typeFilter = filter === 'income' ? 'income' : 'expense';
+  const data = [];
+  for (let i = 0; i <= days; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const dayTotal = filtered.filter(tx => {
+      const td = new Date(tx.date || tx.createdAt);
+      return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate() && tx.type === typeFilter;
+    }).reduce((s, t) => s + t.amount, 0);
+    data.push({ day: d.getDate(), date: `${d.getMonth() + 1}/${d.getDate()}`, amount: dayTotal });
+  }
+  const total = data.reduce((s, d) => s + d.amount, 0);
+  return { type: 'bar', data, total, avg: days > 0 ? total / days : 0 };
+}
+
 async function chatWithAI(question, transactions, budgets, lang) {
   const now = new Date();
   const last90 = transactions.filter(t => {
@@ -728,7 +826,7 @@ RULES:
 - 3-5 sentences max
 - Plain text only, no markdown`;
 
-  const result = await callGemini(prompt);
+  const result = await callGemini(prompt, { maxTokens: 2048 });
   return result || (lang === 'he' ? 'לא הצלחתי לענות כרגע. נסה שוב.' : lang === 'ru' ? 'Не удалось ответить. Попробуйте ещё раз.' : 'Could not answer right now. Please try again.');
 }
 
@@ -741,6 +839,8 @@ export default {
   generateInsights,
   getPersonalAdvice,
   chatWithAI,
+  interpretChartQuery,
+  buildChartData,
   scanReceipt,
   scanReceiptItems,
   callGemini,
