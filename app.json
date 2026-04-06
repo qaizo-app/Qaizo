@@ -13,7 +13,8 @@
     "icon": "./assets/images/icon.png",
     "scheme": "qaizo",
     "android": {
-      "package": "com.qaizo.app"
+      "package": "com.qaizo.app",
+      "versionCode": 2
     },
     "ios": {
       "bundleIdentifier": "com.qaizo.app"
