@@ -325,7 +325,7 @@ export default function AIChatScreen() {
         </TouchableOpacity>
         <View style={st.headerCenter}>
           <Text style={st.headerTitle}>{i18n.t('aiChat')}</Text>
-          <Text style={st.headerSub}>Qaizo AI</Text>
+          <Text style={st.headerPrivacy}>{i18n.t('aiPrivacy')}</Text>
         </View>
         <View style={{ width: 44 }} />
       </View>
@@ -414,6 +414,7 @@ const createSt = () => StyleSheet.create({
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: colors.text, fontSize: 17, fontWeight: '700', flex: 1, textAlign: 'center' },
   headerSub: { color: colors.green, fontSize: 11, fontWeight: '600', marginTop: 1 },
+  headerPrivacy: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
 
   messagesList: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
   msgRow: { marginBottom: 12 },

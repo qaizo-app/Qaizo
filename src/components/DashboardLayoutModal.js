@@ -19,14 +19,14 @@ const BLOCK_ICONS = {
 
 export const DEFAULT_LAYOUT = [
   { id: 'balance', visible: true },
-  { id: 'streak', visible: true },
   { id: 'freeMoneyToday', visible: true },
-  { id: 'pieChart', visible: true },
-  { id: 'budgets', visible: true },
-  { id: 'recurring', visible: true },
-  { id: 'goals', visible: true },
-  { id: 'barChart', visible: true },
   { id: 'recentTx', visible: true },
+  { id: 'streak', visible: false },
+  { id: 'pieChart', visible: false },
+  { id: 'budgets', visible: false },
+  { id: 'recurring', visible: false },
+  { id: 'goals', visible: false },
+  { id: 'barChart', visible: false },
 ];
 
 export default function DashboardLayoutModal({ visible, onClose, layout, onSave }) {

@@ -106,7 +106,7 @@ export default function StreakCard({ streakData, transactions }) {
             <View style={[st.progressFill, { width: `${progressPct}%`, backgroundColor: level.color }]} />
           </View>
           <Text style={st.progressText}>
-            {nextLevel.min - currentStreak} {i18n.t('daysToNext')}
+            {nextLevel.min - currentStreak} {i18n.t('daysTo')} {i18n.t(nextLevel.key)}
           </Text>
         </View>
       )}

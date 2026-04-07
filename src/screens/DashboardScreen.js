@@ -70,7 +70,9 @@ export default function DashboardScreen() {
   const [freeExpanded, setFreeExpanded] = useState(false);
   const [monthlyExtra, setMonthlyExtra] = useState(0);
   const [goals, setGoals] = useState([]);
+  const [showAiHint, setShowAiHint] = useState(false);
   const bellAnim = useRef(new Animated.Value(1)).current;
+  const aiGlow = useRef(new Animated.Value(0)).current;
   const toast = useToast();
 
   // Слушаем входящие уведомления
@@ -107,13 +109,72 @@ export default function DashboardScreen() {
     ]);
     setGoals(gls);
     if (settings.weekStart) setWeekStart(settings.weekStart);
+    let layout;
     if (settings.dashLayout) {
       // Merge saved layout with defaults (add new blocks that didn't exist before)
       const saved = settings.dashLayout;
       const savedIds = new Set(saved.map(b => b.id));
-      const merged = [...saved, ...DEFAULT_LAYOUT.filter(b => !savedIds.has(b.id))];
-      setDashLayout(merged);
+      layout = [...saved, ...DEFAULT_LAYOUT.filter(b => !savedIds.has(b.id))];
+    } else {
+      layout = DEFAULT_LAYOUT.map(b => ({ ...b }));
     }
+
+    // Auto-reveal widgets based on user progress
+    const revealed = new Set(settings.revealedWidgets || []);
+    const txMonths = new Set(txs.map(tx => {
+      const d = tx.date || tx.createdAt;
+      return d ? d.substring(0, 7) : null;
+    }).filter(Boolean));
+    const streakResult = await streakService.updateStreaks(txs);
+
+    const revealConditions = {
+      streak: streakResult.streakData?.currentStreak >= 3,
+      pieChart: txs.length >= 10,
+      budgets: bdg.length > 0,
+      recurring: rec.length > 0,
+      goals: gls.length > 0,
+      barChart: txMonths.size >= 2,
+    };
+
+    let hasNewReveal = false;
+    for (const [widgetId, shouldReveal] of Object.entries(revealConditions)) {
+      if (shouldReveal && !revealed.has(widgetId)) {
+        const block = layout.find(b => b.id === widgetId);
+        if (block && !block.visible) {
+          block.visible = true;
+          hasNewReveal = true;
+        }
+        revealed.add(widgetId);
+      }
+    }
+
+    setDashLayout(layout);
+    if (hasNewReveal) {
+      await dataService.saveSettings({
+        ...settings,
+        dashLayout: layout,
+        revealedWidgets: [...revealed],
+      });
+    } else if (revealed.size > (settings.revealedWidgets || []).length) {
+      await dataService.saveSettings({
+        ...settings,
+        revealedWidgets: [...revealed],
+      });
+    }
+
+    // Show AI hint on first launch
+    if (!settings.aiHintShown) {
+      setShowAiHint(true);
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(aiGlow, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(aiGlow, { toValue: 0, duration: 800, useNativeDriver: true }),
+        ]),
+        { iterations: 4 }
+      ).start();
+      await dataService.saveSettings({ ...settings, aiHintShown: true });
+    }
+
     setMonthlyExtra(settings.monthlyExtra || 0);
     setTransactions(txs);
     setBudgets(bdg);
@@ -121,10 +182,9 @@ export default function DashboardScreen() {
     setQuickTemplates(tpls);
     setRecurring(rec);
 
-    // Обновляем стрики
-    const result = await streakService.updateStreaks(txs);
-    setStreakData(result.streakData);
-    if (result.newMilestone) setNewMilestone(result.newMilestone);
+    // Обновляем стрики (уже посчитано выше)
+    setStreakData(streakResult.streakData);
+    if (streakResult.newMilestone) setNewMilestone(streakResult.newMilestone);
     if (txs.length > 0 || accs.length > 0) setLoading(false);
   };
 
@@ -306,20 +366,18 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 120 }}>
 
         <View style={st.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Image source={require('../../assets/images/icon.png')} style={st.logoImg} />
-            <View>
-              <Text style={st.logo}>Qaizo</Text>
-              <Text style={st.subtitle}>{dateStr}</Text>
+          <TouchableOpacity onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }} activeOpacity={0.7}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={st.logo}>Q<Animated.Text style={{ color: colors.green, opacity: showAiHint ? aiGlow.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) : 1 }}>ai</Animated.Text>zo</Text>
             </View>
-          </View>
+            <Text style={st.subtitle}>{dateStr}</Text>
+            {showAiHint && (
+              <View style={st.aiHint}>
+                <Text style={st.aiHintText}>{i18n.t('aiHint')}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('AIChat')}>
-            <Feather name="cpu" size={18} color={colors.green} />
-          </TouchableOpacity>
-          <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
-            <Feather name="settings" size={18} color={colors.textDim} />
-          </TouchableOpacity>
           <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
             <Feather name="sliders" size={18} color={colors.textDim} />
           </TouchableOpacity>
@@ -332,6 +390,9 @@ export default function DashboardScreen() {
                 <Text style={st.bellBadgeText}>{notifications.length > 9 ? '9+' : notifications.length}</Text>
               </View>
             )}
+          </TouchableOpacity>
+          <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
+            <Feather name="menu" size={20} color={colors.textDim} />
           </TouchableOpacity>
           </View>
         </View>
@@ -959,6 +1020,8 @@ const createSt = () => StyleSheet.create({
   logoImg: { width: 38, height: 38, borderRadius: 10 },
   logo: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: -1 },
   subtitle: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
+  aiHint: { backgroundColor: colors.green, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginTop: 6 },
+  aiHintText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   balLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
   balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
