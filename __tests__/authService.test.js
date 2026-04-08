@@ -1,6 +1,14 @@
 // __tests__/authService.test.js
 // Тесты авторизации — Firebase Auth замокан в jest.setup.js
 
+jest.mock('@react-native-google-signin/google-signin', () => ({
+  GoogleSignin: {
+    configure: jest.fn(),
+    hasPlayServices: jest.fn().mockResolvedValue(true),
+    signIn: jest.fn(),
+  },
+}));
+
 jest.mock('../src/config/firebase', () => ({
   auth: { currentUser: null },
 }));
