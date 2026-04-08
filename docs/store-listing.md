@@ -70,7 +70,7 @@ Export your data to CSV, Excel or PDF. Import from other apps.
 Chat with your personal AI financial advisor. Ask about spending, get savings tips — your data stays private.
 
 - Voice & smart input:
-Say "coffee 15 shekels" or type naturally. AI understands amount, category and account.
+Say "coffee 5 dollars" or type naturally. AI understands amount, category and account.
 
 Qaizo does NOT provide professional financial advice.
 
