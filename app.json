@@ -14,7 +14,8 @@
     "scheme": "qaizo",
     "android": {
       "package": "com.qaizo.app",
-      "versionCode": 2
+      "versionCode": 3,
+      "googleServicesFile": "./google-services.json"
     },
     "ios": {
       "bundleIdentifier": "com.qaizo.app"
@@ -43,7 +44,8 @@
         }
       ],
       "react-native-edge-to-edge",
-      "./plugins/withResizeableActivity"
+      "./plugins/withResizeableActivity",
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {

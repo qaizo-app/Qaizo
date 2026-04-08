@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "568492177874",
+    "project_id": "qaizo-ece06",
+    "storage_bucket": "qaizo-ece06.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568492177874:android:cf1474ed4dff0a223b700b",
+        "android_client_info": {
+          "package_name": "com.qaizo.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568492177874-trnvoahteeitl15432ckif2d06luvgp2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.qaizo.app",
+            "certificate_hash": "22e6f2cf76d60fc86b936d02136eecf1404d8d65"
+          }
+        },
+        {
+          "client_id": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCO6yEL48Ut9GDM2o3lrYg29HHCXdy75W4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

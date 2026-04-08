@@ -12,11 +12,12 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { auth } from '../config/firebase';
 
-WebBrowser.maybeCompleteAuthSession();
+GoogleSignin.configure({
+  webClientId: '568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com',
+});
 
 const authService = {
 
@@ -73,46 +74,22 @@ const authService = {
     }
   },
 
-  // Google Sign-In (with PKCE — required by Google since 2025)
+  // Google Sign-In (native)
   async loginWithGoogle() {
     try {
-      const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-      if (!clientId) {
-        return { success: false, error: 'Google Client ID not configured' };
-      }
-      const redirectUri = AuthSession.makeRedirectUri({ preferLocalhost: false });
-      const discovery = {
-        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-        tokenEndpoint: 'https://oauth2.googleapis.com/token',
-      };
-      const request = new AuthSession.AuthRequest({
-        clientId,
-        redirectUri,
-        scopes: ['openid', 'profile', 'email'],
-        responseType: AuthSession.ResponseType.Code,
-        usePKCE: true,
-      });
-      const result = await request.promptAsync(discovery);
-      if (result.type === 'success' && result.params?.code) {
-        // Exchange code for tokens
-        const tokenResult = await AuthSession.exchangeCodeAsync(
-          {
-            clientId,
-            code: result.params.code,
-            redirectUri,
-            extraParams: { code_verifier: request.codeVerifier },
-          },
-          discovery,
-        );
-        if (tokenResult.idToken) {
-          const credential = GoogleAuthProvider.credential(tokenResult.idToken);
-          const cred = await signInWithCredential(auth, credential);
-          return { success: true, user: cred.user };
-        }
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      const idToken = response.data?.idToken;
+      if (!idToken) {
         return { success: false, error: 'No ID token received' };
       }
-      return { success: false, error: 'Google sign-in cancelled' };
+      const credential = GoogleAuthProvider.credential(idToken);
+      const cred = await signInWithCredential(auth, credential);
+      return { success: true, user: cred.user };
     } catch (e) {
+      if (e.code === 'SIGN_IN_CANCELLED') {
+        return { success: false, error: 'Google sign-in cancelled' };
+      }
       return { success: false, error: e.message || 'Google sign-in failed' };
     }
   },
