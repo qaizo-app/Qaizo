@@ -163,8 +163,8 @@ export default function GoalsScreen() {
                   <Feather name={goal.icon || 'target'} size={22} color={gc} />
                 </View>
                 <View style={st.goalInfo}>
-                  <Text style={st.goalName}>{goal.name}</Text>
-                  <Text style={st.goalMeta}>
+                  <Text style={st.goalName} numberOfLines={1}>{goal.name}</Text>
+                  <Text style={st.goalMeta} numberOfLines={1}>
                     {goal.targetDate ? dd : ''}{goal.targetDate && monthly ? ' · ' : ''}
                     {monthly ? <Text>{i18n.t('monthlyNeeded')}: <Amount value={monthly} style={st.goalMeta} /></Text> : ''}
                   </Text>
@@ -173,8 +173,8 @@ export default function GoalsScreen() {
               </View>
 
               <View style={st.progressRow}>
-                <Amount value={saved} style={[st.progressSaved, { color: gc }]} />
-                <Amount value={goal.targetAmount} style={st.progressTarget} />
+                <Amount value={saved} style={[st.progressSaved, { color: gc }]} numberOfLines={1} adjustsFontSizeToFit />
+                <Amount value={goal.targetAmount} style={st.progressTarget} numberOfLines={1} adjustsFontSizeToFit />
               </View>
 
               <View style={st.progressBar}>

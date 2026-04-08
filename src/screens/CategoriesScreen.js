@@ -264,7 +264,7 @@ export default function CategoriesScreen() {
               <View style={[styles.groupIcon, { backgroundColor: `${group.color}18` }]}>
                 <Feather name={group.icon} size={18} color={group.color} />
               </View>
-              <Text style={styles.groupName}>{getName(group.name)}</Text>
+              <Text style={styles.groupName} numberOfLines={1}>{getName(group.name)}</Text>
               <Text style={styles.subCount}>{group.subs.length}</Text>
               <Feather name={expandedGroup === group.id ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -288,7 +288,7 @@ export default function CategoriesScreen() {
                     <View style={[styles.subIcon, { backgroundColor: `${group.color}10` }]}>
                       <Feather name={sub.icon} size={14} color={group.color} />
                     </View>
-                    <Text style={styles.subName}>{getName(sub.name)}</Text>
+                    <Text style={styles.subName} numberOfLines={1}>{getName(sub.name)}</Text>
                     <Feather name="edit-2" size={14} color={colors.textMuted} />
                   </TouchableOpacity>
                 ))}

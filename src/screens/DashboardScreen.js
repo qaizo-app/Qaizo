@@ -435,7 +435,7 @@ export default function DashboardScreen() {
                       <View style={st.forecastRow}>
                         <Feather name="activity" size={14} color={colors.textMuted} />
                         <Text style={st.forecastText}>{i18n.t('endOfMonthForecast')}: </Text>
-                        <Amount value={projectedBalance} sign style={st.forecastAmount} color={projectedBalance >= 0 ? colors.green : colors.red} numberOfLines={1} />
+                        <Amount value={projectedBalance} sign style={st.forecastAmount} color={projectedBalance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
                       </View>
                     );
                   })()}
@@ -634,7 +634,7 @@ export default function DashboardScreen() {
                             <View style={st.budgetInfo}>
                               <View style={st.budgetLeft}>
                                 <View style={[st.budgetDot, { backgroundColor: cfg.color }]} />
-                                <Text style={st.budgetCat}>{catNameMap[cat] || i18n.t(cat)}</Text>
+                                <Text style={st.budgetCat} numberOfLines={1}>{catNameMap[cat] || i18n.t(cat)}</Text>
                               </View>
                               <View style={st.budgetRight}>
                                 {hb ? (
@@ -701,7 +701,7 @@ export default function DashboardScreen() {
                                 <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
                               </View>
                               <View style={st.recInfo}>
-                                <Text style={st.recName}>{rec.recipient || rec.categoryName || i18n.t(rec.categoryId)}</Text>
+                                <Text style={st.recName} numberOfLines={1}>{rec.recipient || rec.categoryName || i18n.t(rec.categoryId)}</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                                   <Amount value={rec.type === 'expense' ? -rec.amount : rec.amount} sign style={st.recMeta} color={rec.type === 'expense' ? colors.red : colors.green} />
                                   <Text style={st.recMeta}> · {dateLabel}</Text>
@@ -1025,9 +1025,9 @@ const createSt = () => StyleSheet.create({
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   balLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
   balAmount: { fontSize: 38, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
-  forecastRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider },
-  forecastText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
-  forecastAmount: { fontSize: 14, fontWeight: '700' },
+  forecastRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, flexWrap: 'wrap' },
+  forecastText: { color: colors.textMuted, fontSize: 13, fontWeight: '500', flexShrink: 1 },
+  forecastAmount: { fontSize: 14, fontWeight: '700', flexShrink: 1 },
   incExpRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
   incExpItem: { flex: 1 },
   incExpHead: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 6 },
@@ -1042,8 +1042,8 @@ const createSt = () => StyleSheet.create({
   totalPct: { fontSize: 15, fontWeight: '700' },
   budgetTitleRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   totalBudgetRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  totalBudgetLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600', writingDirection: 'ltr' },
+  totalBudgetLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', flexShrink: 1 },
+  totalBudgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600', writingDirection: 'ltr', flexShrink: 0 },
   barBgThick: { height: 10, backgroundColor: colors.bg2, borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
   barFillThick: { height: 10, borderRadius: 5 },
   totalBudgetLeft: { color: colors.textMuted, fontSize: 12, fontWeight: '500', writingDirection: 'ltr' },
@@ -1052,7 +1052,7 @@ const createSt = () => StyleSheet.create({
   budgetLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   budgetRight: { flexDirection: i18n.row(), alignItems: 'center' },
   budgetDot: { width: 8, height: 8, borderRadius: 4 },
-  budgetCat: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
+  budgetCat: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign(), flexShrink: 1, maxWidth: '60%' },
   budgetPct: { fontSize: 13, fontWeight: '700', marginEnd: 8 },
   budgetAmount: { color: colors.textDim, fontSize: 13, fontWeight: '600', writingDirection: 'ltr' },
   barBg: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
@@ -1097,8 +1097,8 @@ const createSt = () => StyleSheet.create({
   freeBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden', marginBottom: 10 },
   freeBarFill: { height: 6, borderRadius: 3 },
   freeDetails: { gap: 4 },
-  freeDetail: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  freeDetailTxt: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
+  freeDetail: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  freeDetailTxt: { color: colors.textMuted, fontSize: 11, fontWeight: '600', flexShrink: 1 },
 
   // Recurring
   recRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
@@ -1117,7 +1117,7 @@ const createSt = () => StyleSheet.create({
   goalName: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 4 },
   goalBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
   goalBarFill: { height: 6, borderRadius: 3 },
-  goalPct: { fontSize: 13, fontWeight: '700', width: 40, textAlign: 'right' },
+  goalPct: { fontSize: 13, fontWeight: '700', minWidth: 40, textAlign: 'right' },
   recEmpty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 

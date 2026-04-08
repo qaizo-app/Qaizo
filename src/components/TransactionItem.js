@@ -53,7 +53,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
       <View style={styles.container}>
         <CategoryIcon categoryId={transaction.categoryId} size="medium" />
         <View style={styles.info}>
-          <Text style={styles.category}>{transaction.categoryName || getCatName(transaction.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
+          <Text style={styles.category} numberOfLines={1}>{transaction.categoryName || getCatName(transaction.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
           <Text style={styles.note} numberOfLines={1}>
             {transaction.note || ''}
           </Text>

@@ -25,14 +25,14 @@ export default function ConfirmModal({
           <View style={styles.buttonRow}>
             {cancelText ? (
               <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-                <Text style={styles.cancelText}>{cancelText}</Text>
+                <Text style={styles.cancelText} numberOfLines={1} adjustsFontSizeToFit>{cancelText}</Text>
               </TouchableOpacity>
             ) : null}
             <TouchableOpacity
               style={[styles.confirmBtn, { backgroundColor: confirmColor }]}
               onPress={onConfirm}
             >
-              <Text style={styles.confirmText}>{confirmText}</Text>
+              <Text style={styles.confirmText} numberOfLines={1} adjustsFontSizeToFit>{confirmText}</Text>
             </TouchableOpacity>
           </View>
         </View>
