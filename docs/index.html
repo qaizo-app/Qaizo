@@ -48,6 +48,44 @@
         "author": { "@type": "Organization", "name": "Qaizo", "url": "https://qaizo.app" }
     }
     </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Is my data safe?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Your data is encrypted and stored either locally on your device or in your private Firebase cloud — you choose. We never sell your data to anyone." }
+            },
+            {
+                "@type": "Question",
+                "name": "How much does it cost?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Qaizo is completely free. No ads, no hidden payments, no premium tier locked behind a paywall." }
+            },
+            {
+                "@type": "Question",
+                "name": "Do I need to connect my bank?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No. Transactions are added manually, by voice, or by scanning a receipt. You stay in full control — nothing connects to your bank account." }
+            },
+            {
+                "@type": "Question",
+                "name": "Does it work offline?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. All core features work without internet. AI features (chat, smart input, receipt scanner) need an internet connection to reach Gemini." }
+            },
+            {
+                "@type": "Question",
+                "name": "Which devices are supported?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Android via Google Play. An iOS version is on the roadmap." }
+            },
+            {
+                "@type": "Question",
+                "name": "Can I export my data?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes — to CSV, Excel, or PDF, anytime, from the Settings screen. Your data is yours, always." }
+            }
+        ]
+    }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -158,6 +196,19 @@
         .l-name { font-family:'Outfit','Noto Sans Hebrew',sans-serif; font-size:1.35rem; font-weight:600; margin-bottom:0.4rem; }
         .l-native { color:var(--green); font-size:1rem; font-weight:500; }
         .l-note { color:var(--text2); font-size:0.85rem; margin-top:0.8rem; line-height:1.5; }
+
+        /* FAQ */
+        .faq-section { background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+        .faq-list { max-width:780px; margin:0 auto; }
+        .faq-item { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:0.75rem; overflow:hidden; transition:all 0.3s; }
+        .faq-item:hover { border-color:rgba(52,211,153,0.15); }
+        .faq-item.open { border-color:rgba(52,211,153,0.25); }
+        .faq-q { width:100%; background:transparent; border:none; padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; cursor:pointer; color:var(--text); font-family:inherit; font-size:1rem; font-weight:600; text-align:start; transition:all 0.25s; }
+        .faq-q:hover { color:var(--green); }
+        .faq-icon { flex-shrink:0; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:var(--green); transition:transform 0.3s ease; }
+        .faq-item.open .faq-icon { transform:rotate(45deg); }
+        .faq-a { max-height:0; overflow:hidden; transition:max-height 0.4s ease, padding 0.4s ease; padding:0 1.5rem; color:var(--text2); font-size:0.93rem; line-height:1.65; }
+        .faq-item.open .faq-a { max-height:300px; padding:0 1.5rem 1.25rem; }
 
         /* CTA */
         .cta-section { text-align:center; padding:8rem 2rem; }
@@ -274,13 +325,49 @@
     </div>
 </section>
 
+<section class="faq-section" id="faq">
+    <div class="container">
+        <div class="reveal" style="text-align:center;margin-bottom:3rem;">
+            <span class="s-label" data-i18n="faql">FAQ</span>
+            <h2 data-i18n="faqt">Frequently asked questions</h2>
+            <p class="s-desc" style="margin:0.5rem auto 0;text-align:center;" data-i18n="faqd">Everything you might want to know before downloading.</p>
+        </div>
+        <div class="faq-list reveal">
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq1q">Is my data safe?</span><span class="faq-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+                <div class="faq-a"><p data-i18n="faq1a">Your data is encrypted and stored either locally on your device or in your private Firebase cloud — you choose. We never sell your data to anyone.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq2q">How much does it cost?</span><span class="faq-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+                <div class="faq-a"><p data-i18n="faq2a">Qaizo is completely free. No ads, no hidden payments, no premium tier locked behind a paywall.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq3q">Do I need to connect my bank?</span><span class="faq-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+                <div class="faq-a"><p data-i18n="faq3a">No. Transactions are added manually, by voice, or by scanning a receipt. You stay in full control — nothing connects to your bank account.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq4q">Does it work offline?</span><span class="faq-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+                <div class="faq-a"><p data-i18n="faq4a">Yes. All core features work without internet. AI features (chat, smart input, receipt scanner) need an internet connection to reach Gemini.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq5q">Which devices are supported?</span><span class="faq-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+                <div class="faq-a"><p data-i18n="faq5a">Android via Google Play. An iOS version is on the roadmap.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq6q">Can I export my data?</span><span class="faq-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+                <div class="faq-a"><p data-i18n="faq6a">Yes — to CSV, Excel, or PDF, anytime, from the Settings screen. Your data is yours, always.</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="cta-section" id="download">
     <div class="container reveal">
         <span class="s-label" data-i18n="dl">Download</span>
         <h2 data-i18n="dt">Ready to take control?</h2>
         <p class="s-desc" style="margin:0 auto 2.5rem;text-align:center;" data-i18n="dd">Free to download. No bank connection required. Your data stays yours.</p>
         <div class="stores">
-            <a href="#" class="store-badge"><span class="store-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span><div class="store-text"><small data-i18n="gp">Get it on</small><strong>Google Play</strong></div></a>
+            <a href="https://play.google.com/apps/testing/com.qaizo.app" target="_blank" rel="noopener" class="store-badge"><span class="store-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span><div class="store-text"><small data-i18n="gp">Join the beta</small><strong>Google Play</strong></div></a>
         </div>
     </div>
 </section>
@@ -289,6 +376,7 @@
     <div class="f-logo"><span>Q</span>aizo</div>
     <div class="f-links">
         <a href="#features" data-i18n="ff">Features</a>
+        <a href="#faq" data-i18n="faql">FAQ</a>
         <a href="help/">Help</a>
         <a href="privacy-policy.html" data-i18n="fp">Privacy Policy</a>
         <a href="terms.html" data-i18n="ftr">Terms of Service</a>
@@ -299,10 +387,14 @@
 
 <script>
 const T = {
-  en: { badge:"Available on Google Play", h1:"Your finances.", h2:"Finally clear.", sub:"AI-powered finance app with voice input, receipt scanner and smart budgeting. Chat with AI about your money — in English, Russian and Hebrew.", cta1:"Download Free", cta2:"See Features", ph_hi:"Good morning", ph_bal:"Total Balance", ph_inc:"Income", ph_exp:"Expenses", ph_rec:"Recent", tx1:"Supermarket", tx1c:"Groceries", tx2:"Salary", tx2c:"Income", tx3:"Receipt scan", tx3c:"Auto-categorized", fl:"Features", ft:"Everything you need.<br>Nothing you don't.", fd:"Qaizo combines AI intelligence with simple tools to give you complete control over your personal finances.", f1t:"Qaizo AI", f1d:"Chat with your personal AI financial advisor. Ask about spending, get savings tips, analyze trends — all based on your real data. Your data stays private.", f2t:"Voice & Smart Input", f2d:"Say \"coffee 5 dollars\" or type naturally. AI understands amount, category and account. The fastest way to log expenses.", f3t:"Receipt Scanner", f3d:"Snap a photo of any receipt. AI reads amount, store, date and items. Multi-photo for long receipts. Duplicate protection.", f4t:"Smart Budgeting", f4d:"\"Free Money Today\" calculator. Set budgets by category with visual progress bars. Daily spending limits that adapt.", f5t:"Advanced Analytics", f5d:"Balance history, cash flow charts, expense breakdown, period selector (7D-1Y). Three tabs: Overview, Expenses, Trends.", f6t:"Smart Shopping List", f6d:"Price history from scanned receipts. Alerts for overdue items. Build lists and share via WhatsApp. Find the cheapest store.", f7t:"Savings Goals", f7d:"Create goals with target amounts and dates. Track deposits, see monthly needed amount. Reach your financial dreams.", f8t:"Recurring Payments", f8d:"Set up automatic tracking for rent, subscriptions, salaries. Contract end reminders 30 days in advance.", f9t:"Achievements & Streaks", f9d:"6 levels from Beginner to Legend. 30-day activity calendar. Dashboard widgets that unlock as you use the app.", ll:"Multilingual", lt:"Your language. Your way.", ld:"Full interface, categories and insights — all native in three languages. No machine translation. RTL support built in.", le:"Full interface, categories, analytics and receipt scanner in English.", lr:"Full Russian interface — natively written, not translated.", lh:"Full Hebrew interface with native RTL support.", dl:"Download", dt:"Ready to take control?", dd:"Free to download. No bank connection required. Your data stays yours.", gp:"Get it on", ff:"Features", fp:"Privacy Policy", ftr:"Terms of Service" },
-  ru: { badge:"Доступно в Google Play", h1:"Ваши финансы.", h2:"Наконец в порядке.", sub:"Финансовое приложение с AI-ассистентом, голосовым вводом и сканером чеков. Спросите AI про свои деньги — на русском, английском и иврите.", cta1:"Скачать бесплатно", cta2:"Возможности", ph_hi:"Доброе утро", ph_bal:"Общий баланс", ph_inc:"Доходы", ph_exp:"Расходы", ph_rec:"Последние", tx1:"Супермаркет", tx1c:"Продукты", tx2:"Зарплата", tx2c:"Доход", tx3:"Скан чека", tx3c:"Авто-категория", fl:"Возможности", ft:"Всё что нужно.<br>Ничего лишнего.", fd:"Qaizo сочетает AI с простыми инструментами для полного контроля над финансами.", f1t:"Qaizo AI", f1d:"Чат с персональным AI-советником. Спросите о расходах, получите советы по экономии, анализ трендов — на основе ваших реальных данных. Данные остаются приватными.", f2t:"Голос и умный ввод", f2d:"Скажите «кофе 5 долларов» или напишите текстом. AI поймёт сумму, категорию и счёт. Самый быстрый способ записать расход.", f3t:"Сканер чеков", f3d:"Сфотографируйте чек. AI определит сумму, магазин, дату и товары. Несколько фото для длинных чеков. Защита от дублей.", f4t:"Умный бюджет", f4d:"Калькулятор «Свободные деньги». Бюджеты по категориям с прогресс-барами. Адаптивные дневные лимиты.", f5t:"Продвинутая аналитика", f5d:"Динамика баланса, денежный поток, расходы по категориям, выбор периода (7Д-1Г). Три вкладки: Обзор, Расходы, Тренды.", f6t:"Умный список покупок", f6d:"История цен из чеков. Предупреждения о забытых товарах. Создайте список и поделитесь через WhatsApp.", f7t:"Цели накоплений", f7d:"Создайте цели с суммой и датой. Отслеживайте прогресс. Приложение подскажет сколько откладывать.", f8t:"Регулярные платежи", f8d:"Автоотслеживание аренды, подписок, зарплат. Напоминание за 30 дней до конца контракта.", f9t:"Достижения и стрики", f9d:"6 уровней от Новичка до Легенды. Календарь активности за 30 дней. Виджеты дашборда открываются по мере использования.", ll:"Многоязычность", lt:"На вашем языке.", ld:"Полный интерфейс на трёх языках. Не машинный перевод. Встроенная поддержка RTL.", le:"Полный интерфейс, категории и аналитика на английском.", lr:"Полностью русскоязычный интерфейс — написан, не переведён.", lh:"Полный интерфейс на иврите со встроенной поддержкой RTL.", dl:"Скачать", dt:"Готовы взять финансы под контроль?", dd:"Бесплатно. Без подключения к банку. Ваши данные остаются вашими.", gp:"Скачать в", ff:"Возможности", fp:"Конфиденциальность", ftr:"Условия" },
-  he: { badge:"זמין ב-Google Play", h1:"הכספים שלך.", h2:"סוף סוף ברורים.", sub:"אפליקציית פיננסים עם AI, קלט קולי וסורק קבלות. שוחח עם AI על הכסף שלך — בעברית, רוסית ואנגלית.", cta1:"הורדה חינם", cta2:"תכונות", ph_hi:"בוקר טוב", ph_bal:"יתרה כוללת", ph_inc:"הכנסות", ph_exp:"הוצאות", ph_rec:"אחרונים", tx1:"סופרמרקט", tx1c:"מזון", tx2:"משכורת", tx2c:"הכנסה", tx3:"סריקת קבלה", tx3c:"קטגוריה אוטומטית", fl:"תכונות", ft:"כל מה שצריך.<br>בלי המיותר.", fd:"Qaizo משלב AI עם כלים פשוטים לשליטה מלאה על הכספים האישיים.", f1t:"Qaizo AI", f1d:"שוחח עם יועץ פיננסי AI אישי. שאל על הוצאות, קבל טיפים לחיסכון, נתח מגמות — הכל על סמך הנתונים שלך. המידע נשאר פרטי.", f2t:"קלט קולי וחכם", f2d:"תגיד \"קפה 5 דולר\" או תקליד טקסט חופשי. AI מבין סכום, קטגוריה וחשבון. הדרך הכי מהירה לרשום הוצאה.", f3t:"סורק קבלות", f3d:"צלם קבלה. AI מזהה סכום, חנות, תאריך ופריטים. כמה תמונות לקבלה ארוכה. הגנה מכפילויות.", f4t:"תקציב חכם", f4d:"מחשבון כסף פנוי להיום. תקציבים לפי קטגוריה עם סרגלי התקדמות. מגבלות יומיות מתאימות.", f5t:"אנליטיקה מתקדמת", f5d:"דינמיקת יתרה, תזרים מזומנים, הוצאות לפי קטגוריות, בחירת תקופה. שלוש לשוניות: סקירה, הוצאות, מגמות.", f6t:"רשימת קניות חכמה", f6d:"היסטוריית מחירים מקבלות. התראות על פריטים שנשכחו. בנה רשימה ושתף בוואטסאפ. מצא את החנות הזולה.", f7t:"מטרות חיסכון", f7d:"צור מטרות עם סכום ותאריך. עקוב אחרי הפקדות. האפליקציה מחשבת כמה לחסוך.", f8t:"תשלומים קבועים", f8d:"מעקב אוטומטי לשכירות, מנויים, משכורות. תזכורת 30 יום לפני סיום חוזה.", f9t:"הישגים וסטריקים", f9d:"6 רמות ממתחיל ועד אגדה. לוח פעילות 30 יום. וידג'טים נפתחים ככל שמשתמשים באפליקציה.", ll:"רב-לשוני", lt:"בשפה שלך. בדרך שלך.", ld:"ממשק מלא בשלוש שפות. לא תרגום מכונה. תמיכה מובנית ב-RTL.", le:"ממשק מלא, קטגוריות ואנליטיקה באנגלית.", lr:"ממשק רוסי מלא — כתוב, לא מתורגם.", lh:"ממשק מלא בעברית עם תמיכה מובנית ב-RTL.", dl:"הורדה", dt:"מוכנים לקחת שליטה?", dd:"חינם. בלי חיבור לבנק. הנתונים שלך נשארים שלך.", gp:"הורד מ-", ff:"תכונות", fp:"מדיניות פרטיות", ftr:"תנאי שימוש" }
+  en: { badge:"Available on Google Play", h1:"Your finances.", h2:"Finally clear.", sub:"AI-powered finance app with voice input, receipt scanner and smart budgeting. Chat with AI about your money — in English, Russian and Hebrew.", cta1:"Download Free", cta2:"See Features", ph_hi:"Good morning", ph_bal:"Total Balance", ph_inc:"Income", ph_exp:"Expenses", ph_rec:"Recent", tx1:"Supermarket", tx1c:"Groceries", tx2:"Salary", tx2c:"Income", tx3:"Receipt scan", tx3c:"Auto-categorized", fl:"Features", ft:"Everything you need.<br>Nothing you don't.", fd:"Qaizo combines AI intelligence with simple tools to give you complete control over your personal finances.", f1t:"Qaizo AI", f1d:"Chat with your personal AI financial advisor. Ask about spending, get savings tips, analyze trends — all based on your real data. Your data stays private.", f2t:"Voice & Smart Input", f2d:"Say \"coffee 5 dollars\" or type naturally. AI understands amount, category and account. The fastest way to log expenses.", f3t:"Receipt Scanner", f3d:"Snap a photo of any receipt. AI reads amount, store, date and items. Multi-photo for long receipts. Duplicate protection.", f4t:"Smart Budgeting", f4d:"\"Free Money Today\" calculator. Set budgets by category with visual progress bars. Daily spending limits that adapt.", f5t:"Advanced Analytics", f5d:"Balance history, cash flow charts, expense breakdown, period selector (7D-1Y). Three tabs: Overview, Expenses, Trends.", f6t:"Smart Shopping List", f6d:"Price history from scanned receipts. Alerts for overdue items. Build lists and share via WhatsApp. Find the cheapest store.", f7t:"Savings Goals", f7d:"Create goals with target amounts and dates. Track deposits, see monthly needed amount. Reach your financial dreams.", f8t:"Recurring Payments", f8d:"Set up automatic tracking for rent, subscriptions, salaries. Contract end reminders 30 days in advance.", f9t:"Achievements & Streaks", f9d:"6 levels from Beginner to Legend. 30-day activity calendar. Dashboard widgets that unlock as you use the app.", ll:"Multilingual", lt:"Your language. Your way.", ld:"Full interface, categories and insights — all native in three languages. No machine translation. RTL support built in.", le:"Full interface, categories, analytics and receipt scanner in English.", lr:"Full Russian interface — natively written, not translated.", lh:"Full Hebrew interface with native RTL support.", dl:"Download", dt:"Ready to take control?", dd:"Free to download. No bank connection required. Your data stays yours.", gp:"Join the beta", ff:"Features", fp:"Privacy Policy", ftr:"Terms of Service", faql:"FAQ", faqt:"Frequently asked questions", faqd:"Everything you might want to know before downloading.", faq1q:"Is my data safe?", faq1a:"Your data is encrypted and stored either locally on your device or in your private Firebase cloud — you choose. We never sell your data to anyone.", faq2q:"How much does it cost?", faq2a:"Qaizo is completely free. No ads, no hidden payments, no premium tier locked behind a paywall.", faq3q:"Do I need to connect my bank?", faq3a:"No. Transactions are added manually, by voice, or by scanning a receipt. You stay in full control — nothing connects to your bank account.", faq4q:"Does it work offline?", faq4a:"Yes. All core features work without internet. AI features (chat, smart input, receipt scanner) need an internet connection to reach Gemini.", faq5q:"Which devices are supported?", faq5a:"Android via Google Play. An iOS version is on the roadmap.", faq6q:"Can I export my data?", faq6a:"Yes — to CSV, Excel, or PDF, anytime, from the Settings screen. Your data is yours, always." },
+  ru: { badge:"Доступно в Google Play", h1:"Ваши финансы.", h2:"Наконец в порядке.", sub:"Финансовое приложение с AI-ассистентом, голосовым вводом и сканером чеков. Спросите AI про свои деньги — на русском, английском и иврите.", cta1:"Скачать бесплатно", cta2:"Возможности", ph_hi:"Доброе утро", ph_bal:"Общий баланс", ph_inc:"Доходы", ph_exp:"Расходы", ph_rec:"Последние", tx1:"Супермаркет", tx1c:"Продукты", tx2:"Зарплата", tx2c:"Доход", tx3:"Скан чека", tx3c:"Авто-категория", fl:"Возможности", ft:"Всё что нужно.<br>Ничего лишнего.", fd:"Qaizo сочетает AI с простыми инструментами для полного контроля над финансами.", f1t:"Qaizo AI", f1d:"Чат с персональным AI-советником. Спросите о расходах, получите советы по экономии, анализ трендов — на основе ваших реальных данных. Данные остаются приватными.", f2t:"Голос и умный ввод", f2d:"Скажите «кофе 5 долларов» или напишите текстом. AI поймёт сумму, категорию и счёт. Самый быстрый способ записать расход.", f3t:"Сканер чеков", f3d:"Сфотографируйте чек. AI определит сумму, магазин, дату и товары. Несколько фото для длинных чеков. Защита от дублей.", f4t:"Умный бюджет", f4d:"Калькулятор «Свободные деньги». Бюджеты по категориям с прогресс-барами. Адаптивные дневные лимиты.", f5t:"Продвинутая аналитика", f5d:"Динамика баланса, денежный поток, расходы по категориям, выбор периода (7Д-1Г). Три вкладки: Обзор, Расходы, Тренды.", f6t:"Умный список покупок", f6d:"История цен из чеков. Предупреждения о забытых товарах. Создайте список и поделитесь через WhatsApp.", f7t:"Цели накоплений", f7d:"Создайте цели с суммой и датой. Отслеживайте прогресс. Приложение подскажет сколько откладывать.", f8t:"Регулярные платежи", f8d:"Автоотслеживание аренды, подписок, зарплат. Напоминание за 30 дней до конца контракта.", f9t:"Достижения и стрики", f9d:"6 уровней от Новичка до Легенды. Календарь активности за 30 дней. Виджеты дашборда открываются по мере использования.", ll:"Многоязычность", lt:"На вашем языке.", ld:"Полный интерфейс на трёх языках. Не машинный перевод. Встроенная поддержка RTL.", le:"Полный интерфейс, категории и аналитика на английском.", lr:"Полностью русскоязычный интерфейс — написан, не переведён.", lh:"Полный интерфейс на иврите со встроенной поддержкой RTL.", dl:"Скачать", dt:"Готовы взять финансы под контроль?", dd:"Бесплатно. Без подключения к банку. Ваши данные остаются вашими.", gp:"Стать бета-тестером", ff:"Возможности", fp:"Конфиденциальность", ftr:"Условия", faql:"FAQ", faqt:"Частые вопросы", faqd:"Всё что вы хотели знать перед скачиванием.", faq1q:"Безопасны ли мои данные?", faq1a:"Данные шифруются и хранятся либо локально на устройстве, либо в вашем приватном Firebase облаке — вы решаете. Мы не продаём ваши данные.", faq2q:"Сколько стоит приложение?", faq2a:"Qaizo полностью бесплатно. Без рекламы, без скрытых платежей, без премиум-версии за деньги.", faq3q:"Нужно ли подключать банк?", faq3a:"Нет. Транзакции добавляются вручную, голосом или сканом чека. Вы полностью контролируете данные — никакого подключения к банку.", faq4q:"Работает ли оффлайн?", faq4a:"Да. Все основные функции работают без интернета. AI функции (чат, умный ввод, сканер чеков) требуют подключения к Gemini.", faq5q:"На каких устройствах работает?", faq5a:"Android через Google Play. iOS версия в планах.", faq6q:"Можно ли экспортировать данные?", faq6a:"Да — в CSV, Excel или PDF, в любой момент, из настроек. Ваши данные принадлежат вам." },
+  he: { badge:"זמין ב-Google Play", h1:"הכספים שלך.", h2:"סוף סוף ברורים.", sub:"אפליקציית פיננסים עם AI, קלט קולי וסורק קבלות. שוחח עם AI על הכסף שלך — בעברית, רוסית ואנגלית.", cta1:"הורדה חינם", cta2:"תכונות", ph_hi:"בוקר טוב", ph_bal:"יתרה כוללת", ph_inc:"הכנסות", ph_exp:"הוצאות", ph_rec:"אחרונים", tx1:"סופרמרקט", tx1c:"מזון", tx2:"משכורת", tx2c:"הכנסה", tx3:"סריקת קבלה", tx3c:"קטגוריה אוטומטית", fl:"תכונות", ft:"כל מה שצריך.<br>בלי המיותר.", fd:"Qaizo משלב AI עם כלים פשוטים לשליטה מלאה על הכספים האישיים.", f1t:"Qaizo AI", f1d:"שוחח עם יועץ פיננסי AI אישי. שאל על הוצאות, קבל טיפים לחיסכון, נתח מגמות — הכל על סמך הנתונים שלך. המידע נשאר פרטי.", f2t:"קלט קולי וחכם", f2d:"תגיד \"קפה 5 דולר\" או תקליד טקסט חופשי. AI מבין סכום, קטגוריה וחשבון. הדרך הכי מהירה לרשום הוצאה.", f3t:"סורק קבלות", f3d:"צלם קבלה. AI מזהה סכום, חנות, תאריך ופריטים. כמה תמונות לקבלה ארוכה. הגנה מכפילויות.", f4t:"תקציב חכם", f4d:"מחשבון כסף פנוי להיום. תקציבים לפי קטגוריה עם סרגלי התקדמות. מגבלות יומיות מתאימות.", f5t:"אנליטיקה מתקדמת", f5d:"דינמיקת יתרה, תזרים מזומנים, הוצאות לפי קטגוריות, בחירת תקופה. שלוש לשוניות: סקירה, הוצאות, מגמות.", f6t:"רשימת קניות חכמה", f6d:"היסטוריית מחירים מקבלות. התראות על פריטים שנשכחו. בנה רשימה ושתף בוואטסאפ. מצא את החנות הזולה.", f7t:"מטרות חיסכון", f7d:"צור מטרות עם סכום ותאריך. עקוב אחרי הפקדות. האפליקציה מחשבת כמה לחסוך.", f8t:"תשלומים קבועים", f8d:"מעקב אוטומטי לשכירות, מנויים, משכורות. תזכורת 30 יום לפני סיום חוזה.", f9t:"הישגים וסטריקים", f9d:"6 רמות ממתחיל ועד אגדה. לוח פעילות 30 יום. וידג'טים נפתחים ככל שמשתמשים באפליקציה.", ll:"רב-לשוני", lt:"בשפה שלך. בדרך שלך.", ld:"ממשק מלא בשלוש שפות. לא תרגום מכונה. תמיכה מובנית ב-RTL.", le:"ממשק מלא, קטגוריות ואנליטיקה באנגלית.", lr:"ממשק רוסי מלא — כתוב, לא מתורגם.", lh:"ממשק מלא בעברית עם תמיכה מובנית ב-RTL.", dl:"הורדה", dt:"מוכנים לקחת שליטה?", dd:"חינם. בלי חיבור לבנק. הנתונים שלך נשארים שלך.", gp:"הצטרף לגרסת בטא", ff:"תכונות", fp:"מדיניות פרטיות", ftr:"תנאי שימוש", faql:"שאלות נפוצות", faqt:"שאלות נפוצות", faqd:"כל מה שכדאי לדעת לפני ההורדה.", faq1q:"האם המידע שלי בטוח?", faq1a:"המידע שלך מוצפן ונשמר באופן מקומי במכשיר או בענן Firebase הפרטי שלך — אתה בוחר. אנחנו לעולם לא מוכרים מידע לאף אחד.", faq2q:"כמה זה עולה?", faq2a:"Qaizo חינם לחלוטין. בלי פרסומות, בלי תשלומים נסתרים, בלי גרסת פרימיום.", faq3q:"צריך לחבר את הבנק?", faq3a:"לא. תנועות מתווספות ידנית, בקול או על ידי סריקת קבלה. השליטה המלאה אצלך — שום דבר לא מתחבר לבנק.", faq4q:"האם זה עובד ללא אינטרנט?", faq4a:"כן. כל הפיצ'רים העיקריים עובדים ללא אינטרנט. פיצ'רי AI (צ'אט, קלט חכם, סורק קבלות) דורשים חיבור לאינטרנט כדי להגיע ל-Gemini.", faq5q:"באילו מכשירים זה עובד?", faq5a:"אנדרואיד דרך Google Play. גרסת iOS מתוכננת.", faq6q:"האם אפשר לייצא את הנתונים?", faq6a:"כן — ל-CSV, Excel או PDF, בכל זמן, ממסך ההגדרות. הנתונים שלך נשארים שלך." }
 };
+function toggleFaq(btn) {
+    const item = btn.parentElement;
+    item.classList.toggle('open');
+}
 function setLang(l,btn) {
     document.documentElement.dir = l==='he'?'rtl':'ltr';
     document.documentElement.lang = l;
