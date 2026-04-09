@@ -1,5 +1,8 @@
 // src/i18n/ru.js
 export default {
+  appSlogan: 'Умнее с каждым днём',
+  contactEmail: 'Email',
+  contactWhatsapp: 'WhatsApp',
   // Tabs
   dashboard: 'Главная',
   transactions: 'Транзакции',

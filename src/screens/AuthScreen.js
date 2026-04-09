@@ -100,7 +100,7 @@ export default function AuthScreen({ onSkip }) {
         <View style={st.logoWrap}>
           <Image source={require('../../assets/images/icon.png')} style={st.logoImg} />
           <Text style={st.logo}>Qaizo</Text>
-          <Text style={st.slogan}>Smarter every day.</Text>
+          <Text style={st.slogan}>{i18n.t('appSlogan')}</Text>
         </View>
 
         {/* Заголовок */}

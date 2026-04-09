@@ -1,5 +1,8 @@
 // src/i18n/en.js
 export default {
+  appSlogan: 'Smarter every day.',
+  contactEmail: 'Email',
+  contactWhatsapp: 'WhatsApp',
   dashboard: 'Home',
   transactions: 'Transactions',
   accounts: 'Accounts',

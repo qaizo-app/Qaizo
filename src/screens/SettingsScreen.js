@@ -451,11 +451,11 @@ export default function SettingsScreen() {
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
               <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('mailto:support@qaizo.app')}>
                 <Feather name="mail" size={16} color={colors.green} />
-                <Text style={styles.contactTxt}>Email</Text>
+                <Text style={styles.contactTxt}>{i18n.t('contactEmail')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('https://wa.me/972586995577')}>
                 <Feather name="message-circle" size={16} color={colors.green} />
-                <Text style={styles.contactTxt}>WhatsApp</Text>
+                <Text style={styles.contactTxt}>{i18n.t('contactWhatsapp')}</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.aboutCopy}>© 2026 Qaizo</Text>

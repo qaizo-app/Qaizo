@@ -1,5 +1,8 @@
 // src/i18n/he.js
 export default {
+  appSlogan: 'חכמים יותר כל יום',
+  contactEmail: 'אימייל',
+  contactWhatsapp: 'וואטסאפ',
   dashboard: 'ראשי',
   transactions: 'תנועות',
   accounts: 'חשבונות',
