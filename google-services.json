@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "568492177874-d6a49h1mrar101kgqmuv226lfi8ittei.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.qaizo.app",
+            "certificate_hash": "d5c9543bbfb54705bfc9c27c01ba40ae622670ff"
+          }
+        },
+        {
           "client_id": "568492177874-trnvoahteeitl15432ckif2d06luvgp2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
