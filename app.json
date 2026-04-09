@@ -14,7 +14,7 @@
     "scheme": "qaizo",
     "android": {
       "package": "com.qaizo.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "googleServicesFile": "./google-services.json"
     },
     "ios": {
