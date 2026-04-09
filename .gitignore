@@ -44,6 +44,9 @@ tasks/sean-*.md
 # typescript
 *.tsbuildinfo
 
+# Test coverage reports
+coverage/
+
 app-example
 
 # generated native folders

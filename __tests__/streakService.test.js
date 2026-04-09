@@ -96,4 +96,76 @@ describe('streakService', () => {
     const result = streakService.isStreakAtRisk({ currentStreak: 5, lastActiveDate: '2020-01-01' });
     expect(typeof result).toBe('boolean');
   });
+
+  test('isStreakAtRisk returns false when no streak', () => {
+    expect(streakService.isStreakAtRisk(null)).toBe(false);
+    expect(streakService.isStreakAtRisk({ currentStreak: 0, lastActiveDate: null })).toBe(false);
+  });
+
+  test('todayStr returns YYYY-MM-DD format', () => {
+    const today = streakService.todayStr();
+    expect(today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  test('getLocalDate converts ISO to YYYY-MM-DD', () => {
+    const local = streakService.getLocalDate('2026-04-09T15:30:00.000Z');
+    expect(local).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  // ─── under-budget streaks ────────────────────
+  test('under-budget streak: balance <= 0 returns 0', async () => {
+    const txs = [
+      { type: 'income', amount: 100, date: new Date().toISOString() },
+      { type: 'expense', amount: 200, date: new Date().toISOString() },
+    ];
+    const result = await streakService.updateStreaks(txs);
+    expect(result.streakData.underBudgetStreak).toBe(0);
+  });
+
+  test('under-budget streak: positive balance with no spending today', async () => {
+    // Income 10000, no expenses → daily budget high → today underBudget=1
+    const txs = [
+      { type: 'income', amount: 10000, date: new Date().toISOString() },
+    ];
+    const result = await streakService.updateStreaks(txs);
+    expect(result.streakData.underBudgetStreak).toBeGreaterThanOrEqual(1);
+  });
+
+  test('under-budget streak: longestUnderBudget preserved', async () => {
+    dataService.getStreaks.mockResolvedValue({
+      currentStreak: 0, longestStreak: 0, lastActiveDate: null,
+      underBudgetStreak: 0, longestUnderBudget: 50, milestones: [],
+    });
+    const txs = [{ type: 'income', amount: 1000, date: new Date().toISOString() }];
+    const result = await streakService.updateStreaks(txs);
+    expect(result.streakData.longestUnderBudget).toBeGreaterThanOrEqual(50);
+  });
+
+  // ─── milestones progression ──────────────────
+  test('multiple milestones: 7-day streak triggers 7 milestone', async () => {
+    const txs = Array.from({ length: 7 }, (_, i) => makeTx(i));
+    const result = await streakService.updateStreaks(txs);
+    expect(result.streakData.currentStreak).toBe(7);
+    expect(result.streakData.milestones).toContain(3);
+    expect(result.streakData.milestones).toContain(7);
+    expect(result.newMilestone).toBe(7);
+  });
+
+  // ─── error handling ──────────────────────────
+  test('updateStreaks handles dataService errors', async () => {
+    dataService.getStreaks.mockRejectedValue(new Error('storage error'));
+    const result = await streakService.updateStreaks([makeTx(0)]);
+    expect(result.streakData.currentStreak).toBe(0);
+    expect(result.newMilestone).toBeNull();
+  });
+
+  // ─── save optimization ───────────────────────
+  test('does not save when nothing changed', async () => {
+    dataService.getStreaks.mockResolvedValue({
+      currentStreak: 0, longestStreak: 0, lastActiveDate: null,
+      underBudgetStreak: 0, longestUnderBudget: 0, milestones: [],
+    });
+    await streakService.updateStreaks([]);
+    expect(dataService.saveStreaks).not.toHaveBeenCalled();
+  });
 });

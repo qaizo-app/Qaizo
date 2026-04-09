@@ -9,6 +9,9 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
   },
 }));
 
+const { signInWithCredential, deleteUser, GoogleAuthProvider } = require('firebase/auth');
+const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+
 jest.mock('../src/config/firebase', () => ({
   auth: { currentUser: null },
 }));
@@ -153,5 +156,64 @@ describe('authService', () => {
     createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/unknown-error' });
     const result = await authService.register('a@b.com', '123456');
     expect(result.error).toBe('auth/unknown-error');
+  });
+
+  // ─── Google Sign-In ─────────────────────────
+  test('loginWithGoogle success', async () => {
+    GoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'fake-token' } });
+    GoogleAuthProvider.credential.mockReturnValue('fake-credential');
+    const fakeUser = { uid: 'g1', email: 'g@gmail.com' };
+    signInWithCredential.mockResolvedValue({ user: fakeUser });
+
+    const result = await authService.loginWithGoogle();
+    expect(result.success).toBe(true);
+    expect(result.user).toEqual(fakeUser);
+    expect(GoogleSignin.hasPlayServices).toHaveBeenCalled();
+    expect(signInWithCredential).toHaveBeenCalledWith(auth, 'fake-credential');
+  });
+
+  test('loginWithGoogle returns error when no idToken', async () => {
+    GoogleSignin.signIn.mockResolvedValue({ data: {} });
+    const result = await authService.loginWithGoogle();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('No ID token received');
+  });
+
+  test('loginWithGoogle handles SIGN_IN_CANCELLED', async () => {
+    GoogleSignin.signIn.mockRejectedValue({ code: 'SIGN_IN_CANCELLED' });
+    const result = await authService.loginWithGoogle();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Google sign-in cancelled');
+  });
+
+  test('loginWithGoogle handles general errors', async () => {
+    GoogleSignin.signIn.mockRejectedValue(new Error('Network error'));
+    const result = await authService.loginWithGoogle();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Network error');
+  });
+
+  // ─── deleteAccount ───────────────────────────
+  test('deleteAccount success', async () => {
+    auth.currentUser = { uid: 'u1', email: 'a@b.com' };
+    deleteUser.mockResolvedValue();
+    const result = await authService.deleteAccount();
+    expect(result.success).toBe(true);
+    expect(deleteUser).toHaveBeenCalledWith(auth.currentUser);
+  });
+
+  test('deleteAccount with no current user', async () => {
+    auth.currentUser = null;
+    const result = await authService.deleteAccount();
+    expect(result.success).toBe(true);
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  test('deleteAccount requires reauth error', async () => {
+    auth.currentUser = { uid: 'u1' };
+    deleteUser.mockRejectedValue({ code: 'auth/requires-recent-login' });
+    const result = await authService.deleteAccount();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('reauth');
   });
 });

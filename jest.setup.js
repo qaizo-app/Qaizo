@@ -1,4 +1,8 @@
 // jest.setup.js — глобальные моки для тяжёлых модулей
+
+// React Native global flag — false in tests so error logging is silent
+global.__DEV__ = false;
+
 jest.mock('firebase/app', () => ({ initializeApp: jest.fn() }));
 jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(() => ({ currentUser: null })),
@@ -8,7 +12,9 @@ jest.mock('firebase/auth', () => ({
   signOut: jest.fn(),
   onAuthStateChanged: jest.fn(),
   sendPasswordResetEmail: jest.fn(),
+  sendEmailVerification: jest.fn(() => Promise.resolve()),
   updateProfile: jest.fn(),
+  deleteUser: jest.fn(),
   GoogleAuthProvider: { credential: jest.fn() },
 }));
 jest.mock('expo-auth-session', () => ({

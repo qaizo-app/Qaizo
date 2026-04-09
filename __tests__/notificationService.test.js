@@ -14,6 +14,7 @@ jest.mock('../src/utils/currency', () => ({
 jest.mock('../src/services/dataService', () => {
   const mock = {
     getRecurring: jest.fn(() => Promise.resolve([])),
+    getTransactions: jest.fn(() => Promise.resolve([])),
   };
   return { __esModule: true, default: mock };
 });
@@ -155,5 +156,104 @@ describe('notificationService', () => {
         importance: Notifications.AndroidImportance.HIGH,
       }),
     );
+  });
+
+  // ─── scheduleRecurringNotifications - extended ──────────
+  test('scheduleRecurringNotifications skips past dates', async () => {
+    const past = new Date();
+    past.setDate(past.getDate() - 5);
+    const pastStr = past.toISOString().split('T')[0];
+
+    dataService.getRecurring.mockResolvedValue([{
+      id: 'r1', isActive: true, nextDate: pastStr,
+      recipient: 'Old', categoryId: 'food', type: 'expense', amount: 100,
+    }]);
+
+    await notificationService.scheduleRecurringNotifications();
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  test('scheduleRecurringNotifications skips when notify=false', async () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 5);
+    const futureStr = future.toISOString().split('T')[0];
+
+    dataService.getRecurring.mockResolvedValue([{
+      id: 'r1', isActive: true, nextDate: futureStr, notify: false,
+      recipient: 'Test', categoryId: 'food', type: 'expense', amount: 100,
+    }]);
+
+    await notificationService.scheduleRecurringNotifications();
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  test('scheduleRecurringNotifications schedules contract end reminder', async () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 5);
+    const futureStr = future.toISOString().split('T')[0];
+
+    const contractEnd = new Date();
+    contractEnd.setDate(contractEnd.getDate() + 60); // 60 days from now → reminder in 30 days
+    const contractStr = contractEnd.toISOString().split('T')[0];
+
+    dataService.getRecurring.mockResolvedValue([{
+      id: 'r1', isActive: true, nextDate: futureStr,
+      recipient: 'Phone plan', categoryId: 'utilities', type: 'expense',
+      amount: 80, contractEndDate: contractStr,
+    }]);
+
+    await notificationService.scheduleRecurringNotifications();
+    // 2 payment + 1 contract = 3 notifications
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
+
+    const calls = Notifications.scheduleNotificationAsync.mock.calls;
+    const contractCall = calls.find(c => c[0].content.data?.type === 'contract_end');
+    expect(contractCall).toBeDefined();
+  });
+
+  test('scheduleRecurringNotifications handles errors gracefully', async () => {
+    dataService.getRecurring.mockRejectedValue(new Error('boom'));
+    const result = await notificationService.scheduleRecurringNotifications();
+    expect(result).toBe(false);
+  });
+
+  // ─── scheduleWeeklySummary ───────────────────
+  test('scheduleWeeklySummary creates weekly summary notification', async () => {
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+    dataService.getTransactions.mockResolvedValue([]);
+
+    await notificationService.scheduleWeeklySummary();
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
+
+    const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
+    expect(call.content.data.type).toBe('weekly_summary');
+    expect(call.trigger.type).toBe('weekly');
+    expect(call.trigger.weekday).toBe(1);
+    expect(call.trigger.hour).toBe(10);
+  });
+
+  test('scheduleWeeklySummary skips if already scheduled', async () => {
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([
+      { content: { data: { type: 'weekly_summary' } } },
+    ]);
+
+    await notificationService.scheduleWeeklySummary();
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  test('scheduleWeeklySummary computes diff between weeks', async () => {
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+
+    const now = new Date();
+    const thisWeek = new Date(now); thisWeek.setDate(thisWeek.getDate() - 2);
+    const lastWeek = new Date(now); lastWeek.setDate(lastWeek.getDate() - 10);
+
+    dataService.getTransactions.mockResolvedValue([
+      { type: 'expense', amount: 100, date: thisWeek.toISOString() },
+      { type: 'expense', amount: 200, date: lastWeek.toISOString() },
+    ]);
+
+    await notificationService.scheduleWeeklySummary();
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
   });
 });
