@@ -573,7 +573,7 @@ const createSt = () => StyleSheet.create({
   monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 12, gap: 12 },
   monthArrow: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   monthLabel: { paddingHorizontal: 20, paddingVertical: 8, backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder },
-  monthText: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  monthText: { color: colors.text, fontSize: 14, fontWeight: '600' },
   periodRow: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.cardBorder },
   periodBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
   periodActive: { backgroundColor: colors.green },
@@ -582,8 +582,8 @@ const createSt = () => StyleSheet.create({
 
   // Income/Expense summary
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
-  summaryAmount: { fontSize: 22, fontWeight: '800' },
+  summaryLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+  summaryAmount: { fontSize: 20, fontWeight: '800' },
 
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 16 },
@@ -600,7 +600,7 @@ const createSt = () => StyleSheet.create({
   scoreCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   scoreNum: { fontSize: 24, fontWeight: '800' },
   scoreInfo: { flex: 1 },
-  scoreLabel: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  scoreLabel: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
   scoreBar: { height: 8, backgroundColor: colors.bg2, borderRadius: 4, overflow: 'hidden' },
   scoreBarFill: { height: 8, borderRadius: 4 },
 
@@ -632,13 +632,13 @@ const createSt = () => StyleSheet.create({
   // Day chart
   dayChart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, gap: 4, direction: 'ltr' },
   dayCol: { flex: 1, alignItems: 'center' },
-  dayAmount: { color: colors.textMuted, fontSize: 9, fontWeight: '600', marginBottom: 4 },
+  dayAmount: { color: colors.textMuted, fontSize: 10, fontWeight: '600', marginBottom: 4 },
   dayBarBg: { width: '100%', height: 80, backgroundColor: colors.bg2, borderRadius: 6, justifyContent: 'flex-end', overflow: 'hidden' },
   dayBarFill: { width: '100%', backgroundColor: colors.red, borderRadius: 6 },
   dayLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', marginTop: 4 },
 
   // Account balances
-  accountTotal: { fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 14 },
+  accountTotal: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 14 },
   accountRow: { paddingVertical: 10 },
   accountBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   accountInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
@@ -651,6 +651,6 @@ const createSt = () => StyleSheet.create({
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   statItem: { width: '46%', backgroundColor: colors.bg2, borderRadius: 12, padding: 14 },
   statLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '500', marginBottom: 4 },
-  statValue: { color: colors.text, fontSize: 18, fontWeight: '700' },
+  statValue: { color: colors.text, fontSize: 16, fontWeight: '700' },
   statChange: { fontSize: 12, fontWeight: '700', marginTop: 2 },
 });

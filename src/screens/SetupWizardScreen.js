@@ -259,30 +259,30 @@ const createSt = () => StyleSheet.create({
   progressRow: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, gap: 12 },
   progressBg: { flex: 1, height: 4, backgroundColor: colors.card, borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: 4, backgroundColor: colors.green, borderRadius: 2 },
-  stepLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  stepLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
   content: { flexGrow: 1, paddingTop: 24, paddingBottom: 40 },
   stepWrap: { paddingHorizontal: 24, alignItems: 'center' },
 
   stepIcon: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  stepTitle: { color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
+  stepTitle: { color: colors.text, fontSize: 20, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
   stepSub: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
 
-  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, alignSelf: 'stretch' },
+  fieldLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, alignSelf: 'stretch' },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder, alignSelf: 'stretch' },
 
   optionGrid: { flexDirection: i18n.row(), gap: 12, marginBottom: 28 },
   currPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.cardBorder, gap: 12, alignSelf: 'stretch' },
   currPickerSymbol: { color: colors.text, fontSize: 24, fontWeight: '700', width: 40, textAlign: 'center' },
-  currPickerCode: { color: colors.textSecondary, fontSize: 18, fontWeight: '600', flex: 1 },
+  currPickerCode: { color: colors.textSecondary, fontSize: 16, fontWeight: '600', flex: 1 },
 
   typeRow: { flexDirection: i18n.row(), gap: 10, marginBottom: 16, alignSelf: 'stretch' },
   typeBtn: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.cardBorder, gap: 4 },
   typeTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
   balRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20, alignSelf: 'stretch' },
-  balCur: { color: colors.green, fontSize: 28, fontWeight: '700', marginEnd: 8 },
-  balInput: { flex: 1, color: colors.text, fontSize: 28, fontWeight: '700' },
+  balCur: { color: colors.green, fontSize: 32, fontWeight: '700', marginEnd: 8 },
+  balInput: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '700' },
 
   catGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16, alignSelf: 'stretch' },
   catBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.cardBorder, flexDirection: i18n.row(), alignItems: 'center', gap: 6 },

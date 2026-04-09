@@ -277,10 +277,10 @@ const createSt = () => StyleSheet.create({
   logo: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
-  title: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 24 },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24 },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
-  errorTxt: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
+  errorTxt: { color: colors.red, fontSize: 12, fontWeight: '600', flex: 1 },
 
   inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
   inputIcon: { marginStart: 16 },
@@ -289,7 +289,7 @@ const createSt = () => StyleSheet.create({
 
   strengthRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginBottom: 14, marginTop: -6, paddingHorizontal: 4 },
   strengthBar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.divider },
-  strengthTxt: { fontSize: 11, fontWeight: '600', marginStart: 8 },
+  strengthTxt: { fontSize: 12, fontWeight: '600', marginStart: 8 },
 
   mainBtn: { backgroundColor: colors.green, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginTop: 8, marginBottom: 12 },
   mainBtnTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
@@ -303,11 +303,11 @@ const createSt = () => StyleSheet.create({
 
   orRow: { flexDirection: i18n.row(), alignItems: 'center', marginVertical: 16 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.divider },
-  orTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500', marginHorizontal: 16 },
+  orTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500', marginHorizontal: 16 },
   googleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderRadius: 14, paddingVertical: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10, marginBottom: 8 },
   googleG: { fontSize: 20, fontWeight: '800', color: '#4285F4' },
-  googleTxt: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  googleTxt: { color: colors.text, fontSize: 14, fontWeight: '600' },
 
   skipBtn: { alignItems: 'center', marginTop: 20 },
-  skipTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '500', textDecorationLine: 'underline' },
+  skipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textDecorationLine: 'underline' },
 });

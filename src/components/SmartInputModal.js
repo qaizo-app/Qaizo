@@ -185,15 +185,15 @@ const createStyles = () => StyleSheet.create({
   modal: { backgroundColor: colors.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 40, borderWidth: 1, borderColor: colors.cardBorder, borderBottomWidth: 0 },
   header: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
   closeBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
-  title: { color: colors.text, fontSize: 17, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: 32, marginBottom: 16 },
+  title: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  hint: { color: colors.textMuted, fontSize: 12, textAlign: 'center', paddingHorizontal: 32, marginBottom: 16 },
 
   inputWrap: { flexDirection: i18n.row(), alignItems: 'flex-start', backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.cardBorder, marginHorizontal: 20, marginBottom: 16, minHeight: 56 },
   input: { flex: 1, color: colors.text, fontSize: 16, paddingVertical: 16, paddingHorizontal: 12, maxHeight: 100 },
   aiBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginEnd: 8 },
 
   examples: { paddingHorizontal: 24, marginBottom: 16 },
-  exTitle: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginBottom: 8, textAlign: i18n.textAlign() },
+  exTitle: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 8, textAlign: i18n.textAlign() },
   exRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8 },
   exText: { color: colors.textSecondary, fontSize: 14, textAlign: i18n.textAlign(), flex: 1 },
 
@@ -201,9 +201,9 @@ const createStyles = () => StyleSheet.create({
   resultHeader: { flexDirection: i18n.row(), alignItems: 'center', gap: 14, marginBottom: 16 },
   resultIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   resultCategory: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  resultRecipient: { color: colors.textDim, fontSize: 13, marginTop: 2 },
+  resultRecipient: { color: colors.textDim, fontSize: 12, marginTop: 2 },
   resultAmount: { fontSize: 20, fontWeight: '800', textAlign: i18n.textAlign() },
-  resultType: { color: colors.textMuted, fontSize: 11, fontWeight: '600', textAlign: i18n.textAlign(), marginTop: 2 },
+  resultType: { color: colors.textMuted, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign(), marginTop: 2 },
 
   taxRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.bg2, borderRadius: 12, padding: 12, marginBottom: 16 },
   taxText: { color: colors.yellow, fontSize: 12, fontWeight: '600', flex: 1 },

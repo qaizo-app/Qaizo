@@ -359,20 +359,20 @@ const createSt = () => StyleSheet.create({
   scanningWrap: { alignItems: 'center', paddingVertical: 24 },
   scanningText: { color: colors.textDim, fontSize: 14, marginTop: 12 },
 
-  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
+  label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
   amountRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
   currency: { color: colors.green, fontSize: 24, fontWeight: '700', marginEnd: 8 },
   amountInput: { flex: 1, color: colors.text, fontSize: 24, fontWeight: '700', paddingVertical: 14 },
-  input: { backgroundColor: colors.bg2, borderRadius: 14, padding: 14, color: colors.text, fontSize: 15, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
+  input: { backgroundColor: colors.bg2, borderRadius: 14, padding: 14, color: colors.text, fontSize: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
 
   catChip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg2, marginEnd: 6, borderWidth: 1.5, borderColor: 'transparent', gap: 4 },
   catText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
   itemsCard: { backgroundColor: colors.bg2, borderRadius: 14, padding: 12, marginBottom: 16 },
-  itemsTitle: { color: colors.textDim, fontSize: 11, fontWeight: '700', marginBottom: 8 },
+  itemsTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', marginBottom: 8 },
   itemRow: { flexDirection: i18n.row(), justifyContent: 'space-between', paddingVertical: 6 },
-  itemName: { color: colors.text, fontSize: 13, flex: 1 },
-  itemPrice: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  itemName: { color: colors.text, fontSize: 12, flex: 1 },
+  itemPrice: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
 
   btnRow: { flexDirection: i18n.row(), gap: 12, paddingVertical: 12 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
@@ -381,6 +381,6 @@ const createSt = () => StyleSheet.create({
   saveText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
   errorCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.red + '30' },
-  errorCardText: { color: colors.red, fontSize: 13, fontWeight: '600', flex: 1 },
-  error: { color: colors.red, fontSize: 13, textAlign: 'center', marginTop: 8 },
+  errorCardText: { color: colors.red, fontSize: 12, fontWeight: '600', flex: 1 },
+  error: { color: colors.red, fontSize: 12, textAlign: 'center', marginTop: 8 },
 });

@@ -258,12 +258,12 @@ const createSt = () => StyleSheet.create({
 
   monthNav: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 16 },
   navBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
-  monthLabel: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  monthLabel: { color: colors.text, fontSize: 16, fontWeight: '700' },
 
   summaryRow: { flexDirection: i18n.row(), alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, height: 36, backgroundColor: colors.divider },
-  summaryLabel: { color: colors.textDim, fontSize: 11, fontWeight: '600', marginBottom: 4 },
+  summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
   summaryAmount: { fontSize: 16, fontWeight: '800' },
 
   statsGrid: { flexDirection: i18n.row(), gap: 12 },
@@ -283,5 +283,5 @@ const createSt = () => StyleSheet.create({
   catAmount: { color: colors.textDim, fontSize: 14, fontWeight: '700' },
 
   empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
-  emptyTxt: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
+  emptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 });

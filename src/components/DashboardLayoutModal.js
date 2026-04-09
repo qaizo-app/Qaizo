@@ -111,7 +111,7 @@ export default function DashboardLayoutModal({ visible, onClose, layout, onSave 
 const createSt = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
   modal: { backgroundColor: colors.bg2, borderRadius: 20, padding: 20, width: '100%', borderWidth: 1, borderColor: colors.cardBorder },
-  title: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
 
   row: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, padding: 12, marginBottom: 6, borderWidth: 1, borderColor: colors.cardBorder },
   rowDim: { opacity: 0.5 },

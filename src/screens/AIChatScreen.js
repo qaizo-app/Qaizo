@@ -97,8 +97,8 @@ function ChatCashFlowChart({ data, totalIncome, totalExpense }) {
     <View style={{ alignItems: 'center', marginTop: 8 }}>
       {/* Summary */}
       <View style={{ flexDirection: i18n.row(), justifyContent: 'center', gap: 16, marginBottom: 6 }}>
-        <Text style={{ color: colors.green, fontSize: 11, fontWeight: '600' }}>+{Math.round(totalIncome)} {sym()}</Text>
-        <Text style={{ color: colors.red, fontSize: 11, fontWeight: '600' }}>-{Math.round(totalExpense)} {sym()}</Text>
+        <Text style={{ color: colors.green, fontSize: 12, fontWeight: '600' }}>+{Math.round(totalIncome)} {sym()}</Text>
+        <Text style={{ color: colors.red, fontSize: 12, fontWeight: '600' }}>-{Math.round(totalExpense)} {sym()}</Text>
       </View>
       <Svg width={chartW} height={midY * 2 + 20}>
         {/* Center line */}
@@ -412,8 +412,8 @@ const createSt = () => StyleSheet.create({
   header: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.divider },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { color: colors.text, fontSize: 17, fontWeight: '700', flex: 1, textAlign: 'center' },
-  headerSub: { color: colors.green, fontSize: 11, fontWeight: '600', marginTop: 1 },
+  headerTitle: { color: colors.text, fontSize: 16, fontWeight: '700', flex: 1, textAlign: 'center' },
+  headerSub: { color: colors.green, fontSize: 12, fontWeight: '600', marginTop: 1 },
   headerPrivacy: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
 
   messagesList: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
@@ -424,26 +424,26 @@ const createSt = () => StyleSheet.create({
   bubble: { maxWidth: '80%', borderRadius: 18, padding: 14 },
   bubbleUser: { backgroundColor: colors.green, borderBottomRightRadius: i18n.isRTL() ? 18 : 4, borderBottomLeftRadius: i18n.isRTL() ? 4 : 18 },
   bubbleAI: { backgroundColor: colors.card, borderBottomLeftRadius: i18n.isRTL() ? 18 : 4, borderBottomRightRadius: i18n.isRTL() ? 4 : 18, borderWidth: 1, borderColor: colors.cardBorder },
-  msgText: { color: colors.text, fontSize: 15, lineHeight: 22 },
+  msgText: { color: colors.text, fontSize: 14, lineHeight: 22 },
 
   chartWrap: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.divider },
-  chartTitle: { color: colors.text, fontSize: 13, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
+  chartTitle: { color: colors.text, fontSize: 12, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
 
   emptyWrap: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 24 },
   emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  emptyTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 8 },
   emptyHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
   suggestionsWrap: { width: '100%', gap: 8 },
   suggestionBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.cardBorder },
   suggestionText: { color: colors.text, fontSize: 14, fontWeight: '500', flex: 1, textAlign: i18n.textAlign() },
 
   loadingRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
-  loadingText: { color: colors.textMuted, fontSize: 13 },
+  loadingText: { color: colors.textMuted, fontSize: 12 },
 
   inputRow: { flexDirection: i18n.row(), alignItems: 'flex-end', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.divider, backgroundColor: colors.bg2, gap: 8 },
   micBtn: { justifyContent: 'center', alignItems: 'center' },
   micInner: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   micListening: { backgroundColor: colors.redSoft, borderColor: colors.red },
-  input: { flex: 1, backgroundColor: colors.card, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 12, color: colors.text, fontSize: 15, maxHeight: 100, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
+  input: { flex: 1, backgroundColor: colors.card, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 12, color: colors.text, fontSize: 14, maxHeight: 100, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
   sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 });

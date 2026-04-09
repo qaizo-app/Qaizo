@@ -140,7 +140,7 @@ const createStyles = () => StyleSheet.create({
 
   header: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   navBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
-  monthTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  monthTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
 
   daysRow: { flexDirection: i18n.row(), marginBottom: 8 },
   dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 12, fontWeight: '600' },
@@ -149,7 +149,7 @@ const createStyles = () => StyleSheet.create({
   cell: { width: '14.28%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 2 },
   cellSelected: { backgroundColor: colors.green, borderRadius: 12 },
   cellToday: { borderWidth: 1.5, borderColor: colors.green, borderRadius: 12 },
-  cellText: { color: colors.text, fontSize: 15, fontWeight: '500' },
+  cellText: { color: colors.text, fontSize: 14, fontWeight: '500' },
   cellTextSelected: { color: colors.bg, fontWeight: '700' },
   cellTextToday: { color: colors.green, fontWeight: '700' },
 

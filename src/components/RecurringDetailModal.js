@@ -170,14 +170,14 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
 const createSt = () => StyleSheet.create({
   header: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20 },
   iconWrap: { width: 50, height: 50, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
-  title: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  subtitle: { color: colors.textDim, fontSize: 13, marginTop: 2 },
-  amount: { fontSize: 22, fontWeight: '800' },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700' },
+  subtitle: { color: colors.textDim, fontSize: 12, marginTop: 2 },
+  amount: { fontSize: 20, fontWeight: '800' },
 
   infoCard: { backgroundColor: colors.bg2, borderRadius: 16, padding: 16, marginBottom: 16 },
   infoRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 8 },
-  infoLabel: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginStart: 10, flex: 1 },
-  infoValue: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', textAlign: 'right', maxWidth: '50%' },
+  infoLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginStart: 10, flex: 1 },
+  infoValue: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', textAlign: 'right', maxWidth: '50%' },
   infoDivider: { height: 1, backgroundColor: colors.divider },
 
   actionsRow: { flexDirection: i18n.row(), gap: 10, marginBottom: 20 },
@@ -194,7 +194,7 @@ const createSt = () => StyleSheet.create({
   historyAmount: { fontSize: 14, fontWeight: '700' },
 
   emptyHistory: { alignItems: 'center', paddingVertical: 24, gap: 8, backgroundColor: colors.bg2, borderRadius: 14, marginBottom: 20 },
-  emptyTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  emptyTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
   bottomRow: { flexDirection: i18n.row(), gap: 12 },
   editBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.bg2 },

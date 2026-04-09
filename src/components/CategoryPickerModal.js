@@ -261,25 +261,25 @@ const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
 
   topSection: { marginBottom: 16 },
-  sectionLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
+  sectionLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
   topGrid: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   catBtn: { alignItems: 'center', gap: 6, width: 62 },
   catBtnTop: { width: 62 },
   catIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  catName: { color: colors.textSecondary, fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  catName: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: colors.cardBorder },
-  searchInput: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14, padding: 0 },
 
   list: { maxHeight: 300 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 20 },
 
   groupSection: { marginBottom: 16 },
-  groupTitle: { fontSize: 13, fontWeight: '700', marginBottom: 8 },
+  groupTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8 },
 
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
   listIcon: { width: 36, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   listInfo: { flex: 1 },
-  listName: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  listGroup: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  listName: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  listGroup: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
 });

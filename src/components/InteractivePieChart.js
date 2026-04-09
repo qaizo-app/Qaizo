@@ -166,16 +166,16 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
 const createSt = () => StyleSheet.create({
   container: { alignItems: 'center' },
   centerLabel: { position: 'absolute', top: 0, start: 0, justifyContent: 'center', alignItems: 'center' },
-  centerAmount: { color: colors.text, fontSize: 18, fontWeight: '800' },
-  centerPct: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginTop: 2 },
+  centerAmount: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  centerPct: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginTop: 2 },
 
   legend: { width: '100%', marginTop: 16, gap: 2 },
   legendRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, gap: 10 },
   legendRowActive: { backgroundColor: colors.bg2 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendName: { flex: 1, color: colors.textDim, fontSize: 13, fontWeight: '600', textAlign: rtl() ? 'right' : 'left' },
+  legendName: { flex: 1, color: colors.textDim, fontSize: 12, fontWeight: '600', textAlign: rtl() ? 'right' : 'left' },
   legendNameActive: { color: colors.text },
-  legendAmount: { color: colors.textDim, fontSize: 13, fontWeight: '700' },
+  legendAmount: { color: colors.textDim, fontSize: 12, fontWeight: '700' },
   legendAmountActive: { color: colors.text },
   legendPct: { color: colors.textMuted, fontSize: 12, fontWeight: '600', minWidth: 32, textAlign: 'center' },
 });

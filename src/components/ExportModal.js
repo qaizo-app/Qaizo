@@ -99,7 +99,7 @@ export default function ExportModal({ visible, onClose, onResult }) {
 
 const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20 },
-  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, marginTop: 8 },
+  label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, marginTop: 8 },
 
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   dateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.bg2, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.cardBorder },

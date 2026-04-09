@@ -112,8 +112,8 @@ const createSt = () => StyleSheet.create({
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContainer: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 },
   modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.divider, alignSelf: 'center', marginBottom: 16 },
-  modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  sectionLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginTop: 16, marginBottom: 10 },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  sectionLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 16, marginBottom: 10 },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
   colorBtn: { width: 36, height: 36, borderRadius: 14, overflow: 'hidden' },

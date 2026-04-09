@@ -163,7 +163,7 @@ export default function OnboardingScreen({ onDone }) {
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   logoRow: { paddingTop: 60, alignItems: 'center', marginBottom: 8 },
-  logo: { color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1 },
+  logo: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: -1 },
 
   slide: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   slideContent: { alignItems: 'center', paddingHorizontal: 40 },
@@ -172,7 +172,7 @@ const createSt = () => StyleSheet.create({
   iconInner: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center' },
 
   title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 12, letterSpacing: -0.5 },
-  subtitle: { color: colors.textDim, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+  subtitle: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
 
   featureList: { alignSelf: 'stretch', gap: 12, alignItems: 'flex-start' },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

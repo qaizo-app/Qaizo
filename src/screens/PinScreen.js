@@ -172,7 +172,7 @@ const createSt = () => StyleSheet.create({
   numpad: { gap: 12, direction: 'ltr' },
   numRow: { flexDirection: 'row', gap: 24 },
   numKey: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
-  numText: { color: colors.text, fontSize: 28, fontWeight: '600' },
+  numText: { color: colors.text, fontSize: 24, fontWeight: '600' },
 
   cancelBtn: { marginTop: 30 },
   cancelTxt: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },

@@ -90,7 +90,7 @@ const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: colors.cardBorder },
-  searchInput: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14, padding: 0 },
 
   list: { maxHeight: 380 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 14 },
@@ -98,5 +98,5 @@ const createSt = () => StyleSheet.create({
   symbol: { color: colors.text, fontSize: 20, fontWeight: '700', width: 40, textAlign: 'center' },
   info: { flex: 1 },
   code: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  name: { color: colors.textDim, fontSize: 13, marginTop: 2 },
+  name: { color: colors.textDim, fontSize: 12, marginTop: 2 },
 });

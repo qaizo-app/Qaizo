@@ -154,8 +154,8 @@ const st = StyleSheet.create({
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  summaryLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  summaryAmount: { fontSize: 13, fontWeight: '600', color: colors.text },
+  summaryLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+  summaryAmount: { fontSize: 12, fontWeight: '600', color: colors.text },
   netAmount: { fontSize: 14, fontWeight: '700' },
-  selectedDate: { color: colors.textMuted, fontSize: 11, fontWeight: '500', textAlign: 'center', marginTop: 4 },
+  selectedDate: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textAlign: 'center', marginTop: 4 },
 });

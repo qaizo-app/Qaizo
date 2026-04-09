@@ -208,16 +208,16 @@ const createSt = () => StyleSheet.create({
   empty: { alignItems: 'center', marginTop: 80, gap: 16 },
   emptyText: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },
   emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.green, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
-  emptyBtnText: { color: colors.bg, fontSize: 15, fontWeight: '700' },
+  emptyBtnText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
 
   projectRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 14 },
   projectIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   projectInfo: { flex: 1 },
   projectName: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  projectMeta: { color: colors.textDim, fontSize: 13, fontWeight: '500' },
+  projectMeta: { color: colors.textDim, fontSize: 12, fontWeight: '500' },
 
   form: { paddingHorizontal: 24, paddingBottom: 30 },
-  label: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
+  label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
   input: { color: colors.text, fontSize: 16, backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder },
 
   iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -235,9 +235,9 @@ const createSt = () => StyleSheet.create({
 
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end', zIndex: 100 },
   actionSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
-  actionTitle: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 20 },
+  actionTitle: { color: colors.text, fontSize: 20, fontWeight: '700', textAlign: 'center', marginBottom: 20 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.divider },
   actionBtnText: { color: colors.text, fontSize: 16, fontWeight: '600' },
   actionCancelBtn: { alignItems: 'center', paddingVertical: 16, marginTop: 8, borderRadius: 14, backgroundColor: colors.bg2 },
-  actionCancelText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  actionCancelText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
 });

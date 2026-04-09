@@ -155,14 +155,14 @@ const createSt = () => StyleSheet.create({
   // Start state
   startRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   startIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  startTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  startTitle: { color: colors.text, fontSize: 14, fontWeight: '600' },
   startSub: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
 
   // Top
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   levelIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   streakRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  streakNum: { fontSize: 28, fontWeight: '800', letterSpacing: -1 },
+  streakNum: { fontSize: 32, fontWeight: '800', letterSpacing: -1 },
   streakLabel: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
   levelName: { fontSize: 12, fontWeight: '700', marginTop: 1 },
   riskBadge: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.yellow + '15', justifyContent: 'center', alignItems: 'center' },
@@ -181,7 +181,7 @@ const createSt = () => StyleSheet.create({
   // Stats
   statsRow: { flexDirection: 'row', gap: 8 },
   stat: { flex: 1, backgroundColor: colors.bg2, borderRadius: 10, padding: 10, alignItems: 'center' },
-  statNum: { color: colors.text, fontSize: 18, fontWeight: '800' },
+  statNum: { color: colors.text, fontSize: 16, fontWeight: '800' },
   statLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '500', marginTop: 2 },
 
   // Risk

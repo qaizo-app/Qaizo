@@ -422,30 +422,30 @@ const createStyles = () => StyleSheet.create({
   searchBtnActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
   filterBtnActive: { borderColor: colors.teal, backgroundColor: `${colors.teal}15` },
   filterBadge: { position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: 8, backgroundColor: colors.teal, justifyContent: 'center', alignItems: 'center' },
-  filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '800' },
+  filterBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
   badge: { backgroundColor: colors.card, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder },
-  badgeText: { color: colors.textDim, fontSize: 15, fontWeight: '700' },
+  badgeText: { color: colors.textDim, fontSize: 14, fontWeight: '700' },
 
   searchRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 24, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.cardBorder, gap: 10 },
-  searchInput: { flex: 1, color: colors.text, fontSize: 15, paddingVertical: 12, textAlign: i18n.textAlign() },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 12, textAlign: i18n.textAlign() },
 
   filters: { flexDirection: i18n.row(), paddingHorizontal: 24, gap: 8, marginBottom: 12 },
   filterBtn: { flexDirection: i18n.row(), paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent', alignItems: 'center' },
-  filterText: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  filterText: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
 
   // Advanced filter panel
   filterPanel: { marginHorizontal: 24, marginBottom: 12, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder },
   filterSection: { marginBottom: 12 },
-  filterLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
+  filterLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
   dateRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
   dateBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', gap: 6, backgroundColor: colors.bg2, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.divider },
   dateBtnActive: { borderColor: colors.green, backgroundColor: `${colors.green}10` },
   dateBtnText: { color: colors.textMuted, fontSize: 12, fontWeight: '600', flex: 1 },
   dateField: { flex: 1 },
-  dateInput: { backgroundColor: colors.bg2, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 13, borderWidth: 1, borderColor: colors.divider, textAlign: i18n.textAlign() },
+  dateInput: { backgroundColor: colors.bg2, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 12, borderWidth: 1, borderColor: colors.divider, textAlign: i18n.textAlign() },
   chipRow: { flexDirection: i18n.row(), gap: 6 },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: colors.bg2, borderWidth: 1, borderColor: 'transparent', gap: 4 },
-  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '600', maxWidth: 80 },
+  chipText: { color: colors.textMuted, fontSize: 12, fontWeight: '600', maxWidth: 80 },
   filterBtnRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
   clearBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder },
   clearText: { color: colors.red, fontSize: 14, fontWeight: '600' },
@@ -454,11 +454,11 @@ const createStyles = () => StyleSheet.create({
 
   summary: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, marginBottom: 8 },
   summaryAmount: { fontSize: 16, fontWeight: '700', writingDirection: 'ltr' },
-  hint: { color: colors.textMuted, fontSize: 11, opacity: 0.6 },
+  hint: { color: colors.textMuted, fontSize: 12, opacity: 0.6 },
 
   list: { paddingHorizontal: 20, paddingBottom: 120 },
   emptyContainer: { alignItems: 'center', paddingVertical: 60 },
-  emptyText: { color: colors.textMuted, fontSize: 15, fontWeight: '600', marginTop: 12 },
+  emptyText: { color: colors.textMuted, fontSize: 14, fontWeight: '600', marginTop: 12 },
 
   fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16 },
 });

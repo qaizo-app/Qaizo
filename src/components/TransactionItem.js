@@ -86,11 +86,11 @@ const createStyles = () => StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
   info: { flex: 1 },
-  category: { color: colors.text, fontSize: 15, fontWeight: '600', letterSpacing: -0.2, textAlign: i18n.textAlign() },
+  category: { color: colors.text, fontSize: 14, fontWeight: '600', letterSpacing: -0.2, textAlign: i18n.textAlign() },
   note: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: i18n.textAlign() },
   amountContainer: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
   amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3, writingDirection: 'ltr' },
-  date: { color: colors.textMuted, fontSize: 11, marginTop: 3, alignSelf: 'flex-end' },
+  date: { color: colors.textMuted, fontSize: 12, marginTop: 3, alignSelf: 'flex-end' },
 
   actionsRow: { flexDirection: i18n.row() },
   actionBtn: {

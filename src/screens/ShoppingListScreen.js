@@ -280,7 +280,7 @@ const createSt = () => StyleSheet.create({
   shareBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.cardBorder },
-  searchInput: { flex: 1, color: colors.text, fontSize: 15, paddingVertical: 12 },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 12 },
 
   tabsRow: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.card, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.cardBorder },
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, borderRadius: 10 },
@@ -290,21 +290,21 @@ const createSt = () => StyleSheet.create({
 
   empty: { alignItems: 'center', paddingVertical: 32 },
   emptyTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 12 },
-  emptyText: { color: colors.textMuted, fontSize: 13, marginTop: 4, textAlign: 'center' },
+  emptyText: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'center' },
 
   itemHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   addListBtn: { padding: 4 },
   checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, borderColor: colors.textMuted, justifyContent: 'center', alignItems: 'center' },
   checkboxChecked: { backgroundColor: colors.green, borderColor: colors.green },
-  itemName: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  itemName: { color: colors.text, fontSize: 14, fontWeight: '600' },
   itemNameChecked: { textDecorationLine: 'line-through', color: colors.textMuted },
   itemStore: { color: colors.textMuted, fontSize: 12, fontWeight: '500', marginTop: 2 },
   itemPrice: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  itemChange: { fontSize: 11, fontWeight: '700', marginTop: 2 },
+  itemChange: { fontSize: 12, fontWeight: '700', marginTop: 2 },
 
   needBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: colors.orange + '15', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, alignSelf: 'flex-start' },
   needText: { color: colors.orange, fontSize: 12, fontWeight: '600' },
 
   statsRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  statText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  statText: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
 });

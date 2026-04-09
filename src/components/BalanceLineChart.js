@@ -154,6 +154,6 @@ const st = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   headerAmount: { fontSize: 20, fontWeight: '700', color: colors.text },
   changeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  changeText: { fontSize: 13, fontWeight: '700' },
+  changeText: { fontSize: 12, fontWeight: '700' },
   selectedDate: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
 });

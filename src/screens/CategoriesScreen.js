@@ -363,7 +363,7 @@ const createStyles = () => StyleSheet.create({
   groupRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 20, marginTop: 8, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10 },
   groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   groupName: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
-  subCount: { color: colors.textMuted, fontSize: 13, fontWeight: '600', backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  subCount: { color: colors.textMuted, fontSize: 12, fontWeight: '600', backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
 
   subsContainer: { marginHorizontal: 20, marginTop: 4, backgroundColor: colors.card, borderRadius: 14, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
   subRow: { flexDirection: i18n.row(), alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 10 },
@@ -371,10 +371,10 @@ const createStyles = () => StyleSheet.create({
   subName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
 
   addSubBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', padding: 12, gap: 6 },
-  addSubText: { fontSize: 13, fontWeight: '600' },
+  addSubText: { fontSize: 12, fontWeight: '600' },
 
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: i18n.textAlign() },
-  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 8, textAlign: i18n.textAlign() },
+  fieldLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 8, textAlign: i18n.textAlign() },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
 
   iconGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16 },

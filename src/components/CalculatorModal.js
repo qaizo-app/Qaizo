@@ -197,22 +197,22 @@ const createSt = () => StyleSheet.create({
 
   displayWrap: { backgroundColor: colors.card, borderRadius: 16, padding: 16, marginBottom: 12, minHeight: 80, justifyContent: 'flex-end', alignItems: 'flex-end', borderWidth: 1, borderColor: colors.cardBorder },
   prevText: { color: colors.textMuted, fontSize: 16, fontWeight: '500', marginBottom: 4 },
-  displayText: { color: colors.text, fontSize: 36, fontWeight: '800', writingDirection: 'ltr' },
+  displayText: { color: colors.text, fontSize: 32, fontWeight: '800', writingDirection: 'ltr' },
 
   row: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   btn: { flex: 1, height: 56, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
-  btnText: { color: colors.text, fontSize: 22, fontWeight: '600' },
+  btnText: { color: colors.text, fontSize: 20, fontWeight: '600' },
 
   btnOp: { backgroundColor: colors.greenSoft },
   btnOpText: { color: colors.green, fontWeight: '700' },
   btnOpActive: { backgroundColor: colors.green },
 
   btnAction: { backgroundColor: colors.bg2 },
-  btnActionText: { color: colors.textDim, fontSize: 18 },
+  btnActionText: { color: colors.textDim, fontSize: 16 },
 
   btnEquals: { backgroundColor: colors.green },
   btnEqualsText: { color: colors.bg, fontWeight: '800' },
 
   doneBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, borderRadius: 14, paddingVertical: 16, marginTop: 4 },
-  doneTxt: { color: colors.bg, fontSize: 18, fontWeight: '700' },
+  doneTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });

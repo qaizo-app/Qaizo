@@ -254,7 +254,7 @@ const createSt = () => StyleSheet.create({
   monthTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
 
   daysRow: { flexDirection: i18n.row(), marginBottom: 4 },
-  dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 11, fontWeight: '600' },
+  dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 12, fontWeight: '600' },
 
   grid: { flexDirection: i18n.row(), flexWrap: 'wrap' },
   cell: { width: '14.28%', paddingVertical: 6, justifyContent: 'center', alignItems: 'center' },
@@ -277,14 +277,14 @@ const createSt = () => StyleSheet.create({
   chipTxtActiveAlt: { color: colors.teal },
 
   endRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 8, marginTop: 4 },
-  sectionLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
+  sectionLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
   endBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 8, marginBottom: 12 },
   endBtnTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
-  endLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  endLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
   endInput: { backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, color: colors.text, fontSize: 14, borderWidth: 1, borderColor: colors.cardBorder, width: 70 },
 
   endDateBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: colors.cardBorder },
-  endDateTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600', flex: 1 },
+  endDateTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600', flex: 1 },
   pickingDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.teal },
 
   footer: { flexDirection: i18n.row(), gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.divider },

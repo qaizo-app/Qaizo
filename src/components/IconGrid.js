@@ -45,5 +45,5 @@ const createSt = () => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   iconBtn: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.card, borderWidth: 1.5, borderColor: 'transparent' },
   expandBtn: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder },
-  expandTxt: { color: colors.textMuted, fontSize: 9, fontWeight: '600', marginTop: -2 },
+  expandTxt: { color: colors.textMuted, fontSize: 10, fontWeight: '600', marginTop: -2 },
 });

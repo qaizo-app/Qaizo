@@ -209,26 +209,26 @@ const createSt = () => StyleSheet.create({
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, height: 30, backgroundColor: colors.divider },
   summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
-  summaryVal: { fontSize: 15, fontWeight: '800', writingDirection: 'ltr' },
+  summaryVal: { fontSize: 14, fontWeight: '800', writingDirection: 'ltr' },
 
   navRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   navBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   monthTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
 
   daysRow: { flexDirection: i18n.row(), marginBottom: 8 },
-  dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 11, fontWeight: '600' },
+  dayName: { flex: 1, textAlign: 'center', color: colors.textDim, fontSize: 12, fontWeight: '600' },
 
   grid: { flexDirection: i18n.row(), flexWrap: 'wrap' },
   cell: { width: '14.28%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 2, borderRadius: 10 },
   cellSelected: { backgroundColor: colors.green + '20', borderWidth: 1.5, borderColor: colors.green },
   cellToday: { borderWidth: 1, borderColor: colors.green + '40' },
-  cellDay: { color: colors.text, fontSize: 13, fontWeight: '500' },
+  cellDay: { color: colors.text, fontSize: 12, fontWeight: '500' },
   cellDaySelected: { color: colors.green, fontWeight: '700' },
   cellAmounts: { flexDirection: 'row', gap: 2, marginTop: 2 },
   cellDot: { width: 5, height: 5, borderRadius: 3 },
 
   daySummary: { marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  daySummaryDate: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  daySummaryDate: { color: colors.text, fontSize: 14, fontWeight: '700' },
   daySummaryAmounts: { flexDirection: 'row', gap: 12 },
   daySummaryItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   daySummaryVal: { fontSize: 14, fontWeight: '700' },
@@ -239,5 +239,5 @@ const createSt = () => StyleSheet.create({
   txCat: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   txRecipient: { color: colors.textMuted, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
   txAmount: { fontSize: 14, fontWeight: '700', writingDirection: 'ltr' },
-  emptyTxt: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingVertical: 16 },
+  emptyTxt: { color: colors.textMuted, fontSize: 12, textAlign: 'center', paddingVertical: 16 },
 });

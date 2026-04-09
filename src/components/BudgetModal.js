@@ -136,12 +136,12 @@ const createSt = () => StyleSheet.create({
 
   header: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 24 },
   iconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginEnd: 14 },
-  title: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  spentLabel: { color: colors.textDim, fontSize: 13, marginTop: 2 },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700' },
+  spentLabel: { color: colors.textDim, fontSize: 12, marginTop: 2 },
 
   inputRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, paddingHorizontal: 16, marginBottom: 20 },
-  currency: { color: colors.green, fontSize: 22, fontWeight: '700', marginEnd: 8 },
-  input: { flex: 1, color: colors.text, fontSize: 22, fontWeight: '700', paddingVertical: 16 },
+  currency: { color: colors.green, fontSize: 20, fontWeight: '700', marginEnd: 8 },
+  input: { flex: 1, color: colors.text, fontSize: 20, fontWeight: '700', paddingVertical: 16 },
 
   deleteBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.redSoft, marginBottom: 16 },
   deleteTxt: { color: colors.red, fontSize: 16, fontWeight: '600' },

@@ -56,7 +56,7 @@ const createStyles = () => StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginBottom: 20,
   },
   title: {
-    color: colors.text, fontSize: 18, fontWeight: '700',
+    color: colors.text, fontSize: 20, fontWeight: '700',
     textAlign: 'center', marginBottom: 8,
   },
   message: {
