@@ -366,18 +366,18 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 120 }}>
 
         <View style={st.header}>
-          <TouchableOpacity onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }} activeOpacity={0.7}>
+          <TouchableOpacity style={{ flexShrink: 1, minWidth: 0 }} onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }} activeOpacity={0.7}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={st.logo}>Q<Animated.Text style={{ color: colors.green, opacity: showAiHint ? aiGlow.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) : 1 }}>ai</Animated.Text>zo</Text>
             </View>
             <Text style={st.subtitle}>{dateStr}</Text>
             {showAiHint && (
               <View style={st.aiHint}>
-                <Text style={st.aiHintText}>{i18n.t('aiHint')}</Text>
+                <Text style={st.aiHintText} numberOfLines={2}>{i18n.t('aiHint')}</Text>
               </View>
             )}
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
           <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
             <Feather name="sliders" size={18} color={colors.textDim} />
           </TouchableOpacity>
