@@ -334,6 +334,8 @@ export default function AIChatScreen() {
       <FlatList
         ref={flatListRef}
         data={messages}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         keyExtractor={item => item.id}
         renderItem={renderMessage}
         contentContainerStyle={st.messagesList}

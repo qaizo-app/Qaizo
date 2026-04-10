@@ -364,6 +364,8 @@ export default function DashboardScreen() {
   return (
     <View style={st.container}>
       <ScrollView showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.green} />}
         contentContainerStyle={{ paddingBottom: 120 }}>
 

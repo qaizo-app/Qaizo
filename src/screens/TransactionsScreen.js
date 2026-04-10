@@ -364,6 +364,8 @@ export default function TransactionsScreen({ route }) {
       {/* List */}
       <FlatList
         data={filtered}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <TransactionItem
