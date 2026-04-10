@@ -2,11 +2,14 @@
 // Поток: тема → язык → онбординг → визард → авторизация → приложение
 import * as Sentry from '@sentry/react-native';
 
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  enabled: !__DEV__, // Отключен в dev, включён в production
-  tracesSampleRate: 0.2, // 20% транзакций для performance monitoring
-});
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    enabled: !__DEV__,
+    tracesSampleRate: 0.2,
+  });
+}
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
