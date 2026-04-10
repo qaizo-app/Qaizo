@@ -1,7 +1,8 @@
 // src/services/securityService.js
-// PIN-код (биометрия будет добавлена в production build)
+// PIN-код + биометрическая аутентификация (fingerprint / face)
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const KEYS = {
   PIN_HASH: 'qaizo_pin_hash',
@@ -39,19 +40,38 @@ const securityService = {
     return val === 'true';
   },
 
-  // --- Biometric (placeholder — needs native build) ---
+  // --- Biometric ---
   async isBiometricAvailable() {
-    return false;
+    try {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      if (!compatible) return false;
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      return enrolled;
+    } catch (e) { return false; }
   },
 
   async isBiometricEnabled() {
-    return false;
+    const available = await this.isBiometricAvailable();
+    if (!available) return false;
+    const val = await AsyncStorage.getItem(KEYS.BIOMETRIC_ENABLED);
+    return val === 'true';
   },
 
-  async setBiometricEnabled() {},
+  async setBiometricEnabled(enabled) {
+    await AsyncStorage.setItem(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false');
+  },
 
-  async authenticateWithBiometric() {
-    return false;
+  async authenticateWithBiometric(promptMessage) {
+    try {
+      const available = await this.isBiometricAvailable();
+      if (!available) return false;
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: promptMessage || 'Unlock Qaizo',
+        cancelLabel: 'Use PIN',
+        disableDeviceFallback: true,
+      });
+      return result.success;
+    } catch (e) { return false; }
   },
 
   async isLockEnabled() {

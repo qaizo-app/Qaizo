@@ -31,7 +31,15 @@ jest.mock('expo-auth-session', () => ({
 jest.mock('expo-web-browser', () => ({
   maybeCompleteAuthSession: jest.fn(),
 }));
-jest.mock('expo-crypto', () => ({}));
+jest.mock('expo-crypto', () => ({
+  digestStringAsync: jest.fn(() => Promise.resolve('mocked_hash')),
+  CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+}));
+jest.mock('expo-local-authentication', () => ({
+  hasHardwareAsync: jest.fn(() => Promise.resolve(false)),
+  isEnrolledAsync: jest.fn(() => Promise.resolve(false)),
+  authenticateAsync: jest.fn(() => Promise.resolve({ success: false })),
+}));
 jest.mock('expo-document-picker', () => ({
   getDocumentAsync: jest.fn(() => Promise.resolve({ canceled: true })),
 }));
