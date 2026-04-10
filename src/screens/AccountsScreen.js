@@ -43,6 +43,7 @@ export default function AccountsScreen() {
   const [billingDay, setBillingDay] = useState(10);
   const [isActive, setIsActive] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [reorderMode, setReorderMode] = useState(false);
   const styles = createStyles();
 
   const loadData = async () => { setAccounts(await dataService.getAccounts()); };
@@ -52,18 +53,15 @@ export default function AccountsScreen() {
   const inactive = accounts.filter(a => a.isActive === false);
   const totalBalance = active.reduce((s,a) => s + (a.balance||0), 0);
 
-  // Группировка по порядку
+  // Группировка: сохраняем порядок из массива accounts, группируем по типу
   const grouped = [];
-  GROUP_ORDER.forEach(typeId => {
-    const accs = active.filter(a => a.type === typeId);
-    if (accs.length > 0) grouped.push({ typeId, accs, sum: accs.reduce((s,a) => s+(a.balance||0), 0) });
-  });
-  // Остальные типы
-  const coveredTypes = new Set(GROUP_ORDER);
-  active.filter(a => !coveredTypes.has(a.type)).forEach(a => {
-    const existing = grouped.find(g => g.typeId === a.type);
-    if (existing) existing.accs.push(a);
-    else grouped.push({ typeId: a.type, accs: [a], sum: a.balance || 0 });
+  const seenTypes = new Set();
+  active.forEach(a => {
+    if (!seenTypes.has(a.type)) {
+      seenTypes.add(a.type);
+      const accs = active.filter(x => x.type === a.type);
+      grouped.push({ typeId: a.type, accs, sum: accs.reduce((s, x) => s + (x.balance || 0), 0) });
+    }
   });
 
   const openHistory = (acc) => navigation.navigate('AccountHistory', { account: acc });
@@ -86,6 +84,15 @@ export default function AccountsScreen() {
   };
   const handleDelete = async () => {
     if (deleteTarget) { await dataService.deleteAccount(deleteTarget.id); setDeleteTarget(null); setShowEdit(false); await loadData(); }
+  };
+
+  const moveAccount = async (idx, direction) => {
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= accounts.length) return;
+    const reordered = [...accounts];
+    [reordered[idx], reordered[newIdx]] = [reordered[newIdx], reordered[idx]];
+    setAccounts(reordered);
+    await dataService.saveAccounts(reordered);
   };
 
   const tc = accountTypeConfig[type]?.color || colors.blue;
@@ -111,9 +118,14 @@ export default function AccountsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>{i18n.t('accounts')}</Text>
-          <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-            <Feather name="plus" size={20} color={colors.bg} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity style={[styles.addBtn, { backgroundColor: reorderMode ? colors.green : colors.card, borderWidth: 1, borderColor: colors.cardBorder }]} onPress={() => setReorderMode(!reorderMode)}>
+              <Feather name="list" size={18} color={reorderMode ? colors.bg : colors.textDim} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
+              <Feather name="plus" size={20} color={colors.bg} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Total */}
@@ -127,8 +139,29 @@ export default function AccountsScreen() {
           {i18n.t('accountHint')}
         </Text>
 
+        {/* Reorder mode */}
+        {reorderMode && (
+          <View style={{ marginHorizontal: 20, gap: 6, marginBottom: 16 }}>
+            {accounts.filter(a => a.isActive !== false).map((acc, idx) => {
+              const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
+              return (
+                <View key={acc.id} style={{ flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 }}>
+                  <MaterialCommunityIcons name={cfg.icon} size={18} color={cfg.color} />
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600', flex: 1 }}>{acc.name}</Text>
+                  <TouchableOpacity onPress={() => moveAccount(idx, -1)} style={{ padding: 6 }} disabled={idx === 0}>
+                    <Feather name="chevron-up" size={20} color={idx === 0 ? colors.textMuted + '40' : colors.text} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => moveAccount(idx, 1)} style={{ padding: 6 }} disabled={idx === accounts.filter(a => a.isActive !== false).length - 1}>
+                    <Feather name="chevron-down" size={20} color={idx === accounts.filter(a => a.isActive !== false).length - 1 ? colors.textMuted + '40' : colors.text} />
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         {/* Groups */}
-        {grouped.map(({ typeId, accs, sum }) => {
+        {!reorderMode && grouped.map(({ typeId, accs, sum }) => {
           const cfg = accountTypeConfig[typeId] || accountTypeConfig.bank;
           return (
             <View key={typeId}>
@@ -145,11 +178,14 @@ export default function AccountsScreen() {
         })}
 
         {/* Crypto */}
+        {!reorderMode && (
         <View style={styles.groupHeader}>
           <MaterialCommunityIcons name="bitcoin" size={14} color={colors.orange} style={{ }} />
           <Text style={[styles.groupTitle, { color: colors.orange }]}>{typeLabel('crypto')}</Text>
           <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
         </View>
+        )}
+        {!reorderMode && (
         <View style={styles.tilesRow}>
           <View style={[styles.tile, { borderLeftColor: colors.orange, borderLeftWidth: 3, opacity: 0.4 }]}>
             <MaterialCommunityIcons name="bitcoin" size={16} color={colors.orange} />
@@ -157,9 +193,10 @@ export default function AccountsScreen() {
             <Text style={[styles.tileBalance, { color: colors.textMuted }]}>—</Text>
           </View>
         </View>
+        )}
 
         {/* Inactive */}
-        {inactive.length > 0 && (
+        {!reorderMode && inactive.length > 0 && (
           <View>
             <View style={styles.groupHeader}>
               <Feather name="archive" size={14} color={colors.textMuted} style={{ }} />
