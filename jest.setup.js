@@ -3,12 +3,6 @@
 // React Native global flag — false in tests so error logging is silent
 global.__DEV__ = false;
 
-jest.mock('@sentry/react-native', () => ({
-  init: jest.fn(),
-  wrap: jest.fn((component) => component),
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
-}));
 jest.mock('firebase/app', () => ({ initializeApp: jest.fn() }));
 jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(() => ({ currentUser: null })),

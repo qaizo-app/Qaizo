@@ -45,13 +45,7 @@
       ],
       "react-native-edge-to-edge",
       "./plugins/withResizeableActivity",
-      "@react-native-google-signin/google-signin",
-      [
-        "@sentry/react-native",
-        {
-          "uploadSourceMaps": false
-        }
-      ]
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {

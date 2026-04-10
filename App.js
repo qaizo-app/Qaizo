@@ -1,16 +1,5 @@
 // App.js
 // Поток: тема → язык → онбординг → визард → авторизация → приложение
-import * as Sentry from '@sentry/react-native';
-
-const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    enabled: !__DEV__,
-    tracesSampleRate: 0.2,
-  });
-}
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
@@ -268,7 +257,7 @@ function AppInner() {
   );
 }
 
-export default Sentry.wrap(function App() {
+export default function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -276,4 +265,4 @@ export default Sentry.wrap(function App() {
       </ToastProvider>
     </ThemeProvider>
   );
-});
+}
