@@ -670,4 +670,8 @@ async function importTransactions(transactions) {
   return { imported, failed, skippedDuplicates };
 }
 
-export default { pickAndParseFile, importTransactions, parseWithMapping };
+// Test helpers — exposed for unit testing only
+function resetDelimiter() { _delimiter = null; }
+const _internal = { resolveCategory, detectDelimiter, parseCSVLine, detectFormat, parseDate, parseAmount, parseQaizoRow, parseBankRow, parseWalletRow, parseGenericRow, resetDelimiter };
+
+export default { pickAndParseFile, importTransactions, parseWithMapping, _internal };
