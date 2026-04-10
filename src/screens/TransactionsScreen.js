@@ -105,11 +105,11 @@ export default function TransactionsScreen({ route }) {
     filtered = filtered.filter(t => selProjects.includes(t.projectId));
   }
   if (amountMin) {
-    const min = parseFloat(amountMin);
+    const min = parseFloat((amountMin||'').replace(',', '.'));
     if (!isNaN(min)) filtered = filtered.filter(t => t.amount >= min);
   }
   if (amountMax) {
-    const max = parseFloat(amountMax);
+    const max = parseFloat((amountMax||'').replace(',', '.'));
     if (!isNaN(max)) filtered = filtered.filter(t => t.amount <= max);
   }
 

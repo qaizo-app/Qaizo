@@ -90,21 +90,21 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const togTag = (tag) => setTags(p => p.includes(tag) ? p.filter(t => t !== tag) : [...p, tag]);
 
   const handleSave = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
     const txDate = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
     if (isEdit) {
       const ci = getCatIcon(categoryId, catGroups);
-      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
+      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
     } else if (type === 'transfer') {
       if (selAcc === toAcc) return;
       const fn = accounts.find(a => a.id === selAcc)?.name || '';
       const tn = accounts.find(a => a.id === toAcc)?.name || '';
       const transferPairId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags });
-      await dataService.addTransaction({ type: 'income', amount: parseFloat(amount), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags });
+      await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags });
+      await dataService.addTransaction({ type: 'income', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags });
     } else {
       const ci2 = getCatIcon(categoryId, catGroups);
-      await dataService.addTransaction({ type, amount: parseFloat(amount), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
+      await dataService.addTransaction({ type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
     }
     onSave?.(); onClose?.();
   };
@@ -302,8 +302,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               <TouchableOpacity style={st.cancelBtn} onPress={close}>
                 <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount) > 0 ? 1 : 0.35 }]}
-                onPress={handleSave} disabled={!amount || parseFloat(amount) <= 0}>
+              <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
+                onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
                 <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
                 <Text style={st.saveTxt}>{i18n.t('save')}</Text>
               </TouchableOpacity>

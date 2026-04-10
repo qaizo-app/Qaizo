@@ -65,7 +65,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   const getAccIcon = (t) => (accountTypeConfig[t] || accountTypeConfig.bank).icon;
 
   const handleSave = async () => {
-    const num = parseFloat(amount);
+    const num = parseFloat(amount.replace(',', '.'));
     if (!num || num <= 0) return;
 
     await dataService.addTransaction({
@@ -141,9 +141,9 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
                   <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[st.saveBtn, { backgroundColor: cfg.color, opacity: amount && parseFloat(amount) > 0 ? 1 : 0.35 }]}
+                  style={[st.saveBtn, { backgroundColor: cfg.color, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
                   onPress={handleSave}
-                  disabled={!amount || parseFloat(amount) <= 0}
+                  disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}
                 >
                   <Feather name="check" size={18} color={colors.bg} style={{ marginEnd: 6 }} />
                   <Text style={st.saveTxt}>{i18n.t('save')}</Text>

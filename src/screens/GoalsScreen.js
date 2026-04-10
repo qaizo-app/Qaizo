@@ -79,8 +79,8 @@ export default function GoalsScreen() {
     if (!name.trim() || !targetAmount) return;
     const data = {
       name: name.trim(), icon, color: selColor,
-      targetAmount: parseFloat(targetAmount) || 0,
-      initialAmount: parseFloat(initialAmount) || 0,
+      targetAmount: parseFloat((targetAmount||'').replace(',', '.')) || 0,
+      initialAmount: parseFloat((initialAmount||'').replace(',', '.')) || 0,
       targetDate: targetDate || null,
     };
     if (editGoal) {
@@ -94,7 +94,7 @@ export default function GoalsScreen() {
 
   const handleDeposit = async () => {
     if (!showDeposit || !depositAmount) return;
-    const amt = parseFloat(depositAmount);
+    const amt = parseFloat((depositAmount||'').replace(',', '.'));
     if (!amt) return;
     await dataService.addGoalDeposit(showDeposit.id, amt, depositNote);
     setShowDeposit(null); setDepositAmount(''); setDepositNote('');

@@ -79,7 +79,7 @@ export default function AccountsScreen() {
   const handleSave = async () => {
     if (!name.trim()) return;
     const cfg = accountTypeConfig[type]||accountTypeConfig.bank;
-    const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat(balance)||0, overdraft:overdraft?parseFloat(overdraft):null, billingDay: type==='credit'?billingDay:null, isActive, icon:cfg.icon };
+    const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat((balance||'').replace(',','.'))||0, overdraft:overdraft?parseFloat(overdraft.replace(',','.')):null, billingDay: type==='credit'?billingDay:null, isActive, icon:cfg.icon };
     if (editAccount) await dataService.updateAccount(editAccount.id, data);
     else await dataService.addAccount(data);
     setShowEdit(false); await loadData();

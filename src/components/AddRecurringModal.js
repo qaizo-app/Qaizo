@@ -71,7 +71,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const getAI = (t) => (accountTypeConfig[t] || accountTypeConfig.bank).icon;
 
   const handleSave = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
     let nextDate = startDate;
     if (!nextDate) {
       const tomorrow = new Date();
@@ -81,7 +81,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
     const data = {
       type,
-      amount: parseFloat(amount),
+      amount: parseFloat(amount.replace(',', '.')),
       categoryId,
       icon: categoryConfig[categoryId]?.icon || 'repeat',
       recipient: recipient.trim(),
@@ -239,8 +239,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
             <TouchableOpacity style={st.cancelBtn} onPress={close}>
               <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount) > 0 ? 1 : 0.35 }]}
-              onPress={handleSave} disabled={!amount || parseFloat(amount) <= 0}>
+            <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
+              onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
               <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
               <Text style={st.saveTxt}>{i18n.t('save')}</Text>
             </TouchableOpacity>

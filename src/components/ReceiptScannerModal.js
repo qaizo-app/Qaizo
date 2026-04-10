@@ -117,7 +117,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
   };
 
   const handleSave = async () => {
-    const num = parseFloat(amount);
+    const num = parseFloat(amount.replace(',', '.'));
     if (!num || num <= 0) return;
 
     // Check for duplicate — same amount + same date
@@ -322,8 +322,8 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
             <TouchableOpacity style={st.cancelBtn} onPress={reset}>
               <Text style={st.cancelText}>{i18n.t('cancel')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[st.saveBtn, { opacity: amount && parseFloat(amount) > 0 ? 1 : 0.35 }]}
-              onPress={handleSave} disabled={!amount || parseFloat(amount) <= 0}>
+            <TouchableOpacity style={[st.saveBtn, { opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
+              onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
               <Feather name="check" size={18} color={colors.bg} />
               <Text style={st.saveText}>{i18n.t('save')}</Text>
             </TouchableOpacity>

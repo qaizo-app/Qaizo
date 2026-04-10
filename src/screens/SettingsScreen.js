@@ -284,7 +284,7 @@ export default function SettingsScreen() {
                 keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
               <TouchableOpacity style={styles.extraSaveBtn} onPress={async () => {
                 const settings = await dataService.getSettings();
-                await dataService.saveSettings({ ...settings, monthlyExtra: parseFloat(monthlyExtra) || 0 });
+                await dataService.saveSettings({ ...settings, monthlyExtra: parseFloat((monthlyExtra||'').replace(',', '.')) || 0 });
                 setOpenSection(null);
                 toast.show(i18n.t('saved'), 'success');
               }}>
