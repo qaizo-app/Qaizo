@@ -30,7 +30,8 @@
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "568492177874",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:568492177874:web:019151972555cba53b700b",
         "EXPO_PUBLIC_GEMINI_API_KEY": "SET_VIA_EAS_SECRETS",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://84ec7a96b35b78f5b740b7f7cde66280@o4511194543357952.ingest.de.sentry.io/4511194553843792"
       },
       "android": {
         "buildType": "app-bundle"

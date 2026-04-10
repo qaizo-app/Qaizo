@@ -45,7 +45,8 @@
       ],
       "react-native-edge-to-edge",
       "./plugins/withResizeableActivity",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {
