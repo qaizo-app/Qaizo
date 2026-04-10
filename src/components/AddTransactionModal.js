@@ -33,6 +33,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showCalc, setShowCalc] = useState(false);
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitRows, setSplitRows] = useState([]);
+  const [splitCatPicker, setSplitCatPicker] = useState(null); // index of row being edited
   const [projects, setProjects] = useState([]);
   const [selProject, setSelProject] = useState('');
   const [weekStart, setWeekStart] = useState('sunday');
@@ -76,6 +79,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         } else {
           setAmount(''); setRecipient(''); setNote(''); setTags([]); setSelProject('');
           setType('expense'); setCategoryId('food'); setShowMore(false);
+          setSplitMode(false); setSplitRows([]);
           const today = new Date();
           setDateStr(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
           if (preselectedAccount) setSelAcc(preselectedAccount);
@@ -92,6 +96,23 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const handleSave = async () => {
     if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
     const txDate = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
+
+    // Split mode — create multiple transactions
+    if (splitMode && splitRows.length > 0 && !isEdit) {
+      const validRows = splitRows.filter(r => parseFloat((r.amount || '').replace(',', '.')) > 0);
+      for (const row of validRows) {
+        const ci = getCatIcon(row.categoryId, catGroups);
+        await dataService.addTransaction({
+          type, amount: parseFloat(row.amount.replace(',', '.')),
+          categoryId: row.categoryId, categoryName: getCatName(row.categoryId, catGroups, lang),
+          icon: ci.icon, recipient, note, currency: sym(), date: txDate,
+          account: selAcc, tags, projectId: selProject || null,
+        });
+      }
+      onSave?.(); onClose?.();
+      return;
+    }
+
     if (isEdit) {
       const ci = getCatIcon(categoryId, catGroups);
       await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
@@ -144,11 +165,73 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               <TouchableOpacity style={st.calcBtn} onPress={() => setShowCalc(true)}>
                 <MaterialCommunityIcons name="calculator-variant-outline" size={18} color={colors.textDim} />
               </TouchableOpacity>
+              {!isEdit && type === 'expense' && (
+                <TouchableOpacity style={[st.calcBtn, splitMode && { backgroundColor: colors.green + '20', borderColor: colors.green + '40' }]}
+                  onPress={() => {
+                    if (!splitMode) {
+                      const total = parseFloat((amount || '0').replace(',', '.')) || 0;
+                      setSplitMode(true);
+                      setSplitRows([{ amount: total > 0 ? String(total) : '', categoryId }]);
+                    } else {
+                      setSplitMode(false); setSplitRows([]);
+                    }
+                  }}>
+                  <Feather name="scissors" size={16} color={splitMode ? colors.green : colors.textDim} />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={st.dateBtn} onPress={() => setShowCal(true)}>
                 <Feather name="calendar" size={14} color={colors.green} />
                 <Text style={st.dateTxt}>{dd || i18n.t('date')}</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Split rows */}
+            {splitMode && (
+              <View style={{ marginBottom: 12 }}>
+                <Text style={st.label}>{i18n.t('splitTransaction') || 'Split'}</Text>
+                {splitRows.map((row, idx) => {
+                  const ci = getCatIcon(row.categoryId, catGroups);
+                  return (
+                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: ci.color + '18', justifyContent: 'center', alignItems: 'center' }}
+                        onPress={() => setSplitCatPicker(idx)}>
+                        <Feather name={ci.icon} size={16} color={ci.color} />
+                      </TouchableOpacity>
+                      <TextInput
+                        style={[st.input, { flex: 1, marginBottom: 0 }]}
+                        value={row.amount}
+                        onChangeText={(val) => {
+                          const updated = [...splitRows];
+                          updated[idx] = { ...updated[idx], amount: val };
+                          setSplitRows(updated);
+                          // Update total
+                          const total = updated.reduce((s, r) => s + (parseFloat((r.amount || '0').replace(',', '.')) || 0), 0);
+                          setAmount(total > 0 ? String(total) : '');
+                        }}
+                        placeholder="0" placeholderTextColor={colors.textMuted}
+                        keyboardType="decimal-pad"
+                      />
+                      {splitRows.length > 1 && (
+                        <TouchableOpacity onPress={() => {
+                          const updated = splitRows.filter((_, i) => i !== idx);
+                          setSplitRows(updated);
+                          const total = updated.reduce((s, r) => s + (parseFloat((r.amount || '0').replace(',', '.')) || 0), 0);
+                          setAmount(total > 0 ? String(total) : '');
+                        }} style={{ padding: 6 }}>
+                          <Feather name="x" size={16} color={colors.red} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                })}
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder }}
+                  onPress={() => setSplitRows([...splitRows, { amount: '', categoryId: 'other' }])}>
+                  <Feather name="plus" size={14} color={colors.green} />
+                  <Text style={{ color: colors.green, fontSize: 12, fontWeight: '600' }}>{i18n.t('addRow') || 'Add row'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View>
               {!hasPre && type !== 'transfer' && (
@@ -313,6 +396,14 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       </SwipeModal>
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
       <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
+      <CategoryPickerModal visible={splitCatPicker !== null} onClose={() => setSplitCatPicker(null)} onSelect={(catId) => {
+        if (splitCatPicker !== null) {
+          const updated = [...splitRows];
+          updated[splitCatPicker] = { ...updated[splitCatPicker], categoryId: catId };
+          setSplitRows(updated);
+          setSplitCatPicker(null);
+        }
+      }} type="expense" />
       <CalculatorModal visible={showCalc} onClose={() => setShowCalc(false)} initialValue={amount}
         onResult={(val) => setAmount(val)} />
     </>

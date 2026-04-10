@@ -43,6 +43,8 @@ export default {
   incomeType: 'Income',
   expenseType: 'Expense',
   transfer: 'Transfer',
+  splitTransaction: 'Split by category',
+  addRow: 'Add row',
   all: 'All',
   today: 'Today',
   yesterday: 'Yesterday',

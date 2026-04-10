@@ -46,6 +46,8 @@ export default {
   incomeType: 'Доход',
   expenseType: 'Расход',
   transfer: 'Перевод',
+  splitTransaction: 'Разделить по категориям',
+  addRow: 'Добавить строку',
   all: 'Все',
   today: 'Сегодня',
   yesterday: 'Вчера',

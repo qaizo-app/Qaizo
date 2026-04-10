@@ -43,6 +43,8 @@ export default {
   incomeType: 'הכנסה',
   expenseType: 'הוצאה',
   transfer: 'העברה',
+  splitTransaction: 'פיצול לפי קטגוריה',
+  addRow: 'הוסף שורה',
   all: 'הכל',
   today: 'היום',
   yesterday: 'אתמול',
