@@ -2,8 +2,8 @@
 // Calendar view — income/expense per day, tap day → transaction list
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Animated, PanResponder, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Amount from '../components/Amount';
 import Card from '../components/Card';
 import CategoryIcon from '../components/CategoryIcon';
@@ -84,6 +84,15 @@ export default function CalendarScreen() {
     setSelectedDate(null);
   };
 
+  // Swipe to change month
+  const swipeRef = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 20 && Math.abs(g.dx) > Math.abs(g.dy),
+    onPanResponderRelease: (_, g) => {
+      if (g.dx > 50) { i18n.isRTL() ? nextMonth() : prevMonth(); }
+      else if (g.dx < -50) { i18n.isRTL() ? prevMonth() : nextMonth(); }
+    },
+  })).current;
+
   const selectedTxs = selectedDate && dayData[selectedDate] ? dayData[selectedDate].txs : [];
 
   const formatAmount = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -112,6 +121,7 @@ export default function CalendarScreen() {
 
         {/* Calendar */}
         <Card style={{ marginHorizontal: 20, marginTop: 12 }}>
+          <View {...swipeRef.panHandlers}>
           {/* Nav */}
           <View style={st.navRow}>
             <TouchableOpacity onPress={prevMonth} style={st.navBtn}>
@@ -158,6 +168,7 @@ export default function CalendarScreen() {
             })}
           </View>
 
+          </View>
           {/* Day summary inside calendar card */}
           {selectedDate && dayData[selectedDate] && (
             <View style={st.daySummary}>
