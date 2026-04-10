@@ -441,7 +441,7 @@ No markdown, no explanation, only the JSON array.`;
 }
 
 // ─── Receipt Scanner ────────────────────────────────────
-async function scanReceipt(imageInput, lang) {
+async function scanReceipt(imageInput, lang, _retryCount = 0) {
   if (!GEMINI_API_KEY) {
     if (__DEV__) console.error('scanReceipt: no API key');
     return null;
@@ -462,7 +462,7 @@ async function scanReceipt(imageInput, lang) {
       inlineData: { mimeType: detectMime(b64), data: b64 }
     }));
 
-    if (__DEV__) console.log('scanReceipt:', imageList.length, 'images, sizes:', imageList.map(b => b.length));
+    if (__DEV__) console.log('scanReceipt:', imageList.length, 'images, sizes:', imageList.map(b => b.length), 'attempt:', _retryCount + 1);
 
     const multiImageHint = imageList.length > 1
       ? `These ${imageList.length} images are parts of the SAME receipt. Combine all items and find the total from the last image.`
@@ -474,18 +474,18 @@ async function scanReceipt(imageInput, lang) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: `You are a receipt scanner. Analyze this receipt carefully.
+            { text: `You are an expert receipt scanner optimized for Israeli receipts (Hebrew text, ₪ currency). The image may be slightly blurry, rotated, or have low contrast — do your best to extract data.
 ${multiImageHint}
 Extract:
-- total: the TOTAL/סה"כ amount (number). Look for words like Total, סה"כ, סהכ, Итого
-- store: business name, usually at the top of receipt
-- date: look for date on receipt, return as YYYY-MM-DD. Look for dd/mm/yyyy or dd.mm.yyyy format
+- total: the TOTAL/סה"כ/סהכ amount (number). Look for the LAST/LARGEST bold number, or words: Total, סה"כ, סהכ, Итого, לתשלום, סך הכל. If multiple totals, pick the final one.
+- store: business name, usually at the top. Common Israeli chains: שופרסל, רמי לוי, ויקטורי, מגה, יוחננוף, AM:PM, פז, סונול, דור אלון
+- date: look for date on receipt, return as YYYY-MM-DD. Israeli format is usually DD/MM/YYYY or DD.MM.YYYY
 - category: classify the business. Supermarket/grocery = "food". Restaurant/cafe = "restaurant". Gas station = "fuel". Pharmacy = "health". Use: food,restaurant,fuel,transport,health,phone,utilities,clothing,household,kids,entertainment,education,cosmetics,electronics,insurance,rent,other
 Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","category":"food"}` },
             ...imageParts,
           ],
         }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
+        generationConfig: { temperature: 0.15, maxOutputTokens: 1024 },
       }),
     });
 
@@ -548,12 +548,24 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
     // Validate — need at least total or store
     if (!parsed.total && !parsed.store) {
       if (__DEV__) console.error('scanReceipt: no total or store found');
+      // Retry once if validation failed
+      if (_retryCount < 1) {
+        if (__DEV__) console.log('scanReceipt: retrying after validation failure...');
+        await new Promise(r => setTimeout(r, 1000));
+        return scanReceipt(imageInput, lang, _retryCount + 1);
+      }
       return null;
     }
 
     return parsed;
   } catch (e) {
     if (__DEV__) console.error('scanReceipt error:', e);
+    // Retry once on failure
+    if (_retryCount < 1) {
+      if (__DEV__) console.log('scanReceipt: retrying after error...');
+      await new Promise(r => setTimeout(r, 1000));
+      return scanReceipt(imageInput, lang, _retryCount + 1);
+    }
     return null;
   }
 }
