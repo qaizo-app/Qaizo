@@ -2,7 +2,10 @@
 // PIN-код + биометрическая аутентификация (fingerprint / face)
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import * as LocalAuthentication from 'expo-local-authentication';
+
+// Lazy import — avoid crash if native module not linked
+let LocalAuthentication = null;
+try { LocalAuthentication = require('expo-local-authentication'); } catch (e) {}
 
 const KEYS = {
   PIN_HASH: 'qaizo_pin_hash',
@@ -43,6 +46,7 @@ const securityService = {
   // --- Biometric ---
   async isBiometricAvailable() {
     try {
+      if (!LocalAuthentication) return false;
       const compatible = await LocalAuthentication.hasHardwareAsync();
       if (!compatible) return false;
       const enrolled = await LocalAuthentication.isEnrolledAsync();
@@ -63,6 +67,7 @@ const securityService = {
 
   async authenticateWithBiometric(promptMessage) {
     try {
+      if (!LocalAuthentication) return false;
       const available = await this.isBiometricAvailable();
       if (!available) return false;
       const result = await LocalAuthentication.authenticateAsync({
