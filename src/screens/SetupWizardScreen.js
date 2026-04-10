@@ -52,7 +52,7 @@ export default function SetupWizardScreen({ onDone }) {
       name: accName.trim(),
       type: accType,
       currency,
-      balance: parseFloat(accBalance) || 0,
+      balance: parseFloat(accBalance.replace(',', '.')) || 0,
       isActive: true,
       icon: cfg.icon,
     });
@@ -61,11 +61,12 @@ export default function SetupWizardScreen({ onDone }) {
   };
 
   const handleSaveTransaction = async () => {
-    if (!txAmount || parseFloat(txAmount) <= 0) return;
+    const parsed = parseFloat(txAmount.replace(',', '.'));
+    if (!txAmount || !parsed || parsed <= 0) return;
     const cfg = categoryConfig[txCategory] || categoryConfig.other;
     await dataService.addTransaction({
       type: 'expense',
-      amount: parseFloat(txAmount),
+      amount: parsed,
       categoryId: txCategory,
       icon: cfg.icon,
       recipient: txRecipient.trim(),
@@ -204,8 +205,8 @@ export default function SetupWizardScreen({ onDone }) {
               <TouchableOpacity style={st.skipBtn} onPress={handleSkipTransaction}>
                 <Text style={st.skipTxt}>{i18n.t('skip')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[st.primaryBtn, { flex: 2, opacity: txAmount && parseFloat(txAmount) > 0 ? 1 : 0.4 }]}
-                onPress={handleSaveTransaction} disabled={!txAmount || parseFloat(txAmount) <= 0}>
+              <TouchableOpacity style={[st.primaryBtn, { flex: 2, opacity: txAmount && parseFloat(txAmount.replace(',', '.')) > 0 ? 1 : 0.4 }]}
+                onPress={handleSaveTransaction} disabled={!txAmount || parseFloat(txAmount.replace(',', '.')) <= 0}>
                 <Text style={st.primaryTxt}>{i18n.t('next')}</Text>
                 <Feather name="arrow-right" size={18} color={colors.bg} style={{ marginStart: 6 }} />
               </TouchableOpacity>
