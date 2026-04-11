@@ -4,15 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q64RRQW58H"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-Q64RRQW58H');
-    </script>
-
     <!-- Primary SEO -->
     <title>Qaizo — Smart Budget & Expense Tracker | AI Finance App</title>
     <meta name="description" content="Qaizo is a multilingual AI-powered personal finance app. Track expenses, manage budgets, scan receipts and get smart financial insights in English, Russian and Hebrew.">
@@ -102,10 +93,11 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23151a28'/><text x='50' y='72' font-size='65' font-weight='800' font-family='sans-serif' fill='%2334d399' text-anchor='middle'>Q</text></svg>">
 
-    <!-- Fonts -->
+    <!-- Fonts (non-blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Hebrew:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 
     <style>
         :root {
@@ -506,6 +498,15 @@ const obs=new IntersectionObserver(e => { e.forEach((en,i) => { if(en.isIntersec
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 // Init lang from URL
 (function(){const p=new URLSearchParams(window.location.search);const l=p.get('lang');if(l&&T[l]){const b=document.querySelectorAll('.lang-btn');b.forEach(x=>{if((l==='ru'&&x.textContent==='RU')||(l==='he'&&x.textContent==='עב'))x.click();});}})();
+</script>
+
+<!-- Google Analytics 4 (deferred) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q64RRQW58H"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-Q64RRQW58H');
 </script>
 </body>
 </html>
