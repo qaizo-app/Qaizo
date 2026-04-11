@@ -473,21 +473,6 @@ export default function SettingsScreen() {
           <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
-          <View style={styles.sectionLeft}>
-            <Feather name="message-circle" size={18} color={colors.textMuted} />
-            <Text style={[styles.sectionText, { color: colors.textDim }]}>{i18n.t('aiChat')}</Text>
-          </View>
-          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
-          <View style={styles.sectionLeft}>
-            <Feather name="camera" size={18} color={colors.textMuted} />
-            <Text style={[styles.sectionText, { color: colors.textDim }]}>{i18n.t('scanReceipt')}</Text>
-          </View>
-          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
-        </TouchableOpacity>
 
       </ScrollView>
 
