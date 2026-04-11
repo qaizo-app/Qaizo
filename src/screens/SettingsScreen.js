@@ -462,16 +462,7 @@ export default function SettingsScreen() {
           </Card>
         )}
 
-        {/* ═══ COMING SOON ═══ */}
-        <Text style={styles.groupTitle}>{i18n.t('comingSoon')}</Text>
 
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => toast.show(i18n.t('comingSoonMessage'), 'info')}>
-          <View style={styles.sectionLeft}>
-            <Feather name="cpu" size={18} color={colors.textMuted} />
-            <Text style={[styles.sectionText, { color: colors.textDim }]}>{i18n.t('advisor')}</Text>
-          </View>
-          <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
-        </TouchableOpacity>
 
 
       </ScrollView>
