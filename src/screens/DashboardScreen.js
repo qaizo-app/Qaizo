@@ -151,17 +151,14 @@ export default function DashboardScreen() {
     }
 
     setDashLayout(layout);
+
+    // Collect all settings changes and save once
+    const settingsUpdates = {};
     if (hasNewReveal) {
-      await dataService.saveSettings({
-        ...settings,
-        dashLayout: layout,
-        revealedWidgets: [...revealed],
-      });
+      settingsUpdates.dashLayout = layout;
+      settingsUpdates.revealedWidgets = [...revealed];
     } else if (revealed.size > (settings.revealedWidgets || []).length) {
-      await dataService.saveSettings({
-        ...settings,
-        revealedWidgets: [...revealed],
-      });
+      settingsUpdates.revealedWidgets = [...revealed];
     }
 
     // Show AI hint on first launch
@@ -174,7 +171,12 @@ export default function DashboardScreen() {
         ]),
         { iterations: 4 }
       ).start();
-      await dataService.saveSettings({ ...settings, aiHintShown: true });
+      settingsUpdates.aiHintShown = true;
+    }
+
+    // Save all changes at once to avoid race conditions
+    if (Object.keys(settingsUpdates).length > 0) {
+      await dataService.saveSettings({ ...settings, ...settingsUpdates });
     }
 
     setMonthlyExtra(settings.monthlyExtra || 0);
