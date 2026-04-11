@@ -48,6 +48,7 @@ export default {
   transfer: 'Перевод',
   splitTransaction: 'Разделить по категориям',
   addRow: 'Добавить строку',
+  remaining: 'Осталось',
   all: 'Все',
   today: 'Сегодня',
   yesterday: 'Вчера',

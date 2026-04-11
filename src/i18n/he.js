@@ -45,6 +45,7 @@ export default {
   transfer: 'העברה',
   splitTransaction: 'פיצול לפי קטגוריה',
   addRow: 'הוסף שורה',
+  remaining: 'נותר',
   all: 'הכל',
   today: 'היום',
   yesterday: 'אתמול',

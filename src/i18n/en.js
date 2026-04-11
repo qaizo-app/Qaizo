@@ -45,6 +45,7 @@ export default {
   transfer: 'Transfer',
   splitTransaction: 'Split by category',
   addRow: 'Add row',
+  remaining: 'Remaining',
   all: 'All',
   today: 'Today',
   yesterday: 'Yesterday',

@@ -169,9 +169,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 <TouchableOpacity style={[st.calcBtn, splitMode && { backgroundColor: colors.green + '20', borderColor: colors.green + '40' }]}
                   onPress={() => {
                     if (!splitMode) {
-                      const total = parseFloat((amount || '0').replace(',', '.')) || 0;
                       setSplitMode(true);
-                      setSplitRows([{ amount: total > 0 ? String(total) : '', categoryId }]);
+                      setSplitRows([{ amount: '', categoryId }, { amount: '', categoryId: 'other' }]);
                     } else {
                       setSplitMode(false); setSplitRows([]);
                     }
@@ -204,19 +203,13 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                           const updated = [...splitRows];
                           updated[idx] = { ...updated[idx], amount: val };
                           setSplitRows(updated);
-                          // Update total
-                          const total = updated.reduce((s, r) => s + (parseFloat((r.amount || '0').replace(',', '.')) || 0), 0);
-                          setAmount(total > 0 ? String(total) : '');
                         }}
                         placeholder="0" placeholderTextColor={colors.textMuted}
                         keyboardType="decimal-pad"
                       />
                       {splitRows.length > 1 && (
                         <TouchableOpacity onPress={() => {
-                          const updated = splitRows.filter((_, i) => i !== idx);
-                          setSplitRows(updated);
-                          const total = updated.reduce((s, r) => s + (parseFloat((r.amount || '0').replace(',', '.')) || 0), 0);
-                          setAmount(total > 0 ? String(total) : '');
+                          setSplitRows(splitRows.filter((_, i) => i !== idx));
                         }} style={{ padding: 6 }}>
                           <Feather name="x" size={16} color={colors.red} />
                         </TouchableOpacity>
@@ -224,6 +217,16 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                     </View>
                   );
                 })}
+                {(() => {
+                  const totalAmount = parseFloat((amount || '0').replace(',', '.')) || 0;
+                  const splitSum = splitRows.reduce((s, r) => s + (parseFloat((r.amount || '0').replace(',', '.')) || 0), 0);
+                  const remaining = totalAmount - splitSum;
+                  return remaining !== 0 && totalAmount > 0 ? (
+                    <Text style={{ color: remaining > 0 ? colors.yellow : colors.red, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
+                      {remaining > 0 ? `${i18n.t('remaining') || 'Remaining'}: ${remaining.toFixed(2)} ${sym()}` : `${i18n.t('over') || 'Over'}: ${Math.abs(remaining).toFixed(2)} ${sym()}`}
+                    </Text>
+                  ) : null;
+                })()}
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder }}
                   onPress={() => setSplitRows([...splitRows, { amount: '', categoryId: 'other' }])}>
