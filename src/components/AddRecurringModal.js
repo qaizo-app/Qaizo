@@ -31,6 +31,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [endDate, setEndDate] = useState('');
   const [showSchedule, setShowSchedule] = useState(false);
   const [notify, setNotify] = useState(true);
+  const [autoConfirm, setAutoConfirm] = useState(false);
   const [contractEndDate, setContractEndDate] = useState('');
   const isEdit = !!editItem;
   const st = createSt();
@@ -54,12 +55,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
           setEndDate(editItem.endDate || '');
           setNotify(editItem.notify !== false);
+          setAutoConfirm(editItem.autoConfirm === true);
           setContractEndDate(editItem.contractEndDate || '');
         } else {
           setType('expense'); setAmount(''); setCategoryId('rent');
           setRecipient(''); setNote(''); setIntervalMonths(1);
           setStartDate(''); setEndType('none'); setTotalCount('12'); setEndDate('');
-          setNotify(true); setContractEndDate('');
+          setNotify(true); setAutoConfirm(false); setContractEndDate('');
           if (active.length > 0) setSelAcc(active[0].id);
         }
       });
@@ -94,6 +96,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       totalCount: endType === 'count' ? parseInt(totalCount, 10) || 12 : null,
       endDate: endType === 'date' ? endDate : null,
       notify,
+      autoConfirm,
       contractEndDate: contractEndDate || null,
     };
 
@@ -232,6 +235,17 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
             <Switch value={notify} onValueChange={setNotify}
               trackColor={{ false: colors.card, true: `${tc}40` }}
               thumbColor={notify ? tc : colors.textMuted} />
+          </View>
+
+          {/* Auto-confirm */}
+          <View style={st.toggleRow}>
+            <View>
+              <Text style={st.toggleLabel}>{i18n.t('autoConfirm')}</Text>
+              <Text style={st.toggleSub}>{i18n.t('autoConfirmSub')}</Text>
+            </View>
+            <Switch value={autoConfirm} onValueChange={setAutoConfirm}
+              trackColor={{ false: colors.card, true: `${tc}40` }}
+              thumbColor={autoConfirm ? tc : colors.textMuted} />
           </View>
 
           {/* Кнопки */}

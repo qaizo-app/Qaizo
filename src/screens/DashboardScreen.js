@@ -100,7 +100,7 @@ export default function DashboardScreen() {
     const uid = require('../services/authService').default.getUid();
     if (!uid) return;
 
-    const [txs, bdg, rec, settings, accs, tpls, gls] = await Promise.all([
+    let [txs, bdg, rec, settings, accs, tpls, gls] = await Promise.all([
       dataService.getTransactions(),
       dataService.getBudgets(),
       dataService.getRecurring(),
@@ -180,6 +180,21 @@ export default function DashboardScreen() {
     }
 
     setMonthlyExtra(settings.monthlyExtra || 0);
+
+    // Auto-confirm recurring payments that are due
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let recUpdated = false;
+    for (const r of rec) {
+      if (r.isActive && r.autoConfirm && r.nextDate && r.nextDate <= todayStr) {
+        await dataService.confirmRecurring(r.id);
+        recUpdated = true;
+      }
+    }
+    if (recUpdated) {
+      txs = await dataService.getTransactions();
+      rec = await dataService.getRecurring();
+    }
+
     setTransactions(txs);
     setBudgets(bdg);
     setAccounts(accs.filter(a => a.isActive !== false));

@@ -577,6 +577,8 @@ export default {
   savings: 'Сбережения',
   day: 'день',
   remaining: 'Осталось',
+  autoConfirm: 'Авто-подтверждение',
+  autoConfirmSub: 'Автоматически записывать транзакцию в день оплаты',
   upcoming: 'Предстоящие',
 
   // Analytics

@@ -46,6 +46,8 @@ export default {
   splitTransaction: 'Split by category',
   addRow: 'Add row',
   remaining: 'Remaining',
+  autoConfirm: 'Auto-confirm',
+  autoConfirmSub: 'Automatically record transaction on due date',
   all: 'All',
   today: 'Today',
   yesterday: 'Yesterday',

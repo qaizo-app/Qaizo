@@ -46,6 +46,8 @@ export default {
   splitTransaction: 'פיצול לפי קטגוריה',
   addRow: 'הוסף שורה',
   remaining: 'נותר',
+  autoConfirm: 'אישור אוטומטי',
+  autoConfirmSub: 'רישום עסקה אוטומטית בתאריך התשלום',
   all: 'הכל',
   today: 'היום',
   yesterday: 'אתמול',
