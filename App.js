@@ -1,5 +1,21 @@
 // App.js
 // Поток: тема → язык → онбординг → визард → авторизация → приложение
+import * as Sentry from '@sentry/react-native';
+
+try {
+  Sentry.init({
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    enabled: !__DEV__,
+    tracesSampleRate: 0,
+    enableStallTracking: false,
+    enableAppStartTracking: false,
+    enableNativeFramesTracking: false,
+    attachScreenshot: false,
+  });
+} catch (e) {
+  // Sentry init failed — app continues without crash reporting
+}
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
@@ -56,6 +72,14 @@ function detectSystemLanguage() {
       const code = locales[0].languageCode;
       if (code === 'he' || code === 'iw') return 'he';
       if (code === 'ru') return 'ru';
+      if (code === 'ar') return 'ar';
+      if (code === 'es') return 'es';
+      if (code === 'fr') return 'fr';
+      if (code === 'de') return 'de';
+      if (code === 'pt') return 'pt';
+      if (code === 'zh') return 'zh';
+      if (code === 'hi') return 'hi';
+      if (code === 'ja') return 'ja';
     }
   } catch (e) {}
   return 'en';
