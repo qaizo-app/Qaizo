@@ -3,7 +3,8 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import aiService from '../services/aiService';
 import { useFocusEffect } from '@react-navigation/native';
 import ColorPickerRow from '../components/ColorPickerRow';
 import ConfirmModal from '../components/ConfirmModal';
@@ -163,6 +164,7 @@ export default function CategoriesScreen() {
   const [editColor, setEditColor] = useState('#60a5fa');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteTxCount, setDeleteTxCount] = useState(0);
+  const [translating, setTranslating] = useState(false);
   const lang = i18n.getLanguage();
   const styles = createStyles();
 
@@ -185,33 +187,42 @@ export default function CategoriesScreen() {
     setEditItem(sub); setEditParent(group); setEditName(getName(sub.name)); setEditIcon(sub.icon); setEditColor(group.color); setShowEdit(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editName.trim()) return;
     const newGroups = [...groups];
+    const isNew = !editItem;
+
+    // For new categories — auto-translate via Gemini, fallback to same name
+    let nameObj;
+    if (isNew) {
+      setTranslating(true);
+      nameObj = await aiService.translateCategoryName(editName.trim(), lang);
+      setTranslating(false);
+    }
+
     if (editParent) {
-      // Sub-category
       const gIdx = newGroups.findIndex(g => g.id === editParent.id);
       if (gIdx === -1) return;
       if (editItem) {
-        // Edit existing sub
+        // Edit existing sub — only update current language
         const sIdx = newGroups[gIdx].subs.findIndex(s => s.id === editItem.id);
         if (sIdx !== -1) newGroups[gIdx].subs[sIdx] = { ...newGroups[gIdx].subs[sIdx], name: { ...newGroups[gIdx].subs[sIdx].name, [lang]: editName.trim() }, icon: editIcon };
       } else {
-        // Add new sub
+        // Add new sub with auto-translated name
         const id = editName.trim().toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString(36).slice(-4);
-        newGroups[gIdx].subs.push({ id, name: { [lang]: editName.trim() }, icon: editIcon });
+        newGroups[gIdx].subs.push({ id, name: nameObj, icon: editIcon });
       }
     } else {
       if (editItem) {
-        // Edit group
+        // Edit group — only update current language
         const gIdx = newGroups.findIndex(g => g.id === editItem.id);
         if (gIdx !== -1) {
           newGroups[gIdx] = { ...newGroups[gIdx], name: { ...newGroups[gIdx].name, [lang]: editName.trim() }, icon: editIcon, color: editColor };
         }
       } else {
-        // Add new group
+        // Add new group with auto-translated name
         const id = editName.trim().toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString(36).slice(-4);
-        newGroups.push({ id, name: { [lang]: editName.trim() }, icon: editIcon, color: editColor, subs: [] });
+        newGroups.push({ id, name: nameObj, icon: editIcon, color: editColor, subs: [] });
       }
     }
     persistGroups(newGroups);
@@ -336,9 +347,11 @@ export default function CategoriesScreen() {
               <TouchableOpacity style={styles.cancelBtn} onPress={close}>
                 <Text style={styles.cancelText}>{i18n.t('cancel')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: editColor }]} onPress={handleSave}>
-                <Feather name="check" size={18} color="#fff" />
-                <Text style={styles.saveText}> {i18n.t('save')}</Text>
+              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: editColor }]} onPress={handleSave} disabled={translating}>
+                {translating
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <><Feather name="check" size={18} color="#fff" /><Text style={styles.saveText}> {i18n.t('save')}</Text></>
+                }
               </TouchableOpacity>
             </View>
           </View>

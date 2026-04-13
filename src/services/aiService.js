@@ -842,6 +842,27 @@ RULES:
   return result || (lang === 'he' ? 'לא הצלחתי לענות כרגע. נסה שוב.' : lang === 'ru' ? 'Не удалось ответить. Попробуйте ещё раз.' : 'Could not answer right now. Please try again.');
 }
 
+// ─── Перевод названия категории на все языки ────────────
+async function translateCategoryName(name, sourceLang) {
+  const fallback = { ru: name, en: name, he: name };
+  if (!name || !GEMINI_API_KEY) return fallback;
+  try {
+    const prompt = `Translate this expense category name to Russian, English, and Hebrew.
+Input: "${name}" (language: ${sourceLang})
+Reply ONLY with valid JSON, no explanation:
+{"ru":"...","en":"...","he":"..."}`;
+    const raw = await callGemini(prompt, { maxTokens: 100, temperature: 0.1 });
+    if (!raw) return fallback;
+    const match = raw.match(/\{[^}]+\}/);
+    if (!match) return fallback;
+    const parsed = JSON.parse(match[0]);
+    if (parsed.ru && parsed.en && parsed.he) return parsed;
+    return fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
 export default {
   parseTransaction,
   parseTransactionSmart,
@@ -855,6 +876,7 @@ export default {
   buildChartData,
   scanReceipt,
   scanReceiptItems,
+  translateCategoryName,
   callGemini,
   MAAM_RATE,
   ESTIMATED_INCOME_TAX,
