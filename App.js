@@ -20,7 +20,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
 import { useEffect, useRef, useState } from 'react';
-import { AppState, I18nManager, StatusBar, StyleSheet, View } from 'react-native';
+import { AppState, I18nManager, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+
+// Disable system font scaling globally — prevents layout breaks on large accessibility fonts
+Text.defaultProps = Text.defaultProps || {};
+Text.defaultProps.allowFontScaling = false;
+TextInput.defaultProps = TextInput.defaultProps || {};
+TextInput.defaultProps.allowFontScaling = false;
 
 // Global RTL patch: I18nManager flips textAlign ('right' becomes 'left')
 // So we REMOVE explicit textAlign:'right' and let the system handle alignment

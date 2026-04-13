@@ -68,7 +68,7 @@ export default function InvestmentsScreen() {
               </View>
               <View style={styles.invInfo}>
                 <Text style={styles.invName}>{inv.name}</Text>
-                <Text style={styles.invType}>{i18n.t(inv.type)}</Text>
+                <Text style={styles.invType}>{i18n.t(inv.type === 'savings' ? 'investSavings' : inv.type === 'education' ? 'investEducation' : inv.type)}</Text>
               </View>
               <View style={styles.invAmounts}>
                 <Amount value={inv.balance || 0} style={styles.invBalance} numberOfLines={1} adjustsFontSizeToFit />
