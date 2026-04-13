@@ -50,7 +50,7 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
   const pct = currentLimit > 0 ? Math.round((spent / currentLimit) * 100) : 0;
 
   const handleSave = () => {
-    const num = parseInt(value, 10);
+    const num = parseInt(value.replace(',', '.'), 10);
     if (num > 0) {
       onSave(categoryId, num);
     }

@@ -230,7 +230,7 @@ export default function SetupWizardScreen({ onDone }) {
                   <Text style={st.doneTxt}>{i18n.t('account')}: {createdAccount.name}</Text>
                 </View>
               )}
-              {txAmount && parseFloat(txAmount) > 0 && (
+              {txAmount && parseFloat(txAmount.replace(',', '.')) > 0 && (
                 <View style={st.doneRow}>
                   <Feather name="check" size={16} color={colors.green} />
                   <Text style={st.doneTxt}>{i18n.t('wizFirstTx')}: {currency}{txAmount}</Text>
