@@ -445,6 +445,7 @@ export default function DashboardScreen() {
                   monthlyExtra={monthlyExtra}
                   expanded={freeExpanded}
                   onToggle={() => setFreeExpanded(!freeExpanded)}
+                  onAddRecurring={() => setShowRecurring(true)}
                 />
               );
             case 'pieChart':

@@ -17,6 +17,7 @@ export default function FreeMoneyTodayBlock({
   monthlyExtra,
   expanded,
   onToggle,
+  onAddRecurring,
 }) {
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysLeft = Math.max(lastDay - now.getDate(), 1);
@@ -105,9 +106,14 @@ export default function FreeMoneyTodayBlock({
       </TouchableOpacity>
 
       {hasNoIncomeData && (
-        <View style={{ backgroundColor: colors.blue + '12', borderRadius: 10, padding: 10, marginBottom: 8 }}>
-          <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600' }}>{i18n.t('addIncomeHint')}</Text>
-        </View>
+        <TouchableOpacity
+          onPress={onAddRecurring}
+          activeOpacity={0.7}
+          style={{ backgroundColor: colors.blue + '12', borderRadius: 10, padding: 10, marginBottom: 8, flexDirection: i18n.row(), alignItems: 'center', gap: 6 }}
+        >
+          <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600', flex: 1 }}>{i18n.t('addIncomeHint')}</Text>
+          <Feather name="chevron-right" size={14} color={colors.blue} />
+        </TouchableOpacity>
       )}
 
       {isCrisis && !hasNoIncomeData && (
