@@ -120,6 +120,7 @@ const notificationService = {
           title: 'Qaizo',
           body: i18n.t('streakAtRisk'),
           data: { type: 'streak_reminder' },
+          categoryIdentifier: 'quick_add',
         },
         trigger: {
           type: 'daily',
@@ -166,6 +167,7 @@ const notificationService = {
           title: i18n.t('weeklySummaryTitle'),
           body,
           data: { type: 'weekly_summary' },
+          categoryIdentifier: 'quick_add',
         },
         trigger: {
           type: 'weekly',
@@ -193,6 +195,26 @@ const notificationService = {
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
       });
+    }
+  },
+
+  // Настроить категории с кнопками действий (+ Доходы / + Расходы)
+  async setupNotificationCategories() {
+    try {
+      await Notifications.setNotificationCategoryAsync('quick_add', [
+        {
+          identifier: 'add_income',
+          buttonTitle: '+ ' + i18n.t('income'),
+          options: { opensAppToForeground: true },
+        },
+        {
+          identifier: 'add_expense',
+          buttonTitle: '+ ' + i18n.t('expenseType'),
+          options: { opensAppToForeground: true },
+        },
+      ]);
+    } catch (e) {
+      if (__DEV__) console.error('setupNotificationCategories:', e);
     }
   },
 };

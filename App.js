@@ -19,6 +19,7 @@ try {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
+import * as Notifications from 'expo-notifications';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, I18nManager, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -98,6 +99,7 @@ function AppInner() {
   const [user, setUser] = useState(null);
   const [authSkipped, setAuthSkipped] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const navTheme = {
     ...DefaultTheme,
@@ -178,6 +180,7 @@ function AppInner() {
       // Инициализация уведомлений
       try {
         await notificationService.setupAndroidChannel();
+        await notificationService.setupNotificationCategories();
         const granted = await notificationService.requestPermission();
         if (granted) {
           await notificationService.scheduleRecurringNotifications();
@@ -185,6 +188,14 @@ function AppInner() {
           await notificationService.scheduleWeeklySummary();
         }
       } catch (e) {}
+
+      // Слушатель кнопок действий в уведомлениях
+      const notifSub = Notifications.addNotificationResponseReceivedListener(response => {
+        const action = response.actionIdentifier;
+        if (action === 'add_income' || action === 'add_expense') {
+          setPendingAction(action);
+        }
+      });
 
       // Check PIN lock
       const pinOn = await securityService.isPinEnabled();
@@ -206,6 +217,7 @@ function AppInner() {
     return () => {
       if (unsubAuth) unsubAuth();
       appStateSub.remove();
+      notifSub?.remove?.();
     };
   }, []);
 
@@ -280,7 +292,7 @@ function AppInner() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavigationContainer theme={navTheme} key={`nav-${themeKey}`}>
         <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
-        <AppNavigator />
+        <AppNavigator pendingAction={pendingAction} onPendingActionHandled={() => setPendingAction(null)} />
       </NavigationContainer>
     </GestureHandlerRootView>
     </SafeAreaProvider>

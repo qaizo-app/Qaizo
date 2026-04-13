@@ -79,7 +79,7 @@ const ADD_MENU = [
   { key: 'scanReceipt',     icon: 'camera',    color: colors.teal },
 ];
 
-export default function AppNavigator() {
+export default function AppNavigator({ pendingAction, onPendingActionHandled }) {
   const [, setLangVer] = useState(0);
   useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
   const insets = useSafeAreaInsets();
@@ -90,6 +90,14 @@ export default function AppNavigator() {
   // Add menu state
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [addInitialType, setAddInitialType] = useState('expense');
+
+  useEffect(() => {
+    if (!pendingAction) return;
+    if (pendingAction === 'add_income') { setAddInitialType('income'); setShowAdd(true); }
+    else if (pendingAction === 'add_expense') { setAddInitialType('expense'); setShowAdd(true); }
+    onPendingActionHandled?.();
+  }, [pendingAction]);
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -338,7 +346,7 @@ export default function AppNavigator() {
       )}
 
       {/* Global Modals */}
-      <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} />
+      <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} initialType={addInitialType} />
       <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSave={() => setShowSmartInput(false)} />
       <AddRecurringModal visible={showRecurring} onClose={() => setShowRecurring(false)} onSave={() => setShowRecurring(false)} />
       <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />

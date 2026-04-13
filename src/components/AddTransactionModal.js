@@ -15,8 +15,12 @@ import SwipeModal from './SwipeModal';
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
 const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','other_income','transfer'].includes(k));
 
-export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount }) {
-  const [type, setType] = useState('expense');
+export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount, initialType }) {
+  const [type, setType] = useState(initialType || 'expense');
+
+  useEffect(() => {
+    if (visible && initialType) setType(initialType);
+  }, [visible, initialType]);
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('food');
   const [recipient, setRecipient] = useState('');
