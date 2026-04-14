@@ -335,6 +335,7 @@ export default {
   noTemplates: 'אין תבניות',
   aboutText: 'ניהול פיננסי חכם עם בינה מלאכותית.\nכל יום — חכם יותר.',
   notFinancialAdvice: 'האפליקציה אינה מספקת ייעוץ פיננסי מקצועי. התובנות הן לצרכי מעקב בלבד.',
+  sentryTestSent: 'דוח בדיקה נשלח ל-Sentry',
   privacyPolicy: 'מדיניות פרטיות',
   termsOfService: 'תנאי שימוש',
   help: 'עזרה',

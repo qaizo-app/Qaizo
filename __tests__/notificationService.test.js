@@ -241,6 +241,18 @@ describe('notificationService', () => {
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
+  // ─── setupNotificationCategories ────────────
+  test('setupNotificationCategories creates quick_add category with actions', async () => {
+    await notificationService.setupNotificationCategories();
+    expect(Notifications.setNotificationCategoryAsync).toHaveBeenCalledWith(
+      'quick_add',
+      expect.arrayContaining([
+        expect.objectContaining({ identifier: 'add_income', options: { opensAppToForeground: true } }),
+        expect.objectContaining({ identifier: 'add_expense', options: { opensAppToForeground: true } }),
+      ]),
+    );
+  });
+
   test('scheduleWeeklySummary computes diff between weeks', async () => {
     Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
 

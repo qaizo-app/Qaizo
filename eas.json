@@ -39,7 +39,7 @@
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:568492177874:web:019151972555cba53b700b",
         "EXPO_PUBLIC_GEMINI_API_KEY": "SET_VIA_EAS_SECRETS",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com",
-        "EXPO_PUBLIC_SENTRY_DSN_DISABLED": "will re-enable when auth token is configured"
+        "EXPO_PUBLIC_SENTRY_DSN": "SET_VIA_EAS_SECRETS"
       },
       "android": {
         "buildType": "app-bundle"

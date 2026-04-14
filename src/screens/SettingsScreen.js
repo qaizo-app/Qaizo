@@ -1,9 +1,10 @@
 // src/screens/SettingsScreen.js
 // Добавлена кнопка Категории → открывает CategoriesScreen
 import { Feather } from '@expo/vector-icons';
+import * as Sentry from '@sentry/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
@@ -34,6 +35,8 @@ export default function SettingsScreen() {
   const [langVersion, setLangVersion] = useState(0);
   const currentUser = authService.getCurrentUser();
   const toast = useToast();
+  const versionTapCount = useRef(0);
+  const versionTapTimer = useRef(null);
   const styles = createStyles();
 
   // Загрузить weekStart + PIN status
@@ -429,7 +432,16 @@ export default function SettingsScreen() {
             <Text style={styles.sectionText}>Qaizo</Text>
           </View>
           <View style={styles.sectionRight}>
-            <Text style={styles.sectionValue}>v1.0.0</Text>
+            <Text style={styles.sectionValue} onPress={() => {
+              versionTapCount.current++;
+              clearTimeout(versionTapTimer.current);
+              versionTapTimer.current = setTimeout(() => { versionTapCount.current = 0; }, 2000);
+              if (versionTapCount.current >= 5) {
+                versionTapCount.current = 0;
+                Sentry.captureException(new Error('Sentry test crash from Settings'));
+                toast.show(i18n.t('sentryTestSent'));
+              }
+            }}>v1.0.0</Text>
             <Feather name={openSection === 'about' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
           </View>
         </TouchableOpacity>

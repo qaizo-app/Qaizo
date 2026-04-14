@@ -338,6 +338,7 @@ export default {
   noTemplates: 'No templates yet',
   aboutText: 'AI-powered finance management.\nSmarter every day.',
   notFinancialAdvice: 'This app does not provide professional financial advice. Insights are for tracking purposes only.',
+  sentryTestSent: 'Test report sent to Sentry',
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
   help: 'Help',
