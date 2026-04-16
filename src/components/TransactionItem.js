@@ -15,6 +15,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
   const swipeRef = useRef(null);
   const styles = createStyles();
   const isTransfer = !!transaction.isTransfer;
+  const isMergedTransfer = !!transaction._mergedTransfer;
   const isIncome = transaction.type === 'income';
   const amountColor = isTransfer ? colors.blue : isIncome ? colors.green : colors.red;
 
@@ -55,11 +56,11 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
         <View style={styles.info}>
           <Text style={styles.category} numberOfLines={1}>{transaction.categoryName || getCatName(transaction.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
           <Text style={styles.note} numberOfLines={1}>
-            {transaction.note || ''}
+            {isMergedTransfer ? `${transaction._fromAccountName} → ${transaction._toAccountName}` : (transaction.note || '')}
           </Text>
         </View>
         <View style={styles.amountContainer}>
-          <Amount value={isIncome ? transaction.amount : isTransfer ? transaction.amount : -transaction.amount} sign={!isTransfer} style={styles.amount} color={amountColor} />
+          <Amount value={isMergedTransfer ? -transaction.amount : isIncome ? transaction.amount : isTransfer ? transaction.amount : -transaction.amount} sign={isMergedTransfer || !isTransfer} style={styles.amount} color={amountColor} />
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
         </View>
       </View>

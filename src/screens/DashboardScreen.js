@@ -246,7 +246,8 @@ export default function DashboardScreen() {
   const totalIncome = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpense;
-  const recentTx = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || '')).slice(0, 3);
+  const recentTxRaw = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
+  const recentTx = mergeTransferPairs(recentTxRaw).slice(0, 3);
 
   // PIE CHART
   const catTotals = {};
@@ -803,3 +804,36 @@ const createSt = () => StyleSheet.create({
   milestoneBtn: { backgroundColor: colors.orange, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 12 },
   milestoneBtnTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });
+
+function mergeTransferPairs(txs) {
+  const pairMap = {};
+  for (const tx of txs) {
+    if (tx.isTransfer && tx.transferPairId) {
+      if (!pairMap[tx.transferPairId]) pairMap[tx.transferPairId] = {};
+      pairMap[tx.transferPairId][tx.type] = tx;
+    }
+  }
+  const skipIds = new Set();
+  const result = [];
+  for (const tx of txs) {
+    if (skipIds.has(tx.id)) continue;
+    if (tx.isTransfer && tx.transferPairId) {
+      const pair = pairMap[tx.transferPairId];
+      if (pair.expense && pair.income) {
+        skipIds.add(pair.expense.id);
+        skipIds.add(pair.income.id);
+        result.push({
+          ...pair.expense,
+          _mergedTransfer: true,
+          _fromAccountName: pair.income.recipient,
+          _toAccountName: pair.expense.recipient,
+        });
+      } else {
+        result.push(tx);
+      }
+    } else {
+      result.push(tx);
+    }
+  }
+  return result;
+}

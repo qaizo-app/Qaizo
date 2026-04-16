@@ -71,9 +71,10 @@ export default function TransactionsScreen({ route }) {
     setDateFrom(''); setDateTo(''); setSelCategories([]); setSelAccounts([]); setAmountMin(''); setAmountMax(''); setSelProjects([]);
   };
 
-  // Фильтр по типу
+  // Merge transfer pairs into single rows
   const sorted = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
-  let filtered = filter === 'all' ? sorted : sorted.filter(t => t.type === filter);
+  const merged = mergeTransferPairs(sorted);
+  let filtered = filter === 'all' ? merged : merged.filter(t => t.type === filter);
 
   // Поиск
   if (search.trim()) {
@@ -113,7 +114,7 @@ export default function TransactionsScreen({ route }) {
     if (!isNaN(max)) filtered = filtered.filter(t => t.amount <= max);
   }
 
-  const totalFiltered = filtered.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0);
+  const totalFiltered = filtered.reduce((s, t) => s + (t.isTransfer ? 0 : t.type === 'income' ? t.amount : -t.amount), 0);
 
   // Get unique categories from transactions for filter chips
   const usedCategories = [...new Set(transactions.map(t => t.categoryId))].filter(Boolean);
@@ -407,6 +408,39 @@ export default function TransactionsScreen({ route }) {
         onSelect={(d) => setDateTo(d)} selectedDate={dateTo} lang={lang} weekStart={weekStart} />
     </GestureHandlerRootView>
   );
+}
+
+function mergeTransferPairs(txs) {
+  const pairMap = {};
+  for (const tx of txs) {
+    if (tx.isTransfer && tx.transferPairId) {
+      if (!pairMap[tx.transferPairId]) pairMap[tx.transferPairId] = {};
+      pairMap[tx.transferPairId][tx.type] = tx;
+    }
+  }
+  const skipIds = new Set();
+  const result = [];
+  for (const tx of txs) {
+    if (skipIds.has(tx.id)) continue;
+    if (tx.isTransfer && tx.transferPairId) {
+      const pair = pairMap[tx.transferPairId];
+      if (pair.expense && pair.income) {
+        skipIds.add(pair.expense.id);
+        skipIds.add(pair.income.id);
+        result.push({
+          ...pair.expense,
+          _mergedTransfer: true,
+          _fromAccountName: pair.income.recipient,
+          _toAccountName: pair.expense.recipient,
+        });
+      } else {
+        result.push(tx);
+      }
+    } else {
+      result.push(tx);
+    }
+  }
+  return result;
 }
 
 function formatFilterDate(dateStr) {
