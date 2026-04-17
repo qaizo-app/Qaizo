@@ -246,7 +246,7 @@ export default {
   noUpcoming: 'אין תשלומים קרובים',
   recurringPayment: 'תשלום קבוע',
   oneTimePayment: 'תנועה חד פעמית',
-  freeMoneyToday: 'כסף פנוי להיום',
+  freeMoneyToday: 'תקציב יומי',
   daysLeft: 'ימים לסוף החודש',
   spentToday: 'הוצאות היום',
   savedYesterday: 'חסכת אתמול',

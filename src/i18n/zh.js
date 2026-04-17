@@ -244,7 +244,7 @@ export default {
   noUpcoming: '暂无即将到来的付款',
   recurringPayment: '定期付款',
   oneTimePayment: '一次性交易',
-  freeMoneyToday: '今日可用资金',
+  freeMoneyToday: '每日预算',
   daysLeft: '本月剩余天数',
   spentToday: '今日已花费',
   savedYesterday: '昨日节省',

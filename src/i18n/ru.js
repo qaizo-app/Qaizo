@@ -254,7 +254,7 @@ export default {
   noUpcoming: 'Нет предстоящих платежей',
   recurringPayment: 'Запланированный платёж',
   oneTimePayment: 'Разовая транзакция',
-  freeMoneyToday: 'Свободные деньги сегодня',
+  freeMoneyToday: 'Бюджет на день',
   daysLeft: 'дн. до конца месяца',
   spentToday: 'Потрачено сегодня',
   savedYesterday: 'Сэкономлено вчера',

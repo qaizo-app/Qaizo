@@ -244,7 +244,7 @@ export default {
   noUpcoming: '近日の支払いはありません',
   recurringPayment: '定期支払い',
   oneTimePayment: '一時取引',
-  freeMoneyToday: '今日の自由なお金',
+  freeMoneyToday: '今日の予算',
   daysLeft: '今月の残り日数',
   spentToday: '今日の支出',
   savedYesterday: '昨日の節約',

@@ -249,7 +249,7 @@ export default {
   noUpcoming: 'Sin pagos próximos',
   recurringPayment: 'Pago recurrente',
   oneTimePayment: 'Transacción única',
-  freeMoneyToday: 'Dinero libre hoy',
+  freeMoneyToday: 'Presupuesto diario',
   daysLeft: 'días restantes este mes',
   spentToday: 'Gastado hoy',
   savedYesterday: 'Ahorrado ayer',

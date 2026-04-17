@@ -243,7 +243,7 @@ export default {
   noUpcoming: 'कोई आगामी भुगतान नहीं',
   recurringPayment: 'आवर्ती भुगतान',
   oneTimePayment: 'एकमुश्त लेनदेन',
-  freeMoneyToday: 'आज का मुफ्त पैसा',
+  freeMoneyToday: 'दैनिक बजट',
   daysLeft: 'इस महीने के दिन शेष',
   spentToday: 'आज खर्च किया',
   savedYesterday: 'कल बचाया',

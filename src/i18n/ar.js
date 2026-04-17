@@ -243,7 +243,7 @@ export default {
   noUpcoming: 'لا توجد مدفوعات قادمة',
   recurringPayment: 'دفعة متكررة',
   oneTimePayment: 'معاملة لمرة واحدة',
-  freeMoneyToday: 'المال المتاح اليوم',
+  freeMoneyToday: 'الميزانية اليومية',
   daysLeft: 'أيام متبقية هذا الشهر',
   spentToday: 'المُنفَق اليوم',
   savedYesterday: 'وُفِّر أمس',

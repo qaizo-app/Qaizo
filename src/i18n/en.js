@@ -248,7 +248,7 @@ export default {
   noUpcoming: 'No upcoming payments',
   recurringPayment: 'Recurring payment',
   oneTimePayment: 'One-time transaction',
-  freeMoneyToday: 'Free money today',
+  freeMoneyToday: 'Daily budget',
   daysLeft: 'days left this month',
   spentToday: 'Spent today',
   savedYesterday: 'Saved yesterday',
