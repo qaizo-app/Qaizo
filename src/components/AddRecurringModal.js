@@ -153,7 +153,18 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
   return (
     <>
-    <SwipeModal visible={visible} onClose={onClose}>
+    <SwipeModal visible={visible} onClose={onClose} footer={({ close }) => (
+        <View style={st.btnRow}>
+          <TouchableOpacity style={st.cancelBtn} onPress={close}>
+            <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
+            onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
+            <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
+            <Text style={st.saveTxt}>{i18n.t('save')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}>
       {({ close }) => (
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={st.title}>{isEdit ? i18n.t('edit') : i18n.t('newRecurring')}</Text>
@@ -176,8 +187,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Сумма */}
           <View style={st.amtRow}>
-            <Text style={[st.cur, { color: tc }]}>{sym()}</Text>
-            <TextInput style={st.amtIn} value={amount} onChangeText={setAmount}
+            <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
+            <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32) }]} value={amount} onChangeText={setAmount}
               placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
           </View>
 
@@ -248,18 +259,6 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               thumbColor={autoConfirm ? tc : colors.textMuted} />
           </View>
 
-          {/* Кнопки */}
-          <View style={st.btnRow}>
-            <TouchableOpacity style={st.cancelBtn} onPress={close}>
-              <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
-              onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
-              <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
-              <Text style={st.saveTxt}>{i18n.t('save')}</Text>
-            </TouchableOpacity>
-          </View>
-
           <SchedulePickerModal
             visible={showSchedule}
             onClose={() => setShowSchedule(false)}
@@ -278,6 +277,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
     </>
   );
+}
+
+function amtFont(val, base) {
+  const len = (val || '').length;
+  if (len <= 4) return base;
+  if (len <= 6) return Math.round(base * 0.8);
+  return Math.round(base * 0.65);
 }
 
 const createSt = () => StyleSheet.create({

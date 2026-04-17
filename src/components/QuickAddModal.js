@@ -104,10 +104,10 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
               {/* Сумма */}
               <View style={st.inputRow}>
-                <Text style={[st.currency, { color: cfg.color }]}>{sym()}</Text>
+                <Text style={[st.currency, { color: cfg.color, fontSize: amtFont(amount, 24) }]}>{sym()}</Text>
                 <TextInput
                   ref={inputRef}
-                  style={st.input}
+                  style={[st.input, { fontSize: amtFont(amount, 24) }]}
                   value={amount}
                   onChangeText={setAmount}
                   keyboardType="decimal-pad"
@@ -156,6 +156,13 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
       </KeyboardAvoidingView>
     </Modal>
   );
+}
+
+function amtFont(val, base) {
+  const len = (val || '').length;
+  if (len <= 4) return base;
+  if (len <= 6) return Math.round(base * 0.8);
+  return Math.round(base * 0.65);
 }
 
 const createSt = () => StyleSheet.create({

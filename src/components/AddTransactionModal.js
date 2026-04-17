@@ -142,7 +142,18 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
 
   return (
     <>
-      <SwipeModal visible={visible} onClose={onClose}>
+      <SwipeModal visible={visible} onClose={onClose} footer={({ close }) => (
+          <View style={st.btnRow}>
+            <TouchableOpacity style={st.cancelBtn} onPress={close}>
+              <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
+              onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
+              <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
+              <Text style={st.saveTxt}>{i18n.t('save')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}>
         {({ close }) => (
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={st.title}>{title}</Text>
@@ -164,8 +175,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             </View>
 
             <View style={st.amtRow}>
-              <Text style={[st.cur, { color: tc }]}>{sym()}</Text>
-              <TextInput style={st.amtIn} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
+              <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
+              <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32) }]} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
               <TouchableOpacity style={st.calcBtn} onPress={() => setShowCalc(true)}>
                 <MaterialCommunityIcons name="calculator-variant-outline" size={18} color={colors.textDim} />
               </TouchableOpacity>
@@ -388,16 +399,6 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               )}
             </View>
 
-            <View style={st.btnRow}>
-              <TouchableOpacity style={st.cancelBtn} onPress={close}>
-                <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
-                onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
-                <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
-                <Text style={st.saveTxt}>{i18n.t('save')}</Text>
-              </TouchableOpacity>
-            </View>
           </ScrollView>
         )}
       </SwipeModal>
@@ -415,6 +416,13 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         onResult={(val) => setAmount(val)} />
     </>
   );
+}
+
+function amtFont(val, base) {
+  const len = (val || '').length;
+  if (len <= 4) return base;
+  if (len <= 6) return Math.round(base * 0.8);
+  return Math.round(base * 0.65);
 }
 
 const createSt = () => StyleSheet.create({

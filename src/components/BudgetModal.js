@@ -87,10 +87,10 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
 
               {/* Поле ввода */}
               <View style={st.inputRow}>
-                <Text style={st.currency}>{sym()}</Text>
+                <Text style={[st.currency, { fontSize: amtFont(value, 20) }]}>{sym()}</Text>
                 <TextInput
                   ref={inputRef}
-                  style={st.input}
+                  style={[st.input, { fontSize: amtFont(value, 20) }]}
                   value={value}
                   onChangeText={setValue}
                   placeholder={i18n.t('budgetPlaceholder')}
@@ -126,6 +126,13 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
       </KeyboardAvoidingView>
     </Modal>
   );
+}
+
+function amtFont(val, base) {
+  const len = (val || '').length;
+  if (len <= 4) return base;
+  if (len <= 6) return Math.round(base * 0.8);
+  return Math.round(base * 0.65);
 }
 
 const createSt = () => StyleSheet.create({

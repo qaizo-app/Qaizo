@@ -239,8 +239,8 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
               {/* Amount */}
               <Text style={st.label}>{i18n.t('amount')}</Text>
               <View style={st.amountRow}>
-                <Text style={st.currency}>{sym()}</Text>
-                <TextInput style={st.amountInput} value={amount} onChangeText={setAmount}
+                <Text style={[st.currency, { fontSize: amtFont(amount, 24) }]}>{sym()}</Text>
+                <TextInput style={[st.amountInput, { fontSize: amtFont(amount, 24) }]} value={amount} onChangeText={setAmount}
                   keyboardType="decimal-pad" />
               </View>
 
@@ -336,6 +336,13 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
       onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={i18n.getLanguage()} />
   </>
   );
+}
+
+function amtFont(val, base) {
+  const len = (val || '').length;
+  if (len <= 4) return base;
+  if (len <= 6) return Math.round(base * 0.8);
+  return Math.round(base * 0.65);
 }
 
 const createSt = () => StyleSheet.create({
