@@ -161,8 +161,9 @@ export default function DashboardScreen() {
       settingsUpdates.revealedWidgets = [...revealed];
     }
 
-    // Show AI hint on first launch
-    if (!settings.aiHintShown) {
+    // Show AI hint for first 2 launches, then hide forever
+    const hintCount = settings.aiHintCount || 0;
+    if (hintCount < 2) {
       setShowAiHint(true);
       Animated.loop(
         Animated.sequence([
@@ -171,7 +172,7 @@ export default function DashboardScreen() {
         ]),
         { iterations: 4 }
       ).start();
-      settingsUpdates.aiHintShown = true;
+      settingsUpdates.aiHintCount = hintCount + 1;
     }
 
     // Save all changes at once to avoid race conditions
@@ -393,11 +394,6 @@ export default function DashboardScreen() {
               <Text style={st.logo}>Q<Animated.Text style={{ color: colors.green, opacity: showAiHint ? aiGlow.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) : 1 }}>ai</Animated.Text>zo</Text>
             </View>
             <Text style={st.subtitle}>{dateStr}</Text>
-            {showAiHint && (
-              <View style={st.aiHint}>
-                <Text style={st.aiHintText} numberOfLines={2}>{i18n.t('aiHint')}</Text>
-              </View>
-            )}
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
           <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
@@ -418,6 +414,17 @@ export default function DashboardScreen() {
           </TouchableOpacity>
           </View>
         </View>
+
+        {showAiHint && (
+          <TouchableOpacity style={st.aiHintBanner} activeOpacity={0.8}
+            onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }}>
+            <Feather name="message-circle" size={16} color="#fff" />
+            <Text style={st.aiHintText} numberOfLines={1}>{i18n.t('aiHint')}</Text>
+            <TouchableOpacity onPress={() => setShowAiHint(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
 
         {dashLayout.map(block => {
           if (!block.visible) return null;
@@ -741,8 +748,8 @@ const createSt = () => StyleSheet.create({
   logoImg: { width: 38, height: 38, borderRadius: 10 },
   logo: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: -1 },
   subtitle: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
-  aiHint: { backgroundColor: colors.green, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginTop: 6 },
-  aiHintText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  aiHintBanner: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.green, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginHorizontal: 24, marginBottom: 8 },
+  aiHintText: { flex: 1, color: '#fff', fontSize: 13, fontWeight: '600' },
   profileBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder, justifyContent: 'center', alignItems: 'center' },
   empty: { alignItems: 'center', paddingVertical: 36 },
   emptyText: { color: colors.textMuted, fontSize: 14, fontWeight: '600', marginTop: 12 },
