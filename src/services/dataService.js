@@ -9,6 +9,13 @@ import {
 import { db } from '../config/firebase';
 import authService from './authService';
 
+// ─── Кэш транзакций (чтобы не загружать 14K+ из Firestore каждый раз) ──
+let _txCache = null;
+let _txCacheTime = 0;
+const TX_CACHE_TTL = 30000; // 30 секунд
+
+function invalidateTxCache() { _txCache = null; _txCacheTime = 0; }
+
 // ─── Ключи для AsyncStorage (гостевой режим) ─────────────
 const KEYS = {
   TRANSACTIONS: 'qaizo_transactions',
@@ -158,17 +165,27 @@ async function updateAccountBalance(accountId, amount, type) {
 const dataService = {
 
   // ─── TRANSACTIONS ────────────────────────────────────────
-  async getTransactions() {
+  async getTransactions(forceRefresh = false) {
+    if (!forceRefresh && _txCache && (Date.now() - _txCacheTime < TX_CACHE_TTL)) {
+      return _txCache;
+    }
     const uid = getUid();
-    if (uid) return getColDocs('transactions');
-    try {
-      const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
-      const txs = data ? JSON.parse(data) : [];
-      return txs;
-    } catch (e) { if (__DEV__) console.error('getTransactions error:', e); return []; }
+    let txs;
+    if (uid) {
+      txs = await getColDocs('transactions');
+    } else {
+      try {
+        const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
+        txs = data ? JSON.parse(data) : [];
+      } catch (e) { if (__DEV__) console.error('getTransactions error:', e); txs = []; }
+    }
+    _txCache = txs;
+    _txCacheTime = Date.now();
+    return txs;
   },
 
   async addTransaction(transaction) {
+    invalidateTxCache();
     const uid = getUid();
     const newTx = { ...transaction, createdAt: new Date().toISOString() };
     try {
@@ -186,6 +203,7 @@ const dataService = {
   },
 
   async deleteTransaction(id) {
+    invalidateTxCache();
     const uid = getUid();
     try {
       if (uid) {
@@ -236,6 +254,7 @@ const dataService = {
   },
 
   async updateTransaction(id, changes) {
+    invalidateTxCache();
     const uid = getUid();
     try {
       if (uid) {

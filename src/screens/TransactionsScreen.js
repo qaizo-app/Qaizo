@@ -3,7 +3,7 @@
 // Фильтры: тип, дата, категория, счёт, диапазон сумм
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -11,6 +11,8 @@ import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
 import DatePickerModal from '../components/DatePickerModal';
 import TransactionItem from '../components/TransactionItem';
+import { getCachedGroups } from '../components/CategoryIcon';
+import { getCatName } from '../components/CategoryPickerModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
@@ -71,53 +73,46 @@ export default function TransactionsScreen({ route }) {
     setDateFrom(''); setDateTo(''); setSelCategories([]); setSelAccounts([]); setAmountMin(''); setAmountMax(''); setSelProjects([]);
   };
 
-  // Merge transfer pairs into single rows
-  const sorted = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
-  const merged = mergeTransferPairs(sorted);
-  let filtered = filter === 'all' ? merged : merged.filter(t => t.type === filter);
+  // Merge transfer pairs into single rows (memoized for 14K+ transactions)
+  const { filtered, totalFiltered, usedCategories } = useMemo(() => {
+    const sorted = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
+    const merged = mergeTransferPairs(sorted);
+    let f = filter === 'all' ? merged : merged.filter(t => t.type === filter);
 
-  // Поиск
-  if (search.trim()) {
-    const q = search.trim().toLowerCase();
-    filtered = filtered.filter(t => {
-      const catName = (i18n.t(t.categoryId) || '').toLowerCase();
-      const recipient = (t.recipient || '').toLowerCase();
-      const note = (t.note || '').toLowerCase();
-      const amount = String(t.amount);
-      const tags = (t.tags || []).join(' ').toLowerCase();
-      return catName.includes(q) || recipient.includes(q) || note.includes(q) || amount.includes(q) || tags.includes(q);
-    });
-  }
+    // Поиск
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      f = f.filter(t => {
+        const catName = (i18n.t(t.categoryId) || '').toLowerCase();
+        const recipient = (t.recipient || '').toLowerCase();
+        const note = (t.note || '').toLowerCase();
+        const amount = String(t.amount);
+        const tags = (t.tags || []).join(' ').toLowerCase();
+        return catName.includes(q) || recipient.includes(q) || note.includes(q) || amount.includes(q) || tags.includes(q);
+      });
+    }
 
-  // Advanced filters
-  if (dateFrom) {
-    filtered = filtered.filter(t => (t.date || t.createdAt || '').slice(0, 10) >= dateFrom);
-  }
-  if (dateTo) {
-    filtered = filtered.filter(t => (t.date || t.createdAt || '').slice(0, 10) <= dateTo);
-  }
-  if (selCategories.length > 0) {
-    filtered = filtered.filter(t => selCategories.includes(t.categoryId));
-  }
-  if (selAccounts.length > 0) {
-    filtered = filtered.filter(t => selAccounts.includes(t.account));
-  }
-  if (selProjects.length > 0) {
-    filtered = filtered.filter(t => selProjects.includes(t.projectId));
-  }
-  if (amountMin) {
-    const min = parseFloat((amountMin||'').replace(',', '.'));
-    if (!isNaN(min)) filtered = filtered.filter(t => t.amount >= min);
-  }
-  if (amountMax) {
-    const max = parseFloat((amountMax||'').replace(',', '.'));
-    if (!isNaN(max)) filtered = filtered.filter(t => t.amount <= max);
-  }
+    // Advanced filters — single pass when possible
+    if (dateFrom) f = f.filter(t => (t.date || t.createdAt || '').slice(0, 10) >= dateFrom);
+    if (dateTo) f = f.filter(t => (t.date || t.createdAt || '').slice(0, 10) <= dateTo);
+    if (selCategories.length > 0) f = f.filter(t => selCategories.includes(t.categoryId));
+    if (selAccounts.length > 0) f = f.filter(t => selAccounts.includes(t.account));
+    if (selProjects.length > 0) f = f.filter(t => selProjects.includes(t.projectId));
+    if (amountMin) {
+      const min = parseFloat((amountMin||'').replace(',', '.'));
+      if (!isNaN(min)) f = f.filter(t => t.amount >= min);
+    }
+    if (amountMax) {
+      const max = parseFloat((amountMax||'').replace(',', '.'));
+      if (!isNaN(max)) f = f.filter(t => t.amount <= max);
+    }
 
-  const totalFiltered = filtered.reduce((s, t) => s + (t.isTransfer ? 0 : t.type === 'income' ? t.amount : -t.amount), 0);
-
-  // Get unique categories from transactions for filter chips
-  const usedCategories = [...new Set(transactions.map(t => t.categoryId))].filter(Boolean);
+    return {
+      filtered: f,
+      totalFiltered: f.reduce((s, t) => s + (t.isTransfer ? 0 : t.type === 'income' ? t.amount : -t.amount), 0),
+      usedCategories: [...new Set(transactions.map(t => t.categoryId))].filter(Boolean),
+    };
+  }, [transactions, filter, search, dateFrom, dateTo, selCategories, selAccounts, selProjects, amountMin, amountMax]);
 
   const toggleCategory = (cid) => setSelCategories(prev => prev.includes(cid) ? prev.filter(c => c !== cid) : [...prev, cid]);
   const toggleAccount = (aid) => setSelAccounts(prev => prev.includes(aid) ? prev.filter(a => a !== aid) : [...prev, aid]);
@@ -376,6 +371,11 @@ export default function TransactionsScreen({ route }) {
             onDuplicate={handleDuplicate}
           />
         )}
+        initialNumToRender={15}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={100}
+        windowSize={5}
+        removeClippedSubviews={true}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -397,7 +397,7 @@ export default function TransactionsScreen({ route }) {
       <ConfirmModal
         visible={!!deleteTarget}
         title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${deleteTarget.categoryName || getCatName(deleteTarget.categoryId, getCachedGroups(), i18n.getLanguage())} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)}
       />

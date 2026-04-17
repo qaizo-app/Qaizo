@@ -2,8 +2,8 @@
 // Графики: pie chart категорий, bar chart по месяцам, бюджеты с прогресс-барами
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, AppState, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, AppState, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -239,78 +239,87 @@ export default function DashboardScreen() {
   const mNames = monthNames[lang] || monthNames.en;
   const dateStr = `${(fullMonths[lang] || fullMonths.en)[now.getMonth()]} ${now.getFullYear()}`;
 
-  const thisMonth = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-
-  const totalIncome = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const balance = totalIncome - totalExpense;
-  const recentTxRaw = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
-  const recentTx = mergeTransferPairs(recentTxRaw).slice(0, 3);
-
-  // PIE CHART
-  const catTotals = {};
-  thisMonth.filter(t => t.type === 'expense').forEach(t => {
-    const cat = t.categoryId || 'other';
-    catTotals[cat] = (catTotals[cat] || 0) + t.amount;
-  });
-  // Build category name lookup from transactions
-  const catNameMap = {};
-  thisMonth.forEach(t => { if (t.categoryName) catNameMap[t.categoryId] = t.categoryName; });
-
-  const pieData = Object.entries(catTotals)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([cat, amount]) => ({
-      name: catNameMap[cat] || i18n.t(cat),
-      amount,
-      color: categoryConfig[cat]?.color || '#64748b',
-      legendFontColor: colors.textDim,
-      legendFontSize: 11,
-    }));
-
-  // BAR CHART
-  const barData = [];
-  for (let i = 5; i >= 0; i--) {
-    const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const mTxs = transactions.filter(t => {
+  const { thisMonth, totalIncome, totalExpense, balance, recentTx, catTotals, catNameMap, pieData, barData, maxBar, budgetRows, totalBudgetLimit, totalBudgetSpent, totalBudgetPct, hasBudgets } = useMemo(() => {
+    const _thisMonth = transactions.filter(t => {
       const d = new Date(t.date || t.createdAt);
-      return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    barData.push({ month: (fullMonths[lang] || fullMonths.en)[m.getMonth()], income: inc, expense: exp });
-  }
-  const maxBar = Math.max(...barData.map(d => Math.max(d.income, d.expense)), 1);
 
-  // BUDGET DATA
-  const budgetRows = [];
-  Object.entries(budgets).forEach(([cat, limit]) => {
-    const spent = catTotals[cat] || 0;
-    budgetRows.push({ cat, spent, limit, hasBudget: true });
-  });
-  const remaining = 6 - budgetRows.length;
-  if (remaining > 0) {
-    Object.entries(catTotals)
-      .filter(([cat]) => !budgets[cat])
+    const _totalIncome = _thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const _totalExpense = _thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const _balance = _totalIncome - _totalExpense;
+    const recentTxRaw = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
+    const _recentTx = mergeTransferPairs(recentTxRaw).slice(0, 3);
+
+    // PIE CHART
+    const _catTotals = {};
+    _thisMonth.filter(t => t.type === 'expense').forEach(t => {
+      const cat = t.categoryId || 'other';
+      _catTotals[cat] = (_catTotals[cat] || 0) + t.amount;
+    });
+    const _catNameMap = {};
+    _thisMonth.forEach(t => { if (t.categoryName) _catNameMap[t.categoryId] = t.categoryName; });
+
+    const _pieData = Object.entries(_catTotals)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, remaining)
-      .forEach(([cat, spent]) => {
-        budgetRows.push({ cat, spent, limit: 0, hasBudget: false });
-      });
-  }
-  budgetRows.sort((a, b) => {
-    if (a.hasBudget && !b.hasBudget) return -1;
-    if (!a.hasBudget && b.hasBudget) return 1;
-    return b.spent - a.spent;
-  });
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        name: _catNameMap[cat] || i18n.t(cat),
+        amount,
+        color: categoryConfig[cat]?.color || '#64748b',
+        legendFontColor: colors.textDim,
+        legendFontSize: 11,
+      }));
 
-  const totalBudgetLimit = Object.values(budgets).reduce((s, v) => s + v, 0);
-  const totalBudgetSpent = Object.keys(budgets).reduce((s, cat) => s + (catTotals[cat] || 0), 0);
-  const totalBudgetPct = totalBudgetLimit > 0 ? Math.round((totalBudgetSpent / totalBudgetLimit) * 100) : 0;
-  const hasBudgets = Object.keys(budgets).length > 0;
+    // BAR CHART
+    const _barData = [];
+    for (let i = 5; i >= 0; i--) {
+      const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mTxs = transactions.filter(t => {
+        const d = new Date(t.date || t.createdAt);
+        return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear();
+      });
+      const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      _barData.push({ month: (fullMonths[lang] || fullMonths.en)[m.getMonth()], income: inc, expense: exp });
+    }
+    const _maxBar = Math.max(..._barData.map(d => Math.max(d.income, d.expense)), 1);
+
+    // BUDGET DATA
+    const _budgetRows = [];
+    Object.entries(budgets).forEach(([cat, limit]) => {
+      const spent = _catTotals[cat] || 0;
+      _budgetRows.push({ cat, spent, limit, hasBudget: true });
+    });
+    const remaining = 6 - _budgetRows.length;
+    if (remaining > 0) {
+      Object.entries(_catTotals)
+        .filter(([cat]) => !budgets[cat])
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, remaining)
+        .forEach(([cat, spent]) => {
+          _budgetRows.push({ cat, spent, limit: 0, hasBudget: false });
+        });
+    }
+    _budgetRows.sort((a, b) => {
+      if (a.hasBudget && !b.hasBudget) return -1;
+      if (!a.hasBudget && b.hasBudget) return 1;
+      return b.spent - a.spent;
+    });
+
+    const _totalBudgetLimit = Object.values(budgets).reduce((s, v) => s + v, 0);
+    const _totalBudgetSpent = Object.keys(budgets).reduce((s, cat) => s + (_catTotals[cat] || 0), 0);
+
+    return {
+      thisMonth: _thisMonth, totalIncome: _totalIncome, totalExpense: _totalExpense, balance: _balance,
+      recentTx: _recentTx, catTotals: _catTotals, catNameMap: _catNameMap, pieData: _pieData,
+      barData: _barData, maxBar: _maxBar, budgetRows: _budgetRows,
+      totalBudgetLimit: _totalBudgetLimit,
+      totalBudgetSpent: _totalBudgetSpent,
+      totalBudgetPct: _totalBudgetLimit > 0 ? Math.round((_totalBudgetSpent / _totalBudgetLimit) * 100) : 0,
+      hasBudgets: Object.keys(budgets).length > 0,
+    };
+  }, [transactions, budgets, lang]);
 
   // HANDLERS
   const handleDelete = async () => {
@@ -375,6 +384,7 @@ export default function DashboardScreen() {
     return (
       <View style={[st.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <Image source={require('../../assets/images/icon.png')} style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 16 }} />
+        <ActivityIndicator size="small" color={colors.green} style={{ marginBottom: 8 }} />
         <Text style={{ color: colors.textMuted, fontSize: 14 }}>{i18n.t('loading')}</Text>
       </View>
     );
@@ -516,7 +526,7 @@ export default function DashboardScreen() {
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${deleteTarget.categoryName || catNameMap[deleteTarget.categoryId] || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
       <ConfirmModal visible={deleteTemplate !== null} title={i18n.t('delete')}

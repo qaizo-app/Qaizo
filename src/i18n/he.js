@@ -661,7 +661,7 @@ export default {
   daysToNext: 'ימים לרמה הבאה',
   daysTo: 'ימים ל',
   last30days: '30 יום אחרונים',
-  loading: '...טוען',
+  loading: 'טוען...',
   shoppingList: 'רשימת קניות',
   mostBought: 'הכי נקנה',
   byPrice: 'לפי מחיר',

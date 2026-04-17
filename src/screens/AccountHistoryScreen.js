@@ -8,6 +8,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
 import ConfirmModal from '../components/ConfirmModal';
 import TransactionItem from '../components/TransactionItem';
+import { getCachedGroups } from '../components/CategoryIcon';
+import { getCatName } from '../components/CategoryPickerModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
@@ -105,6 +107,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
       </View>
 
       <FlatList data={withBalance} keyExtractor={item=>item.id} renderItem={renderItem}
+        initialNumToRender={15} maxToRenderPerBatch={10} updateCellsBatchingPeriod={100}
+        windowSize={5} removeClippedSubviews={true}
         contentContainerStyle={styles.list}
         ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={48} color={colors.textMuted} /><Text style={styles.emptyText}>{i18n.t('noTransactions')}</Text></View>} />
 
@@ -112,7 +116,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${deleteTarget.categoryName || getCatName(deleteTarget.categoryId, getCachedGroups(), i18n.getLanguage())} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </GestureHandlerRootView>
