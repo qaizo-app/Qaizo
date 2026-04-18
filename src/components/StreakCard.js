@@ -96,6 +96,7 @@ const createSt = () => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    direction: 'ltr',
   },
   fire: {
     fontSize: 22,
@@ -122,6 +123,7 @@ const createSt = () => StyleSheet.create({
   // Progress
   progressSection: {
     marginTop: 12,
+    direction: 'ltr',
   },
   progressBar: {
     height: 6,
@@ -142,7 +144,7 @@ const createSt = () => StyleSheet.create({
 
   // Today warning
   todayRow: {
-    flexDirection: 'row',
+    flexDirection: i18n.row(),
     alignItems: 'center',
     gap: 6,
     marginTop: 12,

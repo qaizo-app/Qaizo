@@ -660,7 +660,7 @@ export default {
   streakLegend: 'אגדה',
   startStreakSub: 'הוסף תנועה היום כדי להתחיל סטריק',
   daysToNext: 'ימים לרמה הבאה',
-  daysTo: 'ימים ל',
+  daysTo: 'ימים ל-',
   last30days: '30 יום אחרונים',
   loading: 'טוען...',
   shoppingList: 'רשימת קניות',
