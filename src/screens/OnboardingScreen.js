@@ -95,7 +95,7 @@ function SlideContent({ item, isActive }) {
       {/* Animated features */}
       <View style={st.featureList}>
         {item.features.map((fk, idx) => (
-          <Animated.View key={idx} style={[st.featureRow, { opacity: featureFades[idx], transform: [{ translateX: featureFades[idx].interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }]}>
+          <Animated.View key={idx} style={[st.featureRow, { opacity: featureFades[idx], transform: [{ translateX: featureFades[idx].interpolate({ inputRange: [0, 1], outputRange: [i18n.isRTL() ? -30 : 30, 0] }) }] }]}>
             <View style={[st.featureDot, { backgroundColor: item.color }]} />
             <Text style={st.featureText}>{i18n.t(fk)}</Text>
           </Animated.View>
@@ -120,8 +120,8 @@ const st = StyleSheet.create({
   title: { color: colors.text, fontSize: 26, fontWeight: '800', textAlign: 'center', marginBottom: 10, letterSpacing: -0.5 },
   subtitle: { color: colors.textDim, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
 
-  featureList: { alignSelf: 'stretch', gap: 14, alignItems: 'flex-start' },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  featureList: { alignSelf: 'stretch', gap: 14 },
+  featureRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 10 },
   featureDot: { width: 8, height: 8, borderRadius: 4 },
   featureText: { color: colors.textSecondary, fontSize: 15, fontWeight: '500', flexShrink: 1, textAlign: i18n.textAlign() },
 
@@ -212,7 +212,7 @@ export default function OnboardingScreen({ onDone }) {
             activeOpacity={0.8}
           >
             <Text style={st.nextTxt}>{isLast ? i18n.t('getStarted') : i18n.t('next')}</Text>
-            <Feather name={isLast ? 'check' : 'arrow-right'} size={18} color={colors.bg} style={{ marginStart: 6 }} />
+            <Feather name={isLast ? 'check' : (i18n.isRTL() ? 'arrow-left' : 'arrow-right')} size={18} color={colors.bg} style={{ marginStart: 6 }} />
           </TouchableOpacity>
         </View>
       </View>
