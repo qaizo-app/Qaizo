@@ -6,6 +6,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
       "android": {
         "buildType": "apk"
       }
@@ -13,6 +14,7 @@
     "preview": {
       "developmentClient": false,
       "distribution": "internal",
+      "channel": "preview",
       "env": {
         "EXPO_NO_DEV_CLIENT": "true",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAP3qu6pOnmc-JQxt4LtXMX_0UYUAnWYUE",
@@ -30,6 +32,7 @@
     },
     "production": {
       "distribution": "store",
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAP3qu6pOnmc-JQxt4LtXMX_0UYUAnWYUE",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "qaizo-ece06.firebaseapp.com",
