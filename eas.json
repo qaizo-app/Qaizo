@@ -15,7 +15,6 @@
       "distribution": "internal",
       "env": {
         "EXPO_NO_DEV_CLIENT": "true",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAP3qu6pOnmc-JQxt4LtXMX_0UYUAnWYUE",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "qaizo-ece06.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "qaizo-ece06",
