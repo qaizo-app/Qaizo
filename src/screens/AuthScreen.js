@@ -255,10 +255,9 @@ export default function AuthScreen({ onSkip }) {
             if (result.success) {
               let lang = 'en';
               try { lang = i18n.getLanguage(); } catch (e) {}
-              const { sendEmailVerification: sendVerif } = require('firebase/auth');
-              const { auth: fbAuth } = require('../config/firebase');
-              fbAuth.languageCode = lang;
-              await sendVerif(result.user);
+              const auth = require('@react-native-firebase/auth').default;
+              auth().languageCode = lang;
+              await result.user.sendEmailVerification();
               await authService.logout();
             }
           } catch (e) {}

@@ -3,20 +3,22 @@
 // React Native global flag — false in tests so error logging is silent
 global.__DEV__ = false;
 
-jest.mock('firebase/app', () => ({ initializeApp: jest.fn() }));
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(() => ({ currentUser: null })),
-  createUserWithEmailAndPassword: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  signInWithCredential: jest.fn(),
-  signOut: jest.fn(),
-  onAuthStateChanged: jest.fn(),
-  sendPasswordResetEmail: jest.fn(),
-  sendEmailVerification: jest.fn(() => Promise.resolve()),
-  updateProfile: jest.fn(),
-  deleteUser: jest.fn(),
-  GoogleAuthProvider: { credential: jest.fn() },
-}));
+jest.mock('@react-native-firebase/app', () => ({}));
+jest.mock('@react-native-firebase/auth', () => {
+  const authInstance = {
+    currentUser: null,
+    onAuthStateChanged: jest.fn(),
+    createUserWithEmailAndPassword: jest.fn(),
+    signInWithEmailAndPassword: jest.fn(),
+    signInWithCredential: jest.fn(),
+    signOut: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
+    languageCode: 'en',
+  };
+  const authFn = jest.fn(() => authInstance);
+  authFn.GoogleAuthProvider = { credential: jest.fn() };
+  return { __esModule: true, default: authFn };
+});
 jest.mock('expo-auth-session', () => ({
   makeRedirectUri: jest.fn(() => 'test://redirect'),
   AuthRequest: jest.fn(),
@@ -50,20 +52,23 @@ jest.mock('expo-sharing', () => ({
   isAvailableAsync: jest.fn(() => Promise.resolve(true)),
   shareAsync: jest.fn(() => Promise.resolve()),
 }));
-jest.mock('firebase/firestore', () => ({
-  initializeFirestore: jest.fn(() => ({})),
-  persistentLocalCache: jest.fn(),
-  collection: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  getDocs: jest.fn(),
-  addDoc: jest.fn(),
-  setDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
-  orderBy: jest.fn(),
-  query: jest.fn(),
-}));
+jest.mock('@react-native-firebase/firestore', () => {
+  const firestoreFn = jest.fn(() => ({
+    collection: jest.fn(() => ({
+      doc: jest.fn(() => ({
+        collection: jest.fn(),
+        get: jest.fn(),
+        set: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      })),
+      add: jest.fn(),
+      get: jest.fn(),
+      orderBy: jest.fn(() => ({ get: jest.fn() })),
+    })),
+  }));
+  return { __esModule: true, default: firestoreFn };
+});
 jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),
   getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),

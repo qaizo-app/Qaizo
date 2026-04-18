@@ -1,18 +1,6 @@
 // src/services/authService.js
-// Авторизация через Firebase Auth
-import {
-    GoogleAuthProvider,
-    createUserWithEmailAndPassword,
-    deleteUser,
-    onAuthStateChanged,
-    sendEmailVerification,
-    sendPasswordResetEmail,
-    signInWithCredential,
-    signInWithEmailAndPassword,
-    signOut,
-    updateProfile,
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
+// Авторизация через Firebase Auth (native SDK)
+import auth from '@react-native-firebase/auth';
 
 let GoogleSignin = null;
 try {
@@ -28,31 +16,31 @@ const authService = {
 
   // Текущий пользователь
   getCurrentUser() {
-    return auth.currentUser;
+    return auth().currentUser;
   },
 
   // UID текущего пользователя
   getUid() {
-    return auth.currentUser?.uid || null;
+    return auth().currentUser?.uid || null;
   },
 
   // Слушатель состояния авторизации
   onAuthChanged(callback) {
-    return onAuthStateChanged(auth, callback);
+    return auth().onAuthStateChanged(callback);
   },
 
   // Регистрация
   async register(email, password, displayName) {
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const cred = await auth().createUserWithEmailAndPassword(email, password);
       if (displayName) {
-        await updateProfile(cred.user, { displayName });
+        await cred.user.updateProfile({ displayName });
       }
       // Send verification email in app language
       let lang = 'en';
       try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
-      auth.languageCode = lang;
-      try { await sendEmailVerification(cred.user); } catch (e) {}
+      auth().languageCode = lang;
+      try { await cred.user.sendEmailVerification(); } catch (e) {}
       return { success: true, user: cred.user };
     } catch (e) {
       return { success: false, error: getErrorMessage(e.code) };
@@ -62,7 +50,7 @@ const authService = {
   // Вход
   async login(email, password) {
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const cred = await auth().signInWithEmailAndPassword(email, password);
       return { success: true, user: cred.user };
     } catch (e) {
       return { success: false, error: getErrorMessage(e.code) };
@@ -72,7 +60,7 @@ const authService = {
   // Выход
   async logout() {
     try {
-      await signOut(auth);
+      await auth().signOut();
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message };
@@ -89,8 +77,8 @@ const authService = {
       if (!idToken) {
         return { success: false, error: 'No ID token received' };
       }
-      const credential = GoogleAuthProvider.credential(idToken);
-      const cred = await signInWithCredential(auth, credential);
+      const credential = auth.GoogleAuthProvider.credential(idToken);
+      const cred = await auth().signInWithCredential(credential);
       return { success: true, user: cred.user };
     } catch (e) {
       if (e.code === 'SIGN_IN_CANCELLED') {
@@ -103,9 +91,9 @@ const authService = {
   // Удаление аккаунта (Apple requirement)
   async deleteAccount() {
     try {
-      const user = auth.currentUser;
+      const user = auth().currentUser;
       if (user) {
-        await deleteUser(user);
+        await user.delete();
       }
       return { success: true };
     } catch (e) {
@@ -118,8 +106,8 @@ const authService = {
     try {
       let lang = 'en';
       try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
-      auth.languageCode = lang;
-      await sendPasswordResetEmail(auth, email);
+      auth().languageCode = lang;
+      await auth().sendPasswordResetEmail(email);
       return { success: true };
     } catch (e) {
       return { success: false, error: getErrorMessage(e.code) };
@@ -139,7 +127,6 @@ function getErrorMessage(code) {
     'auth/too-many-requests': { ru: 'Слишком много попыток. Подождите', he: 'יותר מדי ניסיונות. המתן', en: 'Too many attempts. Please wait' },
     'auth/network-request-failed': { ru: 'Нет подключения к интернету', he: 'אין חיבור לאינטרנט', en: 'No internet connection' },
   };
-  // Определяем язык из i18n
   let lang = 'en';
   try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
   const msg = messages[code];

@@ -7,117 +7,117 @@ jest.mock('../src/services/authService', () => ({
   getUid: () => 'test-user',
 }));
 
-jest.mock('../src/config/firebase', () => ({
-  db: { name: 'mockDb' }, auth: { currentUser: { uid: 'test-user' } },
-}));
-
-// In-memory Firestore mock — must be defined inside jest.mock factory (Jest hoisting rule)
-jest.mock('firebase/firestore', () => {
+// In-memory Firestore mock for @react-native-firebase/firestore (chained API)
+jest.mock('@react-native-firebase/firestore', () => {
   const state = {
     collections: {}, // { 'users/test-user/transactions': [{id, ...data}] }
     docs: {},        // { 'users/test-user/budgets/data': { value: {...} } }
   };
 
-  const pathFromArgs = (args) => {
-    if (args[0] && args[0].name === 'mockDb') return args.slice(1).join('/');
-    return args.join('/');
-  };
-
-  const mod = {
-    __state: state, // expose for test reset
-    initializeFirestore: jest.fn(() => ({})),
-    persistentLocalCache: jest.fn(),
-    collection: jest.fn((...args) => ({ __type: 'collection', path: pathFromArgs(args) })),
-    doc: jest.fn((...args) => {
-      if (args[0] && args[0].__type === 'collection') {
-        return { __type: 'doc', path: `${args[0].path}/${args[1]}` };
-      }
-      return { __type: 'doc', path: pathFromArgs(args) };
-    }),
-    getDoc: jest.fn(async (ref) => {
-      // First try standalone docs (settings, budgets, etc)
-      let data = state.docs[ref.path];
-      // If not found, try as a doc inside a collection
-      if (data === undefined) {
-        const segments = ref.path.split('/');
-        const id = segments.pop();
-        const colPath = segments.join('/');
-        const col = state.collections[colPath];
-        if (col) {
-          const found = col.find(i => i.id === id);
-          if (found) {
-            const { id: _, ...rest } = found;
-            data = rest;
+  function makeDocRef(path) {
+    return {
+      __type: 'doc',
+      path,
+      collection: (subCol) => makeColRef(`${path}/${subCol}`),
+      get: async () => {
+        // First try standalone docs (settings, budgets, etc)
+        let data = state.docs[path];
+        // If not found, try as a doc inside a collection
+        if (data === undefined) {
+          const segments = path.split('/');
+          const id = segments.pop();
+          const colPath = segments.join('/');
+          const col = state.collections[colPath];
+          if (col) {
+            const found = col.find(i => i.id === id);
+            if (found) {
+              const { id: _, ...rest } = found;
+              data = rest;
+            }
           }
         }
-      }
-      return {
-        exists: () => data !== undefined,
-        data: () => data,
-        id: ref.path.split('/').pop(),
-      };
-    }),
-    getDocs: jest.fn(async (qOrCol) => {
-      const path = qOrCol.__type === 'query' ? qOrCol.colPath : qOrCol.path;
-      const items = state.collections[path] || [];
-      return {
-        docs: items.map(item => ({
-          id: item.id,
-          data: () => { const { id, ...rest } = item; return rest; },
-          ref: { __type: 'doc', path: `${path}/${item.id}` },
-        })),
-      };
-    }),
-    addDoc: jest.fn(async (col, data) => {
-      const id = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-      if (!state.collections[col.path]) state.collections[col.path] = [];
-      state.collections[col.path].push({ id, ...data });
-      return { id };
-    }),
-    setDoc: jest.fn(async (ref, data) => {
-      const segments = ref.path.split('/');
-      const id = segments.pop();
-      const colPath = segments.join('/');
-      // Determine if this is a "single doc" or "doc in collection" path
-      // Collection paths in Qaizo: users/{uid}/transactions, users/{uid}/accounts, users/{uid}/recurring, users/{uid}/investments
-      const isCollectionDoc = /^users\/[^/]+\/(transactions|accounts|recurring|investments)$/.test(colPath);
-      if (isCollectionDoc) {
-        if (!state.collections[colPath]) state.collections[colPath] = [];
-        const idx = state.collections[colPath].findIndex(i => i.id === id);
-        if (idx >= 0) state.collections[colPath][idx] = { id, ...data };
-        else state.collections[colPath].push({ id, ...data });
-      } else {
-        state.docs[ref.path] = data;
-      }
-    }),
-    updateDoc: jest.fn(async (ref, data) => {
-      const segments = ref.path.split('/');
-      const id = segments.pop();
-      const colPath = segments.join('/');
-      if (state.collections[colPath]) {
-        const idx = state.collections[colPath].findIndex(i => i.id === id);
-        if (idx >= 0) state.collections[colPath][idx] = { ...state.collections[colPath][idx], ...data };
-      } else if (state.docs[ref.path]) {
-        state.docs[ref.path] = { ...state.docs[ref.path], ...data };
-      }
-    }),
-    deleteDoc: jest.fn(async (ref) => {
-      const segments = ref.path.split('/');
-      const id = segments.pop();
-      const colPath = segments.join('/');
-      if (state.collections[colPath]) {
-        state.collections[colPath] = state.collections[colPath].filter(i => i.id !== id);
-      }
-      delete state.docs[ref.path];
-    }),
-    orderBy: jest.fn((field, direction) => ({ field, direction })),
-    query: jest.fn((col, ...mods) => ({ __type: 'query', colPath: col.path, mods })),
-  };
-  return mod;
+        return {
+          exists: data !== undefined,
+          data: () => data,
+          id: path.split('/').pop(),
+        };
+      },
+      set: async (data) => {
+        const segments = path.split('/');
+        const id = segments.pop();
+        const colPath = segments.join('/');
+        const isCollectionDoc = /^users\/[^/]+\/(transactions|accounts|recurring|investments)$/.test(colPath);
+        if (isCollectionDoc) {
+          if (!state.collections[colPath]) state.collections[colPath] = [];
+          const idx = state.collections[colPath].findIndex(i => i.id === id);
+          if (idx >= 0) state.collections[colPath][idx] = { id, ...data };
+          else state.collections[colPath].push({ id, ...data });
+        } else {
+          state.docs[path] = data;
+        }
+      },
+      update: async (data) => {
+        const segments = path.split('/');
+        const id = segments.pop();
+        const colPath = segments.join('/');
+        if (state.collections[colPath]) {
+          const idx = state.collections[colPath].findIndex(i => i.id === id);
+          if (idx >= 0) state.collections[colPath][idx] = { ...state.collections[colPath][idx], ...data };
+        } else if (state.docs[path]) {
+          state.docs[path] = { ...state.docs[path], ...data };
+        }
+      },
+      delete: async () => {
+        const segments = path.split('/');
+        const id = segments.pop();
+        const colPath = segments.join('/');
+        if (state.collections[colPath]) {
+          state.collections[colPath] = state.collections[colPath].filter(i => i.id !== id);
+        }
+        delete state.docs[path];
+      },
+    };
+  }
+
+  function makeColRef(path) {
+    return {
+      __type: 'collection',
+      path,
+      doc: (id) => makeDocRef(`${path}/${id}`),
+      add: async (data) => {
+        const id = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        if (!state.collections[path]) state.collections[path] = [];
+        state.collections[path].push({ id, ...data });
+        return { id };
+      },
+      get: async () => {
+        const items = state.collections[path] || [];
+        return {
+          docs: items.map(item => ({
+            id: item.id,
+            data: () => { const { id, ...rest } = item; return rest; },
+            ref: makeDocRef(`${path}/${item.id}`),
+          })),
+        };
+      },
+      orderBy: function (_field, _direction) {
+        // Return the same colRef so .get() still works on the chain
+        return this;
+      },
+    };
+  }
+
+  const firestoreFn = () => ({
+    collection: (name) => makeColRef(name),
+  });
+
+  firestoreFn.__state = state; // expose for test reset
+
+  return { __esModule: true, default: firestoreFn };
 });
 
 const dataService = require('../src/services/dataService').default;
-const firestoreMock = require('firebase/firestore');
+const firestoreMock = require('@react-native-firebase/firestore').default;
 
 beforeEach(() => {
   firestoreMock.__state.collections = {};

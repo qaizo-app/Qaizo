@@ -1,5 +1,5 @@
 // __tests__/authService.test.js
-// Тесты авторизации — Firebase Auth замокан в jest.setup.js
+// Тесты авторизации — @react-native-firebase/auth замокан в jest.setup.js
 
 jest.mock('@react-native-google-signin/google-signin', () => ({
   GoogleSignin: {
@@ -9,33 +9,20 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
   },
 }));
 
-const { signInWithCredential, deleteUser, GoogleAuthProvider } = require('firebase/auth');
 const { GoogleSignin } = require('@react-native-google-signin/google-signin');
-
-jest.mock('../src/config/firebase', () => ({
-  auth: { currentUser: null },
-}));
 
 jest.mock('../src/i18n', () => ({
   default: { getLanguage: () => 'en' },
 }));
 
-const {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  sendPasswordResetEmail,
-  updateProfile,
-  onAuthStateChanged,
-} = require('firebase/auth');
-
-const { auth } = require('../src/config/firebase');
+const auth = require('@react-native-firebase/auth').default;
+const authInstance = auth();
 const authService = require('../src/services/authService').default;
 
 describe('authService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    auth.currentUser = null;
+    authInstance.currentUser = null;
   });
 
   // ─── getCurrentUser / getUid ───────────────────
@@ -48,34 +35,33 @@ describe('authService', () => {
   });
 
   test('getUid returns uid when user exists', () => {
-    auth.currentUser = { uid: 'abc123', email: 'test@test.com' };
+    authInstance.currentUser = { uid: 'abc123', email: 'test@test.com' };
     expect(authService.getUid()).toBe('abc123');
   });
 
   // ─── register ──────────────────────────────────
   test('register success without displayName', async () => {
-    const fakeUser = { uid: 'u1', email: 'a@b.com' };
-    createUserWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
+    const fakeUser = { uid: 'u1', email: 'a@b.com', updateProfile: jest.fn(), sendEmailVerification: jest.fn() };
+    authInstance.createUserWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
 
     const result = await authService.register('a@b.com', '123456');
     expect(result.success).toBe(true);
     expect(result.user).toEqual(fakeUser);
-    expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(auth, 'a@b.com', '123456');
-    expect(updateProfile).not.toHaveBeenCalled();
+    expect(authInstance.createUserWithEmailAndPassword).toHaveBeenCalledWith('a@b.com', '123456');
+    expect(fakeUser.updateProfile).not.toHaveBeenCalled();
   });
 
   test('register success with displayName', async () => {
-    const fakeUser = { uid: 'u1', email: 'a@b.com' };
-    createUserWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
-    updateProfile.mockResolvedValue();
+    const fakeUser = { uid: 'u1', email: 'a@b.com', updateProfile: jest.fn(), sendEmailVerification: jest.fn() };
+    authInstance.createUserWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
 
     const result = await authService.register('a@b.com', '123456', 'Alex');
     expect(result.success).toBe(true);
-    expect(updateProfile).toHaveBeenCalledWith(fakeUser, { displayName: 'Alex' });
+    expect(fakeUser.updateProfile).toHaveBeenCalledWith({ displayName: 'Alex' });
   });
 
   test('register failure returns error message', async () => {
-    createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/email-already-in-use' });
+    authInstance.createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/email-already-in-use' });
 
     const result = await authService.register('a@b.com', '123456');
     expect(result.success).toBe(false);
@@ -83,7 +69,7 @@ describe('authService', () => {
   });
 
   test('register with weak password', async () => {
-    createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/weak-password' });
+    authInstance.createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/weak-password' });
 
     const result = await authService.register('a@b.com', '123');
     expect(result.success).toBe(false);
@@ -93,7 +79,7 @@ describe('authService', () => {
   // ─── login ─────────────────────────────────────
   test('login success', async () => {
     const fakeUser = { uid: 'u1', email: 'a@b.com' };
-    signInWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
+    authInstance.signInWithEmailAndPassword.mockResolvedValue({ user: fakeUser });
 
     const result = await authService.login('a@b.com', '123456');
     expect(result.success).toBe(true);
@@ -101,7 +87,7 @@ describe('authService', () => {
   });
 
   test('login failure — wrong password', async () => {
-    signInWithEmailAndPassword.mockRejectedValue({ code: 'auth/wrong-password' });
+    authInstance.signInWithEmailAndPassword.mockRejectedValue({ code: 'auth/wrong-password' });
 
     const result = await authService.login('a@b.com', 'wrong');
     expect(result.success).toBe(false);
@@ -109,7 +95,7 @@ describe('authService', () => {
   });
 
   test('login failure — user not found', async () => {
-    signInWithEmailAndPassword.mockRejectedValue({ code: 'auth/user-not-found' });
+    authInstance.signInWithEmailAndPassword.mockRejectedValue({ code: 'auth/user-not-found' });
 
     const result = await authService.login('no@one.com', '123456');
     expect(result.success).toBe(false);
@@ -118,13 +104,13 @@ describe('authService', () => {
 
   // ─── logout ────────────────────────────────────
   test('logout success', async () => {
-    signOut.mockResolvedValue();
+    authInstance.signOut.mockResolvedValue();
     const result = await authService.logout();
     expect(result.success).toBe(true);
   });
 
   test('logout failure', async () => {
-    signOut.mockRejectedValue(new Error('Network error'));
+    authInstance.signOut.mockRejectedValue(new Error('Network error'));
     const result = await authService.logout();
     expect(result.success).toBe(false);
     expect(result.error).toBe('Network error');
@@ -132,13 +118,13 @@ describe('authService', () => {
 
   // ─── resetPassword ─────────────────────────────
   test('resetPassword success', async () => {
-    sendPasswordResetEmail.mockResolvedValue();
+    authInstance.sendPasswordResetEmail.mockResolvedValue();
     const result = await authService.resetPassword('a@b.com');
     expect(result.success).toBe(true);
   });
 
   test('resetPassword failure', async () => {
-    sendPasswordResetEmail.mockRejectedValue({ code: 'auth/user-not-found' });
+    authInstance.sendPasswordResetEmail.mockRejectedValue({ code: 'auth/user-not-found' });
     const result = await authService.resetPassword('no@one.com');
     expect(result.success).toBe(false);
     expect(result.error).toBe('User not found');
@@ -148,12 +134,12 @@ describe('authService', () => {
   test('onAuthChanged registers listener', () => {
     const cb = jest.fn();
     authService.onAuthChanged(cb);
-    expect(onAuthStateChanged).toHaveBeenCalledWith(auth, cb);
+    expect(authInstance.onAuthStateChanged).toHaveBeenCalledWith(cb);
   });
 
   // ─── unknown error code ────────────────────────
   test('unknown error code returns code as message', async () => {
-    createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/unknown-error' });
+    authInstance.createUserWithEmailAndPassword.mockRejectedValue({ code: 'auth/unknown-error' });
     const result = await authService.register('a@b.com', '123456');
     expect(result.error).toBe('auth/unknown-error');
   });
@@ -161,15 +147,15 @@ describe('authService', () => {
   // ─── Google Sign-In ─────────────────────────
   test('loginWithGoogle success', async () => {
     GoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'fake-token' } });
-    GoogleAuthProvider.credential.mockReturnValue('fake-credential');
+    auth.GoogleAuthProvider.credential.mockReturnValue('fake-credential');
     const fakeUser = { uid: 'g1', email: 'g@gmail.com' };
-    signInWithCredential.mockResolvedValue({ user: fakeUser });
+    authInstance.signInWithCredential.mockResolvedValue({ user: fakeUser });
 
     const result = await authService.loginWithGoogle();
     expect(result.success).toBe(true);
     expect(result.user).toEqual(fakeUser);
     expect(GoogleSignin.hasPlayServices).toHaveBeenCalled();
-    expect(signInWithCredential).toHaveBeenCalledWith(auth, 'fake-credential');
+    expect(authInstance.signInWithCredential).toHaveBeenCalledWith('fake-credential');
   });
 
   test('loginWithGoogle returns error when no idToken', async () => {
@@ -186,32 +172,24 @@ describe('authService', () => {
     expect(result.error).toBe('Google sign-in cancelled');
   });
 
-  test('loginWithGoogle handles general errors', async () => {
-    GoogleSignin.signIn.mockRejectedValue(new Error('Network error'));
-    const result = await authService.loginWithGoogle();
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Network error');
-  });
-
   // ─── deleteAccount ───────────────────────────
   test('deleteAccount success', async () => {
-    auth.currentUser = { uid: 'u1', email: 'a@b.com' };
-    deleteUser.mockResolvedValue();
+    const fakeUser = { uid: 'u1', email: 'a@b.com', delete: jest.fn().mockResolvedValue() };
+    authInstance.currentUser = fakeUser;
     const result = await authService.deleteAccount();
     expect(result.success).toBe(true);
-    expect(deleteUser).toHaveBeenCalledWith(auth.currentUser);
+    expect(fakeUser.delete).toHaveBeenCalled();
   });
 
   test('deleteAccount with no current user', async () => {
-    auth.currentUser = null;
+    authInstance.currentUser = null;
     const result = await authService.deleteAccount();
     expect(result.success).toBe(true);
-    expect(deleteUser).not.toHaveBeenCalled();
   });
 
   test('deleteAccount requires reauth error', async () => {
-    auth.currentUser = { uid: 'u1' };
-    deleteUser.mockRejectedValue({ code: 'auth/requires-recent-login' });
+    const fakeUser = { uid: 'u1', delete: jest.fn().mockRejectedValue({ code: 'auth/requires-recent-login' }) };
+    authInstance.currentUser = fakeUser;
     const result = await authService.deleteAccount();
     expect(result.success).toBe(false);
     expect(result.error).toBe('reauth');

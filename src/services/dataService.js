@@ -2,11 +2,7 @@
 // Firestore (залогинен) ←→ AsyncStorage (гостевой режим)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs,
-  orderBy, query, setDoc, updateDoc,
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
+import firestore from '@react-native-firebase/firestore';
 import authService from './authService';
 
 // ─── Ключи для AsyncStorage (гостевой режим) ─────────────
@@ -74,19 +70,24 @@ function getUid() {
 
 function userDoc(path) {
   const uid = getUid();
-  return doc(db, 'users', uid, ...path.split('/'));
+  const parts = path.split('/');
+  let ref = firestore().collection('users').doc(uid);
+  for (let i = 0; i < parts.length; i++) {
+    ref = i % 2 === 0 ? ref.collection(parts[i]) : ref.doc(parts[i]);
+  }
+  return ref;
 }
 
 function userCol(colName) {
   const uid = getUid();
-  return collection(db, 'users', uid, colName);
+  return firestore().collection('users').doc(uid).collection(colName);
 }
 
 // ─── Чтение / запись одного документа (settings, budgets, categories, tags) ──
 async function getDocData(colName, defaultVal) {
   try {
-    const snap = await getDoc(userDoc(colName + '/data'));
-    return snap.exists() ? snap.data().value : defaultVal;
+    const snap = await userDoc(colName + '/data').get();
+    return snap.exists ? snap.data().value : defaultVal;
   } catch (e) {
     if (__DEV__) console.error(`Firestore getDocData(${colName}):`, e);
     return defaultVal;
@@ -95,7 +96,7 @@ async function getDocData(colName, defaultVal) {
 
 async function setDocData(colName, value) {
   try {
-    await setDoc(userDoc(colName + '/data'), { value, updatedAt: new Date().toISOString() });
+    await userDoc(colName + '/data').set({ value, updatedAt: new Date().toISOString() });
     return true;
   } catch (e) {
     if (__DEV__) console.error(`Firestore setDocData(${colName}):`, e);
@@ -106,13 +107,11 @@ async function setDocData(colName, value) {
 // ─── Чтение / запись коллекции (transactions, accounts, investments, recurring) ──
 async function getColDocs(colName, defaultVal = []) {
   try {
-    const q = query(userCol(colName), orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
+    const snap = await userCol(colName).orderBy('createdAt', 'desc').get();
     return snap.docs.map(d => ({ ...d.data(), id: d.id }));
   } catch (e) {
-    // если orderBy не работает (нет индекса), пробуем без сортировки
     try {
-      const snap = await getDocs(userCol(colName));
+      const snap = await userCol(colName).get();
       const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       return items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     } catch (e2) {
@@ -127,13 +126,13 @@ async function updateAccountBalance(accountId, amount, type) {
   const uid = getUid();
   try {
     if (uid) {
-      const ref = doc(db, 'users', uid, 'accounts', accountId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
+      const ref = firestore().collection('users').doc(uid).collection('accounts').doc(accountId);
+      const snap = await ref.get();
+      if (snap.exists) {
         let bal = snap.data().balance || 0;
         if (type === 'income') bal += amount;
         else if (type === 'expense') bal -= amount;
-        await updateDoc(ref, { balance: bal });
+        await ref.update({ balance: bal });
       }
     } else {
       const data = await AsyncStorage.getItem(KEYS.ACCOUNTS);
@@ -173,7 +172,7 @@ const dataService = {
     const newTx = { ...transaction, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        const ref = await addDoc(userCol('transactions'), newTx);
+        const ref = await userCol('transactions').add(newTx);
         newTx.id = ref.id;
       } else {
         newTx.id = generateId();
@@ -189,21 +188,21 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        const ref = doc(db, 'users', uid, 'transactions', id);
-        const snap = await getDoc(ref);
-        const tx = snap.exists() ? { ...snap.data(), id } : null;
-        await deleteDoc(ref);
+        const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
+        const snap = await ref.get();
+        const tx = snap.exists ? { ...snap.data(), id } : null;
+        await ref.delete();
         if (tx && tx.account) {
           const reverseType = tx.type === 'income' ? 'expense' : 'income';
           await updateAccountBalance(tx.account, tx.amount, reverseType);
         }
         // Каскадное удаление парной транзакции перевода
         if (tx && tx.transferPairId) {
-          const allSnap = await getDocs(userCol('transactions'));
+          const allSnap = await userCol('transactions').get();
           const pair = allSnap.docs.find(d => d.data().transferPairId === tx.transferPairId && d.id !== id);
           if (pair) {
             const pairData = pair.data();
-            await deleteDoc(pair.ref);
+            await pair.ref.delete();
             if (pairData.account) {
               const pairReverse = pairData.type === 'income' ? 'expense' : 'income';
               await updateAccountBalance(pairData.account, pairData.amount, pairReverse);
@@ -239,10 +238,10 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        const ref = doc(db, 'users', uid, 'transactions', id);
-        const snap = await getDoc(ref);
-        const oldTx = snap.exists() ? { ...snap.data(), id } : null;
-        await updateDoc(ref, changes);
+        const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
+        const snap = await ref.get();
+        const oldTx = snap.exists ? { ...snap.data(), id } : null;
+        await ref.update(changes);
         // Пересчёт балансов
         if (oldTx && oldTx.account) {
           const reverseType = oldTx.type === 'income' ? 'expense' : 'income';
@@ -270,7 +269,7 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await getDocs(userCol('accounts'));
+        const snap = await userCol('accounts').get();
         const accs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
         return accs.length > 0 ? accs : DEFAULT_ACCOUNTS;
       } catch (e) { return DEFAULT_ACCOUNTS; }
@@ -286,12 +285,12 @@ const dataService = {
     if (uid) {
       try {
         // Перезаписываем все документы
-        const snap = await getDocs(userCol('accounts'));
-        const deletes = snap.docs.map(d => deleteDoc(d.ref));
+        const snap = await userCol('accounts').get();
+        const deletes = snap.docs.map(d => d.ref.delete());
         await Promise.all(deletes);
         const writes = accounts.map(a => {
           const { id, ...rest } = a;
-          return setDoc(doc(db, 'users', uid, 'accounts', id), rest);
+          return firestore().collection('users').doc(uid).collection('accounts').doc(id).set(rest);
         });
         await Promise.all(writes);
         return true;
@@ -306,7 +305,7 @@ const dataService = {
       if (uid) {
         const id = generateId();
         const { id: _, ...rest } = account;
-        await setDoc(doc(db, 'users', uid, 'accounts', id), { ...rest, createdAt: new Date().toISOString() });
+        await firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() });
         return { ...account, id };
       } else {
         const accounts = await this.getAccounts();
@@ -322,7 +321,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await updateDoc(doc(db, 'users', uid, 'accounts', id), changes);
+        await firestore().collection('users').doc(uid).collection('accounts').doc(id).update(changes);
       } else {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.map(a => a.id === id ? { ...a, ...changes } : a)));
@@ -335,7 +334,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await deleteDoc(doc(db, 'users', uid, 'accounts', id));
+        await firestore().collection('users').doc(uid).collection('accounts').doc(id).delete();
       } else {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.filter(a => a.id !== id)));
@@ -355,11 +354,11 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await getDocs(userCol('investments'));
-        await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+        const snap = await userCol('investments').get();
+        await Promise.all(snap.docs.map(d => d.ref.delete()));
         await Promise.all(investments.map(inv => {
           const { id, ...rest } = inv;
-          return setDoc(doc(db, 'users', uid, 'investments', id || generateId()), { ...rest, createdAt: rest.createdAt || new Date().toISOString() });
+          return firestore().collection('users').doc(uid).collection('investments').doc(id || generateId()).set({ ...rest, createdAt: rest.createdAt || new Date().toISOString() });
         }));
         return true;
       } catch (e) { return false; }
@@ -496,7 +495,7 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await getDocs(userCol('recurring'));
+        const snap = await userCol('recurring').get();
         const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
         return items.sort((a, b) => (a.nextDate || '').localeCompare(b.nextDate || ''));
       } catch (e) { return []; }
@@ -508,11 +507,11 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await getDocs(userCol('recurring'));
-        await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+        const snap = await userCol('recurring').get();
+        await Promise.all(snap.docs.map(d => d.ref.delete()));
         await Promise.all(items.map(r => {
           const { id, ...rest } = r;
-          return setDoc(doc(db, 'users', uid, 'recurring', id || generateId()), rest);
+          return firestore().collection('users').doc(uid).collection('recurring').doc(id || generateId()).set(rest);
         }));
         return true;
       } catch (e) { return false; }
@@ -525,7 +524,7 @@ const dataService = {
     const newItem = { ...item, completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        const ref = await addDoc(userCol('recurring'), newItem);
+        const ref = await userCol('recurring').add(newItem);
         newItem.id = ref.id;
       } else {
         newItem.id = generateId();
@@ -541,7 +540,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await updateDoc(doc(db, 'users', uid, 'recurring', id), changes);
+        await firestore().collection('users').doc(uid).collection('recurring').doc(id).update(changes);
       } else {
         const items = await this.getRecurring();
         await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items.map(r => r.id === id ? { ...r, ...changes } : r)));
@@ -554,7 +553,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await deleteDoc(doc(db, 'users', uid, 'recurring', id));
+        await firestore().collection('users').doc(uid).collection('recurring').doc(id).delete();
       } else {
         const items = await this.getRecurring();
         await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items.filter(r => r.id !== id)));
@@ -568,8 +567,8 @@ const dataService = {
       const uid = getUid();
       let rec;
       if (uid) {
-        const snap = await getDoc(doc(db, 'users', uid, 'recurring', id));
-        rec = snap.exists() ? { ...snap.data(), id } : null;
+        const snap = await firestore().collection('users').doc(uid).collection('recurring').doc(id).get();
+        rec = snap.exists ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
         rec = items.find(r => r.id === id);
@@ -611,8 +610,8 @@ const dataService = {
       const uid = getUid();
       let rec;
       if (uid) {
-        const snap = await getDoc(doc(db, 'users', uid, 'recurring', id));
-        rec = snap.exists() ? { ...snap.data(), id } : null;
+        const snap = await firestore().collection('users').doc(uid).collection('recurring').doc(id).get();
+        rec = snap.exists ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
         rec = items.find(r => r.id === id);
@@ -712,12 +711,12 @@ const dataService = {
       try {
         const collections = ['transactions', 'accounts', 'investments', 'recurring'];
         for (const col of collections) {
-          const snap = await getDocs(userCol(col));
-          await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+          const snap = await userCol(col).get();
+          await Promise.all(snap.docs.map(d => d.ref.delete()));
         }
         const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals'];
         for (const name of singleDocs) {
-          try { await deleteDoc(userDoc(name + '/data')); } catch (e) {}
+          try { await userDoc(name + '/data').delete(); } catch (e) {}
         }
         return true;
       } catch (e) { return false; }
@@ -744,20 +743,20 @@ const dataService = {
         if (data.transactions) {
           for (const tx of data.transactions) {
             const { id, ...rest } = tx;
-            await setDoc(doc(db, 'users', uid, 'transactions', id || generateId()), rest);
+            await firestore().collection('users').doc(uid).collection('transactions').doc(id || generateId()).set(rest);
           }
         }
         if (data.accounts) {
           for (const acc of data.accounts) {
             const { id, ...rest } = acc;
-            await setDoc(doc(db, 'users', uid, 'accounts', id || generateId()), rest);
+            await firestore().collection('users').doc(uid).collection('accounts').doc(id || generateId()).set(rest);
           }
         }
         if (data.investments) await this.saveInvestments(data.investments);
         if (data.recurring) {
           for (const r of data.recurring) {
             const { id, ...rest } = r;
-            await setDoc(doc(db, 'users', uid, 'recurring', id || generateId()), rest);
+            await firestore().collection('users').doc(uid).collection('recurring').doc(id || generateId()).set(rest);
           }
         }
         // Документы
