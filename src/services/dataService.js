@@ -4,7 +4,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs,
-  orderBy, query, setDoc, updateDoc,
+  setDoc, updateDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import authService from './authService';
@@ -115,19 +115,12 @@ async function setDocData(colName, value) {
 // ─── Чтение / запись коллекции (transactions, accounts, investments, recurring) ──
 async function getColDocs(colName, defaultVal = []) {
   try {
-    const q = query(userCol(colName), orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
-    return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    const snap = await getDocs(userCol(colName));
+    const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    return items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   } catch (e) {
-    // если orderBy не работает (нет индекса), пробуем без сортировки
-    try {
-      const snap = await getDocs(userCol(colName));
-      const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-      return items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-    } catch (e2) {
-      if (__DEV__) console.error(`Firestore getColDocs(${colName}):`, e2);
-      return defaultVal;
-    }
+    if (__DEV__) console.error(`Firestore getColDocs(${colName}):`, e);
+    return defaultVal;
   }
 }
 
