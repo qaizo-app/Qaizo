@@ -383,7 +383,7 @@ export default {
   noAccount: 'Pas de compte ?',
   hasAccount: 'Déjà un compte ?',
   rememberPassword: 'Vous vous souvenez du mot de passe ?',
-  continueWithout: 'Continuer sans se connecter',
+  continueWithout: 'Continuer sans inscription',
   continueWithGoogle: 'Continuer avec Google',
   resetSent: 'Lien de réinitialisation envoyé à votre e-mail',
   verifyEmailTitle: 'Vérifiez votre e-mail',

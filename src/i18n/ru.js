@@ -384,7 +384,7 @@ export default {
   noAccount: 'Нет аккаунта?',
   hasAccount: 'Уже есть аккаунт?',
   rememberPassword: 'Вспомнили пароль?',
-  continueWithout: 'Продолжить без входа',
+  continueWithout: 'Продолжить без регистрации',
   continueWithGoogle: 'Войти через Google',
   resetSent: 'Ссылка для сброса отправлена на email',
   verifyEmailTitle: 'Подтвердите email',

@@ -384,7 +384,7 @@ export default {
   noAccount: '没有账号？',
   hasAccount: '已有账号？',
   rememberPassword: '记起密码了？',
-  continueWithout: '不登录继续',
+  continueWithout: '不注册继续',
   continueWithGoogle: '使用Google继续',
   resetSent: '重置链接已发送至您的邮箱',
   verifyEmailTitle: '验证您的邮箱',

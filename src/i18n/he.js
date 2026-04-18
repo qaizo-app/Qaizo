@@ -378,7 +378,7 @@ export default {
   noAccount: 'אין חשבון?',
   hasAccount: 'כבר יש חשבון?',
   rememberPassword: 'נזכרת בסיסמה?',
-  continueWithout: 'המשך ללא כניסה',
+  continueWithout: 'המשך ללא הרשמה',
   continueWithGoogle: 'התחבר עם Google',
   resetSent: 'קישור לאיפוס נשלח למייל',
   verifyEmailTitle: 'אמת את האימייל שלך',

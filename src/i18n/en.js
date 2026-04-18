@@ -390,7 +390,7 @@ export default {
   noAccount: 'No account?',
   hasAccount: 'Already have an account?',
   rememberPassword: 'Remember password?',
-  continueWithout: 'Continue without signing in',
+  continueWithout: 'Continue without registration',
   continueWithGoogle: 'Continue with Google',
   resetSent: 'Reset link sent to your email',
   verifyEmailTitle: 'Verify your email',

@@ -384,7 +384,7 @@ export default {
   noAccount: 'アカウントがありませんか？',
   hasAccount: 'すでにアカウントをお持ちですか？',
   rememberPassword: 'パスワードを覚えていますか？',
-  continueWithout: 'サインインせずに続ける',
+  continueWithout: '登録せずに続ける',
   continueWithGoogle: 'Googleで続ける',
   resetSent: 'リセットリンクをメールに送信しました',
   verifyEmailTitle: 'メールを確認してください',
