@@ -116,7 +116,7 @@ export default function SetupWizardScreen({ onDone }) {
 
             <TouchableOpacity style={st.primaryBtn} onPress={handleSaveCurrency}>
               <Text style={st.primaryTxt}>{i18n.t('next')}</Text>
-              <Feather name="arrow-right" size={18} color={colors.bg} style={{ marginStart: 6 }} />
+              <Feather name={i18n.isRTL() ? 'arrow-left' : 'arrow-right'} size={18} color={colors.bg} style={{ marginStart: 6 }} />
             </TouchableOpacity>
           </View>
         )}
@@ -160,7 +160,7 @@ export default function SetupWizardScreen({ onDone }) {
             <TouchableOpacity style={[st.primaryBtn, { opacity: accName.trim() ? 1 : 0.4 }]}
               onPress={handleSaveAccount} disabled={!accName.trim()}>
               <Text style={st.primaryTxt}>{i18n.t('next')}</Text>
-              <Feather name="arrow-right" size={18} color={colors.bg} style={{ marginStart: 6 }} />
+              <Feather name={i18n.isRTL() ? 'arrow-left' : 'arrow-right'} size={18} color={colors.bg} style={{ marginStart: 6 }} />
             </TouchableOpacity>
           </View>
         )}
@@ -208,7 +208,7 @@ export default function SetupWizardScreen({ onDone }) {
               <TouchableOpacity style={[st.primaryBtn, { flex: 2, opacity: txAmount && parseFloat(txAmount.replace(',', '.')) > 0 ? 1 : 0.4 }]}
                 onPress={handleSaveTransaction} disabled={!txAmount || parseFloat(txAmount.replace(',', '.')) <= 0}>
                 <Text style={st.primaryTxt}>{i18n.t('next')}</Text>
-                <Feather name="arrow-right" size={18} color={colors.bg} style={{ marginStart: 6 }} />
+                <Feather name={i18n.isRTL() ? 'arrow-left' : 'arrow-right'} size={18} color={colors.bg} style={{ marginStart: 6 }} />
               </TouchableOpacity>
             </View>
           </View>
@@ -240,7 +240,7 @@ export default function SetupWizardScreen({ onDone }) {
 
             <TouchableOpacity style={st.primaryBtn} onPress={onDone}>
               <Text style={st.primaryTxt}>{i18n.t('getStarted')}</Text>
-              <Feather name="arrow-right" size={18} color={colors.bg} style={{ marginStart: 6 }} />
+              <Feather name={i18n.isRTL() ? 'arrow-left' : 'arrow-right'} size={18} color={colors.bg} style={{ marginStart: 6 }} />
             </TouchableOpacity>
           </View>
         )}

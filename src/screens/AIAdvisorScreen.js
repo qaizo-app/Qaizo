@@ -189,7 +189,7 @@ export default function AIAdvisorScreen() {
                   <Text style={st.cfLabel}>{i18n.t('upcoming')}</Text>
                   <Amount value={cashFlow.totalUpcoming} style={st.cfValue} color={colors.red} />
                 </View>
-                <Feather name="arrow-right" size={16} color={colors.textMuted} />
+                <Feather name={i18n.isRTL() ? 'arrow-left' : 'arrow-right'} size={16} color={colors.textMuted} />
                 <View style={st.cfItem}>
                   <Text style={st.cfLabel}>{i18n.t('projected')}</Text>
                   <Amount value={cashFlow.projectedBalance} style={st.cfValue} color={cashFlow.projectedBalance >= 0 ? colors.green : colors.red} />

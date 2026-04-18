@@ -415,7 +415,7 @@ export default {
   underBudget: 'בתקציב',
   streakAtRisk: 'הוסף תנועה כדי לשמור על הרצף!',
   streakTodayNotLogged: 'היום לא נרשם — הוסף תנועה!',
-  aiHint: 'לחץ כדי לשוחח עם AI — המידע שלך נשאר פרטי',
+  aiHint: 'שאל את ה-AI על הכספים שלך',
   startStreak: 'התחל את הרצף — הוסף תנועה!',
   streakMilestone3: '3 ימים ברצף! התחלה מצוינת!',
   streakMilestone7: 'שבוע ברצף! המשך כך!',

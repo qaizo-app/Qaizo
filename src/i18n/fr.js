@@ -410,7 +410,7 @@ export default {
   bestStreak: 'Meilleur',
   underBudget: 'Sous budget',
   streakAtRisk: 'Enregistrez une transaction pour maintenir votre série !',
-  aiHint: 'Appuyez pour discuter avec l\'IA — vos données restent privées',
+  aiHint: 'Demandez à l\'IA sur vos finances',
   startStreak: 'Commencez votre série — enregistrez une transaction !',
   streakMilestone3: '3 jours de série ! Bon départ !',
   streakMilestone7: '1 semaine de série ! Continuez !',

@@ -417,7 +417,7 @@ export default {
   bestStreak: 'Mejor',
   underBudget: 'Bajo presupuesto',
   streakAtRisk: '¡Registra una transacción para mantener tu racha!',
-  aiHint: 'Toca para chatear con IA — tus datos son privados',
+  aiHint: 'Pregunta a la IA sobre tus finanzas',
   startStreak: '¡Inicia tu racha — registra una transacción!',
   streakMilestone3: '¡Racha de 3 días! ¡Buen comienzo!',
   streakMilestone7: '¡Racha de 1 semana! ¡Sigue así!',

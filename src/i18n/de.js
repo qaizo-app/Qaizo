@@ -410,7 +410,7 @@ export default {
   bestStreak: 'Bester',
   underBudget: 'Unter Budget',
   streakAtRisk: 'Füge eine Transaktion hinzu, um deinen Streak zu halten!',
-  aiHint: 'Tippen zum Chat mit KI — deine Daten bleiben privat',
+  aiHint: 'Frag die KI zu deinen Finanzen',
   startStreak: 'Starte deinen Streak — füge eine Transaktion hinzu!',
   streakMilestone3: '3-Tage-Streak! Guter Start!',
   streakMilestone7: '1-Wochen-Streak! Weiter so!',

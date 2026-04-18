@@ -50,6 +50,10 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     if (transcript) {
       setText(transcript);
       handleTextChange(transcript);
+      // Auto-trigger AI parse when final result received
+      if (e.isFinal && transcript.length > 3) {
+        setTimeout(() => handleSmartParse(), 300);
+      }
     }
   });
   useSpeechRecognitionEvent('end', () => setIsListening(false));

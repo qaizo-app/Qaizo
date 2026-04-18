@@ -411,7 +411,7 @@ export default {
   bestStreak: '最佳',
   underBudget: '预算内',
   streakAtRisk: '记录一笔交易以保持连续记录！',
-  aiHint: '点击与AI对话——您的数据保持私密',
+  aiHint: '问AI关于你的财务',
   startStreak: '开始连续记录——记录一笔交易！',
   streakMilestone3: '连续3天！好的开始！',
   streakMilestone7: '连续1周！继续加油！',

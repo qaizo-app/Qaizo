@@ -410,7 +410,7 @@ export default {
   bestStreak: 'الأفضل',
   underBudget: 'ضمن الميزانية',
   streakAtRisk: 'سجّل معاملة للحفاظ على تتابعك!',
-  aiHint: 'اضغط للدردشة مع الذكاء الاصطناعي — بياناتك تبقى خاصة',
+  aiHint: 'اسأل الذكاء الاصطناعي عن أموالك',
   startStreak: 'ابدأ تتابعك — سجّل معاملة!',
   streakMilestone3: 'تتابع 3 أيام! بداية رائعة!',
   streakMilestone7: 'تتابع أسبوع! استمر!',

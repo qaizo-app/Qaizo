@@ -411,7 +411,7 @@ export default {
   bestStreak: 'ベスト',
   underBudget: '予算内',
   streakAtRisk: 'ストリークを維持するために取引を記録してください！',
-  aiHint: 'タップしてAIとチャット — データはプライベートです',
+  aiHint: 'AIに家計について聞く',
   startStreak: 'ストリークを始めましょう — 取引を記録してください！',
   streakMilestone3: '3日連続！素晴らしいスタート！',
   streakMilestone7: '1週間連続！その調子！',

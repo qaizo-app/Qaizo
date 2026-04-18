@@ -223,7 +223,7 @@ export default function TransactionsScreen({ route }) {
                   </TouchableOpacity>
                 ) : null}
               </TouchableOpacity>
-              <Feather name="arrow-right" size={14} color={colors.textMuted} />
+              <Feather name={i18n.isRTL() ? 'arrow-left' : 'arrow-right'} size={14} color={colors.textMuted} />
               <TouchableOpacity style={[styles.dateBtn, dateTo && styles.dateBtnActive]} onPress={() => setShowCalTo(true)}>
                 <Feather name="calendar" size={14} color={dateTo ? colors.green : colors.textMuted} />
                 <Text style={[styles.dateBtnText, dateTo && { color: colors.text }]}>
