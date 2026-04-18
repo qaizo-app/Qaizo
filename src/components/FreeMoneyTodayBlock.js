@@ -112,7 +112,7 @@ export default function FreeMoneyTodayBlock({
           style={{ backgroundColor: colors.blue + '12', borderRadius: 10, padding: 10, marginBottom: 8, flexDirection: i18n.row(), alignItems: 'center', gap: 6 }}
         >
           <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600', flex: 1 }}>{i18n.t('addIncomeHint')}</Text>
-          <Feather name="chevron-right" size={14} color={colors.blue} />
+          <Feather name={i18n.chevronRight()} size={14} color={colors.blue} />
         </TouchableOpacity>
       )}
 

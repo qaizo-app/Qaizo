@@ -1,7 +1,8 @@
 // src/screens/SettingsScreen.js
 // Добавлена кнопка Категории → открывает CategoriesScreen
 import { Feather } from '@expo/vector-icons';
-import * as Sentry from '@sentry/react-native';
+let Sentry = null;
+try { Sentry = require('@sentry/react-native'); } catch (e) {}
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
@@ -132,7 +133,7 @@ export default function SettingsScreen() {
             <Feather name="grid" size={18} color={colors.teal} />
             <Text style={styles.sectionText}>{i18n.t('categories')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Projects')}>
@@ -140,7 +141,7 @@ export default function SettingsScreen() {
             <Feather name="folder" size={18} color="#a78bfa" />
             <Text style={styles.sectionText}>{i18n.t('projects')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Goals')}>
@@ -148,7 +149,7 @@ export default function SettingsScreen() {
             <Feather name="target" size={18} color="#f59e0b" />
             <Text style={styles.sectionText}>{i18n.t('goals')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Investments')}>
@@ -156,7 +157,7 @@ export default function SettingsScreen() {
             <Feather name="trending-up" size={18} color={colors.teal} />
             <Text style={styles.sectionText}>{i18n.t('investments')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('ShoppingList')}>
@@ -164,7 +165,7 @@ export default function SettingsScreen() {
             <Feather name="shopping-cart" size={18} color="#f472b6" />
             <Text style={styles.sectionText}>{i18n.t('shoppingList')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('Analytics')}>
@@ -172,7 +173,7 @@ export default function SettingsScreen() {
             <Feather name="bar-chart-2" size={18} color="#22d3ee" />
             <Text style={styles.sectionText}>{i18n.t('analytics')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionBtn} onPress={() => navigation.navigate('MonthlyReport')}>
@@ -180,7 +181,7 @@ export default function SettingsScreen() {
             <Feather name="file-text" size={18} color={colors.blue} />
             <Text style={styles.sectionText}>{i18n.t('monthlyReport')}</Text>
           </View>
-          <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* ═══ PREFERENCES ═══ */}
@@ -438,7 +439,7 @@ export default function SettingsScreen() {
               versionTapTimer.current = setTimeout(() => { versionTapCount.current = 0; }, 2000);
               if (versionTapCount.current >= 5) {
                 versionTapCount.current = 0;
-                Sentry.captureException(new Error('Sentry test crash from Settings'));
+                Sentry?.captureException(new Error('Sentry test crash from Settings'));
                 toast.show(i18n.t('sentryTestSent'));
               }
             }}>v1.0.0</Text>

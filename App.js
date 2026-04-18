@@ -1,8 +1,8 @@
 // App.js
 // Поток: тема → язык → онбординг → визард → авторизация → приложение
-import * as Sentry from '@sentry/react-native';
-
+let Sentry = null;
 try {
+  Sentry = require('@sentry/react-native');
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     enabled: !__DEV__,
@@ -13,7 +13,7 @@ try {
     attachScreenshot: false,
   });
 } catch (e) {
-  // Sentry init failed — app continues without crash reporting
+  // Sentry not available (Expo Go) — app continues without crash reporting
 }
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -230,7 +230,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
                 {startDate ? scheduleSummary() : i18n.t('frequency')}
               </Text>
             </View>
-            <Feather name="chevron-right" size={16} color={colors.textMuted} />
+            <Feather name={i18n.chevronRight()} size={16} color={colors.textMuted} />
           </TouchableOpacity>
 
           {/* Заметка */}

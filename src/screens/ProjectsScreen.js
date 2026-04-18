@@ -134,7 +134,7 @@ export default function ProjectsScreen() {
                   {count} {i18n.t('transactions').toLowerCase()} · <Amount value={total} style={st.projectMeta} />
                 </Text>
               </View>
-              <Feather name={'chevron-right'} size={18} color={colors.textMuted} />
+              <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
             </TouchableOpacity>
           );
         })}

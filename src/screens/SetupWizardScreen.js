@@ -7,7 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
-import { CURRENCIES as CURRENCY_LIST, setCurrency as setGlobalCurrency, sym } from '../utils/currency';
+import { CURRENCIES as CURRENCY_LIST, setCurrency as setGlobalCurrency, sym, detectCurrency } from '../utils/currency';
 
 const { width: SW } = Dimensions.get('window');
 const ACCOUNT_TYPES = ['bank', 'credit', 'cash'];
@@ -16,9 +16,9 @@ const EXPENSE_CATS = ['food', 'transport', 'fuel', 'health', 'phone', 'utilities
 export default function SetupWizardScreen({ onDone }) {
   const [step, setStep] = useState(0); // 0=валюта, 1=счёт, 2=транзакция, 3=готово
 
-  // Шаг 0: Валюта
-  const [currency, setCurrency] = useState(sym());
-  const [currencyCode, setCurrencyCode] = useState('ILS');
+  // Шаг 0: Валюта — авто-определение по системному locale
+  const [currency, setCurrency] = useState(() => { const d = detectCurrency(); return d ? d.symbol : sym(); });
+  const [currencyCode, setCurrencyCode] = useState(() => { const d = detectCurrency(); return d ? d.code : 'ILS'; });
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   // Шаг 1: Счёт

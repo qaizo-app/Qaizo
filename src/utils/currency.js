@@ -46,6 +46,55 @@ const RATES_TO_ILS = {
   CZK: 0.16,
 };
 
+// Auto-detect currency from system locale (language + region)
+export function detectCurrency() {
+  try {
+    const { getLocales } = require('expo-localization');
+    const locales = getLocales();
+    if (!locales || !locales.length) return null;
+    const { languageCode, regionCode } = locales[0];
+    const region = (regionCode || '').toUpperCase();
+    const lang = (languageCode || '').toLowerCase();
+
+    // By region first (most accurate)
+    const regionMap = {
+      US: 'USD', CA: 'CAD', GB: 'GBP', AU: 'AUD', NZ: 'NZD',
+      IL: 'ILS', RU: 'RUB', UA: 'UAH', JP: 'JPY', CN: 'CNY',
+      KR: 'KRW', IN: 'INR', BR: 'BRL', TR: 'TRY', PL: 'PLN',
+      CZ: 'CZK', SE: 'SEK', NO: 'NOK', DK: 'DKK', ZA: 'ZAR',
+      SG: 'SGD', MY: 'MYR', TH: 'THB', AE: 'AED', SA: 'SAR',
+      EG: 'EGP', JO: 'JOD', HU: 'HUF', RO: 'RON', CH: 'CHF',
+      MX: 'MXN', AR: 'ARS', CL: 'CLP', CO: 'COP',
+      DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', PT: 'EUR',
+      NL: 'EUR', BE: 'EUR', AT: 'EUR', IE: 'EUR', FI: 'EUR',
+      GR: 'EUR', SK: 'EUR', SI: 'EUR', EE: 'EUR', LV: 'EUR',
+      LT: 'EUR', LU: 'EUR', MT: 'EUR', CY: 'EUR',
+    };
+    if (region && regionMap[region]) {
+      const code = regionMap[region];
+      const cur = CURRENCIES.find(c => c.code === code);
+      if (cur) return cur;
+    }
+
+    // Fallback by language (less accurate but better than nothing)
+    const langMap = {
+      he: 'ILS', iw: 'ILS', ru: 'RUB', uk: 'UAH', ja: 'JPY',
+      zh: 'CNY', ko: 'KRW', hi: 'INR', pt: 'BRL', tr: 'TRY',
+      pl: 'PLN', cs: 'CZK', sv: 'SEK', da: 'DKK', hu: 'HUF',
+      ro: 'RON', th: 'THB', ar: 'AED',
+      de: 'EUR', fr: 'EUR', it: 'EUR', es: 'EUR', nl: 'EUR',
+      el: 'EUR', fi: 'EUR', et: 'EUR',
+      en: 'USD',
+    };
+    if (lang && langMap[lang]) {
+      const code = langMap[lang];
+      const cur = CURRENCIES.find(c => c.code === code);
+      if (cur) return cur;
+    }
+  } catch (e) {}
+  return null;
+}
+
 export function setCurrency(symbol, code) {
   _symbol = symbol;
   _code = code || CURRENCIES.find(c => c.symbol === symbol)?.code || 'ILS';

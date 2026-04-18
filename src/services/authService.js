@@ -12,12 +12,17 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { auth } from '../config/firebase';
 
-GoogleSignin.configure({
-  webClientId: '568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com',
-});
+let GoogleSignin = null;
+try {
+  GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
+  GoogleSignin.configure({
+    webClientId: '568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com',
+  });
+} catch (e) {
+  // Native module not available (Expo Go) — Google Sign-In disabled
+}
 
 const authService = {
 
@@ -77,6 +82,7 @@ const authService = {
   // Google Sign-In (native)
   async loginWithGoogle() {
     try {
+      if (!GoogleSignin) return { success: false, error: 'Google Sign-In not available in Expo Go' };
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
       const idToken = response.data?.idToken;

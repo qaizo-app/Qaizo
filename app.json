@@ -14,11 +14,19 @@
     "scheme": "qaizo",
     "android": {
       "package": "com.qaizo.app",
-      "versionCode": 5,
-      "googleServicesFile": "./google-services.json"
+      "versionCode": 6,
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "ios": {
-      "bundleIdentifier": "com.qaizo.app"
+      "bundleIdentifier": "com.qaizo.app",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow Qaizo to recognize your speech",
+        "NSMicrophoneUsageDescription": "Allow Qaizo to access your microphone for voice input"
+      }
     },
     "plugins": [
       "expo-localization",
@@ -46,16 +54,25 @@
       "react-native-edge-to-edge",
       "./plugins/withResizeableActivity",
       "@react-native-google-signin/google-signin",
-      ["@sentry/react-native/expo", {
-        "organization": "qaizo",
-        "project": "qaizo"
-      }]
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "qaizo",
+          "project": "qaizo"
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "912cb02d-8765-41cf-9557-99d035d52189"
       }
     },
-    "owner": "qaizo"
+    "owner": "qaizo",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/912cb02d-8765-41cf-9557-99d035d52189"
+    }
   }
 }

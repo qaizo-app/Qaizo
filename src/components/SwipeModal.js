@@ -7,7 +7,7 @@ import { colors } from '../theme/colors';
 
 const SCREEN_H = Dimensions.get('window').height;
 
-export default function SwipeModal({ visible, onClose, children }) {
+export default function SwipeModal({ visible, onClose, children, footer }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const isClosing = useRef(false);
@@ -83,6 +83,11 @@ export default function SwipeModal({ visible, onClose, children }) {
           <View style={styles.content}>
             {renderContent()}
           </View>
+          {footer && (
+            <View style={styles.footer}>
+              {typeof footer === 'function' ? footer({ close: doClose }) : footer}
+            </View>
+          )}
         </Animated.View>
       </KeyboardAvoidingView>
     </View>
@@ -122,6 +127,13 @@ const createStyles = () => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 20,
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    backgroundColor: colors.bg2,
   },
 });

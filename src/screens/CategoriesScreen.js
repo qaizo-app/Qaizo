@@ -316,45 +316,43 @@ export default function CategoriesScreen() {
       </ScrollView>
 
       {/* Edit modal */}
-      <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)}>
-        {({ close }) => (
-          <View style={{ flex: 1 }}>
-            <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ paddingBottom: 8 }}>
-              <Text style={styles.modalTitle}>
-                {editItem ? i18n.t('edit') : i18n.t('add')}
-                {editParent ? ` → ${getName(editParent.name)}` : ''}
-              </Text>
-
-              <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
-              <TextInput style={styles.input} value={editName} onChangeText={setEditName}
-                placeholder={i18n.t('categoryName')}
-                placeholderTextColor={colors.textMuted} />
-
-              <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
-              <IconGrid icons={editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS}
-                selected={editIcon} color={editColor} onSelect={setEditIcon} />
-
-              {!editParent && (
-                <>
-                  <Text style={[styles.fieldLabel, { marginTop: 16 }]}>{i18n.t('color')}</Text>
-                  <ColorPickerRow selected={editColor} onSelect={setEditColor} />
-                </>
-              )}
-            </ScrollView>
-
-            <View style={styles.btnRow}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={close}>
-                <Text style={styles.cancelText}>{i18n.t('cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: editColor }]} onPress={handleSave} disabled={translating}>
-                {translating
-                  ? <ActivityIndicator size="small" color="#fff" />
-                  : <><Feather name="check" size={18} color="#fff" /><Text style={styles.saveText}> {i18n.t('save')}</Text></>
-                }
-              </TouchableOpacity>
-            </View>
+      <SwipeModal visible={showEdit} onClose={() => setShowEdit(false)} footer={({ close }) => (
+          <View style={styles.btnRow}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={close}>
+              <Text style={styles.cancelText}>{i18n.t('cancel')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.saveBtn, { backgroundColor: editColor }]} onPress={handleSave} disabled={translating}>
+              {translating
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <><Feather name="check" size={18} color="#fff" /><Text style={styles.saveText}> {i18n.t('save')}</Text></>
+              }
+            </TouchableOpacity>
           </View>
+        )}>
+        {() => (
+          <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 8 }}>
+            <Text style={styles.modalTitle}>
+              {editItem ? i18n.t('edit') : i18n.t('add')}
+              {editParent ? ` → ${getName(editParent.name)}` : ''}
+            </Text>
+
+            <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
+            <TextInput style={styles.input} value={editName} onChangeText={setEditName}
+              placeholder={i18n.t('categoryName')}
+              placeholderTextColor={colors.textMuted} />
+
+            <Text style={styles.fieldLabel}>{i18n.t('icon')}</Text>
+            <IconGrid icons={editParent ? (ICONS_BY_GROUP[editParent.id] || ALL_ICONS) : ALL_ICONS}
+              selected={editIcon} color={editColor} onSelect={setEditIcon} />
+
+            {!editParent && (
+              <>
+                <Text style={[styles.fieldLabel, { marginTop: 16 }]}>{i18n.t('color')}</Text>
+                <ColorPickerRow selected={editColor} onSelect={setEditColor} />
+              </>
+            )}
+          </ScrollView>
         )}
       </SwipeModal>
 
