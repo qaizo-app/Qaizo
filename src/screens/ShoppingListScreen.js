@@ -3,7 +3,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Amount from '../components/Amount';
 import Card from '../components/Card';
@@ -23,6 +23,9 @@ export default function ShoppingListScreen() {
   const [checkedItems, setCheckedItems] = useState({});
   const [showBuildList, setShowBuildList] = useState(false);
   const [listItems, setListItems] = useState({}); // {itemName: true}
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [manualItems, setManualItems] = useState([]); // manually added items
   const st = createSt();
 
   useFocusEffect(useCallback(() => {
@@ -102,6 +105,18 @@ export default function ShoppingListScreen() {
     setItems(result);
   };
 
+  const addManualItem = () => {
+    const name = newItemName.trim();
+    if (!name) return;
+    if (!manualItems.find(i => i.name.toLowerCase() === name.toLowerCase())) {
+      setManualItems(prev => [...prev, { name, lastPrice: 0, avgPrice: 0, minPrice: 0, maxPrice: 0, change: 0, count: 0, lastStore: '', lastDate: '', daysSince: 0, avgDaysBetween: 0, needToBuy: false, isFood: true, stores: [], isManual: true }]);
+    }
+    setListItems(prev => ({ ...prev, [name]: true }));
+    setNewItemName('');
+    setShowAddItem(false);
+    setTab('list');
+  };
+
   const toggleCheck = (name) => {
     setCheckedItems(prev => ({ ...prev, [name]: !prev[name] }));
   };
@@ -111,7 +126,8 @@ export default function ShoppingListScreen() {
   };
 
   const getFilteredItems = () => {
-    let filtered = items;
+    const allItems = [...items, ...manualItems.filter(m => !items.find(i => i.name.toLowerCase() === m.name.toLowerCase()))];
+    let filtered = allItems;
 
     // Search
     if (search) {
@@ -268,6 +284,36 @@ export default function ShoppingListScreen() {
           );
         })}
       </ScrollView>
+
+      {/* FAB — Add item */}
+      <TouchableOpacity style={st.fab} onPress={() => setShowAddItem(true)} activeOpacity={0.8}>
+        <Feather name="plus" size={24} color={colors.bg} />
+      </TouchableOpacity>
+
+      {/* Add item modal */}
+      <Modal visible={showAddItem} transparent animationType="fade" onRequestClose={() => setShowAddItem(false)}>
+        <KeyboardAvoidingView style={st.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <TouchableOpacity style={st.modalOverlay} activeOpacity={1} onPress={() => setShowAddItem(false)}>
+            <TouchableOpacity style={st.modalCard} activeOpacity={1} onPress={() => {}}>
+              <Text style={st.modalTitle}>{i18n.t('addItem')}</Text>
+              <TextInput
+                style={st.modalInput}
+                value={newItemName}
+                onChangeText={setNewItemName}
+                placeholder={i18n.t('itemName')}
+                placeholderTextColor={colors.textMuted}
+                autoFocus
+                onSubmitEditing={addManualItem}
+                returnKeyType="done"
+              />
+              <TouchableOpacity style={[st.modalBtn, !newItemName.trim() && { opacity: 0.4 }]} onPress={addManualItem} disabled={!newItemName.trim()}>
+                <Feather name="plus" size={18} color={colors.bg} />
+                <Text style={st.modalBtnText}>{i18n.t('add')}</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -307,4 +353,13 @@ const createSt = () => StyleSheet.create({
 
   statsRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   statText: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+
+  fab: { position: 'absolute', bottom: 100, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' },
+  modalCard: { backgroundColor: colors.card, borderRadius: 20, padding: 24, width: '85%', borderWidth: 1, borderColor: colors.cardBorder },
+  modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  modalInput: { backgroundColor: colors.bg, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, color: colors.text, fontSize: 16, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 16 },
+  modalBtn: { backgroundColor: colors.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
+  modalBtnText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });

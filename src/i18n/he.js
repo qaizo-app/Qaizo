@@ -671,6 +671,8 @@ export default {
   emptyList: 'רשימת הקניות ריקה',
   noReceiptItems: 'עדיין אין פריטים',
   scanReceiptHint: 'סרוק קבלות כדי לבנות רשימת קניות חכמה',
+  addItem: 'הוסף פריט',
+  itemName: 'שם הפריט',
   notBoughtDays: 'לא נקנה כבר {days} ימים',
   cheapest: 'הכי זול',
   duplicateReceipt: 'קבלה זו כבר נסרקה (אותו סכום, חנות ותאריך)',

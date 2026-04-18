@@ -674,6 +674,8 @@ export default {
   emptyList: 'Your shopping list is empty',
   noReceiptItems: 'No items yet',
   scanReceiptHint: 'Scan receipts to build your smart shopping list',
+  addItem: 'Add item',
+  itemName: 'Item name',
   notBoughtDays: 'Not bought for {days} days',
   cheapest: 'Cheapest',
   duplicateReceipt: 'This receipt was already scanned (same amount, store and date)',

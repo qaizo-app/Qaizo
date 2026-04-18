@@ -434,8 +434,8 @@ const createStyles = () => StyleSheet.create({
   searchRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 24, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.cardBorder, gap: 10 },
   searchInput: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 12, textAlign: i18n.textAlign() },
 
-  filters: { flexDirection: i18n.row(), paddingHorizontal: 24, gap: 8, marginBottom: 12 },
-  filterBtn: { flexDirection: i18n.row(), paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent', alignItems: 'center' },
+  filters: { flexDirection: i18n.row(), paddingHorizontal: 24, gap: 8, marginBottom: 12, width: '100%' },
+  filterBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 12, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   filterText: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
 
   // Advanced filter panel

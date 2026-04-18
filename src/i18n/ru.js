@@ -638,6 +638,8 @@ export default {
   emptyList: 'Список покупок пуст',
   noReceiptItems: 'Пока нет товаров',
   scanReceiptHint: 'Сканируйте чеки для умного списка покупок',
+  addItem: 'Добавить товар',
+  itemName: 'Название товара',
   notBoughtDays: 'Не покупали {days} дней',
   cheapest: 'Дешевле',
   duplicateReceipt: 'Этот чек уже был отсканирован (сумма, магазин и дата совпадают)',

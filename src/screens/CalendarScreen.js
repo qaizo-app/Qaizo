@@ -150,7 +150,7 @@ export default function CalendarScreen() {
               return (
                 <TouchableOpacity
                   key={i}
-                  style={[st.cell, isSel && st.cellSelected, d && isToday(d) && !isSel && st.cellToday]}
+                  style={[st.cell, d && isSel && st.cellSelected, d && isToday(d) && !isSel && st.cellToday]}
                   onPress={() => d && setSelectedDate(selectedDate === d ? null : d)}
                   disabled={!d}
                   activeOpacity={0.6}
