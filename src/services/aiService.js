@@ -474,12 +474,12 @@ async function scanReceipt(imageInput, lang, _retryCount = 0) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: `You are an expert receipt scanner optimized for Israeli receipts (Hebrew text, ₪ currency). The image may be slightly blurry, rotated, or have low contrast — do your best to extract data.
+            { text: `You are an expert receipt scanner. The receipt may be in ANY language (Hebrew, Russian, English, Arabic, etc.). The image may be slightly blurry, rotated, or have low contrast — do your best to extract data.
 ${multiImageHint}
 Extract:
-- total: the TOTAL/סה"כ/סהכ amount (number). Look for the LAST/LARGEST bold number, or words: Total, סה"כ, סהכ, Итого, לתשלום, סך הכל. If multiple totals, pick the final one.
-- store: business name, usually at the top. Common Israeli chains: שופרסל, רמי לוי, ויקטורי, מגה, יוחננוף, AM:PM, פז, סונול, דור אלון
-- date: look for date on receipt, return as YYYY-MM-DD. Israeli format is usually DD/MM/YYYY or DD.MM.YYYY
+- total: the TOTAL amount (number). Look for the LAST/LARGEST bold number, or words in any language: Total, סה"כ, סהכ, Итого, Всего, לתשלום, סך הכל, المجموع. If multiple totals, pick the final one.
+- store: business name, usually at the top. Return the name as written on the receipt.
+- date: look for date on receipt, return as YYYY-MM-DD. Common formats: DD/MM/YYYY, DD.MM.YYYY, MM/DD/YYYY, YYYY-MM-DD.
 - category: classify the business. Supermarket/grocery = "food". Restaurant/cafe = "restaurant". Gas station = "fuel". Pharmacy = "health". Use: food,restaurant,fuel,transport,health,phone,utilities,clothing,household,kids,entertainment,education,cosmetics,electronics,insurance,rent,other
 Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","category":"food"}` },
             ...imageParts,

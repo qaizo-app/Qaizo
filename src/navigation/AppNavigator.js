@@ -126,7 +126,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
   const handleMenuPress = (key) => {
     closeAddMenu();
     setTimeout(() => {
-      if (key === 'smartInput') toast.show(i18n.t('comingSoonMessage'), 'info');
+      if (key === 'smartInput') setShowSmartInput(true);
       else if (key === 'scanReceipt') setShowReceipt(true);
       else if (key === 'oneTimePayment') setShowAdd(true);
       else if (key === 'recurringPayment') setShowRecurring(true);
@@ -347,7 +347,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
 
       {/* Global Modals */}
       <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} initialType={addInitialType} />
-      <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSave={() => setShowSmartInput(false)} />
+      <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSaved={() => setShowSmartInput(false)} />
       <AddRecurringModal visible={showRecurring} onClose={() => setShowRecurring(false)} onSave={() => setShowRecurring(false)} />
       <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}

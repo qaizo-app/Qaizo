@@ -38,7 +38,7 @@ export default function AccountsScreen() {
   const [currency, setCurrency] = useState(sym());
   const [currencyCode, setCurrencyCode] = useState(CURRENCIES.find(c => c.symbol === sym())?.code || 'ILS');
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-  const [balance, setBalance] = useState('0');
+  const [balance, setBalance] = useState('');
   const [overdraft, setOverdraft] = useState('');
   const [billingDay, setBillingDay] = useState(10);
   const [isActive, setIsActive] = useState(true);
@@ -67,12 +67,12 @@ export default function AccountsScreen() {
   const openHistory = (acc) => navigation.navigate('AccountHistory', { account: acc });
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber||'');
-    setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(String(parseFloat((acc.balance||0).toFixed(2))));
+    setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(acc.balance ? String(parseFloat(acc.balance.toFixed(2))) : '');
     setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false); setShowEdit(true);
   };
   const openAdd = () => {
     setEditAccount(null); setName(''); setAccountNumber(''); setType('bank');
-    setCurrency(sym()); setBalance('0'); setOverdraft(''); setBillingDay(10); setIsActive(true); setShowEdit(true);
+    setCurrency(sym()); setBalance(''); setOverdraft(''); setBillingDay(10); setIsActive(true); setShowEdit(true);
   };
   const handleSave = async () => {
     if (!name.trim()) return;

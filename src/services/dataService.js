@@ -13,6 +13,7 @@ import authService from './authService';
 let _txCache = null;
 let _txCacheTime = 0;
 const TX_CACHE_TTL = 30000; // 30 секунд
+const TX_LOCAL_CACHE_KEY = 'qaizo_tx_cache';
 
 function invalidateTxCache() { _txCache = null; _txCacheTime = 0; }
 
@@ -166,13 +167,33 @@ const dataService = {
 
   // ─── TRANSACTIONS ────────────────────────────────────────
   async getTransactions(forceRefresh = false) {
+    // 1. Кэш в памяти (30 сек)
     if (!forceRefresh && _txCache && (Date.now() - _txCacheTime < TX_CACHE_TTL)) {
       return _txCache;
     }
     const uid = getUid();
     let txs;
     if (uid) {
+      // 2. При первом запуске — показать локальный кэш пока Firestore грузится
+      if (!_txCache) {
+        try {
+          const local = await AsyncStorage.getItem(TX_LOCAL_CACHE_KEY);
+          if (local) {
+            _txCache = JSON.parse(local);
+            _txCacheTime = Date.now();
+            // Загрузить из Firestore в фоне и обновить кэш
+            getColDocs('transactions').then(fresh => {
+              _txCache = fresh;
+              _txCacheTime = Date.now();
+              AsyncStorage.setItem(TX_LOCAL_CACHE_KEY, JSON.stringify(fresh)).catch(() => {});
+            }).catch(() => {});
+            return _txCache;
+          }
+        } catch (e) { /* ignore */ }
+      }
       txs = await getColDocs('transactions');
+      // Сохранить в локальный кэш для следующего запуска
+      AsyncStorage.setItem(TX_LOCAL_CACHE_KEY, JSON.stringify(txs)).catch(() => {});
     } else {
       try {
         const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
@@ -739,6 +760,7 @@ const dataService = {
           try { await deleteDoc(userDoc(name + '/data')); } catch (e) {}
         }
         invalidateTxCache();
+        AsyncStorage.removeItem(TX_LOCAL_CACHE_KEY).catch(() => {});
         return true;
       } catch (e) { return false; }
     }

@@ -450,7 +450,7 @@ export default function DashboardScreen() {
                 />
               );
             case 'streak':
-              return <StreakCard key="streak" streakData={streakData} transactions={transactions} weekStart={weekStart} />;
+              return <StreakCard key="streak" streakData={streakData} transactions={transactions} />;
             case 'freeMoneyToday':
               return (
                 <FreeMoneyTodayBlock

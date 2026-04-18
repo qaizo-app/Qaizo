@@ -414,6 +414,7 @@ export default {
   bestStreak: 'שיא',
   underBudget: 'בתקציב',
   streakAtRisk: 'הוסף תנועה כדי לשמור על הרצף!',
+  streakTodayNotLogged: 'היום לא נרשם — הוסף תנועה!',
   aiHint: 'לחץ כדי לשוחח עם AI — המידע שלך נשאר פרטי',
   startStreak: 'התחל את הרצף — הוסף תנועה!',
   streakMilestone3: '3 ימים ברצף! התחלה מצוינת!',

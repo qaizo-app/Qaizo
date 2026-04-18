@@ -417,6 +417,7 @@ export default {
   bestStreak: 'Best',
   underBudget: 'Under budget',
   streakAtRisk: 'Log a transaction to keep your streak!',
+  streakTodayNotLogged: 'Today not logged — add a transaction!',
   aiHint: 'Tap to chat with AI — your data stays private',
   startStreak: 'Start your streak — log a transaction!',
   streakMilestone3: '3-day streak! Great start!',
