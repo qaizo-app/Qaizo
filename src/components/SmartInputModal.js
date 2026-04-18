@@ -4,6 +4,15 @@ import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
+
+// Speech recognition — requires dev build
+let ExpoSpeechRecognitionModule = null;
+let useSpeechRecognitionEvent = (_event, _cb) => {};
+try {
+  const speech = require('@jamsch/expo-speech-recognition');
+  ExpoSpeechRecognitionModule = speech.ExpoSpeechRecognitionModule;
+  useSpeechRecognitionEvent = speech.useSpeechRecognitionEvent;
+} catch {}
 import aiService from '../services/aiService';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
@@ -14,15 +23,63 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
   const [text, setText] = useState('');
   const [parsed, setParsed] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const inputRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   const st = createStyles();
+  const hasVoice = !!ExpoSpeechRecognitionModule;
+
+  // Voice pulse animation
+  useEffect(() => {
+    if (isListening) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.3, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isListening]);
+
+  // Speech recognition events
+  useSpeechRecognitionEvent('result', (e) => {
+    const transcript = e.results?.[0]?.transcript || '';
+    if (transcript) {
+      setText(transcript);
+      handleTextChange(transcript);
+    }
+  });
+  useSpeechRecognitionEvent('end', () => setIsListening(false));
+  useSpeechRecognitionEvent('error', () => setIsListening(false));
+
+  const toggleVoice = async () => {
+    if (!hasVoice) return;
+    if (isListening) {
+      ExpoSpeechRecognitionModule.stop();
+      setIsListening(false);
+      return;
+    }
+    const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!granted) return;
+    const lang = i18n.getLanguage();
+    const langCode = lang === 'he' ? 'he-IL' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    ExpoSpeechRecognitionModule.start({ lang: langCode, interimResults: true });
+    setIsListening(true);
+  };
 
   useEffect(() => {
     if (visible) {
       setText('');
       setParsed(null);
       setTimeout(() => inputRef.current?.focus(), 300);
+    } else {
+      if (isListening && ExpoSpeechRecognitionModule) {
+        ExpoSpeechRecognitionModule.stop();
+        setIsListening(false);
+      }
     }
   }, [visible]);
 
@@ -95,14 +152,21 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
 
           {/* Input */}
           <View style={st.inputWrap}>
-            <Feather name="edit-3" size={20} color={colors.green} style={{ marginStart: 16 }} />
+            {hasVoice && (
+              <TouchableOpacity onPress={toggleVoice} style={{ marginStart: 12 }}>
+                <Animated.View style={{ transform: [{ scale: isListening ? pulseAnim : 1 }] }}>
+                  <Feather name={isListening ? 'mic-off' : 'mic'} size={20} color={isListening ? colors.red : colors.green} />
+                </Animated.View>
+              </TouchableOpacity>
+            )}
+            {!hasVoice && <Feather name="edit-3" size={20} color={colors.green} style={{ marginStart: 16 }} />}
             <TextInput
               ref={inputRef}
               style={st.input}
               value={text}
               onChangeText={handleTextChange}
-              placeholder={i18n.t('smartInputPlaceholder')}
-              placeholderTextColor={colors.textMuted}
+              placeholder={isListening ? i18n.t('listening') : i18n.t('smartInputPlaceholder')}
+              placeholderTextColor={isListening ? colors.green : colors.textMuted}
               multiline
               autoCorrect={false}
               autoComplete="off"
