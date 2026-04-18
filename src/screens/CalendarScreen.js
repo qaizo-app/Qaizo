@@ -220,8 +220,8 @@ const createSt = () => StyleSheet.create({
   summaryRow: { flexDirection: i18n.row(), alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, height: 30, backgroundColor: colors.divider },
-  summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4 },
-  summaryVal: { fontSize: 14, fontWeight: '800', writingDirection: 'ltr' },
+  summaryLabel: { color: colors.textDim, fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  summaryVal: { fontSize: 20, fontWeight: '800', writingDirection: 'ltr' },
 
   navRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   navBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
