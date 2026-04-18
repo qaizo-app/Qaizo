@@ -576,7 +576,7 @@ export default {
   day: 'день',
   remaining: 'Осталось',
   autoConfirm: 'Авто-подтверждение',
-  autoConfirmSub: 'Автоматически записывать транзакцию в день оплаты',
+  autoConfirmSub: 'Записать автоматически в день оплаты',
   upcoming: 'Предстоящие',
 
   // Analytics

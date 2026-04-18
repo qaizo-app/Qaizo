@@ -239,7 +239,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* התראות */}
           <View style={st.toggleRow}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={st.toggleLabel}>{i18n.t('notifications')}</Text>
               <Text style={st.toggleSub}>{i18n.t('notifyBeforePayment')}</Text>
             </View>
@@ -250,7 +250,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Auto-confirm */}
           <View style={st.toggleRow}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={st.toggleLabel}>{i18n.t('autoConfirm')}</Text>
               <Text style={st.toggleSub}>{i18n.t('autoConfirmSub')}</Text>
             </View>
