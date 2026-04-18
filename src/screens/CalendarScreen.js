@@ -2,6 +2,7 @@
 // Calendar view — income/expense per day, tap day → transaction list
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { mergeTransferPairs } from '../utils/transactions';
 import { useCallback, useRef, useState } from 'react';
 import { Animated, PanResponder, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Amount from '../components/Amount';
@@ -93,7 +94,7 @@ export default function CalendarScreen() {
     },
   })).current;
 
-  const selectedTxs = selectedDate && dayData[selectedDate] ? dayData[selectedDate].txs : [];
+  const selectedTxs = selectedDate && dayData[selectedDate] ? mergeTransferPairs(dayData[selectedDate].txs) : [];
 
   const formatAmount = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
