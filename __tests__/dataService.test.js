@@ -20,10 +20,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 const dataService = require('../src/services/dataService').default;
+const { invalidateTxCache } = require('../src/services/dataService');
 
 describe('dataService (guest mode)', () => {
   beforeEach(() => {
     Object.keys(mockStorage).forEach(k => delete mockStorage[k]);
+    invalidateTxCache();
   });
 
   // ─── TRANSACTIONS ────────────────────────────

@@ -185,7 +185,6 @@ const dataService = {
   },
 
   async addTransaction(transaction) {
-    invalidateTxCache();
     const uid = getUid();
     const newTx = { ...transaction, createdAt: new Date().toISOString() };
     try {
@@ -197,13 +196,13 @@ const dataService = {
         const txs = await this.getTransactions();
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([newTx, ...txs]));
       }
+      invalidateTxCache();
       if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       return newTx;
     } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
   },
 
   async deleteTransaction(id) {
-    invalidateTxCache();
     const uid = getUid();
     try {
       if (uid) {
@@ -249,12 +248,12 @@ const dataService = {
         }
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(filtered));
       }
+      invalidateTxCache();
       return true;
     } catch (e) { if (__DEV__) console.error('deleteTransaction:', e); return false; }
   },
 
   async updateTransaction(id, changes) {
-    invalidateTxCache();
     const uid = getUid();
     try {
       if (uid) {
@@ -280,6 +279,7 @@ const dataService = {
         const newTx = { ...oldTx, ...changes };
         if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
+      invalidateTxCache();
       return true;
     } catch (e) { if (__DEV__) console.error('updateTransaction:', e); return false; }
   },
@@ -738,10 +738,11 @@ const dataService = {
         for (const name of singleDocs) {
           try { await deleteDoc(userDoc(name + '/data')); } catch (e) {}
         }
+        invalidateTxCache();
         return true;
       } catch (e) { return false; }
     }
-    try { await AsyncStorage.multiRemove(Object.values(KEYS)); return true; } catch (e) { return false; }
+    try { await AsyncStorage.multiRemove(Object.values(KEYS)); invalidateTxCache(); return true; } catch (e) { return false; }
   },
 
   async exportData() {
@@ -839,4 +840,5 @@ const dataService = {
   },
 };
 
+export { invalidateTxCache };
 export default dataService;
