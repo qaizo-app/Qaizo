@@ -74,6 +74,7 @@ const tabConfig = {
 
 const ADD_MENU = [
   { key: 'oneTimePayment',  icon: 'plus-circle', color: colors.green },
+  { key: 'smartInput',      icon: 'edit-3',      color: '#a78bfa' },
   { key: 'recurringPayment', icon: 'repeat',   color: '#60a5fa' },
   { key: 'quickAdd',        icon: 'zap',       color: '#f59e0b' },
   { key: 'scanReceipt',     icon: 'camera',    color: colors.teal },

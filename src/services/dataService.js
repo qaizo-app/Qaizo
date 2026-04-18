@@ -12,10 +12,11 @@ import authService from './authService';
 // ─── Кэш транзакций (чтобы не загружать 14K+ из Firestore каждый раз) ──
 let _txCache = null;
 let _txCacheTime = 0;
+let _txDirty = false; // true = кэш был инвалидирован, не использовать локальный
 const TX_CACHE_TTL = 30000; // 30 секунд
 const TX_LOCAL_CACHE_KEY = 'qaizo_tx_cache';
 
-function invalidateTxCache() { _txCache = null; _txCacheTime = 0; }
+function invalidateTxCache() { _txCache = null; _txCacheTime = 0; _txDirty = true; }
 
 // ─── Ключи для AsyncStorage (гостевой режим) ─────────────
 const KEYS = {
@@ -175,7 +176,8 @@ const dataService = {
     let txs;
     if (uid) {
       // 2. При первом запуске — показать локальный кэш пока Firestore грузится
-      if (!_txCache) {
+      //    Но НЕ после invalidation (dirty) — тогда нужны свежие данные
+      if (!_txCache && !_txDirty) {
         try {
           const local = await AsyncStorage.getItem(TX_LOCAL_CACHE_KEY);
           if (local) {
@@ -192,6 +194,7 @@ const dataService = {
         } catch (e) { /* ignore */ }
       }
       txs = await getColDocs('transactions');
+      _txDirty = false;
       // Сохранить в локальный кэш для следующего запуска
       AsyncStorage.setItem(TX_LOCAL_CACHE_KEY, JSON.stringify(txs)).catch(() => {});
     } else {

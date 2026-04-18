@@ -26,9 +26,6 @@ export default function RecurringBlock({
         <Card>
           <View style={st.blockTitleRow}>
             <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
-            <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' }} onPress={onAdd}>
-              <Feather name="plus" size={18} color={colors.green} />
-            </TouchableOpacity>
           </View>
           {upcoming.map(rec => {
             const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
