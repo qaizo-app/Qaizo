@@ -96,7 +96,6 @@ export default function DashboardScreen() {
   const st = createSt();
 
   const loadData = async () => {
-    // Wait for auth — don't load with zeros
     const uid = require('../services/authService').default.getUid();
     if (!uid) return;
 
@@ -210,7 +209,7 @@ export default function DashboardScreen() {
 
   useFocusEffect(useCallback(() => {
     loadData();
-    // Retry after auth may have restored session
+    // Retry after Firestore cold start
     const timer = setTimeout(() => {
       loadData().then(() => setLoading(false));
     }, 2000);

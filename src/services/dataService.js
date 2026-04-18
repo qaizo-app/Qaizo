@@ -4,19 +4,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs,
-  setDoc, updateDoc,
+  orderBy, query, setDoc, updateDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import authService from './authService';
-
-// ─── Кэш транзакций (чтобы не загружать 14K+ из Firestore каждый раз) ──
-let _txCache = null;
-let _txCacheTime = 0;
-let _txDirty = false; // true = кэш был инвалидирован, не использовать локальный
-const TX_CACHE_TTL = 30000; // 30 секунд
-const TX_LOCAL_CACHE_KEY = 'qaizo_tx_cache';
-
-function invalidateTxCache() { _txCache = null; _txCacheTime = 0; _txDirty = true; }
 
 // ─── Ключи для AsyncStorage (гостевой режим) ─────────────
 const KEYS = {
@@ -115,12 +106,19 @@ async function setDocData(colName, value) {
 // ─── Чтение / запись коллекции (transactions, accounts, investments, recurring) ──
 async function getColDocs(colName, defaultVal = []) {
   try {
-    const snap = await getDocs(userCol(colName));
-    const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-    return items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    const q = query(userCol(colName), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ ...d.data(), id: d.id }));
   } catch (e) {
-    if (__DEV__) console.error(`Firestore getColDocs(${colName}):`, e);
-    return defaultVal;
+    // если orderBy не работает (нет индекса), пробуем без сортировки
+    try {
+      const snap = await getDocs(userCol(colName));
+      const items = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      return items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    } catch (e2) {
+      if (__DEV__) console.error(`Firestore getColDocs(${colName}):`, e2);
+      return defaultVal;
+    }
   }
 }
 
@@ -160,45 +158,14 @@ async function updateAccountBalance(accountId, amount, type) {
 const dataService = {
 
   // ─── TRANSACTIONS ────────────────────────────────────────
-  async getTransactions(forceRefresh = false) {
-    // 1. Кэш в памяти (30 сек)
-    if (!forceRefresh && _txCache && (Date.now() - _txCacheTime < TX_CACHE_TTL)) {
-      return _txCache;
-    }
+  async getTransactions() {
     const uid = getUid();
-    let txs;
-    if (uid) {
-      // 2. При первом запуске — показать локальный кэш пока Firestore грузится
-      //    Но НЕ после invalidation (dirty) — тогда нужны свежие данные
-      if (!_txCache && !_txDirty) {
-        try {
-          const local = await AsyncStorage.getItem(TX_LOCAL_CACHE_KEY);
-          if (local) {
-            _txCache = JSON.parse(local);
-            _txCacheTime = Date.now();
-            // Загрузить из Firestore в фоне и обновить кэш
-            getColDocs('transactions').then(fresh => {
-              _txCache = fresh;
-              _txCacheTime = Date.now();
-              AsyncStorage.setItem(TX_LOCAL_CACHE_KEY, JSON.stringify(fresh)).catch(() => {});
-            }).catch(() => {});
-            return _txCache;
-          }
-        } catch (e) { /* ignore */ }
-      }
-      txs = await getColDocs('transactions');
-      _txDirty = false;
-      // Сохранить в локальный кэш для следующего запуска
-      AsyncStorage.setItem(TX_LOCAL_CACHE_KEY, JSON.stringify(txs)).catch(() => {});
-    } else {
-      try {
-        const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
-        txs = data ? JSON.parse(data) : [];
-      } catch (e) { if (__DEV__) console.error('getTransactions error:', e); txs = []; }
-    }
-    _txCache = txs;
-    _txCacheTime = Date.now();
-    return txs;
+    if (uid) return getColDocs('transactions');
+    try {
+      const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
+      const txs = data ? JSON.parse(data) : [];
+      return txs;
+    } catch (e) { if (__DEV__) console.error('getTransactions error:', e); return []; }
   },
 
   async addTransaction(transaction) {
@@ -213,7 +180,6 @@ const dataService = {
         const txs = await this.getTransactions();
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([newTx, ...txs]));
       }
-      invalidateTxCache();
       if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       return newTx;
     } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
@@ -265,7 +231,6 @@ const dataService = {
         }
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(filtered));
       }
-      invalidateTxCache();
       return true;
     } catch (e) { if (__DEV__) console.error('deleteTransaction:', e); return false; }
   },
@@ -296,7 +261,6 @@ const dataService = {
         const newTx = { ...oldTx, ...changes };
         if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
-      invalidateTxCache();
       return true;
     } catch (e) { if (__DEV__) console.error('updateTransaction:', e); return false; }
   },
@@ -755,12 +719,10 @@ const dataService = {
         for (const name of singleDocs) {
           try { await deleteDoc(userDoc(name + '/data')); } catch (e) {}
         }
-        invalidateTxCache();
-        AsyncStorage.removeItem(TX_LOCAL_CACHE_KEY).catch(() => {});
         return true;
       } catch (e) { return false; }
     }
-    try { await AsyncStorage.multiRemove(Object.values(KEYS)); invalidateTxCache(); return true; } catch (e) { return false; }
+    try { await AsyncStorage.multiRemove(Object.values(KEYS)); return true; } catch (e) { return false; }
   },
 
   async exportData() {
@@ -858,5 +820,4 @@ const dataService = {
   },
 };
 
-export { invalidateTxCache };
 export default dataService;

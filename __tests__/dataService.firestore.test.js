@@ -117,13 +117,11 @@ jest.mock('firebase/firestore', () => {
 });
 
 const dataService = require('../src/services/dataService').default;
-const { invalidateTxCache } = require('../src/services/dataService');
 const firestoreMock = require('firebase/firestore');
 
 beforeEach(() => {
   firestoreMock.__state.collections = {};
   firestoreMock.__state.docs = {};
-  invalidateTxCache();
 });
 
 describe('dataService (firestore mode)', () => {

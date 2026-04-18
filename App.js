@@ -145,6 +145,10 @@ function AppInner() {
 
         setAuthSkipped(skipped === 'true');
 
+        // Check PIN lock before showing any screen
+        const pinOn = await securityService.isPinEnabled();
+        if (pinOn) setLocked(true);
+
         // Всегда слушаем auth — даже если флаги сброшены, юзер может быть залогинен
         unsubAuth = authService.onAuthChanged(async (u) => {
           if (u) try { await u.reload(); } catch (e) {}
@@ -172,6 +176,8 @@ function AppInner() {
             setScreen('auth');
           }
           }
+          // Auth resolved — safe to show the app now
+          setReady(true);
         });
       } catch (e) {
         if (__DEV__) console.error('Error loading:', e);
@@ -197,11 +203,7 @@ function AppInner() {
         }
       });
 
-      // Check PIN lock
-      const pinOn = await securityService.isPinEnabled();
-      if (pinOn) setLocked(true);
-
-      setReady(true);
+      // Notifications init — non-blocking, runs in background
     })();
 
     // Re-lock when app comes from background
