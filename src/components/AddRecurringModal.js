@@ -105,8 +105,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     } else {
       await dataService.addRecurring(data);
     }
-    onSave?.();
     onClose?.();
+    // Small delay to ensure Firestore offline cache is updated before reload
+    setTimeout(() => onSave?.(), 100);
   };
 
   const intervalLabel = (m) => {

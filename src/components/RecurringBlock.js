@@ -7,6 +7,7 @@ import Amount from './Amount';
 import Card from './Card';
 import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
+import { sym } from '../utils/currency';
 
 export default function RecurringBlock({
   recurring,
@@ -53,10 +54,12 @@ export default function RecurringBlock({
                   </View>
                   <View style={st.recInfo}>
                     <Text style={st.recName} numberOfLines={1}>{rec.recipient || rec.categoryName || i18n.t(rec.categoryId)}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                      <Amount value={rec.type === 'expense' ? -rec.amount : rec.amount} sign style={st.recMeta} color={rec.type === 'expense' ? colors.red : colors.green} />
-                      <Text style={st.recMeta}> · {dateLabel}</Text>
-                    </View>
+                    <Text style={st.recMeta} numberOfLines={1}>
+                      <Text style={{ color: rec.type === 'expense' ? colors.red : colors.green }}>
+                        {rec.type === 'expense' ? '-' : '+'}{Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}
+                      </Text>
+                      {' · '}{dateLabel}
+                    </Text>
                   </View>
                   <View style={st.recActions}>
                     <TouchableOpacity style={st.recSkip} onPress={() => onSkip(rec.id)}>
