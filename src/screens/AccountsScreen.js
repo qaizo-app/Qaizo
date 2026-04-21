@@ -176,15 +176,18 @@ export default function AccountsScreen() {
     if (deleteTarget) { await dataService.deleteAccount(deleteTarget.id); setDeleteTarget(null); setShowEdit(false); await loadData(); }
   };
 
-  const moveAccount = async (idx, direction) => {
-    // idx is index within active-only list; translate to full accounts index
-    const activeList = accounts.filter(a => a.isActive !== false);
-    const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= activeList.length) return;
-    const accA = activeList[idx];
-    const accB = activeList[newIdx];
-    const fullIdxA = accounts.findIndex(a => a.id === accA.id);
-    const fullIdxB = accounts.findIndex(a => a.id === accB.id);
+  // Move within a type group. direction = -1 (up) / +1 (down).
+  // Swaps the account with its nearest same-type neighbor in the full accounts array.
+  const moveAccount = async (accId, direction) => {
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    const sameTypeActive = accounts.filter(a => a.type === acc.type && a.isActive !== false);
+    const idxInGroup = sameTypeActive.findIndex(a => a.id === accId);
+    const targetIdxInGroup = idxInGroup + direction;
+    if (targetIdxInGroup < 0 || targetIdxInGroup >= sameTypeActive.length) return;
+    const target = sameTypeActive[targetIdxInGroup];
+    const fullIdxA = accounts.findIndex(a => a.id === accId);
+    const fullIdxB = accounts.findIndex(a => a.id === target.id);
     const reordered = [...accounts];
     [reordered[fullIdxA], reordered[fullIdxB]] = [reordered[fullIdxB], reordered[fullIdxA]];
     setAccounts(reordered);
@@ -249,27 +252,36 @@ export default function AccountsScreen() {
           {i18n.t('accountHint')}
         </Text>
 
-        {/* Reorder mode */}
-        {reorderMode && (
-          <View style={{ marginHorizontal: 20, gap: 6, marginBottom: 16 }}>
-            {active.map((acc, idx) => {
-              const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
-              const isLast = idx === active.length - 1;
-              return (
-                <View key={acc.id} style={{ flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 }}>
-                  <MaterialCommunityIcons name={cfg.icon} size={18} color={cfg.color} />
-                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600', flex: 1 }}>{acc.name}</Text>
-                  <TouchableOpacity onPress={() => moveAccount(idx, -1)} style={{ padding: 6 }} disabled={idx === 0}>
-                    <Feather name="chevron-up" size={20} color={idx === 0 ? colors.textMuted + '40' : colors.text} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => moveAccount(idx, 1)} style={{ padding: 6 }} disabled={isLast}>
-                    <Feather name="chevron-down" size={20} color={isLast ? colors.textMuted + '40' : colors.text} />
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </View>
-        )}
+        {/* Reorder mode — grouped by type so the order matches the normal view */}
+        {reorderMode && grouped.map(({ typeId, accs }) => {
+          const cfg = accountTypeConfig[typeId] || accountTypeConfig.bank;
+          return (
+            <View key={typeId} style={{ marginBottom: 16 }}>
+              <View style={styles.groupHeader}>
+                <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} />
+                <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+              </View>
+              <View style={{ marginHorizontal: 20, gap: 6 }}>
+                {accs.map((acc, idx) => {
+                  const isFirst = idx === 0;
+                  const isLast = idx === accs.length - 1;
+                  return (
+                    <View key={acc.id} style={{ flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 }}>
+                      <MaterialCommunityIcons name={cfg.icon} size={18} color={cfg.color} />
+                      <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600', flex: 1 }}>{acc.name}</Text>
+                      <TouchableOpacity onPress={() => moveAccount(acc.id, -1)} style={{ padding: 6 }} disabled={isFirst}>
+                        <Feather name="chevron-up" size={20} color={isFirst ? colors.textMuted + '40' : colors.text} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => moveAccount(acc.id, 1)} style={{ padding: 6 }} disabled={isLast}>
+                        <Feather name="chevron-down" size={20} color={isLast ? colors.textMuted + '40' : colors.text} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
 
         {/* Groups */}
         {!reorderMode && grouped.map(({ typeId, accs, sum }) => {
