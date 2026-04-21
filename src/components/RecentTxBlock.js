@@ -7,12 +7,13 @@ import TransactionItem from './TransactionItem';
 import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
-export default function RecentTxBlock({ recentTx, onDelete, onEdit, onDuplicate }) {
+export default function RecentTxBlock({ recentTx, accounts, onDelete, onEdit, onDuplicate }) {
   return (
     <Card>
       <Text style={st.blockTitle}>{i18n.t('recentTransactions')}</Text>
       {recentTx.length > 0 ? recentTx.map(tx => (
         <TransactionItem key={tx.id} transaction={tx}
+          currency={accounts?.find(a => a.id === tx.account)?.currency}
           onDelete={onDelete}
           onEdit={onEdit}
           onDuplicate={onDuplicate} />

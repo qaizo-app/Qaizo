@@ -516,6 +516,7 @@ export default function DashboardScreen() {
                 <RecentTxBlock
                   key="recentTx"
                   recentTx={recentTx}
+                  accounts={accounts}
                   onDelete={t => setDeleteTarget(t)}
                   onEdit={t => setEditTx(t)}
                   onDuplicate={handleDuplicate}

@@ -82,6 +82,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const renderItem = ({ item }) => (
     <TransactionItem transaction={item}
       runningBalance={item.runningBalance}
+      currency={account.currency}
       onDelete={(t) => setDeleteTarget(t)}
       onEdit={(t) => setEditTx(t)}
       onDuplicate={handleDuplicate} />
@@ -104,8 +105,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       <View style={styles.balCard}>
         <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
-        <Amount value={currentBalance} style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} />
-        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: <Amount value={account.overdraft} style={styles.odText} /></Text>}
+        <Amount value={currentBalance} style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
+        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: <Amount value={account.overdraft} style={styles.odText} currency={account.currency} /></Text>}
       </View>
 
       {chartData.length >= 2 && (

@@ -373,6 +373,7 @@ export default function TransactionsScreen({ route }) {
         renderItem={({ item }) => (
           <TransactionItem
             transaction={item}
+            currency={accounts.find(a => a.id === item.account)?.currency}
             onDelete={(t) => setDeleteTarget(t)}
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}
