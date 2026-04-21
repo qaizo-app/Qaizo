@@ -59,6 +59,7 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import SetupWizardScreen from './src/screens/SetupWizardScreen';
 import authService from './src/services/authService';
 import dataService from './src/services/dataService';
+import exchangeRateService from './src/services/exchangeRateService';
 import notificationService from './src/services/notificationService';
 import securityService from './src/services/securityService';
 import PinScreen from './src/screens/PinScreen';
@@ -129,6 +130,9 @@ function AppInner() {
           const cur = CURRENCIES.find(c => c.symbol === settings.currency);
           if (cur) setCurrency(cur.symbol, cur.code);
         }
+
+        // Hydrate FX rates from disk + trigger background refresh (non-blocking)
+        exchangeRateService.init().catch(() => {});
 
         let lang;
         const savedLangCode = await AsyncStorage.getItem('qaizo_lang_code');

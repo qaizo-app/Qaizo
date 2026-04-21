@@ -37,7 +37,9 @@ const CURRENCIES = [
   { symbol: 'lei', code: 'RON', name: 'Romanian Leu' },
 ];
 
-// Примерные курсы к ILS (обновлять вручную или через API)
+// Kept for backwards compatibility; live rates come from exchangeRateService.
+// These values are only used as a static sanity fallback in environments where
+// the service has not been initialised (e.g. some unit tests).
 const RATES_TO_ILS = {
   ILS: 1,
   USD: 3.65,
@@ -121,18 +123,36 @@ export function fmtSigned(amount, type) {
   return `${sign}${fmtNum(amount)} ${_symbol}`;
 }
 
-// Конвертация между валютами
+// Конвертация между валютами — использует live rates через exchangeRateService.
+// Fallback к статическим RATES_TO_ILS только если код неизвестен сервису.
+function liveGetRate(fromCode, toCode) {
+  try {
+    // Lazy require to avoid circular import issues at module init time
+    const fx = require('../services/exchangeRateService').default;
+    const rate = fx.getRate(fromCode, toCode);
+    if (rate && rate !== 1) return rate;
+    if (fromCode === toCode) return 1;
+    // Service does not know both codes → static fallback
+    const fromRate = RATES_TO_ILS[fromCode];
+    const toRate = RATES_TO_ILS[toCode];
+    if (fromRate && toRate) return fromRate / toRate;
+    return rate; // 1 — sensible default when everything else fails
+  } catch (e) {
+    if (fromCode === toCode) return 1;
+    const fromRate = RATES_TO_ILS[fromCode] || 1;
+    const toRate = RATES_TO_ILS[toCode] || 1;
+    return fromRate / toRate;
+  }
+}
+
 export function convert(amount, fromCode, toCode) {
-  if (fromCode === toCode) return amount;
-  const fromRate = RATES_TO_ILS[fromCode] || 1;
-  const toRate = RATES_TO_ILS[toCode] || 1;
-  return Math.round((amount * fromRate / toRate) * 100) / 100;
+  if (!amount || fromCode === toCode) return amount || 0;
+  const rate = liveGetRate(fromCode, toCode);
+  return Math.round(amount * rate * 100) / 100;
 }
 
 export function getRate(fromCode, toCode) {
-  const fromRate = RATES_TO_ILS[fromCode] || 1;
-  const toRate = RATES_TO_ILS[toCode] || 1;
-  return fromRate / toRate;
+  return liveGetRate(fromCode, toCode);
 }
 
 export { CURRENCIES, RATES_TO_ILS };
