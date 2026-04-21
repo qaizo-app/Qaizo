@@ -1,6 +1,6 @@
 // src/components/AddRecurringModal.js
 // Модал создания запланированного платежа
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
@@ -213,7 +213,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           {(() => { const ci = getCatIcon(categoryId, catGroups); return (
           <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
             <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
-              <Feather name={ci.icon} size={20} color={ci.color} />
+              {ci.icon?.startsWith('ion:')
+                ? <Ionicons name={ci.icon.slice(4)} size={20} color={ci.color} />
+                : <Feather name={ci.icon} size={20} color={ci.color} />}
             </View>
             <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, i18n.getLanguage())}</Text>
             <Feather name="chevron-down" size={18} color={colors.textMuted} />

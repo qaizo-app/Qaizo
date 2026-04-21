@@ -273,7 +273,9 @@ export default function CategoriesScreen() {
             {/* Group header */}
             <TouchableOpacity style={styles.groupRow} onPress={() => toggleGroup(group.id)} onLongPress={() => openEditGroup(group)}>
               <View style={[styles.groupIcon, { backgroundColor: `${group.color}18` }]}>
-                <Feather name={group.icon} size={18} color={group.color} />
+                {group.icon?.startsWith('ion:')
+                  ? <Ionicons name={group.icon.slice(4)} size={18} color={group.color} />
+                  : <Feather name={group.icon} size={18} color={group.color} />}
               </View>
               <Text style={styles.groupName} numberOfLines={1}>{getName(group.name)}</Text>
               <Text style={styles.subCount}>{group.subs.length}</Text>
@@ -297,7 +299,9 @@ export default function CategoriesScreen() {
                       }
                     }}>
                     <View style={[styles.subIcon, { backgroundColor: `${group.color}10` }]}>
-                      <Feather name={sub.icon} size={14} color={group.color} />
+                      {sub.icon?.startsWith('ion:')
+                        ? <Ionicons name={sub.icon.slice(4)} size={14} color={group.color} />
+                        : <Feather name={sub.icon} size={14} color={group.color} />}
                     </View>
                     <Text style={styles.subName} numberOfLines={1}>{getName(sub.name)}</Text>
                     <Feather name="edit-2" size={14} color={colors.textMuted} />
