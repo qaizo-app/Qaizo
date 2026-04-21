@@ -25,7 +25,6 @@ export default {
   thisMonth: '今月',
   recentTransactions: '最近の取引',
   seeAll: 'すべて見る',
-  details: '詳細',
   expensesByCategory: 'カテゴリ別支出',
   sixMonths: '6ヶ月',
 

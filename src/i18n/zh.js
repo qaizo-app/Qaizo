@@ -25,7 +25,6 @@ export default {
   thisMonth: '本月',
   recentTransactions: '最近交易',
   seeAll: '查看全部',
-  details: '详情',
   expensesByCategory: '按类别支出',
   sixMonths: '6个月',
 

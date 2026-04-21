@@ -27,7 +27,6 @@ export default {
   thisMonth: 'Этот месяц',
   recentTransactions: 'Последние транзакции',
   seeAll: 'Все',
-  details: 'Подробнее',
   expensesByCategory: 'Расходы по категориям',
   sixMonths: '6 месяцев',
 

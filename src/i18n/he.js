@@ -25,7 +25,6 @@ export default {
   thisMonth: 'החודש',
   recentTransactions: 'תנועות אחרונות',
   seeAll: 'הכל',
-  details: 'פרטים',
   expensesByCategory: 'הוצאות לפי קטגוריה',
   sixMonths: '6 חודשים',
 

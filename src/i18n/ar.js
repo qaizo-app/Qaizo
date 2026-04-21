@@ -25,7 +25,6 @@ export default {
   thisMonth: 'هذا الشهر',
   recentTransactions: 'المعاملات الأخيرة',
   seeAll: 'عرض الكل',
-  details: 'التفاصيل',
   expensesByCategory: 'المصروفات حسب الفئة',
   sixMonths: '6 أشهر',
 
