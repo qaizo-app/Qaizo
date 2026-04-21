@@ -219,6 +219,7 @@ export default {
   data: 'البيانات',
   exportData: 'تصدير البيانات',
   report: 'تقرير',
+  sentryTestSent: 'تم إرسال التقرير التجريبي إلى Sentry',
   importData: 'استيراد البيانات',
   clearData: 'مسح البيانات',
   deleteAllData: 'حذف جميع البيانات؟',

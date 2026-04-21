@@ -219,6 +219,7 @@ export default {
   data: 'डेटा',
   exportData: 'डेटा निर्यात करें',
   report: 'रिपोर्ट',
+  sentryTestSent: 'परीक्षण रिपोर्ट Sentry को भेजी गई',
   importData: 'डेटा आयात करें',
   clearData: 'डेटा साफ करें',
   deleteAllData: 'सभी डेटा हटाएं?',

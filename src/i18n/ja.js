@@ -219,6 +219,7 @@ export default {
   data: 'データ',
   exportData: 'データをエクスポート',
   report: 'レポート',
+  sentryTestSent: 'テストレポートをSentryに送信しました',
   importData: 'データをインポート',
   clearData: 'データを消去',
   deleteAllData: 'すべてのデータを削除しますか？',

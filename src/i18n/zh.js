@@ -219,6 +219,7 @@ export default {
   data: '数据',
   exportData: '导出数据',
   report: '报告',
+  sentryTestSent: '测试报告已发送到 Sentry',
   importData: '导入数据',
   clearData: '清除数据',
   deleteAllData: '删除所有数据？',

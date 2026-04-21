@@ -3,9 +3,14 @@
 let Sentry = null;
 try {
   Sentry = require('@sentry/react-native');
+  const appJson = require('./app.json');
+  const version = appJson?.expo?.version || '0.0.0';
+  const build = appJson?.expo?.android?.versionCode || 0;
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     enabled: !__DEV__,
+    release: `com.qaizo.app@${version}+${build}`,
+    dist: String(build),
     tracesSampleRate: 0,
     enableStallTracking: false,
     enableAppStartTracking: false,

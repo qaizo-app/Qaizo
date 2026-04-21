@@ -224,6 +224,7 @@ export default {
   data: 'Datos',
   exportData: 'Exportar Datos',
   report: 'Informe',
+  sentryTestSent: 'Informe de prueba enviado a Sentry',
   importData: 'Importar Datos',
   clearData: 'Borrar Datos',
   deleteAllData: '¿Eliminar todos los datos?',
