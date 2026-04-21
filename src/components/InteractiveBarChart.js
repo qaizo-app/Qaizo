@@ -2,6 +2,7 @@
 // Interactive bar chart for 6-month income/expense comparison
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import i18n from '../i18n';
 import Amount from './Amount';
@@ -12,7 +13,7 @@ function formatAmount(n) {
   return String(Math.round(n));
 }
 
-export default function InteractiveBarChart({ data, maxBar }) {
+export default function InteractiveBarChart({ data, maxBar, onBarActivate }) {
   const [selected, setSelected] = useState(null);
   const animValues = useRef(data.map(() => new Animated.Value(0))).current;
   const st = createSt();
@@ -30,8 +31,17 @@ export default function InteractiveBarChart({ data, maxBar }) {
     <View>
       {/* Tooltip */}
       {selectedData && (
-        <View style={st.tooltip}>
-          <Text style={st.tooltipMonth}>{selectedData.month}</Text>
+        <TouchableOpacity style={st.tooltip} activeOpacity={onBarActivate ? 0.7 : 1}
+          onPress={() => onBarActivate && onBarActivate(selectedData)}>
+          <View style={st.tooltipHeader}>
+            <Text style={st.tooltipMonth}>{selectedData.month}</Text>
+            {onBarActivate && (
+              <View style={st.tooltipHint}>
+                <Text style={st.tooltipHintText}>{i18n.t('details')}</Text>
+                <Feather name={i18n.isRTL() ? 'chevron-left' : 'chevron-right'} size={14} color={colors.green} />
+              </View>
+            )}
+          </View>
           <View style={st.tooltipRow}>
             <View style={[st.tooltipDot, { backgroundColor: colors.green }]} />
             <Text style={st.tooltipLabel}>{i18n.t('income')}:</Text>
@@ -42,7 +52,7 @@ export default function InteractiveBarChart({ data, maxBar }) {
             <Text style={st.tooltipLabel}>{i18n.t('expenses')}:</Text>
             <Amount value={-selectedData.expense} sign style={st.tooltipVal} color={colors.red} />
           </View>
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* Chart */}
@@ -56,7 +66,11 @@ export default function InteractiveBarChart({ data, maxBar }) {
             <TouchableOpacity
               key={idx}
               style={[st.barGroup, isSelected && st.barGroupActive]}
-              onPress={() => setSelected(selected === idx ? null : idx)}
+              onPress={() => {
+                if (selected === idx && onBarActivate) onBarActivate(d);
+                else setSelected(idx);
+              }}
+              onLongPress={() => onBarActivate && onBarActivate(d)}
               activeOpacity={0.7}
             >
               {/* Amount labels on top */}
@@ -106,7 +120,10 @@ export default function InteractiveBarChart({ data, maxBar }) {
 
 const createSt = () => StyleSheet.create({
   tooltip: { backgroundColor: colors.bg2, borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
-  tooltipMonth: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 6, textAlign: i18n.textAlign() },
+  tooltipHeader: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  tooltipMonth: { color: colors.text, fontSize: 14, fontWeight: '700', textAlign: i18n.textAlign() },
+  tooltipHint: { flexDirection: i18n.row(), alignItems: 'center', gap: 2 },
+  tooltipHintText: { color: colors.green, fontSize: 12, fontWeight: '600' },
   tooltipRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 2 },
   tooltipDot: { width: 8, height: 8, borderRadius: 4 },
   tooltipLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600' },

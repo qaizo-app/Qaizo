@@ -65,7 +65,13 @@ export default function TransactionsScreen({ route }) {
       setShowFilters(true);
       if (route.params) route.params.filterProject = null;
     }
-  }, [route?.params?.openAdd, route?.params?.filterProject]));
+    if (route?.params?.filterDateFrom || route?.params?.filterDateTo) {
+      if (route.params.filterDateFrom) setDateFrom(route.params.filterDateFrom);
+      if (route.params.filterDateTo) setDateTo(route.params.filterDateTo);
+      setShowFilters(true);
+      if (route.params) { route.params.filterDateFrom = null; route.params.filterDateTo = null; }
+    }
+  }, [route?.params?.openAdd, route?.params?.filterProject, route?.params?.filterDateFrom, route?.params?.filterDateTo]));
 
   // Count active filters
   const activeFilterCount = (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (selCategories.length > 0 ? 1 : 0) + (selAccounts.length > 0 ? 1 : 0) + (amountMin ? 1 : 0) + (amountMax ? 1 : 0) + (selProjects.length > 0 ? 1 : 0);

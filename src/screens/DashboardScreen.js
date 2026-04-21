@@ -16,6 +16,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import DashboardLayoutModal, { DEFAULT_LAYOUT } from '../components/DashboardLayoutModal';
 import FreeMoneyTodayBlock from '../components/FreeMoneyTodayBlock';
 import GoalsBlock from '../components/GoalsBlock';
+import MonthDetailModal from '../components/MonthDetailModal';
 import PieChartCard from '../components/PieChartCard';
 import RecentTxBlock from '../components/RecentTxBlock';
 import RecurringBlock from '../components/RecurringBlock';
@@ -65,6 +66,7 @@ export default function DashboardScreen() {
   const [newMilestone, setNewMilestone] = useState(null);
   const [weekStart, setWeekStart] = useState('sunday');
   const [notifications, setNotifications] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [dashLayout, setDashLayout] = useState(DEFAULT_LAYOUT);
   const [showLayoutModal, setShowLayoutModal] = useState(false);
@@ -281,7 +283,7 @@ export default function DashboardScreen() {
       });
       const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      _barData.push({ month: (fullMonths[lang] || fullMonths.en)[m.getMonth()], income: inc, expense: exp });
+      _barData.push({ month: (fullMonths[lang] || fullMonths.en)[m.getMonth()], monthIndex: m.getMonth(), year: m.getFullYear(), income: inc, expense: exp });
     }
     const _maxBar = Math.max(..._barData.map(d => Math.max(d.income, d.expense)), 1);
 
@@ -499,7 +501,7 @@ export default function DashboardScreen() {
                 />
               );
             case 'barChart':
-              return <BarChartCard key="barChart" barData={barData} maxBar={maxBar} />;
+              return <BarChartCard key="barChart" barData={barData} maxBar={maxBar} onBarActivate={setSelectedMonth} />;
             case 'goals':
               return (
                 <GoalsBlock
@@ -689,6 +691,15 @@ export default function DashboardScreen() {
         onClose={() => setShowSmartInput(false)} onSaved={() => loadData()} />
       <ReceiptScannerModal visible={showReceipt}
         onClose={() => setShowReceipt(false)} onSaved={() => loadData()} />
+
+      <MonthDetailModal visible={!!selectedMonth} onClose={() => setSelectedMonth(null)}
+        monthInfo={selectedMonth} transactions={transactions}
+        onShowTransactions={(m) => {
+          const from = `${m.year}-${String(m.monthIndex + 1).padStart(2, '0')}-01`;
+          const lastDay = new Date(m.year, m.monthIndex + 1, 0).getDate();
+          const to = `${m.year}-${String(m.monthIndex + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+          navigation.navigate('Transactions', { filterDateFrom: from, filterDateTo: to });
+        }} />
 
       {/* Notifications modal */}
       <Modal visible={showNotifModal} transparent animationType="fade" onRequestClose={() => setShowNotifModal(false)}>

@@ -25,6 +25,7 @@ export default {
   thisMonth: 'Ce mois',
   recentTransactions: 'Transactions récentes',
   seeAll: 'Voir tout',
+  details: 'Détails',
   expensesByCategory: 'Dépenses par catégorie',
   sixMonths: '6 mois',
 

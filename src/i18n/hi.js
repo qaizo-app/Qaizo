@@ -25,6 +25,7 @@ export default {
   thisMonth: 'इस महीने',
   recentTransactions: 'हाल के लेनदेन',
   seeAll: 'सभी देखें',
+  details: 'विवरण',
   expensesByCategory: 'श्रेणी के अनुसार खर्च',
   sixMonths: '6 महीने',
 
