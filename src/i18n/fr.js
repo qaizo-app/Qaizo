@@ -218,6 +218,7 @@ export default {
   darkMode: 'Mode sombre',
   data: 'Données',
   exportData: 'Exporter les données',
+  report: 'Rapport',
   importData: 'Importer les données',
   clearData: 'Effacer les données',
   deleteAllData: 'Supprimer toutes les données ?',

@@ -220,6 +220,7 @@ export default {
   darkMode: 'מצב כהה',
   data: 'נתונים',
   exportData: 'ייצוא נתונים',
+  report: 'דוח',
   importData: 'ייבוא נתונים',
   clearData: 'מחיקת נתונים',
   deleteAllData: '?למחוק את כל הנתונים',

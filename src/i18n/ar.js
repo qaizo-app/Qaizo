@@ -218,6 +218,7 @@ export default {
   darkMode: 'الوضع الداكن',
   data: 'البيانات',
   exportData: 'تصدير البيانات',
+  report: 'تقرير',
   importData: 'استيراد البيانات',
   clearData: 'مسح البيانات',
   deleteAllData: 'حذف جميع البيانات؟',

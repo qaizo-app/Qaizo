@@ -228,6 +228,7 @@ export default {
   darkMode: 'Тёмная тема',
   data: 'Данные',
   exportData: 'Экспорт данных',
+  report: 'Отчёт',
   importData: 'Импорт данных',
   clearData: 'Очистить данные',
   deleteAllData: 'Удалить все данные?',

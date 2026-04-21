@@ -3,7 +3,7 @@
 
 jest.mock('../src/i18n', () => ({
   __esModule: true,
-  default: { t: (key) => key },
+  default: { t: (key) => key, getLanguage: () => 'en' },
 }));
 
 jest.mock('../src/utils/currency', () => ({
@@ -156,8 +156,11 @@ describe('exportService', () => {
     expect(html).toContain('Qaizo');
     expect(html).toContain('100');
     expect(html).toContain('5,000');
-    expect(html).toContain('#22c55e'); // income color
-    expect(html).toContain('#ef4444'); // expense color
+    // Summary sections (category/account breakdowns) present
+    expect(html).toContain('expensesByCategory');
+    expect(html).toContain('netFlow');
+    // Summary amounts rendered with currency symbol
+    expect(html).toContain('₪');
 
     expect(Sharing.shareAsync).toHaveBeenCalledWith(
       '/tmp/out.pdf',
@@ -167,5 +170,75 @@ describe('exportService', () => {
 
   test('exportPDF throws NO_DATA when empty', async () => {
     await expect(exportService.exportPDF()).rejects.toThrow('NO_DATA');
+  });
+
+  test('exportPDF uses RTL direction for Hebrew', async () => {
+    const i18n = require('../src/i18n').default;
+    i18n.getLanguage = () => 'he';
+    seedData();
+    await exportService.exportPDF();
+    const { html } = Print.printToFileAsync.mock.calls[0][0];
+    expect(html).toContain('dir="rtl"');
+    expect(html).toContain('lang="he"');
+    i18n.getLanguage = () => 'en';
+  });
+});
+
+describe('exportService._internal', () => {
+  const I = exportService._internal;
+
+  test('escapeHtml escapes dangerous chars', () => {
+    expect(I.escapeHtml('<script>alert("x")</script>')).toBe(
+      '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;'
+    );
+    expect(I.escapeHtml("it's & 'quoted'")).toBe('it&#39;s &amp; &#39;quoted&#39;');
+    expect(I.escapeHtml(null)).toBe('');
+    expect(I.escapeHtml(undefined)).toBe('');
+  });
+
+  test('buildCategoryBreakdown aggregates and sorts by amount desc', () => {
+    const txs = [
+      { type: 'expense', amount: 50, categoryId: 'food' },
+      { type: 'expense', amount: 200, categoryId: 'rent' },
+      { type: 'expense', amount: 30, categoryId: 'food' },
+      { type: 'income', amount: 5000, categoryId: 'salary_me' }, // filtered out
+    ];
+    const result = I.buildCategoryBreakdown(txs, 'expense');
+    expect(result[0].id).toBe('rent');
+    expect(result[0].amount).toBe(200);
+    expect(result[1].id).toBe('food');
+    expect(result[1].amount).toBe(80);
+    expect(result).toHaveLength(2);
+  });
+
+  test('buildAccountBreakdown sums income/expense per account', () => {
+    const txs = [
+      { type: 'income', amount: 5000, account: 'a1' },
+      { type: 'expense', amount: 300, account: 'a1' },
+      { type: 'expense', amount: 150, account: 'a2' },
+    ];
+    const accMap = { a1: 'Checking', a2: 'Credit Card' };
+    const result = I.buildAccountBreakdown(txs, accMap);
+    const checking = result.find(r => r.name === 'Checking');
+    expect(checking.income).toBe(5000);
+    expect(checking.expense).toBe(300);
+    expect(checking.count).toBe(2);
+    const credit = result.find(r => r.name === 'Credit Card');
+    expect(credit.income).toBe(0);
+    expect(credit.expense).toBe(150);
+  });
+
+  test('buildDailySeries groups by date in ISO ascending order', () => {
+    const txs = [
+      { type: 'expense', amount: 50, date: '2026-01-15T10:00:00Z' },
+      { type: 'income', amount: 1000, date: '2026-01-10T10:00:00Z' },
+      { type: 'expense', amount: 20, date: '2026-01-15T14:00:00Z' }, // same day
+    ];
+    const result = I.buildDailySeries(txs);
+    expect(result).toHaveLength(2);
+    expect(result[0].date).toBe('2026-01-10');
+    expect(result[0].income).toBe(1000);
+    expect(result[1].date).toBe('2026-01-15');
+    expect(result[1].expense).toBe(70);
   });
 });

@@ -218,6 +218,7 @@ export default {
   darkMode: 'ダークモード',
   data: 'データ',
   exportData: 'データをエクスポート',
+  report: 'レポート',
   importData: 'データをインポート',
   clearData: 'データを消去',
   deleteAllData: 'すべてのデータを削除しますか？',

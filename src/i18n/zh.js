@@ -218,6 +218,7 @@ export default {
   darkMode: '深色模式',
   data: '数据',
   exportData: '导出数据',
+  report: '报告',
   importData: '导入数据',
   clearData: '清除数据',
   deleteAllData: '删除所有数据？',

@@ -222,6 +222,7 @@ export default {
   darkMode: 'Dark Mode',
   data: 'Data',
   exportData: 'Export Data',
+  report: 'Report',
   importData: 'Import Data',
   clearData: 'Clear Data',
   deleteAllData: 'Delete all data?',

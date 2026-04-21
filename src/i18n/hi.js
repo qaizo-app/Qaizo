@@ -218,6 +218,7 @@ export default {
   darkMode: 'डार्क मोड',
   data: 'डेटा',
   exportData: 'डेटा निर्यात करें',
+  report: 'रिपोर्ट',
   importData: 'डेटा आयात करें',
   clearData: 'डेटा साफ करें',
   deleteAllData: 'सभी डेटा हटाएं?',
