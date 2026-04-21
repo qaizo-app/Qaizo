@@ -11,7 +11,7 @@ import { getCatName } from './CategoryPickerModal';
 import CategoryIcon, { getCachedGroups } from './CategoryIcon';
 
 
-export default function TransactionItem({ transaction, onDelete, onEdit, onDuplicate }) {
+export default function TransactionItem({ transaction, onDelete, onEdit, onDuplicate, runningBalance }) {
   const swipeRef = useRef(null);
   const styles = createStyles();
   const isTransfer = !!transaction.isTransfer;
@@ -62,6 +62,9 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
         <View style={styles.amountContainer}>
           <Amount value={isMergedTransfer ? -transaction.amount : isIncome ? transaction.amount : isTransfer ? transaction.amount : -transaction.amount} sign={isMergedTransfer || !isTransfer} style={styles.amount} color={amountColor} />
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
+          {runningBalance !== undefined && (
+            <Amount value={runningBalance} style={styles.runBal} color={runningBalance >= 0 ? colors.textMuted : colors.red} />
+          )}
         </View>
       </View>
     </Swipeable>
@@ -92,6 +95,7 @@ const createStyles = () => StyleSheet.create({
   amountContainer: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
   amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3, writingDirection: 'ltr' },
   date: { color: colors.textMuted, fontSize: 12, marginTop: 3, alignSelf: 'flex-end' },
+  runBal: { fontSize: 10, fontWeight: '500', marginTop: 2, alignSelf: 'flex-end' },
 
   actionsRow: { flexDirection: i18n.row() },
   actionBtn: {

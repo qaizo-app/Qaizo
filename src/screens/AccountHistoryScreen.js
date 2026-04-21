@@ -80,17 +80,11 @@ export default function AccountHistoryScreen({ route, navigation }) {
   })();
 
   const renderItem = ({ item }) => (
-    <View>
-      <TransactionItem transaction={item}
-        onDelete={(t) => setDeleteTarget(t)}
-        onEdit={(t) => setEditTx(t)}
-        onDuplicate={handleDuplicate} />
-      <View style={styles.balLine}>
-        <Text style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]}>
-          {lang==='ru'?'Остаток':lang==='he'?'יתרה':'Bal'}: <Amount value={item.runningBalance} style={[styles.runBal, { color: item.runningBalance >= 0 ? colors.textMuted : colors.red }]} />
-        </Text>
-      </View>
-    </View>
+    <TransactionItem transaction={item}
+      runningBalance={item.runningBalance}
+      onDelete={(t) => setDeleteTarget(t)}
+      onEdit={(t) => setEditTx(t)}
+      onDuplicate={handleDuplicate} />
   );
 
   return (
