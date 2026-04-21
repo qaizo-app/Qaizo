@@ -261,9 +261,12 @@ export default function InvestmentsScreen() {
                       <View style={styles.holdingHead}>
                         <Text style={styles.holdingTicker}>{h.ticker}</Text>
                         {q && (
-                          <Text style={[styles.holdingChange, { color: (q.change24h || 0) >= 0 ? colors.green : colors.red }]}>
-                            {q.change24h >= 0 ? '+' : ''}{(q.change24h || 0).toFixed(2)}%{q.stale ? ' ·' : ''}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                            <Text style={[styles.holdingChange, { color: (q.change24h || 0) >= 0 ? colors.green : colors.red }]}>
+                              {q.change24h >= 0 ? '+' : ''}{(q.change24h || 0).toFixed(2)}%
+                            </Text>
+                            {q.stale && <Feather name="wifi-off" size={10} color={colors.textMuted} />}
+                          </View>
                         )}
                         <TouchableOpacity onPress={() => removeHolding(h.ticker)} style={styles.holdingDel}>
                           <Feather name="x" size={14} color={colors.red} />

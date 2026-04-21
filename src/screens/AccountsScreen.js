@@ -368,7 +368,10 @@ export default function AccountsScreen() {
                       <View style={{ width: 56 }}>
                         <Text style={styles.holdingSym}>{h.symbol}</Text>
                         {info && (
-                          <Text style={[styles.holdingChange, { color: changeColor }]}>{change >= 0 ? '+' : ''}{change.toFixed(1)}%{info.stale ? ' ·' : ''}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                            <Text style={[styles.holdingChange, { color: changeColor }]}>{change >= 0 ? '+' : ''}{change.toFixed(1)}%</Text>
+                            {info.stale && <Feather name="wifi-off" size={9} color={colors.textMuted} />}
+                          </View>
                         )}
                       </View>
                       <TextInput
@@ -498,7 +501,7 @@ const createStyles = () => StyleSheet.create({
   holdingSym:{color:colors.text,fontSize:14,fontWeight:'700'},
   holdingChange:{fontSize:10,fontWeight:'600'},
   holdingAmt:{flex:1,backgroundColor:colors.bg2,borderRadius:8,paddingHorizontal:10,paddingVertical:8,color:colors.text,fontSize:13,fontWeight:'600'},
-  holdingVal:{fontSize:12,fontWeight:'700',minWidth:60,textAlign:'end'},
+  holdingVal:{fontSize:12,fontWeight:'700',minWidth:60,textAlign:i18n.isRTL()?'left':'right'},
   holdingDel:{width:28,height:28,borderRadius:8,backgroundColor:colors.redSoft,justifyContent:'center',alignItems:'center'},
   addHoldingRow:{marginTop:4,marginBottom:8},
   coinChip:{paddingHorizontal:10,paddingVertical:6,borderRadius:10,backgroundColor:colors.bg2,borderWidth:1,borderColor:colors.cardBorder,marginEnd:6},
