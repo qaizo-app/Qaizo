@@ -58,15 +58,23 @@ export default function AccountsScreen() {
     const [accs, rec] = await Promise.all([dataService.getAccounts(), dataService.getRecurring()]);
     setAccounts(accs);
     setRecurring(rec);
-    // Collect all unique symbols from crypto accounts, fetch prices in one call
-    const symbols = new Set();
-    accs.forEach(a => { if (a.type === 'crypto' && Array.isArray(a.holdings)) a.holdings.forEach(h => h.symbol && symbols.add(h.symbol.toUpperCase())); });
-    if (symbols.size > 0) {
-      const p = await cryptoService.fetchPrices([...symbols], code(), force);
-      setPrices(p);
-    } else {
-      setPrices({});
-    }
+    // Group crypto accounts by currency so each batch of prices is denominated
+    // in the account's chosen currency (not global).
+    const byCurrency = {}; // { USD: Set('BTC','ETH'), ILS: Set('SOL'), ... }
+    accs.forEach(a => {
+      if (a.type !== 'crypto' || !Array.isArray(a.holdings)) return;
+      const accCode = CURRENCIES.find(c => c.symbol === a.currency)?.code || code();
+      if (!byCurrency[accCode]) byCurrency[accCode] = new Set();
+      a.holdings.forEach(h => h.symbol && byCurrency[accCode].add(h.symbol.toUpperCase()));
+    });
+    const currencies = Object.keys(byCurrency);
+    if (currencies.length === 0) { setPrices({}); return; }
+    const entries = await Promise.all(
+      currencies.map(async (cur) => [cur, await cryptoService.fetchPrices([...byCurrency[cur]], cur, force)])
+    );
+    const next = {};
+    entries.forEach(([cur, data]) => { next[cur] = data; });
+    setPrices(next);
   };
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
@@ -79,15 +87,16 @@ export default function AccountsScreen() {
     }
   };
 
-  // Compute balance for crypto account from holdings (in global currency)
+  // Compute balance for crypto account from holdings, denominated in the
+  // account's own currency (prices were fetched per-currency in loadData).
   const cryptoBalance = (acc) => {
     if (!Array.isArray(acc.holdings) || acc.holdings.length === 0) return acc.balance || 0;
-    return cryptoService.holdingsValue(acc.holdings, prices);
+    const accCode = CURRENCIES.find(c => c.symbol === acc.currency)?.code || code();
+    const priceMap = prices[accCode] || {};
+    return cryptoService.holdingsValue(acc.holdings, priceMap);
   };
   const getAccountBalance = (acc) => acc.type === 'crypto' ? cryptoBalance(acc) : (acc.balance || 0);
-  const getAccountCode = (acc) => acc.type === 'crypto'
-    ? code()
-    : (CURRENCIES.find(c => c.symbol === acc.currency)?.code || code());
+  const getAccountCode = (acc) => CURRENCIES.find(c => c.symbol === acc.currency)?.code || code();
 
   // Calculate projected balance per account (current + upcoming recurring before end of month)
   // For credit accounts, `overdraft` field stores the credit limit → same math: minAllowed = -limit
@@ -166,7 +175,6 @@ export default function AccountsScreen() {
     const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat((balance||'').replace(',','.'))||0, overdraft:overdraft?parseFloat(overdraft.replace(',','.')):null, billingDay: type==='credit'?billingDay:null, isActive, icon:cfg.icon };
     if (type === 'crypto') {
       data.holdings = holdings.filter(h => h.symbol && h.amount > 0);
-      data.currency = sym(); // crypto displays in global currency
     }
     if (editAccount) await dataService.updateAccount(editAccount.id, data);
     else await dataService.addAccount(data);
@@ -204,7 +212,7 @@ export default function AccountsScreen() {
     const statusColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : null;
     const balColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : (bal >= 0 ? colors.green : colors.red);
     const holdingsCount = isCrypto && Array.isArray(acc.holdings) ? acc.holdings.length : 0;
-    const displayCurrency = isCrypto ? sym() : acc.currency;
+    const displayCurrency = acc.currency;
     return (
       <TouchableOpacity key={acc.id}
         style={[styles.tile,
@@ -362,7 +370,9 @@ export default function AccountsScreen() {
               </>
             )}
 
-            {type === 'crypto' && (
+            {type === 'crypto' && (() => {
+              const editPriceMap = prices[currencyCode] || {};
+              return (
               <View style={{ marginBottom: 16 }}>
                 <Text style={styles.fieldLabel}>{i18n.t('cryptoHoldings')}</Text>
                 {holdings.length === 0 && (
@@ -371,7 +381,7 @@ export default function AccountsScreen() {
                   </Text>
                 )}
                 {holdings.map(h => {
-                  const info = prices[h.symbol];
+                  const info = editPriceMap[h.symbol];
                   const val = (info?.price || 0) * (parseFloat(h.amount) || 0);
                   const change = info?.change24h || 0;
                   const changeColor = change >= 0 ? colors.green : colors.red;
@@ -394,7 +404,7 @@ export default function AccountsScreen() {
                         placeholder="0"
                         placeholderTextColor={colors.textMuted}
                       />
-                      <Amount value={val} style={styles.holdingVal} color={colors.textSecondary} />
+                      <Amount value={val} style={styles.holdingVal} color={colors.textSecondary} currency={currency} />
                       <TouchableOpacity onPress={() => removeHolding(h.symbol)} style={styles.holdingDel}>
                         <Feather name="x" size={14} color={colors.red} />
                       </TouchableOpacity>
@@ -432,7 +442,8 @@ export default function AccountsScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            )}
+              );
+            })()}
 
             {(type==='bank'||type==='credit')&&(
               <View style={{ flexDirection: 'row', gap: 12 }}>
