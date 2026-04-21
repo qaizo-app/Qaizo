@@ -2,7 +2,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Amount from '../components/Amount';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
@@ -30,21 +30,27 @@ export default function InvestmentsScreen() {
   const [newShares, setNewShares] = useState('');
   const [newAvgCost, setNewAvgCost] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const styles = createStyles();
 
-  const loadData = async () => {
+  const loadData = async (force = false) => {
     const inv = await dataService.getInvestments();
     setInvestments(inv);
     const tickers = new Set();
     inv.forEach(i => { if (i.type === 'stocks' && Array.isArray(i.holdings)) i.holdings.forEach(h => h.ticker && tickers.add(h.ticker)); });
     if (tickers.size > 0) {
-      const q = await stockService.fetchQuotes([...tickers]);
+      const q = await stockService.fetchQuotes([...tickers], force);
       setQuotes(q);
     } else {
       setQuotes({});
     }
   };
   useFocusEffect(useCallback(() => { loadData(); }, []));
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try { await loadData(true); } finally { setRefreshing(false); }
+  };
 
   const invValue = (inv) => {
     if (inv.type === 'stocks' && Array.isArray(inv.holdings) && inv.holdings.length > 0) {
@@ -135,7 +141,9 @@ export default function InvestmentsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.teal} colors={[colors.teal]} />}>
+
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Feather name={i18n.backIcon()} size={22} color={colors.text} />

@@ -76,8 +76,8 @@ async function saveDiskCache(cache) {
 
 // Fetch prices for a list of symbols in a single vs currency.
 // Returns { [symbol]: { price, change24h } }. Always returns entries for valid symbols,
-// falling back to disk cache when network fails.
-async function fetchPrices(symbols, vsCurrencyCode) {
+// falling back to disk cache when network fails. Pass force=true to bypass cache.
+async function fetchPrices(symbols, vsCurrencyCode, force = false) {
   const vs = (vsCurrencyCode || 'USD').toLowerCase();
   const vsSafe = SUPPORTED_VS.has(vs) ? vs : 'usd';
 
@@ -94,7 +94,7 @@ async function fetchPrices(symbols, vsCurrencyCode) {
   const cacheKey = `${ids.sort().join(',')}|${vsSafe}`;
   const now = Date.now();
   const mem = memCache.get(cacheKey);
-  if (mem && now - mem.ts < CACHE_TTL_MS) return mem.data;
+  if (!force && mem && now - mem.ts < CACHE_TTL_MS) return mem.data;
 
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vsSafe}&include_24hr_change=true`;

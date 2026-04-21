@@ -3,13 +3,14 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import cryptoService from '../services/cryptoService';
+import exchangeRateService from '../services/exchangeRateService';
 import { accountTypeConfig, colors } from '../theme/colors';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import { CURRENCIES, sym, code, convert } from '../utils/currency';
@@ -50,9 +51,10 @@ export default function AccountsScreen() {
   const [newCoin, setNewCoin] = useState('');
   const [newCoinAmount, setNewCoinAmount] = useState('');
   const [prices, setPrices] = useState({}); // live { SYMBOL: { price, change24h, stale } }
+  const [refreshing, setRefreshing] = useState(false);
   const styles = createStyles();
 
-  const loadData = async () => {
+  const loadData = async (force = false) => {
     const [accs, rec] = await Promise.all([dataService.getAccounts(), dataService.getRecurring()]);
     setAccounts(accs);
     setRecurring(rec);
@@ -60,13 +62,22 @@ export default function AccountsScreen() {
     const symbols = new Set();
     accs.forEach(a => { if (a.type === 'crypto' && Array.isArray(a.holdings)) a.holdings.forEach(h => h.symbol && symbols.add(h.symbol.toUpperCase())); });
     if (symbols.size > 0) {
-      const p = await cryptoService.fetchPrices([...symbols], code());
+      const p = await cryptoService.fetchPrices([...symbols], code(), force);
       setPrices(p);
     } else {
       setPrices({});
     }
   };
   useFocusEffect(useCallback(() => { loadData(); }, []));
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([exchangeRateService.refresh(true), loadData(true)]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Compute balance for crypto account from holdings (in global currency)
   const cryptoBalance = (acc) => {
@@ -211,7 +222,9 @@ export default function AccountsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.green} colors={[colors.green]} />}>
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>{i18n.t('accounts')}</Text>

@@ -25,15 +25,15 @@ async function saveDiskCache(c) {
 
 // Fetch quotes for a list of tickers.
 // Returns { [ticker]: { price, change24h, currency, name, stale? } }.
-// Unknown tickers are silently omitted.
-async function fetchQuotes(tickers) {
+// Unknown tickers are silently omitted. Pass force=true to bypass cache.
+async function fetchQuotes(tickers, force = false) {
   const clean = [...new Set((tickers || []).map(normalizeTicker).filter(Boolean))];
   if (!clean.length) return {};
 
   const cacheKey = clean.sort().join(',');
   const now = Date.now();
   const mem = memCache.get(cacheKey);
-  if (mem && now - mem.ts < CACHE_TTL_MS) return mem.data;
+  if (!force && mem && now - mem.ts < CACHE_TTL_MS) return mem.data;
 
   try {
     const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${clean.join(',')}`;
