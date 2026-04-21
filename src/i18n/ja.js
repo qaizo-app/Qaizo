@@ -163,6 +163,7 @@ export default {
   investment: '投資',
   debt: '借金',
   crypto: '暗号資産',
+  asset: '資産',
   addAccount: '口座を追加',
   newAccount: '新規口座',
   totalAssets: '総資産',

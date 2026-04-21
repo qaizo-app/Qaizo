@@ -163,6 +163,7 @@ export default {
   investment: '投资',
   debt: '债务',
   crypto: '加密货币',
+  asset: '资产',
   addAccount: '添加账户',
   newAccount: '新账户',
   totalAssets: '总资产',

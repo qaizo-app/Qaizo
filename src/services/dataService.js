@@ -271,6 +271,13 @@ const dataService = {
       try {
         const snap = await userCol('accounts').get();
         const accs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        // Sort by 'order' field (manual ordering); fallback to original order
+        accs.sort((a, b) => {
+          if (typeof a.order === 'number' && typeof b.order === 'number') return a.order - b.order;
+          if (typeof a.order === 'number') return -1;
+          if (typeof b.order === 'number') return 1;
+          return 0;
+        });
         return accs.length > 0 ? accs : DEFAULT_ACCOUNTS;
       } catch (e) { return DEFAULT_ACCOUNTS; }
     }
@@ -284,13 +291,13 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        // Перезаписываем все документы
+        // Перезаписываем все документы с явным порядком
         const snap = await userCol('accounts').get();
         const deletes = snap.docs.map(d => d.ref.delete());
         await Promise.all(deletes);
-        const writes = accounts.map(a => {
+        const writes = accounts.map((a, i) => {
           const { id, ...rest } = a;
-          return firestore().collection('users').doc(uid).collection('accounts').doc(id).set(rest);
+          return firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, order: i });
         });
         await Promise.all(writes);
         return true;

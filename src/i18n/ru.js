@@ -169,6 +169,7 @@ export default {
   investment: 'Инвестиции',
   debt: 'Долг',
   crypto: 'Крипто',
+  asset: 'Имущество',
   addAccount: 'Добавить счёт',
   newAccount: 'Новый счёт',
   totalAssets: 'Всего активов',

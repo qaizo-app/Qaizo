@@ -4,7 +4,7 @@
 import { Text } from 'react-native';
 import { sym } from '../utils/currency';
 
-export default function Amount({ value, sign, style, color, numberOfLines, adjustsFontSizeToFit }) {
+export default function Amount({ value, sign, style, color, numberOfLines, adjustsFontSizeToFit, currency }) {
   const num = typeof value === 'number' ? value : parseFloat(value) || 0;
   const abs = Math.abs(num);
   const formatted = abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -13,7 +13,7 @@ export default function Amount({ value, sign, style, color, numberOfLines, adjus
   if (sign && num < 0) prefix = '-';
 
   // \u200e = LTR mark — forces correct order: -123.45 ₪
-  const text = `\u200e${prefix}${formatted} ${sym()}`;
+  const text = `\u200e${prefix}${formatted} ${currency || sym()}`;
 
   return (
     <Text style={[{ writingDirection: 'ltr' }, style, color ? { color } : null]}

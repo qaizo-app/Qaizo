@@ -163,6 +163,7 @@ export default {
   investment: 'Investissement',
   debt: 'Dette',
   crypto: 'Crypto',
+  asset: 'Bien',
   addAccount: 'Ajouter un compte',
   newAccount: 'Nouveau compte',
   totalAssets: 'Total des actifs',

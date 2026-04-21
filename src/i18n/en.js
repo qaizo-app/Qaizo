@@ -165,6 +165,7 @@ export default {
   investment: 'Investment',
   debt: 'Debt',
   crypto: 'Crypto',
+  asset: 'Asset',
   addAccount: 'Add Account',
   newAccount: 'New Account',
   totalAssets: 'Total Assets',

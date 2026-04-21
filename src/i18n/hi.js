@@ -163,6 +163,7 @@ export default {
   investment: 'निवेश',
   debt: 'कर्ज',
   crypto: 'क्रिप्टो',
+  asset: 'संपत्ति',
   addAccount: 'खाता जोड़ें',
   newAccount: 'नया खाता',
   totalAssets: 'कुल संपत्ति',

@@ -118,9 +118,10 @@ export const accountTypeConfig = {
   bank:       { icon: 'bank-outline',          color: '#60a5fa' },
   credit:     { icon: 'credit-card-outline',   color: '#a78bfa' },
   cash:       { icon: 'wallet-outline',        color: '#34d399' },
-  mortgage:   { icon: 'home-city-outline',     color: '#f87171' },
-  loan:       { icon: 'hand-coin-outline',     color: '#fb923c' },
+  mortgage:   { icon: 'home-city-outline',     color: '#ef4444' },
+  loan:       { icon: 'hand-coin-outline',     color: '#ec4899' },
   investment: { icon: 'chart-line',            color: '#2dd4bf' },
   debt:       { icon: 'account-arrow-right-outline', color: '#f59e0b' },
-  crypto:     { icon: 'bitcoin',               color: '#f59e0b' },
+  crypto:     { icon: 'bitcoin',               color: '#eab308' },
+  asset:      { icon: 'office-building',       color: '#06b6d4' },
 };

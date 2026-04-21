@@ -163,6 +163,7 @@ export default {
   investment: 'استثمار',
   debt: 'دين',
   crypto: 'عملة رقمية',
+  asset: 'أصل',
   addAccount: 'إضافة حساب',
   newAccount: 'حساب جديد',
   totalAssets: 'إجمالي الأصول',

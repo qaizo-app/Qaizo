@@ -11,7 +11,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
-import { CURRENCIES, sym } from '../utils/currency';
+import { CURRENCIES, sym, code, convert } from '../utils/currency';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -19,13 +19,13 @@ const TILE_W = (SCREEN_W - 48 - TILE_GAP * 2) / 3;
 
 const ACCOUNT_TYPES = [
   { id:'bank' },{ id:'credit' },{ id:'cash' },{ id:'mortgage' },
-  { id:'loan' },{ id:'investment' },{ id:'debt' },
+  { id:'loan' },{ id:'investment' },{ id:'debt' },{ id:'crypto' },{ id:'asset' },
 ];
 const CURRENCY_SYMBOLS = CURRENCIES.map(c => c.symbol);
 const typeLabel = (id) => i18n.t(id);
 
 // Порядок групп: самые ходовые сверху
-const GROUP_ORDER = ['cash','bank','credit','investment','loan','mortgage','debt'];
+const GROUP_ORDER = ['cash','bank','credit','investment','asset','crypto','loan','mortgage','debt'];
 
 export default function AccountsScreen() {
   const navigation = useNavigation();
@@ -44,14 +44,44 @@ export default function AccountsScreen() {
   const [isActive, setIsActive] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [reorderMode, setReorderMode] = useState(false);
+  const [recurring, setRecurring] = useState([]);
   const styles = createStyles();
 
-  const loadData = async () => { setAccounts(await dataService.getAccounts()); };
+  const loadData = async () => {
+    const [accs, rec] = await Promise.all([dataService.getAccounts(), dataService.getRecurring()]);
+    setAccounts(accs);
+    setRecurring(rec);
+  };
   useFocusEffect(useCallback(() => { loadData(); }, []));
+
+  // Calculate projected balance per account (current + upcoming recurring before end of month)
+  // For credit accounts, `overdraft` field stores the credit limit → same math: minAllowed = -limit
+  const getAccountStatus = (acc) => {
+    const bal = acc.balance || 0;
+    const limit = acc.overdraft || 0;
+    const minAllowed = -limit;
+    const now = new Date();
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const upcomingForAcc = recurring.filter(r =>
+      r.isActive && r.account === acc.id && r.nextDate && r.nextDate <= endOfMonth
+    );
+    const projected = upcomingForAcc.reduce((s, r) => {
+      return s + (r.type === 'expense' ? -r.amount : r.amount);
+    }, bal);
+    if (bal < minAllowed) return 'overdraft';
+    if (projected < minAllowed) return 'warning';
+    return 'ok';
+  };
 
   const active = accounts.filter(a => a.isActive !== false);
   const inactive = accounts.filter(a => a.isActive === false);
-  const totalBalance = active.reduce((s,a) => s + (a.balance||0), 0);
+  // Convert all account balances to global currency for total
+  const globalCode = code();
+  const totalBalance = active.reduce((s,a) => {
+    const accCode = CURRENCIES.find(c => c.symbol === a.currency)?.code || globalCode;
+    const converted = convert(a.balance || 0, accCode, globalCode);
+    return s + converted;
+  }, 0);
 
   // Группировка: сохраняем порядок из массива accounts, группируем по типу
   const grouped = [];
@@ -60,7 +90,10 @@ export default function AccountsScreen() {
     if (!seenTypes.has(a.type)) {
       seenTypes.add(a.type);
       const accs = active.filter(x => x.type === a.type);
-      grouped.push({ typeId: a.type, accs, sum: accs.reduce((s, x) => s + (x.balance || 0), 0) });
+      grouped.push({ typeId: a.type, accs, sum: accs.reduce((s, x) => {
+        const xCode = CURRENCIES.find(c => c.symbol === x.currency)?.code || globalCode;
+        return s + convert(x.balance || 0, xCode, globalCode);
+      }, 0) });
     }
   });
 
@@ -87,10 +120,16 @@ export default function AccountsScreen() {
   };
 
   const moveAccount = async (idx, direction) => {
+    // idx is index within active-only list; translate to full accounts index
+    const activeList = accounts.filter(a => a.isActive !== false);
     const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= accounts.length) return;
+    if (newIdx < 0 || newIdx >= activeList.length) return;
+    const accA = activeList[idx];
+    const accB = activeList[newIdx];
+    const fullIdxA = accounts.findIndex(a => a.id === accA.id);
+    const fullIdxB = accounts.findIndex(a => a.id === accB.id);
     const reordered = [...accounts];
-    [reordered[idx], reordered[newIdx]] = [reordered[newIdx], reordered[idx]];
+    [reordered[fullIdxA], reordered[fullIdxB]] = [reordered[fullIdxB], reordered[fullIdxA]];
     setAccounts(reordered);
     await dataService.saveAccounts(reordered);
   };
@@ -100,14 +139,22 @@ export default function AccountsScreen() {
   const renderTile = (acc) => {
     const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
     const bal = acc.balance || 0;
+    const status = getAccountStatus(acc);
+    const statusColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : null;
+    const balColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : (bal >= 0 ? colors.green : colors.red);
     return (
-      <TouchableOpacity key={acc.id} style={[styles.tile, { borderLeftColor: cfg.color, borderLeftWidth: 3 }]}
+      <TouchableOpacity key={acc.id}
+        style={[styles.tile,
+          { borderLeftColor: cfg.color, borderLeftWidth: 3 },
+          statusColor && { borderColor: statusColor, borderWidth: 1, backgroundColor: statusColor + '08' }
+        ]}
         onPress={() => openHistory(acc)} onLongPress={() => openEdit(acc)} activeOpacity={0.7}>
         <View style={styles.tileTop}>
           <MaterialCommunityIcons name={cfg.icon} size={16} color={cfg.color} />
+          {statusColor && <Feather name="alert-triangle" size={14} color={statusColor} />}
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-        <Amount value={bal} sign style={styles.tileBalance} color={bal >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
+        <Amount value={bal} sign style={styles.tileBalance} color={balColor} numberOfLines={1} adjustsFontSizeToFit currency={acc.currency} />
       </TouchableOpacity>
     );
   };
@@ -142,8 +189,9 @@ export default function AccountsScreen() {
         {/* Reorder mode */}
         {reorderMode && (
           <View style={{ marginHorizontal: 20, gap: 6, marginBottom: 16 }}>
-            {accounts.filter(a => a.isActive !== false).map((acc, idx) => {
+            {active.map((acc, idx) => {
               const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
+              const isLast = idx === active.length - 1;
               return (
                 <View key={acc.id} style={{ flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 }}>
                   <MaterialCommunityIcons name={cfg.icon} size={18} color={cfg.color} />
@@ -151,8 +199,8 @@ export default function AccountsScreen() {
                   <TouchableOpacity onPress={() => moveAccount(idx, -1)} style={{ padding: 6 }} disabled={idx === 0}>
                     <Feather name="chevron-up" size={20} color={idx === 0 ? colors.textMuted + '40' : colors.text} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => moveAccount(idx, 1)} style={{ padding: 6 }} disabled={idx === accounts.filter(a => a.isActive !== false).length - 1}>
-                    <Feather name="chevron-down" size={20} color={idx === accounts.filter(a => a.isActive !== false).length - 1 ? colors.textMuted + '40' : colors.text} />
+                  <TouchableOpacity onPress={() => moveAccount(idx, 1)} style={{ padding: 6 }} disabled={isLast}>
+                    <Feather name="chevron-down" size={20} color={isLast ? colors.textMuted + '40' : colors.text} />
                   </TouchableOpacity>
                 </View>
               );
@@ -207,7 +255,7 @@ export default function AccountsScreen() {
                 <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Amount value={acc.balance||0} style={[styles.tileBalance, { color: colors.textMuted }]} />
+                  <Amount value={acc.balance||0} style={[styles.tileBalance, { color: colors.textMuted }]} currency={acc.currency} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -322,7 +370,7 @@ const createStyles = () => StyleSheet.create({
 
   tilesRow:{flexDirection:i18n.row(),flexWrap:'wrap',paddingHorizontal:24,gap:TILE_GAP},
   tile:{width:TILE_W,backgroundColor:colors.card,borderRadius:14,padding:12,borderWidth:1,borderColor:colors.cardBorder,marginBottom:TILE_GAP},
-  tileTop:{marginBottom:6,alignItems:i18n.isRTL()?'flex-end':'flex-start'},
+  tileTop:{marginBottom:6,flexDirection:i18n.row(),alignItems:'center',justifyContent:'space-between'},
   tileName:{color:colors.textSecondary,fontSize:12,fontWeight:'600',marginBottom:4,textAlign:i18n.textAlign()},
   tileBalance:{color:colors.text,fontSize:14,fontWeight:'700',textAlign:i18n.textAlign()},
 
