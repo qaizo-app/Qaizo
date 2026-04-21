@@ -6,15 +6,24 @@ import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
+import BalanceLineChart from '../components/BalanceLineChart';
 import ConfirmModal from '../components/ConfirmModal';
 import TransactionItem from '../components/TransactionItem';
 import { getCachedGroups } from '../components/CategoryIcon';
 import { getCatName } from '../components/CategoryPickerModal';
 import i18n from '../i18n';
+import analyticsService from '../services/analyticsService';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
 import Amount from '../components/Amount';
 import { sym } from '../utils/currency';
+
+const PERIODS = [
+  { key: '1m', days: 30, labelKey: 'period30d' },
+  { key: '3m', days: 90, labelKey: 'period3m' },
+  { key: '6m', days: 180, labelKey: 'period6m' },
+  { key: '1y', days: 365, labelKey: 'period1y' },
+];
 
 export default function AccountHistoryScreen({ route, navigation }) {
   const { account } = route.params;
@@ -23,6 +32,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [periodKey, setPeriodKey] = useState('3m');
   const lang = i18n.getLanguage();
 
   const styles = createStyles();
@@ -52,6 +62,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
     await loadData();
   };
   const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
+
+  const periodDays = (PERIODS.find(p => p.key === periodKey) || PERIODS[1]).days;
+  const chartData = analyticsService.getAccountBalanceHistory(transactions, account.id, currentBalance, periodDays);
 
   // Расчёт остатка после каждой транзакции
   const withBalance = (() => {
@@ -101,6 +114,24 @@ export default function AccountHistoryScreen({ route, navigation }) {
         {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: <Amount value={account.overdraft} style={styles.odText} /></Text>}
       </View>
 
+      {chartData.length >= 2 && (
+        <View style={styles.chartCard}>
+          <View style={styles.periodRow}>
+            {PERIODS.map(p => {
+              const active = p.key === periodKey;
+              return (
+                <TouchableOpacity key={p.key}
+                  style={[styles.periodBtn, active && styles.periodBtnActive]}
+                  onPress={() => setPeriodKey(p.key)}>
+                  <Text style={[styles.periodTxt, active && styles.periodTxtActive]}>{i18n.t(p.labelKey)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <BalanceLineChart data={chartData} />
+        </View>
+      )}
+
       <View style={styles.countRow}>
         <Text style={styles.countText}>{i18n.t('transactions')}</Text>
         <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
@@ -135,6 +166,12 @@ const createStyles = () => StyleSheet.create({
   balLabel:{color:colors.textDim,fontSize:12,marginBottom:6},
   balAmount:{fontSize:32,fontWeight:'800',letterSpacing:-1},
   odText:{color:colors.textMuted,fontSize:12,marginTop:8},
+  chartCard:{marginHorizontal:20,marginBottom:16,backgroundColor:colors.card,borderRadius:20,padding:16,borderWidth:1,borderColor:colors.cardBorder},
+  periodRow:{flexDirection:'row',gap:6,marginBottom:10},
+  periodBtn:{paddingHorizontal:10,paddingVertical:6,borderRadius:8,backgroundColor:colors.bg2,borderWidth:1,borderColor:colors.cardBorder},
+  periodBtnActive:{borderColor:colors.green,backgroundColor:colors.greenSoft},
+  periodTxt:{color:colors.textDim,fontSize:11,fontWeight:'700'},
+  periodTxtActive:{color:colors.green},
   countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,marginBottom:8},
   countText:{color:colors.text,fontSize:16,fontWeight:'700'},
   countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},

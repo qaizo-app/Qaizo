@@ -277,6 +277,55 @@ const analyticsService = {
     return points;
   },
 
+  // === Per-account balance history ===
+  // Returns daily balance points for a specific account, anchored to the
+  // account's current balance. The running balance is computed backwards from
+  // the present so the last point equals currentBalance even when we do not
+  // have the full transaction history.
+  getAccountBalanceHistory(transactions, accountId, currentBalance = 0, periodDays = 30) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() - periodDays);
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    // Transactions for this account up to today
+    const accountTxs = transactions
+      .filter(t => t.account === accountId && new Date(t.date || t.createdAt) <= now)
+      .sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt));
+
+    // Accumulate deltas per day, only signed amounts affecting balance.
+    const deltaByDate = {};
+    accountTxs.forEach(tx => {
+      const d = new Date(tx.date || tx.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      let delta = 0;
+      if (tx.type === 'income') delta = tx.amount;
+      else if (tx.type === 'expense') delta = -tx.amount;
+      // transfers handled as standalone in/out transactions, no special case
+      deltaByDate[key] = (deltaByDate[key] || 0) + delta;
+    });
+
+    // Walk day-by-day from today backwards, maintaining running balance.
+    // Today closes at currentBalance. Previous day balance = today - delta applied today.
+    const keysDesc = [];
+    const cursor = new Date(now);
+    for (let i = 0; i <= periodDays; i++) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+      keysDesc.push({ key, day: cursor.getDate() });
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    let bal = currentBalance;
+    const pointsDesc = [];
+    for (let i = 0; i < keysDesc.length; i++) {
+      const { key, day } = keysDesc[i];
+      pointsDesc.push({ date: key, day, balance: bal });
+      // Step back: subtract today's delta (txs that happened today were already in bal)
+      bal -= deltaByDate[key] || 0;
+    }
+    return pointsDesc.reverse();
+  },
+
   // === Cash Flow (daily income vs expense) ===
   getCashFlow(transactions, periodDays = 30) {
     const now = new Date();
