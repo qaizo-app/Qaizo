@@ -492,6 +492,7 @@ export default {
   themeSystem: 'システム',
   themeLight: 'ライト',
   themeDark: 'ダーク',
+  themeAmoled: 'AMOLED (完全黒)',
 
   // AI Advisor tips
   aiTip1Title: '買い物',

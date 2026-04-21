@@ -490,6 +490,7 @@ export default {
   themeSystem: 'تلقائي',
   themeLight: 'فاتح',
   themeDark: 'داكن',
+  themeAmoled: 'AMOLED (أسود)',
 
   // AI Advisor tips
   aiTip1Title: 'التسوق',

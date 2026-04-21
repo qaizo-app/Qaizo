@@ -490,6 +490,7 @@ export default {
   themeSystem: 'Système',
   themeLight: 'Clair',
   themeDark: 'Sombre',
+  themeAmoled: 'AMOLED (noir)',
 
   // AI Advisor tips
   aiTip1Title: 'Courses',

@@ -498,6 +498,7 @@ export default {
   themeSystem: 'Sistema',
   themeLight: 'Claro',
   themeDark: 'Oscuro',
+  themeAmoled: 'AMOLED (negro)',
 
   // AI Advisor tips
   aiTip1Title: 'Compras',

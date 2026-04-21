@@ -491,6 +491,7 @@ export default {
   themeSystem: '跟随系统',
   themeLight: '浅色',
   themeDark: '深色',
+  themeAmoled: 'AMOLED (纯黑)',
 
   // AI Advisor tips
   aiTip1Title: '购物',

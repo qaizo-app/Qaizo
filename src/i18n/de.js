@@ -490,6 +490,7 @@ export default {
   themeSystem: 'System',
   themeLight: 'Hell',
   themeDark: 'Dunkel',
+  themeAmoled: 'AMOLED (schwarz)',
 
   // AI Advisor tips
   aiTip1Title: 'Einkaufen',

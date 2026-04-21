@@ -215,12 +215,15 @@ export default function SettingsScreen() {
         {/* Theme */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('theme')}>
           <View style={styles.sectionLeft}>
-            <Feather name={themeMode === 'dark' ? 'moon' : themeMode === 'light' ? 'sun' : 'smartphone'} size={18} color={colors.yellow} />
+            <Feather name={themeMode === 'dark' ? 'moon' : themeMode === 'light' ? 'sun' : themeMode === 'amoled' ? 'circle' : 'smartphone'} size={18} color={colors.yellow} />
             <Text style={styles.sectionText}>{i18n.t('theme')}</Text>
           </View>
           <View style={styles.sectionRight}>
             <Text style={styles.sectionValue}>
-              {themeMode === 'system' ? i18n.t('themeSystem') : themeMode === 'light' ? i18n.t('themeLight') : i18n.t('themeDark')}
+              {themeMode === 'system' ? i18n.t('themeSystem')
+                : themeMode === 'light' ? i18n.t('themeLight')
+                : themeMode === 'amoled' ? i18n.t('themeAmoled')
+                : i18n.t('themeDark')}
             </Text>
             <Feather name={openSection === 'theme' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
           </View>
@@ -231,8 +234,9 @@ export default function SettingsScreen() {
               { mode: 'system', icon: 'smartphone', label: i18n.t('themeSystem') },
               { mode: 'light', icon: 'sun', label: i18n.t('themeLight') },
               { mode: 'dark', icon: 'moon', label: i18n.t('themeDark') },
-            ].map((opt, idx) => (
-              <TouchableOpacity key={opt.mode} style={[styles.optRow, idx < 2 && styles.optBorder]}
+              { mode: 'amoled', icon: 'circle', label: i18n.t('themeAmoled') },
+            ].map((opt, idx, arr) => (
+              <TouchableOpacity key={opt.mode} style={[styles.optRow, idx < arr.length - 1 && styles.optBorder]}
                 onPress={() => { setThemeMode(opt.mode); setOpenSection(null); }}>
                 <Feather name={opt.icon} size={18} color={colors.textDim} style={{ }} />
                 <Text style={styles.optText}>{opt.label}</Text>

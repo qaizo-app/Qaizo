@@ -117,7 +117,7 @@ function AppInner() {
     },
   };
 
-  const statusStyle = theme === 'dark' ? 'light-content' : 'dark-content';
+  const statusStyle = (theme === 'dark' || theme === 'amoled') ? 'light-content' : 'dark-content';
 
   useEffect(() => {
     let unsubAuth = null;

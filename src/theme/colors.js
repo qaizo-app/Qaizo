@@ -34,6 +34,41 @@ const darkColors = {
   overlay: 'rgba(0, 0, 0, 0.80)',
 };
 
+// AMOLED — pure black backgrounds for OLED battery savings.
+// Accent palette mirrors dark; only bg/card/divider swap to true black.
+const amoledColors = {
+  bg: '#000000',
+  bg2: '#0a0a0a',
+  card: '#101010',
+  cardBorder: 'rgba(52, 211, 153, 0.18)',
+  cardHighlight: 'rgba(52, 211, 153, 0.06)',
+
+  green: '#34d399',
+  greenDark: '#059669',
+  greenGlow: 'rgba(52, 211, 153, 0.15)',
+  greenSoft: 'rgba(52, 211, 153, 0.08)',
+  teal: '#2dd4bf',
+  emerald: '#10b981',
+
+  red: '#fb7185',
+  redDark: '#e11d48',
+  redSoft: 'rgba(251, 113, 133, 0.10)',
+  orange: '#fb923c',
+  yellow: '#fbbf24',
+  blue: '#60a5fa',
+  blueSoft: 'rgba(96, 165, 250, 0.10)',
+
+  text: '#f1f5f9',
+  textSecondary: '#cbd5e1',
+  textDim: '#94a3b8',
+  textMuted: '#64748b',
+
+  white: '#ffffff',
+  black: '#000000',
+  divider: 'rgba(255, 255, 255, 0.05)',
+  overlay: 'rgba(0, 0, 0, 0.90)',
+};
+
 const lightColors = {
   bg: '#eef0f5',
   bg2: '#e4e7ee',
@@ -75,7 +110,7 @@ let _currentTheme = 'dark';
 
 export function applyTheme(mode) {
   _currentTheme = mode;
-  const palette = mode === 'light' ? lightColors : darkColors;
+  const palette = mode === 'light' ? lightColors : mode === 'amoled' ? amoledColors : darkColors;
   Object.assign(colors, palette);
 }
 

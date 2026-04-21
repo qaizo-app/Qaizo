@@ -52,6 +52,27 @@ describe('colors / theme', () => {
     });
   });
 
+  // ─── AMOLED ────────────────────────────────────
+  test('applyTheme("amoled") uses pure black backgrounds', () => {
+    applyTheme('amoled');
+    expect(getCurrentTheme()).toBe('amoled');
+    expect(colors.bg).toBe('#000000');
+    expect(colors.card).toBe('#101010');
+  });
+
+  test('AMOLED keeps dark text palette for readability', () => {
+    applyTheme('amoled');
+    expect(colors.text).toBe('#f1f5f9');
+  });
+
+  test('AMOLED palette has all required keys', () => {
+    applyTheme('amoled');
+    const requiredKeys = ['bg', 'bg2', 'card', 'green', 'red', 'text', 'textSecondary', 'divider', 'overlay'];
+    requiredKeys.forEach(key => {
+      expect(colors[key]).toBeDefined();
+    });
+  });
+
   // ─── categoryConfig ────────────────────────────
   test('categoryConfig has food, transport, salary_me, transfer', () => {
     expect(categoryConfig.food).toBeDefined();

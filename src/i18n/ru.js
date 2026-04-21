@@ -501,6 +501,7 @@ export default {
   themeSystem: 'Системная',
   themeLight: 'Светлая',
   themeDark: 'Тёмная',
+  themeAmoled: 'AMOLED (чёрная)',
 
   // AI Advisor tips
   aiTip1Title: 'Покупки',

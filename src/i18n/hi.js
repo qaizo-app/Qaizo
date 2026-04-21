@@ -490,6 +490,7 @@ export default {
   themeSystem: 'सिस्टम',
   themeLight: 'लाइट',
   themeDark: 'डार्क',
+  themeAmoled: 'AMOLED (काला)',
 
   // AI Advisor tips
   aiTip1Title: 'खरीदारी',

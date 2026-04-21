@@ -5,11 +5,11 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { Appearance } from 'react-native';
 import { applyTheme, getCurrentTheme } from './colors';
 
-const THEME_KEY = 'qaizo_theme_mode'; // 'system' | 'light' | 'dark'
+const THEME_KEY = 'qaizo_theme_mode'; // 'system' | 'light' | 'dark' | 'amoled'
 
 const ThemeContext = createContext({
-  theme: 'dark',        // текущая визуальная тема: 'dark' | 'light'
-  themeMode: 'system',  // что выбрал юзер: 'system' | 'light' | 'dark'
+  theme: 'dark',        // текущая визуальная тема: 'dark' | 'light' | 'amoled'
+  themeMode: 'system',  // что выбрал юзер: 'system' | 'light' | 'dark' | 'amoled'
   setThemeMode: () => {},
   themeKey: 0,          // инкремент для принудительного ремаунта
 });
@@ -19,6 +19,11 @@ function resolveTheme(mode) {
     return Appearance.getColorScheme() || 'dark';
   }
   return mode;
+}
+
+// Darkness check — dark + amoled both need light status bar text
+export function isDarkTheme(theme) {
+  return theme === 'dark' || theme === 'amoled';
 }
 
 export function ThemeProvider({ children }) {
