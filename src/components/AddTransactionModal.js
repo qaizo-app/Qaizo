@@ -7,7 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
-import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
+import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS, CatIcon } from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
 import CalculatorModal from './CalculatorModal';
 import SwipeModal from './SwipeModal';
@@ -209,7 +209,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                     <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                       <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: ci.color + '18', justifyContent: 'center', alignItems: 'center' }}
                         onPress={() => setSplitCatPicker(idx)}>
-                        <Feather name={ci.icon} size={16} color={ci.color} />
+                        <CatIcon icon={ci.icon} size={16} color={ci.color} />
                       </TouchableOpacity>
                       <TextInput
                         style={[st.input, { flex: 1, marginBottom: 0 }]}
@@ -293,7 +293,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                   {(() => { const ci = getCatIcon(categoryId, catGroups); return (
                   <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
                     <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
-                      <Feather name={ci.icon} size={20} color={ci.color} />
+                      <CatIcon icon={ci.icon} size={20} color={ci.color} />
                     </View>
                     <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, lang)}</Text>
                     <Feather name="chevron-down" size={18} color={colors.textMuted} />

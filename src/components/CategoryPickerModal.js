@@ -1,6 +1,6 @@
 // src/components/CategoryPickerModal.js
 // Выбор категории: топ-5 часто используемых + полный список с поиском
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
@@ -97,6 +97,12 @@ export function getCatName(id, groups, lang) {
   return id;
 }
 
+// Render icon that may be a Feather name or an 'ion:*' Ionicons name
+export function CatIcon({ icon, size, color }) {
+  if (icon && icon.startsWith('ion:')) return <Ionicons name={icon.slice(4)} size={size} color={color} />;
+  return <Feather name={icon} size={size} color={color} />;
+}
+
 export function getCatIcon(id, groups) {
   const cfg = categoryConfig[id];
   if (cfg) return { icon: cfg.icon, color: cfg.color };
@@ -174,7 +180,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
       <TouchableOpacity key={catId} style={[st.catBtn, size === 'top' && st.catBtnTop]}
         onPress={() => handleSelect(catId)} activeOpacity={0.7}>
         <View style={[st.catIcon, { backgroundColor: color + '18' }]}>
-          <Feather name={icon} size={size === 'top' ? 22 : 18} color={color} />
+          <CatIcon icon={icon} size={size === 'top' ? 22 : 18} color={color} />
         </View>
         <Text style={st.catName} numberOfLines={1}>{name}</Text>
       </TouchableOpacity>
@@ -217,7 +223,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
               searchResults.map(cat => (
                 <TouchableOpacity key={cat.id} style={st.listRow} onPress={() => handleSelect(cat.id)} activeOpacity={0.7}>
                   <View style={[st.listIcon, { backgroundColor: cat.color + '18' }]}>
-                    <Feather name={cat.icon} size={18} color={cat.color} />
+                    <CatIcon icon={cat.icon} size={18} color={cat.color} />
                   </View>
                   <View style={st.listInfo}>
                     <Text style={st.listName}>{cat.name}</Text>
@@ -241,7 +247,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
                   return (
                     <TouchableOpacity key={s.id} style={st.listRow} onPress={() => handleSelect(s.id)} activeOpacity={0.7}>
                       <View style={[st.listIcon, { backgroundColor: color + '18' }]}>
-                        <Feather name={icon} size={18} color={color} />
+                        <CatIcon icon={icon} size={18} color={color} />
                       </View>
                       <Text style={st.listName}>{name}</Text>
                     </TouchableOpacity>
