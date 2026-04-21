@@ -14,7 +14,7 @@
     "scheme": "qaizo",
     "android": {
       "package": "com.qaizo.app",
-      "versionCode": 7,
+      "versionCode": 8,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.RECORD_AUDIO",
