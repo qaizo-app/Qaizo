@@ -287,7 +287,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 </>
               )}
 
-              {type !== 'transfer' && (
+              {type !== 'transfer' && !splitMode && (
                 <>
                   <Text style={st.label}>{i18n.t('category')}</Text>
                   {(() => { const ci = getCatIcon(categoryId, catGroups); return (
