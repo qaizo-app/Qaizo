@@ -300,7 +300,7 @@ export default function AccountsScreen() {
                 <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
                   onLongPress={() => openEdit(acc)}>
                   <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Amount value={acc.balance||0} style={[styles.tileBalance, { color: colors.textMuted }]} currency={acc.currency} />
+                  <Amount value={acc.balance||0} sign style={[styles.tileBalance, { color: colors.textMuted }]} currency={acc.currency} />
                 </TouchableOpacity>
               ))}
             </View>

@@ -63,7 +63,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
           <Amount value={isMergedTransfer ? -transaction.amount : isIncome ? transaction.amount : isTransfer ? transaction.amount : -transaction.amount} sign={isMergedTransfer || !isTransfer} style={styles.amount} color={amountColor} currency={currency || transaction.currency} />
           <Text style={styles.date}>{formatDate(transaction.date || transaction.createdAt)}</Text>
           {runningBalance !== undefined && (
-            <Amount value={runningBalance} style={styles.runBal} color={runningBalance >= 0 ? colors.textMuted : colors.red} currency={currency} />
+            <Amount value={runningBalance} sign style={styles.runBal} color={runningBalance >= 0 ? colors.textMuted : colors.red} currency={currency} />
           )}
         </View>
       </View>

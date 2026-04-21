@@ -105,7 +105,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       <View style={styles.balCard}>
         <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
-        <Amount value={currentBalance} style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
+        <Amount value={currentBalance} sign style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
         {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: <Amount value={account.overdraft} style={styles.odText} currency={account.currency} /></Text>}
       </View>
 

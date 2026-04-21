@@ -70,7 +70,10 @@ export default function BalanceLineChart({ data }) {
   const startVal = values[0];
   const endVal = values[values.length - 1];
   const change = startVal !== 0 ? Math.round(((endVal - startVal) / Math.abs(startVal)) * 100) : 0;
-  const isPositive = endVal >= startVal;
+  // Line color: based on current balance sign (green if positive, red if negative)
+  const isPositive = endVal >= 0;
+  // Badge color: based on change direction (growing = green, shrinking = red)
+  const isGrowing = endVal >= startVal;
 
   return (
     <View>
@@ -78,8 +81,8 @@ export default function BalanceLineChart({ data }) {
       <View style={st.headerRow}>
         <Amount value={selectedPoint ? selectedPoint.balance : endVal} style={st.headerAmount} />
         {!selectedPoint && change !== 0 && (
-          <View style={[st.changeBadge, { backgroundColor: isPositive ? colors.greenSoft : colors.redSoft }]}>
-            <Text style={[st.changeText, { color: isPositive ? colors.green : colors.red }]}>
+          <View style={[st.changeBadge, { backgroundColor: isGrowing ? colors.greenSoft : colors.redSoft }]}>
+            <Text style={[st.changeText, { color: isGrowing ? colors.green : colors.red }]}>
               {change > 0 ? '+' : ''}{change}%
             </Text>
           </View>
