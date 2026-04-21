@@ -313,3 +313,55 @@ describe('parseGenericRow', () => {
     expect(result.amount).toBe(200);
   });
 });
+
+describe('analyzeImportData', () => {
+  test('groups accounts and counts occurrences', () => {
+    const txs = [
+      { amount: 10, categoryId: 'food', _accountName: 'Hapoalim', _accountType: 'bank' },
+      { amount: 20, categoryId: 'food', _accountName: 'Hapoalim', _accountType: 'bank' },
+      { amount: 30, categoryId: 'food', _accountName: 'Cash Wallet', _accountType: 'cash' },
+    ];
+    const result = importService.analyzeImportData(txs, []);
+    expect(result.accounts).toHaveLength(2);
+    expect(result.accounts[0].name).toBe('Hapoalim');
+    expect(result.accounts[0].count).toBe(2);
+    expect(result.accounts[0].suggestedType).toBe('bank');
+    expect(result.accounts[1].name).toBe('Cash Wallet');
+    expect(result.accounts[1].suggestedType).toBe('cash');
+  });
+
+  test('fuzzy matches existing accounts', () => {
+    const txs = [{ amount: 10, categoryId: 'food', _accountName: 'Bank Hapoalim' }];
+    const existing = [{ id: 'acc_1', name: 'hapoalim' }];
+    const result = importService.analyzeImportData(txs, existing);
+    expect(result.accounts[0].match.id).toBe('acc_1');
+    expect(result.accounts[0].match.confidence).toBe('medium');
+  });
+
+  test('collects other-fallback categories with samples', () => {
+    const txs = [
+      { amount: 10, categoryId: 'other', _rawCategory: 'Pet shop', recipient: 'PetCo' },
+      { amount: 20, categoryId: 'other', _rawCategory: 'Pet shop', recipient: 'Chewy' },
+      { amount: 30, categoryId: 'food', _rawCategory: 'grocery' }, // not 'other' — skipped
+    ];
+    const result = importService.analyzeImportData(txs, []);
+    expect(result.otherCategories).toHaveLength(1);
+    expect(result.otherCategories[0].rawName).toBe('Pet shop');
+    expect(result.otherCategories[0].count).toBe(2);
+    expect(result.otherCategories[0].samples).toEqual(['PetCo', 'Chewy']);
+  });
+
+  test('returns empty arrays for transactions without raw metadata', () => {
+    const txs = [{ amount: 10, categoryId: 'food' }];
+    const result = importService.analyzeImportData(txs, []);
+    expect(result.accounts).toEqual([]);
+    expect(result.otherCategories).toEqual([]);
+  });
+
+  test('exact name match gets high confidence', () => {
+    const txs = [{ amount: 10, categoryId: 'food', _accountName: 'Hapoalim' }];
+    const existing = [{ id: 'acc_1', name: 'Hapoalim' }];
+    const result = importService.analyzeImportData(txs, existing);
+    expect(result.accounts[0].match.confidence).toBe('high');
+  });
+});

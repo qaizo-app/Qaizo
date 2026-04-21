@@ -183,16 +183,19 @@ function parseQaizoRow(cols, headerMap) {
 
   const type = (get('type') || '').toLowerCase();
   const isIncome = type.includes('income') || type.includes('доход') || type.includes('הכנסה');
+  const rawCat = (get('category') || '').trim();
 
   return {
     date: parseDate(get('date')),
     type: isIncome ? 'income' : 'expense',
     amount,
-    categoryId: resolveCategory(get('category')),
+    categoryId: resolveCategory(rawCat),
     recipient: get('payee') || get('recipient') || '',
     note: get('note') || '',
     tags: get('tags') ? get('tags').split(',').map(s => s.trim()).filter(Boolean) : [],
     currency: sym(),
+    _rawCategory: rawCat || null,
+    _accountName: (get('account') || '').trim() || null,
   };
 }
 
@@ -239,6 +242,8 @@ function parseBankRow(cols, headerMap) {
     note: '',
     tags: [],
     currency: sym(),
+    _rawCategory: description || null,
+    _accountName: (get('account') || '').trim() || null,
   };
 }
 
@@ -398,6 +403,7 @@ function parseWalletRow(cols, headerMap) {
     currency: sym(),
     _accountName: accountName,
     _accountType: accountType,
+    _rawCategory: (customCat || rawCat || '').trim() || null,
   };
 }
 
@@ -591,10 +597,73 @@ async function pickAndParseFile() {
   }
 }
 
-async function importTransactions(transactions) {
+// ─── Fuzzy name matching ─────────────────────────────────
+function normalizeName(s) {
+  return (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function fuzzyMatchAccount(name, existingAccounts) {
+  const n = normalizeName(name);
+  if (!n) return { id: null, confidence: null };
+  const exact = existingAccounts.find(a => normalizeName(a.name) === n);
+  if (exact) return { id: exact.id, confidence: 'high' };
+  // Substring (either direction), require >= 3 char overlap
+  for (const a of existingAccounts) {
+    const an = normalizeName(a.name);
+    if (!an) continue;
+    if ((an.includes(n) || n.includes(an)) && Math.min(an.length, n.length) >= 3) {
+      return { id: a.id, confidence: 'medium' };
+    }
+  }
+  // Word overlap
+  const words = n.split(/\s+/).filter(w => w.length >= 3);
+  for (const a of existingAccounts) {
+    const aWords = normalizeName(a.name).split(/\s+/);
+    if (words.some(w => aWords.includes(w))) return { id: a.id, confidence: 'low' };
+  }
+  return { id: null, confidence: null };
+}
+
+// Return unique accounts and "other"-fallback categories for user review.
+// existingAccounts: loaded via dataService.getAccounts()
+function analyzeImportData(transactions, existingAccounts) {
+  const accMap = new Map(); // name → { count, suggestedType }
+  const catMap = new Map(); // rawCategory → { count, samples: [] }
+  for (const tx of transactions) {
+    if (tx._accountName) {
+      const key = tx._accountName;
+      const prev = accMap.get(key) || { count: 0, suggestedType: tx._accountType || 'bank' };
+      prev.count++;
+      accMap.set(key, prev);
+    }
+    if (tx.categoryId === 'other' && tx._rawCategory) {
+      const key = tx._rawCategory;
+      const prev = catMap.get(key) || { count: 0, samples: [] };
+      prev.count++;
+      if (tx.recipient && prev.samples.length < 3 && !prev.samples.includes(tx.recipient)) {
+        prev.samples.push(tx.recipient);
+      }
+      catMap.set(key, prev);
+    }
+  }
+  const accounts = [...accMap.entries()].map(([name, info]) => {
+    const match = fuzzyMatchAccount(name, existingAccounts);
+    return { name, count: info.count, suggestedType: info.suggestedType, match };
+  }).sort((a, b) => b.count - a.count);
+  const otherCategories = [...catMap.entries()].map(([rawName, info]) => ({
+    rawName, count: info.count, samples: info.samples,
+  })).sort((a, b) => b.count - a.count);
+  return { accounts, otherCategories };
+}
+
+// options.accountMap: { [rawName]: { id } | { create: { name, type, currency, icon } } | { skip: true } }
+// options.categoryMap: { [rawCategoryName]: categoryId }
+async function importTransactions(transactions, options = {}) {
+  const { accountMap: userAccountMap = {}, categoryMap: userCategoryMap = {} } = options;
   let imported = 0;
   let failed = 0;
   let skippedDuplicates = 0;
+  let skippedByUser = 0;
 
   // Build duplicate detection set from existing transactions
   const existingTxs = await dataService.getTransactions();
@@ -607,47 +676,79 @@ async function importTransactions(transactions) {
 
   // Resolve account names to IDs
   const accounts = await dataService.getAccounts();
-  const accountMap = {}; // name (lower) → id
-  accounts.forEach(a => { accountMap[a.name.toLowerCase()] = a.id; });
+  const accountIdByName = {}; // lower-name → id
+  accounts.forEach(a => { accountIdByName[a.name.toLowerCase()] = a.id; });
 
-  // Collect unique account names that need to be created
-  const newAccountNames = new Set();
+  // Decide account for each rawName: userMap → existing name match → auto-create
+  // nameResolve[lower] = { id } | { skip: true }
+  const nameResolve = {};
+  const autoCreateByName = new Map(); // lower → { name, type }
+  const userCreateSpecs = [];
+
   for (const tx of transactions) {
-    if (tx._accountName && !accountMap[tx._accountName.toLowerCase()]) {
-      newAccountNames.add(tx._accountName);
+    const raw = tx._accountName;
+    if (!raw) continue;
+    const lower = raw.toLowerCase();
+    if (nameResolve[lower]) continue;
+
+    const userEntry = userAccountMap[raw];
+    if (userEntry) {
+      if (userEntry.skip) { nameResolve[lower] = { skip: true }; continue; }
+      if (userEntry.id) { nameResolve[lower] = { id: userEntry.id }; continue; }
+      if (userEntry.create) {
+        userCreateSpecs.push({ lower, spec: userEntry.create });
+        continue;
+      }
+    }
+    // Fallback: existing by name
+    if (accountIdByName[lower]) {
+      nameResolve[lower] = { id: accountIdByName[lower] };
+      continue;
+    }
+    // Auto-create
+    if (!autoCreateByName.has(lower)) {
+      autoCreateByName.set(lower, { name: raw, type: tx._accountType || 'bank' });
     }
   }
 
-  // Collect account types from transactions
-  const accountTypes = {};
-  for (const tx of transactions) {
-    if (tx._accountName && tx._accountType) {
-      accountTypes[tx._accountName.toLowerCase()] = tx._accountType;
-    }
+  // Create accounts (user-specified + auto)
+  const newAccounts = [];
+  const globalCurrency = sym();
+  for (const { lower, spec } of userCreateSpecs) {
+    const type = spec.type || 'bank';
+    const icon = spec.icon || (type === 'cash' ? 'wallet-outline' : type === 'credit' ? 'credit-card' : type === 'asset' ? 'office-building' : 'bank');
+    const id = 'imported_' + lower.replace(/[^a-zа-яё0-9]/g, '_').substring(0, 30) + '_' + Date.now() + '_' + newAccounts.length;
+    newAccounts.push({ id, name: spec.name || lower, type, icon, balance: 0, currency: spec.currency || globalCurrency, isActive: true });
+    nameResolve[lower] = { id };
   }
-
-  // Create missing accounts
-  if (newAccountNames.size > 0) {
-    const updatedAccounts = [...accounts];
-    for (const name of newAccountNames) {
-      const type = accountTypes[name.toLowerCase()] || 'bank';
-      const icon = type === 'cash' ? 'wallet-outline' : type === 'credit' ? 'credit-card' : 'bank';
-      const id = 'imported_' + name.toLowerCase().replace(/[^a-zа-яё0-9]/g, '_').substring(0, 30) + '_' + Date.now();
-      const newAcc = { id, name, type, icon, balance: 0, currency: '₪', isActive: true };
-      updatedAccounts.push(newAcc);
-      accountMap[name.toLowerCase()] = id;
-    }
-    await dataService.saveAccounts(updatedAccounts);
+  for (const [lower, info] of autoCreateByName.entries()) {
+    if (nameResolve[lower]) continue;
+    const type = info.type;
+    const icon = type === 'cash' ? 'wallet-outline' : type === 'credit' ? 'credit-card' : type === 'asset' ? 'office-building' : 'bank';
+    const id = 'imported_' + lower.replace(/[^a-zа-яё0-9]/g, '_').substring(0, 30) + '_' + Date.now() + '_' + newAccounts.length;
+    newAccounts.push({ id, name: info.name, type, icon, balance: 0, currency: globalCurrency, isActive: true });
+    nameResolve[lower] = { id };
+  }
+  if (newAccounts.length > 0) {
+    await dataService.saveAccounts([...accounts, ...newAccounts]);
   }
 
   // Prepare all transactions first
   const toImport = [];
   for (const tx of transactions) {
-    if (tx._accountName) {
-      tx.account = accountMap[tx._accountName.toLowerCase()] || null;
-      delete tx._accountName;
+    // Apply user category remap by raw name
+    if (tx._rawCategory && userCategoryMap[tx._rawCategory]) {
+      tx.categoryId = userCategoryMap[tx._rawCategory];
     }
+
+    if (tx._accountName) {
+      const resolve = nameResolve[tx._accountName.toLowerCase()];
+      if (resolve?.skip) { skippedByUser++; continue; }
+      tx.account = resolve?.id || null;
+    }
+    delete tx._accountName;
     delete tx._accountType;
+    delete tx._rawCategory;
 
     const txDate = (tx.date || '').slice(0, 10);
     const txKey = `${txDate}|${tx.amount}|${tx.categoryId}|${tx.type}`;
@@ -667,11 +768,11 @@ async function importTransactions(transactions) {
     imported += results.filter(r => r).length;
     failed += results.filter(r => !r).length;
   }
-  return { imported, failed, skippedDuplicates };
+  return { imported, failed, skippedDuplicates, skippedByUser };
 }
 
 // Test helpers — exposed for unit testing only
 function resetDelimiter() { _delimiter = null; }
 const _internal = { resolveCategory, detectDelimiter, parseCSVLine, detectFormat, parseDate, parseAmount, parseQaizoRow, parseBankRow, parseWalletRow, parseGenericRow, resetDelimiter };
 
-export default { pickAndParseFile, importTransactions, parseWithMapping, _internal };
+export default { pickAndParseFile, importTransactions, parseWithMapping, analyzeImportData, _internal };

@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
+import dataService from '../services/dataService';
 import importService from '../services/importService';
 import { colors } from '../theme/colors';
 import Amount from './Amount';
@@ -11,14 +12,26 @@ import SwipeModal from './SwipeModal';
 
 const FIELDS = ['date', 'amount', 'type', 'category', 'payee', 'note'];
 const FIELD_ICONS = { date: 'calendar', amount: 'dollar-sign', type: 'tag', category: 'grid', payee: 'user', note: 'file-text' };
+const ACCOUNT_TYPES = ['bank', 'cash', 'credit', 'investment', 'crypto', 'asset', 'loan', 'mortgage'];
+const COMMON_CATEGORIES = [
+  'food', 'restaurant', 'transport', 'fuel', 'health', 'phone', 'utilities',
+  'clothing', 'household', 'kids', 'entertainment', 'education', 'cosmetics',
+  'electronics', 'insurance', 'rent', 'arnona', 'vaad', 'other',
+  'salary_me', 'salary_spouse', 'handyman', 'sales', 'rental_income', 'other_income',
+];
 
 export default function ImportModal({ visible, onClose, onImported }) {
-  const [step, setStep] = useState('pick'); // pick, mapping, preview, importing, done
+  const [step, setStep] = useState('pick'); // pick, mapping, preview, review, importing, done
   const [parseResult, setParseResult] = useState(null);
   const [mapping, setMapping] = useState({});
   const [importResult, setImportResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Review state
+  const [reviewData, setReviewData] = useState(null); // { accounts, otherCategories }
+  const [existingAccounts, setExistingAccounts] = useState([]);
+  const [accountChoices, setAccountChoices] = useState({}); // rawName → { id } | { create: {type} } | { skip: true }
+  const [categoryChoices, setCategoryChoices] = useState({}); // rawCat → categoryId
   const st = createSt();
 
   const handlePick = async () => {
@@ -48,10 +61,45 @@ export default function ImportModal({ visible, onClose, onImported }) {
     setStep('preview');
   };
 
-  const handleImport = async () => {
+  const handleProceedToReview = async () => {
+    if (!parseResult) return;
+    const accounts = await dataService.getAccounts();
+    setExistingAccounts(accounts.filter(a => a.isActive !== false));
+    const analyzed = importService.analyzeImportData(parseResult.transactions, accounts);
+    // If nothing to review, skip directly to import
+    if (analyzed.accounts.length === 0 && analyzed.otherCategories.length === 0) {
+      return handleImport({});
+    }
+    // Pre-populate choices from fuzzy matches
+    const acc = {};
+    analyzed.accounts.forEach(a => {
+      if (a.match.confidence === 'high') acc[a.name] = { id: a.match.id };
+      else if (a.match.confidence === 'medium') acc[a.name] = { id: a.match.id };
+      else acc[a.name] = { create: { type: a.suggestedType || 'bank' } };
+    });
+    setAccountChoices(acc);
+    setCategoryChoices({});
+    setReviewData(analyzed);
+    setStep('review');
+  };
+
+  const handleImport = async (overrides) => {
     if (!parseResult) return;
     setStep('importing');
-    const result = await importService.importTransactions(parseResult.transactions);
+    // Build accountMap for service
+    const accountMap = {};
+    const choices = overrides?.accountChoices || accountChoices;
+    const cats = overrides?.categoryChoices || categoryChoices;
+    Object.keys(choices).forEach(raw => {
+      const c = choices[raw];
+      if (c.skip) accountMap[raw] = { skip: true };
+      else if (c.id) accountMap[raw] = { id: c.id };
+      else if (c.create) accountMap[raw] = { create: { name: raw, type: c.create.type } };
+    });
+    const result = await importService.importTransactions(parseResult.transactions, {
+      accountMap,
+      categoryMap: cats,
+    });
     setImportResult(result);
     setStep('done');
     onImported?.();
@@ -64,6 +112,10 @@ export default function ImportModal({ visible, onClose, onImported }) {
     setMapping({});
     setImportResult(null);
     setError('');
+    setReviewData(null);
+    setExistingAccounts([]);
+    setAccountChoices({});
+    setCategoryChoices({});
     onClose();
   };
 
@@ -229,9 +281,123 @@ export default function ImportModal({ visible, onClose, onImported }) {
                 <TouchableOpacity style={st.cancelBtn} onPress={() => setStep('pick')}>
                   <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={st.importBtn} onPress={handleImport}>
+                <TouchableOpacity style={st.importBtn} onPress={handleProceedToReview}>
+                  <Feather name="arrow-right" size={18} color="#fff" />
+                  <Text style={st.importTxt}>{i18n.t('next')} ({parseResult.transactions.length})</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Step 4: Review accounts & categories */}
+          {step === 'review' && reviewData && (
+            <View>
+              <Text style={st.reviewSub}>{i18n.t('importReviewHint')}</Text>
+
+              <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+                {reviewData.accounts.length > 0 && (
+                  <View style={st.reviewSection}>
+                    <Text style={st.reviewTitle}>{i18n.t('importReviewAccounts')}</Text>
+                    {reviewData.accounts.map(acc => {
+                      const choice = accountChoices[acc.name] || {};
+                      return (
+                        <View key={acc.name} style={st.reviewItem}>
+                          <View style={st.reviewItemHead}>
+                            <Text style={st.reviewName} numberOfLines={1}>{acc.name}</Text>
+                            <Text style={st.reviewCount}>×{acc.count}</Text>
+                          </View>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chipRow}>
+                            {existingAccounts.map(a => {
+                              const active = choice.id === a.id;
+                              return (
+                                <TouchableOpacity
+                                  key={a.id}
+                                  style={[st.chip, active && st.chipActive]}
+                                  onPress={() => setAccountChoices(p => ({ ...p, [acc.name]: { id: a.id } }))}
+                                >
+                                  <Text style={[st.chipTxt, active && st.chipTxtActive]} numberOfLines={1}>{a.name}</Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                            <TouchableOpacity
+                              style={[st.chip, choice.create && st.chipActive]}
+                              onPress={() => setAccountChoices(p => ({ ...p, [acc.name]: { create: { type: acc.suggestedType || 'bank' } } }))}
+                            >
+                              <Feather name="plus" size={12} color={choice.create ? colors.green : colors.textDim} />
+                              <Text style={[st.chipTxt, choice.create && st.chipTxtActive]}>{i18n.t('importCreateNew')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[st.chip, choice.skip && st.chipSkipActive]}
+                              onPress={() => setAccountChoices(p => ({ ...p, [acc.name]: { skip: true } }))}
+                            >
+                              <Feather name="x" size={12} color={choice.skip ? colors.red : colors.textDim} />
+                              <Text style={[st.chipTxt, choice.skip && { color: colors.red }]}>{i18n.t('importSkip')}</Text>
+                            </TouchableOpacity>
+                          </ScrollView>
+                          {choice.create && (
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chipRow}>
+                              {ACCOUNT_TYPES.map(t => {
+                                const active = choice.create.type === t;
+                                return (
+                                  <TouchableOpacity
+                                    key={t}
+                                    style={[st.chipSm, active && st.chipActive]}
+                                    onPress={() => setAccountChoices(p => ({ ...p, [acc.name]: { create: { type: t } } }))}
+                                  >
+                                    <Text style={[st.chipTxt, active && st.chipTxtActive]}>{i18n.t(t)}</Text>
+                                  </TouchableOpacity>
+                                );
+                              })}
+                            </ScrollView>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {reviewData.otherCategories.length > 0 && (
+                  <View style={st.reviewSection}>
+                    <Text style={st.reviewTitle}>{i18n.t('importReviewCategories')}</Text>
+                    {reviewData.otherCategories.map(cat => {
+                      const chosen = categoryChoices[cat.rawName];
+                      return (
+                        <View key={cat.rawName} style={st.reviewItem}>
+                          <View style={st.reviewItemHead}>
+                            <Text style={st.reviewName} numberOfLines={1}>{cat.rawName}</Text>
+                            <Text style={st.reviewCount}>×{cat.count}</Text>
+                          </View>
+                          {cat.samples.length > 0 && (
+                            <Text style={st.reviewSamples} numberOfLines={1}>{cat.samples.join(' · ')}</Text>
+                          )}
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chipRow}>
+                            {COMMON_CATEGORIES.map(id => {
+                              const active = chosen === id;
+                              return (
+                                <TouchableOpacity
+                                  key={id}
+                                  style={[st.chipSm, active && st.chipActive]}
+                                  onPress={() => setCategoryChoices(p => ({ ...p, [cat.rawName]: id }))}
+                                >
+                                  <Text style={[st.chipTxt, active && st.chipTxtActive]}>{i18n.t(id)}</Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </ScrollView>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </ScrollView>
+
+              <View style={st.btnRow}>
+                <TouchableOpacity style={st.cancelBtn} onPress={() => setStep('preview')}>
+                  <Text style={st.cancelTxt}>{i18n.t('back')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={st.importBtn} onPress={() => handleImport()}>
                   <Feather name="download" size={18} color="#fff" />
-                  <Text style={st.importTxt}>{i18n.t('importConfirm')} ({parseResult.transactions.length})</Text>
+                  <Text style={st.importTxt}>{i18n.t('importConfirm')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -253,6 +419,7 @@ export default function ImportModal({ visible, onClose, onImported }) {
               <Text style={st.doneDetail}>
                 {importResult.imported} {i18n.t('importImported')}
                 {importResult.skippedDuplicates > 0 && ` · ${importResult.skippedDuplicates} ${i18n.t('importDuplicates')}`}
+                {importResult.skippedByUser > 0 && ` · ${importResult.skippedByUser} ${i18n.t('importSkipped')}`}
                 {importResult.failed > 0 && ` · ${importResult.failed} ${i18n.t('importFailed')}`}
               </Text>
               <TouchableOpacity style={st.doneBtn} onPress={handleClose}>
@@ -313,6 +480,23 @@ const createSt = () => StyleSheet.create({
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   importBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 8 },
   importTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  // Review
+  reviewSub: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginBottom: 12, textAlign: i18n.textAlign() },
+  reviewSection: { marginBottom: 16 },
+  reviewTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8, textAlign: i18n.textAlign() },
+  reviewItem: { backgroundColor: colors.card, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 8 },
+  reviewItemHead: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  reviewName: { color: colors.text, fontSize: 13, fontWeight: '700', flex: 1 },
+  reviewCount: { color: colors.textMuted, fontSize: 11, fontWeight: '600', marginStart: 8 },
+  reviewSamples: { color: colors.textMuted, fontSize: 11, fontStyle: 'italic', marginBottom: 6, textAlign: i18n.textAlign() },
+  chipRow: { marginTop: 4 },
+  chip: { flexDirection: i18n.row(), alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder, marginEnd: 6 },
+  chipSm: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder, marginEnd: 6 },
+  chipActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
+  chipSkipActive: { borderColor: colors.red, backgroundColor: colors.redSoft },
+  chipTxt: { color: colors.textDim, fontSize: 11, fontWeight: '600' },
+  chipTxtActive: { color: colors.green },
 
   center: { alignItems: 'center', paddingVertical: 32, gap: 12 },
   importingTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
