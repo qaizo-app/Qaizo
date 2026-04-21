@@ -9,6 +9,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
+import cryptoService from '../services/cryptoService';
 import { accountTypeConfig, colors } from '../theme/colors';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import { CURRENCIES, sym, code, convert } from '../utils/currency';
@@ -45,14 +46,37 @@ export default function AccountsScreen() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [recurring, setRecurring] = useState([]);
+  const [holdings, setHoldings] = useState([]); // editable list for current modal
+  const [newCoin, setNewCoin] = useState('');
+  const [newCoinAmount, setNewCoinAmount] = useState('');
+  const [prices, setPrices] = useState({}); // live { SYMBOL: { price, change24h, stale } }
   const styles = createStyles();
 
   const loadData = async () => {
     const [accs, rec] = await Promise.all([dataService.getAccounts(), dataService.getRecurring()]);
     setAccounts(accs);
     setRecurring(rec);
+    // Collect all unique symbols from crypto accounts, fetch prices in one call
+    const symbols = new Set();
+    accs.forEach(a => { if (a.type === 'crypto' && Array.isArray(a.holdings)) a.holdings.forEach(h => h.symbol && symbols.add(h.symbol.toUpperCase())); });
+    if (symbols.size > 0) {
+      const p = await cryptoService.fetchPrices([...symbols], code());
+      setPrices(p);
+    } else {
+      setPrices({});
+    }
   };
   useFocusEffect(useCallback(() => { loadData(); }, []));
+
+  // Compute balance for crypto account from holdings (in global currency)
+  const cryptoBalance = (acc) => {
+    if (!Array.isArray(acc.holdings) || acc.holdings.length === 0) return acc.balance || 0;
+    return cryptoService.holdingsValue(acc.holdings, prices);
+  };
+  const getAccountBalance = (acc) => acc.type === 'crypto' ? cryptoBalance(acc) : (acc.balance || 0);
+  const getAccountCode = (acc) => acc.type === 'crypto'
+    ? code()
+    : (CURRENCIES.find(c => c.symbol === acc.currency)?.code || code());
 
   // Calculate projected balance per account (current + upcoming recurring before end of month)
   // For credit accounts, `overdraft` field stores the credit limit → same math: minAllowed = -limit
@@ -78,9 +102,9 @@ export default function AccountsScreen() {
   // Convert all account balances to global currency for total
   const globalCode = code();
   const totalBalance = active.reduce((s,a) => {
-    const accCode = CURRENCIES.find(c => c.symbol === a.currency)?.code || globalCode;
-    const converted = convert(a.balance || 0, accCode, globalCode);
-    return s + converted;
+    const bal = getAccountBalance(a);
+    const accCode = getAccountCode(a);
+    return s + convert(bal, accCode, globalCode);
   }, 0);
 
   // Группировка: сохраняем порядок из массива accounts, группируем по типу
@@ -91,8 +115,7 @@ export default function AccountsScreen() {
       seenTypes.add(a.type);
       const accs = active.filter(x => x.type === a.type);
       grouped.push({ typeId: a.type, accs, sum: accs.reduce((s, x) => {
-        const xCode = CURRENCIES.find(c => c.symbol === x.currency)?.code || globalCode;
-        return s + convert(x.balance || 0, xCode, globalCode);
+        return s + convert(getAccountBalance(x), getAccountCode(x), globalCode);
       }, 0) });
     }
   });
@@ -101,16 +124,39 @@ export default function AccountsScreen() {
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber||'');
     setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(acc.balance ? String(parseFloat(acc.balance.toFixed(2))) : '');
-    setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false); setShowEdit(true);
+    setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false);
+    setHoldings(Array.isArray(acc.holdings) ? acc.holdings.map(h => ({ ...h })) : []);
+    setNewCoin(''); setNewCoinAmount('');
+    setShowEdit(true);
   };
   const openAdd = () => {
     setEditAccount(null); setName(''); setAccountNumber(''); setType('bank');
-    setCurrency(sym()); setBalance(''); setOverdraft(''); setBillingDay(10); setIsActive(true); setShowEdit(true);
+    setCurrency(sym()); setBalance(''); setOverdraft(''); setBillingDay(10); setIsActive(true);
+    setHoldings([]); setNewCoin(''); setNewCoinAmount('');
+    setShowEdit(true);
   };
+  const addHolding = () => {
+    const s = (newCoin || '').toUpperCase().trim();
+    const amt = parseFloat((newCoinAmount || '').replace(',', '.'));
+    if (!s || !amt || amt <= 0) return;
+    if (holdings.find(h => h.symbol === s)) return; // duplicate guard
+    setHoldings([...holdings, { symbol: s, amount: amt }]);
+    setNewCoin(''); setNewCoinAmount('');
+  };
+  const removeHolding = (sym) => setHoldings(holdings.filter(h => h.symbol !== sym));
+  const updateHoldingAmount = (sym, amount) => {
+    const amt = parseFloat((amount || '').replace(',', '.'));
+    setHoldings(holdings.map(h => h.symbol === sym ? { ...h, amount: amt || 0 } : h));
+  };
+
   const handleSave = async () => {
     if (!name.trim()) return;
     const cfg = accountTypeConfig[type]||accountTypeConfig.bank;
     const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat((balance||'').replace(',','.'))||0, overdraft:overdraft?parseFloat(overdraft.replace(',','.')):null, billingDay: type==='credit'?billingDay:null, isActive, icon:cfg.icon };
+    if (type === 'crypto') {
+      data.holdings = holdings.filter(h => h.symbol && h.amount > 0);
+      data.currency = sym(); // crypto displays in global currency
+    }
     if (editAccount) await dataService.updateAccount(editAccount.id, data);
     else await dataService.addAccount(data);
     setShowEdit(false); await loadData();
@@ -138,10 +184,13 @@ export default function AccountsScreen() {
 
   const renderTile = (acc) => {
     const cfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
-    const bal = acc.balance || 0;
-    const status = getAccountStatus(acc);
+    const isCrypto = acc.type === 'crypto';
+    const bal = getAccountBalance(acc);
+    const status = isCrypto ? 'ok' : getAccountStatus(acc);
     const statusColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : null;
     const balColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : (bal >= 0 ? colors.green : colors.red);
+    const holdingsCount = isCrypto && Array.isArray(acc.holdings) ? acc.holdings.length : 0;
+    const displayCurrency = isCrypto ? sym() : acc.currency;
     return (
       <TouchableOpacity key={acc.id}
         style={[styles.tile,
@@ -154,7 +203,8 @@ export default function AccountsScreen() {
           {statusColor && <Feather name="alert-triangle" size={14} color={statusColor} />}
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-        <Amount value={bal} sign style={styles.tileBalance} color={balColor} numberOfLines={1} adjustsFontSizeToFit currency={acc.currency} />
+        <Amount value={bal} sign style={styles.tileBalance} color={balColor} numberOfLines={1} adjustsFontSizeToFit currency={displayCurrency} />
+        {holdingsCount > 0 && <Text style={styles.tileSub} numberOfLines={1}>{holdingsCount} {i18n.t('coins')}</Text>}
       </TouchableOpacity>
     );
   };
@@ -225,24 +275,6 @@ export default function AccountsScreen() {
           );
         })}
 
-        {/* Crypto */}
-        {!reorderMode && (
-        <View style={styles.groupHeader}>
-          <MaterialCommunityIcons name="bitcoin" size={14} color={colors.orange} style={{ }} />
-          <Text style={[styles.groupTitle, { color: colors.orange }]}>{typeLabel('crypto')}</Text>
-          <View style={styles.v2Badge}><Text style={styles.v2Text}>v2</Text></View>
-        </View>
-        )}
-        {!reorderMode && (
-        <View style={styles.tilesRow}>
-          <View style={[styles.tile, { borderLeftColor: colors.orange, borderLeftWidth: 3, opacity: 0.4 }]}>
-            <MaterialCommunityIcons name="bitcoin" size={16} color={colors.orange} />
-            <Text style={[styles.tileName, { color: colors.textMuted }]}>{i18n.t('comingSoon')}</Text>
-            <Text style={[styles.tileBalance, { color: colors.textMuted }]}>—</Text>
-          </View>
-        </View>
-        )}
-
         {/* Inactive */}
         {!reorderMode && inactive.length > 0 && (
           <View>
@@ -295,11 +327,84 @@ export default function AccountsScreen() {
               <Feather name="chevron-down" size={18} color={colors.textMuted} />
             </TouchableOpacity>
 
-            <Text style={styles.fieldLabel}>{i18n.t('balance')}</Text>
-            <View style={styles.balRow}>
-              <Text style={[styles.balCur,{color:tc}]}>{currency}</Text>
-              <TextInput style={styles.balInput} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
-            </View>
+            {type !== 'crypto' && (
+              <>
+                <Text style={styles.fieldLabel}>{i18n.t('balance')}</Text>
+                <View style={styles.balRow}>
+                  <Text style={[styles.balCur,{color:tc}]}>{currency}</Text>
+                  <TextInput style={styles.balInput} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
+                </View>
+              </>
+            )}
+
+            {type === 'crypto' && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.fieldLabel}>{i18n.t('cryptoHoldings')}</Text>
+                {holdings.length === 0 && (
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 8, textAlign: i18n.textAlign() }}>
+                    {i18n.t('cryptoNoHoldings')}
+                  </Text>
+                )}
+                {holdings.map(h => {
+                  const info = prices[h.symbol];
+                  const val = (info?.price || 0) * (parseFloat(h.amount) || 0);
+                  const change = info?.change24h || 0;
+                  const changeColor = change >= 0 ? colors.green : colors.red;
+                  return (
+                    <View key={h.symbol} style={styles.holdingRow}>
+                      <View style={{ width: 56 }}>
+                        <Text style={styles.holdingSym}>{h.symbol}</Text>
+                        {info && (
+                          <Text style={[styles.holdingChange, { color: changeColor }]}>{change >= 0 ? '+' : ''}{change.toFixed(1)}%{info.stale ? ' ·' : ''}</Text>
+                        )}
+                      </View>
+                      <TextInput
+                        style={styles.holdingAmt}
+                        value={String(h.amount)}
+                        onChangeText={(t) => updateHoldingAmount(h.symbol, t)}
+                        keyboardType="numeric"
+                        placeholder="0"
+                        placeholderTextColor={colors.textMuted}
+                      />
+                      <Amount value={val} style={styles.holdingVal} color={colors.textSecondary} />
+                      <TouchableOpacity onPress={() => removeHolding(h.symbol)} style={styles.holdingDel}>
+                        <Feather name="x" size={14} color={colors.red} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+                <View style={styles.addHoldingRow}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+                    {cryptoService.getSupportedSymbols().filter(s => !holdings.find(h => h.symbol === s)).map(s => {
+                      const active = newCoin === s;
+                      return (
+                        <TouchableOpacity key={s} style={[styles.coinChip, active && { borderColor: colors.orange, backgroundColor: colors.orange + '15' }]} onPress={() => setNewCoin(s)}>
+                          <Text style={[styles.coinChipTxt, active && { color: colors.orange }]}>{s}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+                <View style={styles.addHoldingInputRow}>
+                  <TextInput
+                    style={styles.newCoinAmt}
+                    value={newCoinAmount}
+                    onChangeText={setNewCoinAmount}
+                    keyboardType="numeric"
+                    placeholder={newCoin ? `${i18n.t('amount')} ${newCoin}` : i18n.t('cryptoPickCoin')}
+                    placeholderTextColor={colors.textMuted}
+                    editable={!!newCoin}
+                  />
+                  <TouchableOpacity
+                    style={[styles.addCoinBtn, (!newCoin || !parseFloat((newCoinAmount||'').replace(',','.'))) && { opacity: 0.4 }]}
+                    onPress={addHolding}
+                    disabled={!newCoin || !parseFloat((newCoinAmount||'').replace(',','.'))}
+                  >
+                    <Feather name="plus" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             {(type==='bank'||type==='credit')&&(
               <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -373,9 +478,21 @@ const createStyles = () => StyleSheet.create({
   tileTop:{marginBottom:6,flexDirection:i18n.row(),alignItems:'center',justifyContent:'space-between'},
   tileName:{color:colors.textSecondary,fontSize:12,fontWeight:'600',marginBottom:4,textAlign:i18n.textAlign()},
   tileBalance:{color:colors.text,fontSize:14,fontWeight:'700',textAlign:i18n.textAlign()},
+  tileSub:{color:colors.textMuted,fontSize:10,fontWeight:'600',marginTop:2,textAlign:i18n.textAlign()},
 
-  v2Badge:{backgroundColor:colors.orange + '25',paddingHorizontal:8,paddingVertical:2,borderRadius:6},
-  v2Text:{color:colors.orange,fontSize:10,fontWeight:'700'},
+  // Crypto holdings editor
+  holdingRow:{flexDirection:i18n.row(),alignItems:'center',gap:8,backgroundColor:colors.card,borderRadius:12,padding:10,marginBottom:6,borderWidth:1,borderColor:colors.cardBorder},
+  holdingSym:{color:colors.text,fontSize:14,fontWeight:'700'},
+  holdingChange:{fontSize:10,fontWeight:'600'},
+  holdingAmt:{flex:1,backgroundColor:colors.bg2,borderRadius:8,paddingHorizontal:10,paddingVertical:8,color:colors.text,fontSize:13,fontWeight:'600'},
+  holdingVal:{fontSize:12,fontWeight:'700',minWidth:60,textAlign:'end'},
+  holdingDel:{width:28,height:28,borderRadius:8,backgroundColor:colors.redSoft,justifyContent:'center',alignItems:'center'},
+  addHoldingRow:{marginTop:4,marginBottom:8},
+  coinChip:{paddingHorizontal:10,paddingVertical:6,borderRadius:10,backgroundColor:colors.bg2,borderWidth:1,borderColor:colors.cardBorder,marginEnd:6},
+  coinChipTxt:{color:colors.textDim,fontSize:11,fontWeight:'700'},
+  addHoldingInputRow:{flexDirection:i18n.row(),alignItems:'center',gap:8},
+  newCoinAmt:{flex:1,backgroundColor:colors.card,borderRadius:12,padding:12,color:colors.text,fontSize:14,fontWeight:'600',borderWidth:1,borderColor:colors.cardBorder,textAlign:i18n.textAlign()},
+  addCoinBtn:{width:44,height:44,borderRadius:12,backgroundColor:colors.orange,justifyContent:'center',alignItems:'center'},
 
   modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20,textAlign:i18n.textAlign()},
   fieldLabel:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4,textAlign:i18n.textAlign()},
