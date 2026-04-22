@@ -344,7 +344,7 @@ export default {
 
   // Onboarding consent slides
   onbReminderTitle: 'Ежедневное напоминание',
-  onbReminderSub: 'Мы напомним каждый день записать траты',
+  onbReminderSub: 'Будем каждый день напоминать записывать расходы',
   onbReminderToggle: 'Показывать напоминание',
   onbReminderInfo: 'Включите, чтобы получать ежедневные уведомления о добавлении расходов. Можно изменить позже в настройках.',
   onbPrivacyTitle: 'Конфиденциальность',
