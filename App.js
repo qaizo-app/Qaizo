@@ -200,6 +200,12 @@ function AppInner() {
 
       // Load consent first so Sentry / notifications / analytics respect the user's choice
       await consentService.load();
+      // Warm the category cache so notification bodies and other background
+      // callers can localize custom category names without a UI render first.
+      try {
+        const { ensureCachedGroups } = require('./src/utils/categoryCache');
+        ensureCachedGroups();
+      } catch (e) {}
       // Apply analytics consent to the native SDK and log session start
       await analyticsEvents.syncNativeConsent();
       analyticsEvents.logEvent('app_opened', { platform: 'android' });

@@ -4,23 +4,28 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
-import dataService from '../services/dataService';
+import { getCachedGroups as getCacheGroups, setCachedGroups, ensureCachedGroups } from '../utils/categoryCache';
 
-let _cachedGroups = null;
-export function getCachedGroups() { return _cachedGroups || DEFAULT_GROUPS; }
+// Re-export so existing callers keep working. Falls back to DEFAULT_GROUPS
+// when the cache is empty (initial app start, before the async load).
+export function getCachedGroups() {
+  const g = getCacheGroups();
+  return g.length > 0 ? g : DEFAULT_GROUPS;
+}
 
 export default function CategoryIcon({ categoryId, size = 'medium', type }) {
-  const [groups, setGroups] = useState(_cachedGroups || DEFAULT_GROUPS);
+  const [groups, setGroups] = useState(getCachedGroups());
 
   useEffect(() => {
-    if (!_cachedGroups) {
-      dataService.getCategories().then(saved => {
-        if (saved && saved.length > 0) {
-          _cachedGroups = saved;
-          setGroups(saved);
-        }
-      });
-    }
+    let alive = true;
+    ensureCachedGroups().then(loaded => {
+      if (!alive) return;
+      if (Array.isArray(loaded) && loaded.length > 0) {
+        setCachedGroups(loaded);
+        setGroups(loaded);
+      }
+    });
+    return () => { alive = false; };
   }, []);
 
   const { icon, color } = getCatIcon(categoryId, groups);

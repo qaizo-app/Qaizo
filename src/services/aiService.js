@@ -1,6 +1,7 @@
 // src/services/aiService.js
 // AI-движок: Gemini API + локальный фоллбэк для парсинга, налогов, прогнозов
 import i18n from '../i18n';
+import { catName } from '../utils/categoryName';
 import { fmt, sym, code as curCode } from '../utils/currency';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -244,7 +245,7 @@ function generateInsights(transactions, budgets, accounts, recurring) {
         icon: 'alert-triangle',
         title: i18n.t('aiCategorySpike'),
         text: i18n.t('aiCategorySpikeText')
-          .replace('{cat}', i18n.t(cat))
+          .replace('{cat}', catName(cat))
           .replace('{pct}', pct)
           .replace('{amount}', fmt(amount))
           .replace('{lastAmount}', fmt(lastAmount)),
@@ -261,7 +262,7 @@ function generateInsights(transactions, budgets, accounts, recurring) {
         type: 'negative',
         icon: 'x-circle',
         title: i18n.t('aiBudgetExceeded'),
-        text: i18n.t('aiBudgetExceededText').replace('{cat}', i18n.t(cat)).replace('{amount}', fmt(spent - limit)),
+        text: i18n.t('aiBudgetExceededText').replace('{cat}', catName(cat)).replace('{amount}', fmt(spent - limit)),
       });
     } else if (pct > monthProgress * 100 + 15) {
       insights.push({
@@ -269,7 +270,7 @@ function generateInsights(transactions, budgets, accounts, recurring) {
         icon: 'alert-triangle',
         title: i18n.t('aiBudgetWarning'),
         text: i18n.t('aiBudgetWarningText')
-          .replace('{cat}', i18n.t(cat)).replace('{pct}', pct).replace('{days}', daysInMonth - dayOfMonth),
+          .replace('{cat}', catName(cat)).replace('{pct}', pct).replace('{days}', daysInMonth - dayOfMonth),
       });
     }
   });

@@ -8,6 +8,7 @@ import Card from './Card';
 import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { catName } from '../utils/categoryName';
 
 export default function RecurringBlock({
   recurring,
@@ -53,7 +54,7 @@ export default function RecurringBlock({
                     <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
                   </View>
                   <View style={st.recInfo}>
-                    <Text style={st.recName} numberOfLines={1}>{rec.recipient || rec.categoryName || i18n.t(rec.categoryId)}</Text>
+                    <Text style={st.recName} numberOfLines={1}>{rec.recipient || catName(rec.categoryId, rec.categoryName)}</Text>
                     <Text style={st.recMeta} numberOfLines={1}>
                       <Text style={{ color: rec.type === 'expense' ? colors.red : colors.green }}>
                         {rec.type === 'expense' ? '-' : '+'}{Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}

@@ -7,6 +7,7 @@ import Card from './Card';
 import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { catName } from '../utils/categoryName';
 
 export default function BudgetsBlock({
   budgetRows,
@@ -67,7 +68,7 @@ export default function BudgetsBlock({
                 <View style={st.budgetInfo}>
                   <View style={st.budgetLeft}>
                     <View style={[st.budgetDot, { backgroundColor: cfg.color }]} />
-                    <Text style={st.budgetCat} numberOfLines={1}>{catNameMap[cat] || i18n.t(cat)}</Text>
+                    <Text style={st.budgetCat} numberOfLines={1}>{catNameMap[cat] || catName(cat)}</Text>
                   </View>
                   <View style={st.budgetRight}>
                     {hb ? (

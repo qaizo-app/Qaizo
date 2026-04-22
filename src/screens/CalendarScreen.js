@@ -11,6 +11,7 @@ import CategoryIcon from '../components/CategoryIcon';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
+import { catName } from '../utils/categoryName';
 
 const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -209,7 +210,7 @@ export default function CalendarScreen() {
                 <View key={tx.id || idx} style={[st.txRow, idx < selectedTxs.length - 1 && st.txBorder]}>
                   <CategoryIcon categoryId={tx.categoryId} size="small" />
                   <View style={st.txInfo}>
-                    <Text style={st.txCat}>{tx.categoryName || i18n.t(tx.categoryId)}</Text>
+                    <Text style={st.txCat}>{catName(tx.categoryId, tx.categoryName)}</Text>
                     {subtitle ? <Text style={st.txRecipient} numberOfLines={1}>{subtitle}</Text> : null}
                   </View>
                   <Amount

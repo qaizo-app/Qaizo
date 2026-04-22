@@ -11,6 +11,7 @@ import Card from '../components/Card';
 import CashFlowChart from '../components/CashFlowChart';
 import InteractivePieChart from '../components/InteractivePieChart';
 import i18n from '../i18n';
+import { catName } from '../utils/categoryName';
 import analyticsService from '../services/analyticsService';
 import dataService from '../services/dataService';
 import badgeService from '../services/badgeService';
@@ -130,7 +131,7 @@ export default function AnalyticsScreen() {
           .sort((a, b) => b[1] - a[1])
           .slice(0, 8)
           .map(([cat, amount], idx) => ({
-            name: i18n.t(cat) !== cat ? i18n.t(cat) : cat,
+            name: catName(cat),
             amount,
             color: (categoryConfig[cat] || {}).color || PIE_COLORS[idx % PIE_COLORS.length],
           }));
@@ -146,7 +147,7 @@ export default function AnalyticsScreen() {
           .sort((a, b) => b[1] - a[1])
           .slice(0, 8)
           .map(([cat, amount], idx) => ({
-            name: i18n.t(cat) !== cat ? i18n.t(cat) : cat,
+            name: catName(cat),
             amount,
             color: INC_COLORS[idx % INC_COLORS.length],
           }));
@@ -361,12 +362,12 @@ export default function AnalyticsScreen() {
                 <Text style={st.sectionTitle}>{i18n.t('monthComparison')}</Text>
                 {monthCompare.slice(0, 8).map((item, idx) => {
                   const cfg = categoryConfig[item.categoryId] || categoryConfig.other;
-                  const catName = i18n.t(item.categoryId);
+                  const displayName = catName(item.categoryId);
                   const maxAmount = Math.max(...monthCompare.slice(0, 8).map(m => m.current), 1);
                   return (
                     <View key={idx} style={[st.compareRow, idx < Math.min(monthCompare.length, 8) - 1 && st.compareBorder]}>
                       <View style={[st.compareDot, { backgroundColor: cfg.color }]} />
-                      <Text style={st.compareName} numberOfLines={1}>{catName}</Text>
+                      <Text style={st.compareName} numberOfLines={1}>{displayName}</Text>
                       <Amount value={item.current} style={st.compareAmount} />
                       <View style={[st.changeBadge, {
                         backgroundColor: item.change > 0 ? colors.redSoft : item.change < 0 ? colors.greenSoft : colors.bg2

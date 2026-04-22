@@ -27,6 +27,7 @@ import RecurringDetailModal from '../components/RecurringDetailModal';
 import StreakCard from '../components/StreakCard';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
+import { catName } from '../utils/categoryName';
 import streakService from '../services/streakService';
 import { useToast } from '../components/ToastProvider';
 import notificationService from '../services/notificationService';
@@ -266,7 +267,7 @@ export default function DashboardScreen() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
       .map(([cat, amount]) => ({
-        name: _catNameMap[cat] || i18n.t(cat),
+        name: _catNameMap[cat] || catName(cat),
         amount,
         color: categoryConfig[cat]?.color || '#64748b',
         legendFontColor: colors.textDim,
@@ -529,7 +530,7 @@ export default function DashboardScreen() {
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || catNameMap[deleteTarget.categoryId] || i18n.t(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${deleteTarget.categoryName || catNameMap[deleteTarget.categoryId] || catName(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
       <ConfirmModal visible={deleteTemplate !== null} title={i18n.t('delete')}

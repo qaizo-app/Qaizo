@@ -9,6 +9,7 @@ import aiService from '../services/aiService';
 import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
+import { catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
 import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
@@ -137,7 +138,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
       (t.date || t.createdAt || '').slice(0, 10) === txDate
     );
     if (duplicate) {
-      const dupName = duplicate.recipient || duplicate.categoryName || i18n.t(duplicate.categoryId);
+      const dupName = duplicate.recipient || catName(duplicate.categoryId, duplicate.categoryName);
       setError(i18n.t('duplicateReceipt') + ` (${dupName} — ${duplicate.amount})`);
       return;
     }

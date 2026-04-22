@@ -10,6 +10,7 @@ import DailyExpensesChart from '../components/DailyExpensesChart';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
+import { catName } from '../utils/categoryName';
 
 const SW = Dimensions.get('window').width;
 
@@ -73,7 +74,7 @@ export default function MonthlyReportScreen() {
   // Топ получатели
   const recipTotals = {};
   expTxs.forEach(t => {
-    const r = t.recipient || t.categoryName || i18n.t(t.categoryId) || i18n.t('other');
+    const r = t.recipient || catName(t.categoryId, t.categoryName) || i18n.t('other');
     recipTotals[r] = (recipTotals[r] || 0) + t.amount;
   });
   const topRecipients = Object.entries(recipTotals)
@@ -189,7 +190,7 @@ export default function MonthlyReportScreen() {
                     <View style={st.catLeft}>
                       <Text style={st.catRank}>{idx + 1}</Text>
                       <View style={[st.catDot, { backgroundColor: cfg.color }]} />
-                      <Text style={st.catName}>{i18n.t(cat)}</Text>
+                      <Text style={st.catName}>{catName(cat)}</Text>
                     </View>
                     <View style={st.catRight}>
                       <Text style={st.catPct}>{pct}%</Text>
@@ -228,7 +229,7 @@ export default function MonthlyReportScreen() {
                   <View key={cat} style={st.catRow}>
                     <View style={st.catLeft}>
                       <View style={[st.catDot, { backgroundColor: cfg.color }]} />
-                      <Text style={st.catName}>{i18n.t(cat)}</Text>
+                      <Text style={st.catName}>{catName(cat)}</Text>
                     </View>
                     <Amount value={amount} style={st.catAmount} color={colors.green} />
                   </View>

@@ -6,6 +6,7 @@ import * as Sharing from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
+import { catName } from '../utils/categoryName';
 import dataService from './dataService';
 
 function formatDate(dateStr) {
@@ -46,7 +47,7 @@ function buildRows(transactions, accMap) {
   return transactions.map(tx => ({
     date: formatDate(tx.date || tx.createdAt),
     type: tx.type,
-    category: tx.categoryName || i18n.t(tx.categoryId) || tx.categoryId,
+    category: catName(tx.categoryId, tx.categoryName) || tx.categoryId,
     amount: tx.amount,
     account: accMap[tx.account] || '',
     payee: tx.recipient || '',
@@ -121,7 +122,7 @@ function buildCategoryBreakdown(transactions, type) {
   const totals = {};
   transactions.filter(t => t.type === type).forEach(t => {
     const key = t.categoryId || 'other';
-    if (!totals[key]) totals[key] = { amount: 0, label: t.categoryName || i18n.t(t.categoryId) || t.categoryId };
+    if (!totals[key]) totals[key] = { amount: 0, label: catName(t.categoryId, t.categoryName) || t.categoryId };
     totals[key].amount += t.amount;
   });
   return Object.entries(totals).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.amount - a.amount);

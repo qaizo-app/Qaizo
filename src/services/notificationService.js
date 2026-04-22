@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
+import { catName } from '../utils/categoryName';
 import dataService from './dataService';
 
 // Настройка отображения уведомлений когда приложение открыто
@@ -44,7 +45,7 @@ const notificationService = {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: i18n.t('recurringPayment'),
-              body: `${rec.recipient || i18n.t(rec.categoryId)} — ${rec.type === 'expense' ? '-' : '+'}${sym()}${rec.amount}`,
+              body: `${rec.recipient || catName(rec.categoryId, rec.categoryName)} — ${rec.type === 'expense' ? '-' : '+'}${sym()}${rec.amount}`,
               data: { recurringId: rec.id },
             },
             trigger: {
@@ -65,7 +66,7 @@ const notificationService = {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: i18n.t('upcomingPayment'),
-              body: `${i18n.t('tomorrow')}: ${rec.recipient || i18n.t(rec.categoryId)} — ${sym()}${rec.amount}`,
+              body: `${i18n.t('tomorrow')}: ${rec.recipient || catName(rec.categoryId, rec.categoryName)} — ${sym()}${rec.amount}`,
               data: { recurringId: rec.id },
             },
             trigger: {
@@ -87,7 +88,7 @@ const notificationService = {
             await Notifications.scheduleNotificationAsync({
               content: {
                 title: i18n.t('contractEndingSoon'),
-                body: `${rec.recipient || i18n.t(rec.categoryId)} — ${i18n.t('contractEndsIn30')}`,
+                body: `${rec.recipient || catName(rec.categoryId, rec.categoryName)} — ${i18n.t('contractEndsIn30')}`,
                 data: { recurringId: rec.id, type: 'contract_end' },
               },
               trigger: {
