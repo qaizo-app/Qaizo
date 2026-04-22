@@ -183,7 +183,7 @@ export default {
   comingSoon: 'בקרוב',
   comingSoonTitle: 'בקרוב',
   comingSoonMessage: 'פיצ\'ר זה בפיתוח ויהיה זמין בעדכון הבא',
-  accountHint: 'לחיצה → היסטוריה · ארוכה → עריכה',
+  accountHint: 'לחיצה ← היסטוריה · לחיצה ארוכה ← עריכה',
 
   pension: 'פנסיה',
   gemel: 'קופת גמל',
