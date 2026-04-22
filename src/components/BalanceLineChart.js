@@ -70,7 +70,11 @@ export default function BalanceLineChart({ data, limit, currency, limitLabel }) 
   const selectedPoint = selected !== null ? data[selected] : null;
   const startVal = values[0];
   const endVal = values[values.length - 1];
-  const change = startVal !== 0 ? Math.round(((endVal - startVal) / Math.abs(startVal)) * 100) : 0;
+  const absDiff = endVal - startVal;
+  // When startVal is near zero, % becomes astronomical — show absolute diff instead.
+  const usePercent = Math.abs(startVal) >= 1;
+  const changePct = usePercent ? Math.round((absDiff / Math.abs(startVal)) * 100) : 0;
+  const showBadge = usePercent ? changePct !== 0 : Math.abs(absDiff) >= 0.01;
   // Line color: based on current balance sign (green if positive, red if negative)
   const isPositive = endVal >= 0;
   // Badge color: based on change direction (growing = green, shrinking = red)
@@ -83,11 +87,17 @@ export default function BalanceLineChart({ data, limit, currency, limitLabel }) 
         <Amount value={selectedPoint ? selectedPoint.balance : endVal} sign
           style={[st.headerAmount, { color: (selectedPoint ? selectedPoint.balance : endVal) >= 0 ? colors.text : colors.red }]}
           currency={currency} />
-        {!selectedPoint && change !== 0 && (
+        {!selectedPoint && showBadge && (
           <View style={[st.changeBadge, { backgroundColor: isGrowing ? colors.greenSoft : colors.redSoft }]}>
-            <Text style={[st.changeText, { color: isGrowing ? colors.green : colors.red }]}>
-              {change > 0 ? '+' : ''}{change}%
-            </Text>
+            {usePercent ? (
+              <Text style={[st.changeText, { color: isGrowing ? colors.green : colors.red }]}>
+                {changePct > 0 ? '+' : ''}{changePct}%
+              </Text>
+            ) : (
+              <Text style={[st.changeText, { color: isGrowing ? colors.green : colors.red }]}>
+                {absDiff > 0 ? '+' : ''}<Amount value={absDiff} currency={currency} style={[st.changeText, { color: isGrowing ? colors.green : colors.red }]} />
+              </Text>
+            )}
           </View>
         )}
         {selectedPoint && (
@@ -116,7 +126,7 @@ export default function BalanceLineChart({ data, limit, currency, limitLabel }) 
               <Line x1={PAD_LEFT} y1={yl.y} x2={containerW - PAD_RIGHT} y2={yl.y}
                 stroke={colors.divider} strokeWidth={0.5} strokeDasharray="4,4" />
               <SvgText x={PAD_LEFT - 6} y={yl.y + 4}
-                fill={colors.textMuted} fontSize={10} fontWeight="500" textAnchor="end">
+                fill={colors.textDim} fontSize={12} fontWeight="600" textAnchor="end">
                 {formatK(yl.val)}
               </SvgText>
             </React.Fragment>
@@ -148,7 +158,7 @@ export default function BalanceLineChart({ data, limit, currency, limitLabel }) 
           {/* X-axis date labels */}
           {labelIndices.map(idx => (
             <SvgText key={idx} x={getX(idx)} y={CHART_H - 4}
-              fill={colors.textMuted} fontSize={10} fontWeight="500" textAnchor="middle">
+              fill={colors.textDim} fontSize={12} fontWeight="600" textAnchor="middle">
               {data[idx].day}
             </SvgText>
           ))}

@@ -83,7 +83,7 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
           <Line x1={PAD_LEFT} y1={PAD_TOP} x2={containerW - PAD_RIGHT} y2={PAD_TOP}
             stroke={colors.divider} strokeWidth={0.5} strokeDasharray="4,4" />
           <SvgText x={PAD_LEFT - 6} y={PAD_TOP + 4}
-            fill={colors.green} fontSize={10} fontWeight="500" textAnchor="end">
+            fill={colors.green} fontSize={12} fontWeight="600" textAnchor="end">
             {formatK(maxIncome)}
           </SvgText>
 
@@ -91,7 +91,7 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
           <Line x1={PAD_LEFT} y1={midY} x2={containerW - PAD_RIGHT} y2={midY}
             stroke={colors.textMuted} strokeWidth={0.5} />
           <SvgText x={PAD_LEFT - 6} y={midY + 4}
-            fill={colors.textMuted} fontSize={10} fontWeight="500" textAnchor="end">
+            fill={colors.textDim} fontSize={12} fontWeight="600" textAnchor="end">
             0
           </SvgText>
 
@@ -99,7 +99,7 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
           <Line x1={PAD_LEFT} y1={PAD_TOP + h} x2={containerW - PAD_RIGHT} y2={PAD_TOP + h}
             stroke={colors.divider} strokeWidth={0.5} strokeDasharray="4,4" />
           <SvgText x={PAD_LEFT - 6} y={PAD_TOP + h + 4}
-            fill={colors.red} fontSize={10} fontWeight="500" textAnchor="end">
+            fill={colors.red} fontSize={12} fontWeight="600" textAnchor="end">
             -{formatK(maxExpense)}
           </SvgText>
 
@@ -129,7 +129,7 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
           {/* X-axis date labels */}
           {labelIndices.map(idx => (
             <SvgText key={idx} x={PAD_LEFT + idx * (barW + gap) + barW / 2} y={CHART_H - 4}
-              fill={colors.textMuted} fontSize={10} fontWeight="500" textAnchor="middle">
+              fill={colors.textDim} fontSize={12} fontWeight="600" textAnchor="middle">
               {data[idx].day}
             </SvgText>
           ))}
