@@ -19,6 +19,7 @@ const KEYS = {
   QUICK_TEMPLATES: 'qaizo_quick_templates',
   PROJECTS: 'qaizo_projects',
   GOALS: 'qaizo_goals',
+  SHOPPING_LIST: 'qaizo_shopping_list',
 };
 
 const DEFAULT_ACCOUNTS = [
@@ -682,6 +683,22 @@ const dataService = {
     const uid = getUid();
     if (uid) return setDocData('quickTemplates', templates);
     try { await AsyncStorage.setItem(KEYS.QUICK_TEMPLATES, JSON.stringify(templates)); return true; } catch (e) { return false; }
+  },
+
+  // ─── SHOPPING LIST ────────────────────────────────────────
+  // Stored as { manualItems: [{name, price?, quantity?}], listItems: {name:true},
+  // checkedItems: {name:true} } — survives app restart and cross-device sync.
+  async getShoppingList() {
+    const uid = getUid();
+    const defaults = { manualItems: [], listItems: {}, checkedItems: {} };
+    if (uid) return getDocData('shoppingList', defaults);
+    try { const data = await AsyncStorage.getItem(KEYS.SHOPPING_LIST); return data ? JSON.parse(data) : defaults; } catch (e) { return defaults; }
+  },
+
+  async saveShoppingList(state) {
+    const uid = getUid();
+    if (uid) return setDocData('shoppingList', state);
+    try { await AsyncStorage.setItem(KEYS.SHOPPING_LIST, JSON.stringify(state)); return true; } catch (e) { return false; }
   },
 
   // ─── STREAKS ──────────────────────────────────────────────

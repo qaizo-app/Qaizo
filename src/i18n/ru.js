@@ -17,6 +17,8 @@ export default {
   endOfMonthForecast: 'Прогноз на конец месяца',
   contractEnd: 'Дата окончания контракта',
   optional: 'Необязательно',
+  price: 'Цена',
+  quantity: 'Количество',
   notifications: 'Уведомления',
   notifyBeforePayment: 'Напоминание за день до платежа',
   contractEndingSoon: 'Контракт скоро заканчивается',

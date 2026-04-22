@@ -15,6 +15,8 @@ export default {
   endOfMonthForecast: 'महीने के अंत का पूर्वानुमान',
   contractEnd: 'अनुबंध समाप्ति तिथि',
   optional: 'वैकल्पिक',
+  price: 'मूल्य',
+  quantity: 'मात्रा',
   notifications: 'सूचनाएं',
   notifyBeforePayment: 'भुगतान से एक दिन पहले अनुस्मारक',
   contractEndingSoon: 'अनुबंध जल्द समाप्त हो रहा है',

@@ -15,6 +15,8 @@ export default {
   endOfMonthForecast: 'תחזית סוף חודש',
   contractEnd: 'תאריך סיום חוזה',
   optional: 'אופציונלי',
+  price: 'מחיר',
+  quantity: 'כמות',
   notifications: 'התראות',
   notifyBeforePayment: 'תזכורת יום לפני תשלום',
   contractEndingSoon: 'חוזה מסתיים בקרוב',

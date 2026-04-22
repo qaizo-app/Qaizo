@@ -15,6 +15,8 @@ export default {
   endOfMonthForecast: 'Prévision de fin de mois',
   contractEnd: 'Date de fin de contrat',
   optional: 'Optionnel',
+  price: 'Prix',
+  quantity: 'Quantité',
   notifications: 'Notifications',
   notifyBeforePayment: 'Rappel la veille du paiement',
   contractEndingSoon: 'Contrat bientôt expiré',

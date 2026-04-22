@@ -15,6 +15,8 @@ export default {
   endOfMonthForecast: '月末预测',
   contractEnd: '合同到期日',
   optional: '可选',
+  price: '价格',
+  quantity: '数量',
   notifications: '通知',
   notifyBeforePayment: '付款前一天提醒',
   contractEndingSoon: '合同即将到期',

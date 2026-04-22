@@ -15,6 +15,8 @@ export default {
   endOfMonthForecast: '月末予測',
   contractEnd: '契約終了日',
   optional: '任意',
+  price: '価格',
+  quantity: '数量',
   notifications: '通知',
   notifyBeforePayment: '支払い前日にリマインド',
   contractEndingSoon: '契約終了が近づいています',

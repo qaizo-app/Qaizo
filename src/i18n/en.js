@@ -15,6 +15,8 @@ export default {
   endOfMonthForecast: 'End of month forecast',
   contractEnd: 'Contract end date',
   optional: 'Optional',
+  price: 'Price',
+  quantity: 'Quantity',
   notifications: 'Notifications',
   notifyBeforePayment: 'Reminder day before payment',
   contractEndingSoon: 'Contract ending soon',

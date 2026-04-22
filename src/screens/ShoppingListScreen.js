@@ -2,7 +2,7 @@
 // רשימת קניות חכמה — מוצרים תכופים, בנה רשימה, היסטוריית מחירים
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Amount from '../components/Amount';
@@ -25,12 +25,37 @@ export default function ShoppingListScreen() {
   const [listItems, setListItems] = useState({}); // {itemName: true}
   const [showAddItem, setShowAddItem] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemQty, setNewItemQty] = useState('');
+  const [newItemNote, setNewItemNote] = useState('');
   const [manualItems, setManualItems] = useState([]); // manually added items
+  const [loaded, setLoaded] = useState(false);
   const st = createSt();
 
   useFocusEffect(useCallback(() => {
     loadItems();
+    loadStoredList();
   }, []));
+
+  const loadStoredList = async () => {
+    try {
+      const stored = await dataService.getShoppingList();
+      if (stored) {
+        setManualItems(Array.isArray(stored.manualItems) ? stored.manualItems : []);
+        setListItems(stored.listItems || {});
+        setCheckedItems(stored.checkedItems || {});
+      }
+    } finally {
+      setLoaded(true);
+    }
+  };
+
+  // Persist any user change to storage. Wait for initial load to avoid
+  // wiping existing data with the empty defaults before loadStoredList finishes.
+  useEffect(() => {
+    if (!loaded) return;
+    dataService.saveShoppingList({ manualItems, listItems, checkedItems });
+  }, [loaded, manualItems, listItems, checkedItems]);
 
   const loadItems = async () => {
     const txs = await dataService.getTransactions();
@@ -108,11 +133,25 @@ export default function ShoppingListScreen() {
   const addManualItem = () => {
     const name = newItemName.trim();
     if (!name) return;
-    if (!manualItems.find(i => i.name.toLowerCase() === name.toLowerCase())) {
-      setManualItems(prev => [...prev, { name, lastPrice: 0, avgPrice: 0, minPrice: 0, maxPrice: 0, change: 0, count: 0, lastStore: '', lastDate: '', daysSince: 0, avgDaysBetween: 0, needToBuy: false, isFood: true, stores: [], isManual: true }]);
+    const price = parseFloat((newItemPrice || '').replace(',', '.')) || 0;
+    const qty = parseFloat((newItemQty || '').replace(',', '.')) || 0;
+    const note = newItemNote.trim();
+    const existingIdx = manualItems.findIndex(i => i.name.toLowerCase() === name.toLowerCase());
+    const base = {
+      name,
+      lastPrice: price, avgPrice: price, minPrice: price, maxPrice: price, change: 0,
+      count: 0, lastStore: '', lastDate: '', daysSince: 0, avgDaysBetween: 0,
+      needToBuy: false, isFood: true, stores: [], isManual: true,
+      quantity: qty || undefined, note: note || undefined,
+    };
+    if (existingIdx === -1) {
+      setManualItems(prev => [...prev, base]);
+    } else {
+      // Update price/qty/note if user re-added with new details
+      setManualItems(prev => prev.map((it, i) => i === existingIdx ? { ...it, ...base } : it));
     }
     setListItems(prev => ({ ...prev, [name]: true }));
-    setNewItemName('');
+    setNewItemName(''); setNewItemPrice(''); setNewItemQty(''); setNewItemNote('');
     setShowAddItem(false);
     setTab('list');
   };
@@ -154,9 +193,16 @@ export default function ShoppingListScreen() {
   };
 
   const shareList = async () => {
-    const inList = items.filter(i => listItems[i.name] && !checkedItems[i.name]);
+    // Share everything on the list — merge scanned items with manual ones.
+    const allItems = [...items, ...manualItems.filter(m => !items.find(i => i.name.toLowerCase() === m.name.toLowerCase()))];
+    const inList = allItems.filter(i => listItems[i.name]);
     if (inList.length === 0) return;
-    const text = inList.map(i => `☐ ${i.name}`).join('\n');
+    const text = inList.map(i => {
+      const mark = checkedItems[i.name] ? '☑' : '☐';
+      const qty = i.quantity ? ` ×${i.quantity}` : '';
+      const price = i.lastPrice > 0 ? ` — ${i.lastPrice} ${sym()}` : '';
+      return `${mark} ${i.name}${qty}${price}`;
+    }).join('\n');
     await Share.share({ message: `${i18n.t('shoppingList')}:\n\n${text}` });
   };
 
@@ -172,12 +218,9 @@ export default function ShoppingListScreen() {
             <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={st.title}>{i18n.t('shoppingList')}</Text>
-          {listCount > 0 && (
-            <TouchableOpacity onPress={shareList} style={st.shareBtn}>
-              <Feather name="share-2" size={18} color={colors.green} />
-            </TouchableOpacity>
-          )}
-          {listCount === 0 && <View style={{ width: 44 }} />}
+          <TouchableOpacity onPress={shareList} style={[st.shareBtn, listCount === 0 && { opacity: 0.35 }]} disabled={listCount === 0}>
+            <Feather name="share-2" size={18} color={colors.green} />
+          </TouchableOpacity>
         </View>
 
         {/* Search */}
@@ -296,6 +339,8 @@ export default function ShoppingListScreen() {
           <TouchableOpacity style={st.modalOverlay} activeOpacity={1} onPress={() => setShowAddItem(false)}>
             <TouchableOpacity style={st.modalCard} activeOpacity={1} onPress={() => {}}>
               <Text style={st.modalTitle}>{i18n.t('addItem')}</Text>
+
+              <Text style={st.fieldLabel}>{i18n.t('itemName')}</Text>
               <TextInput
                 style={st.modalInput}
                 value={newItemName}
@@ -303,13 +348,56 @@ export default function ShoppingListScreen() {
                 placeholder={i18n.t('itemName')}
                 placeholderTextColor={colors.textMuted}
                 autoFocus
-                onSubmitEditing={addManualItem}
-                returnKeyType="done"
+                returnKeyType="next"
               />
-              <TouchableOpacity style={[st.modalBtn, !newItemName.trim() && { opacity: 0.4 }]} onPress={addManualItem} disabled={!newItemName.trim()}>
-                <Feather name="plus" size={18} color={colors.bg} />
-                <Text style={st.modalBtnText}>{i18n.t('add')}</Text>
-              </TouchableOpacity>
+
+              <View style={st.rowFields}>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.fieldLabel}>{i18n.t('price')} ({sym()})</Text>
+                  <TextInput
+                    style={st.modalInput}
+                    value={newItemPrice}
+                    onChangeText={setNewItemPrice}
+                    placeholder="0"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="decimal-pad"
+                    returnKeyType="next"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.fieldLabel}>{i18n.t('quantity')}</Text>
+                  <TextInput
+                    style={st.modalInput}
+                    value={newItemQty}
+                    onChangeText={setNewItemQty}
+                    placeholder="1"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="decimal-pad"
+                    returnKeyType="next"
+                  />
+                </View>
+              </View>
+
+              <Text style={st.fieldLabel}>{i18n.t('note')}</Text>
+              <TextInput
+                style={st.modalInput}
+                value={newItemNote}
+                onChangeText={setNewItemNote}
+                placeholder={i18n.t('optional')}
+                placeholderTextColor={colors.textMuted}
+                returnKeyType="done"
+                onSubmitEditing={addManualItem}
+              />
+
+              <View style={st.modalBtnRow}>
+                <TouchableOpacity style={st.modalCancelBtn} onPress={() => setShowAddItem(false)}>
+                  <Text style={st.modalCancelText}>{i18n.t('cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[st.modalBtn, { flex: 2 }, !newItemName.trim() && { opacity: 0.4 }]} onPress={addManualItem} disabled={!newItemName.trim()}>
+                  <Feather name="plus" size={18} color={colors.bg} />
+                  <Text style={st.modalBtnText}>{i18n.t('add')}</Text>
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           </TouchableOpacity>
         </KeyboardAvoidingView>
@@ -357,9 +445,14 @@ const createSt = () => StyleSheet.create({
   fab: { position: 'absolute', bottom: 100, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
 
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' },
-  modalCard: { backgroundColor: colors.card, borderRadius: 20, padding: 24, width: '85%', borderWidth: 1, borderColor: colors.cardBorder },
-  modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  modalInput: { backgroundColor: colors.bg, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, color: colors.text, fontSize: 16, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 16 },
+  modalCard: { backgroundColor: colors.card, borderRadius: 20, padding: 24, width: '90%', borderWidth: 1, borderColor: colors.cardBorder },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '800', marginBottom: 20, textAlign: i18n.textAlign() },
+  modalInput: { backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontSize: 15, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 12, textAlign: i18n.textAlign() },
+  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 4, textAlign: i18n.textAlign() },
+  rowFields: { flexDirection: i18n.row(), gap: 10 },
   modalBtn: { backgroundColor: colors.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
   modalBtnText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
+  modalBtnRow: { flexDirection: i18n.row(), gap: 10, marginTop: 8 },
+  modalCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
+  modalCancelText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
 });
