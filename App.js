@@ -237,12 +237,16 @@ function AppInner() {
       // Notifications init — non-blocking, runs in background
     })();
 
-    // Re-lock when app comes from background
+    // Re-lock when app comes from background, unless the user was just
+    // briefly away (UNLOCK_GRACE_MS) — in that case skip the prompt.
     const appStateRef = { current: AppState.currentState };
     const appStateSub = AppState.addEventListener('change', async (nextState) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+      if (appStateRef.current === 'active' && nextState.match(/inactive|background/)) {
+        // Leaving the foreground — remember when the user was last active.
+        securityService.markActive();
+      } else if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
         const pinOn = await securityService.isPinEnabled();
-        if (pinOn) setLocked(true);
+        if (pinOn && !securityService.isWithinUnlockGrace()) setLocked(true);
       }
       appStateRef.current = nextState;
     });
@@ -281,7 +285,7 @@ function AppInner() {
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
           <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
-          <PinScreen mode="unlock" onSuccess={() => setLocked(false)} />
+          <PinScreen mode="unlock" onSuccess={() => { securityService.markActive(); setLocked(false); }} />
         </GestureHandlerRootView>
       </SafeAreaProvider>
     );

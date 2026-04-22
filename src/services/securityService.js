@@ -13,6 +13,13 @@ const KEYS = {
   BIOMETRIC_ENABLED: 'qaizo_biometric_enabled',
 };
 
+// Grace window after the user unlocks: if the app is only briefly sent to
+// the background (e.g. switch to another app for a call), coming back within
+// this window skips the lock screen. Cold starts and longer absences still
+// require the PIN.
+const UNLOCK_GRACE_MS = 3 * 60 * 1000; // 3 minutes
+let _lastActiveAt = 0;
+
 const securityService = {
   // --- PIN ---
   async hashPin(pin) {
@@ -82,6 +89,24 @@ const securityService = {
   async isLockEnabled() {
     return await this.isPinEnabled();
   },
+
+  // --- Unlock grace (survives background → foreground, not process death) ---
+  // Called right after a successful PIN/biometric unlock, and whenever the
+  // app is about to go to the background so the timer measures from the
+  // last moment the user was actively using it.
+  markActive() {
+    _lastActiveAt = Date.now();
+  },
+
+  clearActive() {
+    _lastActiveAt = 0;
+  },
+
+  isWithinUnlockGrace() {
+    return _lastActiveAt > 0 && (Date.now() - _lastActiveAt) < UNLOCK_GRACE_MS;
+  },
+
+  UNLOCK_GRACE_MS,
 };
 
 export default securityService;
