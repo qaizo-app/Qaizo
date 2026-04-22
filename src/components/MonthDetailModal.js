@@ -70,13 +70,14 @@ export default function MonthDetailModal({ visible, onClose, monthInfo, transact
           </View>
         </View>
 
-        <ScrollView style={st.list} showsVerticalScrollIndicator={false}>
-          {pieData.length > 0 && (
-            <View style={st.pieWrap}>
-              <InteractivePieChart data={pieData} size={200} />
-            </View>
-          )}
+        {/* Sticky pie (stays in place while user scrolls the category list) */}
+        {pieData.length > 0 && (
+          <View style={st.pieWrap}>
+            <InteractivePieChart data={pieData} size={180} hideLegend />
+          </View>
+        )}
 
+        <ScrollView style={st.list} showsVerticalScrollIndicator={false}>
           {catRows.length === 0 ? (
             <Text style={st.empty}>{i18n.t('noData') || '—'}</Text>
           ) : (
@@ -111,8 +112,8 @@ const createSt = () => StyleSheet.create({
   summaryDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 6 },
   summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4, textAlign: i18n.textAlign() },
   summaryValue: { fontSize: 14, fontWeight: '700', textAlign: i18n.textAlign() },
-  list: { },
-  pieWrap: { alignItems: 'center', marginBottom: 12 },
+  list: { flex: 1 },
+  pieWrap: { alignItems: 'center', marginBottom: 8 },
   catRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
   catIconWrap: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   catName: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },

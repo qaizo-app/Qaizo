@@ -24,7 +24,7 @@ function arcPath(cx, cy, r, startAngle, endAngle) {
   return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
 }
 
-export default function InteractivePieChart({ data, size = 220, donut = true }) {
+export default function InteractivePieChart({ data, size = 220, donut = true, hideLegend = false }) {
   const [selected, setSelected] = useState(null);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const total = data.reduce((s, d) => s + d.amount, 0);
@@ -139,26 +139,28 @@ export default function InteractivePieChart({ data, size = 220, donut = true }) 
       </Animated.View>
 
       {/* Legend */}
-      <View style={st.legend}>
-        {slices.map((slice) => {
-          const isSelected = selected === slice.idx;
-          return (
-            <TouchableOpacity
-              key={slice.idx}
-              style={[st.legendRow, isSelected && st.legendRowActive]}
-              onPress={() => handlePress(slice.idx)}
-              activeOpacity={0.7}
-            >
-              <View style={[st.legendDot, { backgroundColor: slice.color }]} />
-              <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
-                {slice.name}
-              </Text>
-              <Amount value={slice.amount} style={[st.legendAmount, isSelected && st.legendAmountActive]} />
-              <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {!hideLegend && (
+        <View style={st.legend}>
+          {slices.map((slice) => {
+            const isSelected = selected === slice.idx;
+            return (
+              <TouchableOpacity
+                key={slice.idx}
+                style={[st.legendRow, isSelected && st.legendRowActive]}
+                onPress={() => handlePress(slice.idx)}
+                activeOpacity={0.7}
+              >
+                <View style={[st.legendDot, { backgroundColor: slice.color }]} />
+                <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
+                  {slice.name}
+                </Text>
+                <Amount value={slice.amount} style={[st.legendAmount, isSelected && st.legendAmountActive]} />
+                <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
