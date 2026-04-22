@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Stop, Circle, Line, Text as SvgText } from 'react-native-svg';
 import Amount from './Amount';
+import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 const CHART_H = 170;
@@ -19,7 +20,7 @@ function formatK(n) {
   return String(Math.round(n));
 }
 
-export default function BalanceLineChart({ data }) {
+export default function BalanceLineChart({ data, limit, currency, limitLabel }) {
   const [containerW, setContainerW] = useState(300);
   const [selected, setSelected] = useState(null);
 
@@ -79,7 +80,9 @@ export default function BalanceLineChart({ data }) {
     <View>
       {/* Header */}
       <View style={st.headerRow}>
-        <Amount value={selectedPoint ? selectedPoint.balance : endVal} style={st.headerAmount} />
+        <Amount value={selectedPoint ? selectedPoint.balance : endVal} sign
+          style={[st.headerAmount, { color: (selectedPoint ? selectedPoint.balance : endVal) >= 0 ? colors.text : colors.red }]}
+          currency={currency} />
         {!selectedPoint && change !== 0 && (
           <View style={[st.changeBadge, { backgroundColor: isGrowing ? colors.greenSoft : colors.redSoft }]}>
             <Text style={[st.changeText, { color: isGrowing ? colors.green : colors.red }]}>
@@ -91,6 +94,11 @@ export default function BalanceLineChart({ data }) {
           <Text style={st.selectedDate}>{selectedPoint.date}</Text>
         )}
       </View>
+      {limit > 0 && (
+        <Text style={st.limitText}>
+          {limitLabel || i18n.t('creditLimit')}: <Amount value={limit} currency={currency} style={st.limitText} />
+        </Text>
+      )}
 
       <TouchableOpacity activeOpacity={1} onPress={handlePress}
         onLayout={(e) => setContainerW(e.nativeEvent.layout.width)}>
@@ -154,9 +162,10 @@ export default function BalanceLineChart({ data }) {
 import React from 'react';
 
 const st = StyleSheet.create({
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  headerAmount: { fontSize: 20, fontWeight: '700', color: colors.text },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
+  headerAmount: { fontSize: 22, fontWeight: '800', color: colors.text },
   changeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   changeText: { fontSize: 12, fontWeight: '700' },
   selectedDate: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+  limitText: { color: colors.textMuted, fontSize: 11, marginBottom: 8, fontWeight: '500' },
 });

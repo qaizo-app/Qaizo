@@ -103,13 +103,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         </View>
       </View>
 
-      <View style={styles.balCard}>
-        <Text style={styles.balLabel}>{lang==='ru'?'Баланс':lang==='he'?'יתרה':'Balance'}</Text>
-        <Amount value={currentBalance} sign style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
-        {account.overdraft && <Text style={styles.odText}>{lang==='ru'?'Лимит':'Limit'}: <Amount value={account.overdraft} style={styles.odText} currency={account.currency} /></Text>}
-      </View>
-
-      {chartData.length >= 2 && (
+      {chartData.length >= 2 ? (
         <View style={styles.chartCard}>
           <View style={styles.periodRow}>
             {PERIODS.map(p => {
@@ -123,7 +117,22 @@ export default function AccountHistoryScreen({ route, navigation }) {
               );
             })}
           </View>
-          <BalanceLineChart data={chartData} />
+          <BalanceLineChart data={chartData}
+            limit={account.overdraft}
+            currency={account.currency}
+            limitLabel={account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')} />
+        </View>
+      ) : (
+        // Not enough data for a chart — still show current balance + limit
+        <View style={styles.balCard}>
+          <Text style={styles.balLabel}>{i18n.t('balance')}</Text>
+          <Amount value={currentBalance} sign style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
+          {account.overdraft > 0 && (
+            <Text style={styles.odText}>
+              {account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')}:{' '}
+              <Amount value={account.overdraft} style={styles.odText} currency={account.currency} />
+            </Text>
+          )}
         </View>
       )}
 
