@@ -315,8 +315,17 @@ function generateInsights(transactions, budgets, accounts, recurring) {
 }
 
 // ─── Gemini API ─────────────────────────────────────────
+// Last AI failure reason — exposed so screens can show a specific message
+// ("rate limit" / "no api key" / "network") instead of a generic fallback.
+let _lastAIError = null;
+function getLastAIError() { return _lastAIError; }
+
 async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) {
-  if (!GEMINI_API_KEY) return null;
+  if (!GEMINI_API_KEY) {
+    _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
+    if (__DEV__) console.warn('[ai] no GEMINI_API_KEY set');
+    return null;
+  }
   try {
     const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -328,12 +337,26 @@ async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) 
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
+      const code = res.status === 429 ? 'rate_limit'
+                 : res.status === 401 || res.status === 403 ? 'auth'
+                 : res.status >= 500 ? 'server'
+                 : 'http_error';
+      _lastAIError = { code, status: res.status, message: errText.slice(0, 300) };
+      if (__DEV__) console.warn('[ai] gemini error', res.status, errText.slice(0, 500));
       return null;
     }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    if (!text) {
+      _lastAIError = { code: 'empty_response', message: 'Gemini returned no text' };
+      if (__DEV__) console.warn('[ai] gemini returned empty text', JSON.stringify(data).slice(0, 300));
+    } else {
+      _lastAIError = null;
+    }
     return text;
   } catch (e) {
+    _lastAIError = { code: 'network', message: String(e?.message || e) };
+    if (__DEV__) console.warn('[ai] gemini fetch failed', e);
     return null;
   }
 }
@@ -839,7 +862,14 @@ RULES:
 - Plain text only, no markdown`;
 
   const result = await callGemini(prompt, { maxTokens: 2048 });
-  return result || (lang === 'he' ? 'לא הצלחתי לענות כרגע. נסה שוב.' : lang === 'ru' ? 'Не удалось ответить. Попробуйте ещё раз.' : 'Could not answer right now. Please try again.');
+  if (result) return result;
+  // Build a fallback that reflects the actual failure reason
+  const err = _lastAIError;
+  const reason = err?.code === 'rate_limit' ? (lang === 'he' ? 'חרגת ממכסת הבקשות היומית. נסה שוב מאוחר יותר.' : lang === 'ru' ? 'Превышен дневной лимит запросов. Попробуйте позже.' : 'Daily rate limit reached. Please try again later.')
+               : err?.code === 'network' ? (lang === 'he' ? 'אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.' : lang === 'ru' ? 'Нет интернета. Проверьте соединение и попробуйте снова.' : 'No internet connection. Please check and try again.')
+               : err?.code === 'auth' || err?.code === 'no_api_key' ? (lang === 'he' ? 'שירות ה-AI אינו זמין כרגע (בעיית תצורה).' : lang === 'ru' ? 'AI временно недоступен (ошибка конфигурации).' : 'AI is temporarily unavailable (configuration issue).')
+               : (lang === 'he' ? 'לא הצלחתי לענות כרגע. נסה שוב.' : lang === 'ru' ? 'Не удалось ответить. Попробуйте ещё раз.' : 'Could not answer right now. Please try again.');
+  return reason;
 }
 
 // ─── Перевод названия категории на все языки ────────────
@@ -878,6 +908,7 @@ export default {
   scanReceiptItems,
   translateCategoryName,
   callGemini,
+  getLastAIError,
   MAAM_RATE,
   ESTIMATED_INCOME_TAX,
   BITUACH_LEUMI,
