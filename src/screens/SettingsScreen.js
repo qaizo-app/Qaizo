@@ -6,7 +6,7 @@ try { Sentry = require('@sentry/react-native'); } catch (e) {}
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Linking, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Modal, ScrollView, Share, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
@@ -429,6 +429,18 @@ export default function SettingsScreen() {
             )}
           </Card>
         )}
+
+        {/* Share Qaizo */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => {
+          const url = 'https://play.google.com/store/apps/details?id=com.qaizo.app';
+          Share.share({ message: `${i18n.t('shareAppMessage')}\n${url}`, url }).catch(() => {});
+        }}>
+          <View style={styles.sectionLeft}>
+            <Feather name="share-2" size={18} color={colors.green} />
+            <Text style={styles.sectionText}>{i18n.t('shareApp')}</Text>
+          </View>
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
         {/* About */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('about')}>

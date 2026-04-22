@@ -3,6 +3,8 @@ export default {
   appSlogan: 'Mais inteligente a cada dia.',
   contactEmail: 'E-mail',
   contactWhatsapp: 'WhatsApp',
+  shareApp: 'Compartilhar Qaizo',
+  shareAppMessage: 'Eu gerencio minhas finanças com Qaizo — simples, privado e inteligente. Experimente:',
   dashboard: 'Início',
   transactions: 'Transações',
   accounts: 'Contas',

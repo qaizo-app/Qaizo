@@ -3,6 +3,8 @@ export default {
   appSlogan: 'हर दिन और स्मार्ट।',
   contactEmail: 'ईमेल',
   contactWhatsapp: 'WhatsApp',
+  shareApp: 'Qaizo शेयर करें',
+  shareAppMessage: 'मैं Qaizo से अपना पैसा ट्रैक करता हूं — सरल, निजी और स्मार्ट। आज़माएं:',
   dashboard: 'होम',
   transactions: 'लेनदेन',
   accounts: 'खाते',

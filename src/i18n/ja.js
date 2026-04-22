@@ -3,6 +3,8 @@ export default {
   appSlogan: '毎日もっとスマートに。',
   contactEmail: 'メール',
   contactWhatsapp: 'WhatsApp',
+  shareApp: 'Qaizoを共有',
+  shareAppMessage: 'Qaizoで家計を管理しています — シンプルでプライベート、スマートです。試してみてください：',
   dashboard: 'ホーム',
   transactions: '取引',
   accounts: '口座',

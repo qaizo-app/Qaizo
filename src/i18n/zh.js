@@ -3,6 +3,8 @@ export default {
   appSlogan: '每天更智能。',
   contactEmail: '电子邮件',
   contactWhatsapp: 'WhatsApp',
+  shareApp: '分享 Qaizo',
+  shareAppMessage: '我用 Qaizo 管理财务——简单、私密、智能。来试试：',
   dashboard: '首页',
   transactions: '交易',
   accounts: '账户',
