@@ -4,7 +4,10 @@ import i18n from '../i18n';
 import { fmt, sym, code as curCode } from '../utils/currency';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_MODEL_PRIMARY = 'gemini-2.5-flash';
+const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
+const geminiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+const GEMINI_URL = geminiUrl(GEMINI_MODEL_PRIMARY);
 
 // ─── МААМ и налоговые ставки (Израиль) ──────────────────
 const MAAM_RATE = 0.17;
@@ -320,45 +323,59 @@ function generateInsights(transactions, budgets, accounts, recurring) {
 let _lastAIError = null;
 function getLastAIError() { return _lastAIError; }
 
+async function callGeminiOnce(model, prompt, { maxTokens, temperature }) {
+  const res = await fetch(`${geminiUrl(model)}?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature, maxOutputTokens: maxTokens },
+    }),
+  });
+  return res;
+}
+
 async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) {
   if (!GEMINI_API_KEY) {
     _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
     if (__DEV__) console.warn('[ai] no GEMINI_API_KEY set');
     return null;
   }
-  try {
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature, maxOutputTokens: maxTokens },
-      }),
-    });
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      const code = res.status === 429 ? 'rate_limit'
-                 : res.status === 401 || res.status === 403 ? 'auth'
-                 : res.status >= 500 ? 'server'
-                 : 'http_error';
-      _lastAIError = { code, status: res.status, message: errText.slice(0, 300) };
-      if (__DEV__) console.warn('[ai] gemini error', res.status, errText.slice(0, 500));
-      return null;
+  const tryModel = async (model) => {
+    try {
+      const res = await callGeminiOnce(model, prompt, { maxTokens, temperature });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        const code = res.status === 429 ? 'rate_limit'
+                   : res.status === 401 || res.status === 403 ? 'auth'
+                   : res.status >= 500 ? 'server'
+                   : 'http_error';
+        if (__DEV__) console.warn('[ai] gemini', model, 'error', res.status, errText.slice(0, 300));
+        return { ok: false, code, status: res.status, message: errText.slice(0, 300) };
+      }
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      if (!text) return { ok: false, code: 'empty_response', message: 'Gemini returned no text' };
+      return { ok: true, text };
+    } catch (e) {
+      if (__DEV__) console.warn('[ai] gemini', model, 'fetch failed', e);
+      return { ok: false, code: 'network', message: String(e?.message || e) };
     }
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-    if (!text) {
-      _lastAIError = { code: 'empty_response', message: 'Gemini returned no text' };
-      if (__DEV__) console.warn('[ai] gemini returned empty text', JSON.stringify(data).slice(0, 300));
-    } else {
-      _lastAIError = null;
-    }
-    return text;
-  } catch (e) {
-    _lastAIError = { code: 'network', message: String(e?.message || e) };
-    if (__DEV__) console.warn('[ai] gemini fetch failed', e);
-    return null;
+  };
+
+  // Primary model
+  let r = await tryModel(GEMINI_MODEL_PRIMARY);
+  // Retry on transient overload (503) or empty response with the fallback model
+  if (!r.ok && (r.code === 'server' || r.code === 'empty_response')) {
+    if (__DEV__) console.warn('[ai] retrying on fallback model', GEMINI_MODEL_FALLBACK);
+    r = await tryModel(GEMINI_MODEL_FALLBACK);
   }
+  if (r.ok) {
+    _lastAIError = null;
+    return r.text;
+  }
+  _lastAIError = { code: r.code, status: r.status, message: r.message };
+  return null;
 }
 
 // Умный парсинг транзакции через Gemini
