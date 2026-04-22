@@ -1,6 +1,7 @@
 // src/services/authService.js
 // Авторизация через Firebase Auth (native SDK)
 import auth from '@react-native-firebase/auth';
+import analyticsEvents from './analyticsEvents';
 
 let GoogleSignin = null;
 try {
@@ -41,6 +42,7 @@ const authService = {
       try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
       auth().languageCode = lang;
       try { await cred.user.sendEmailVerification(); } catch (e) {}
+      analyticsEvents.logEvent('user_registered', { method: 'email' });
       return { success: true, user: cred.user };
     } catch (e) {
       return { success: false, error: getErrorMessage(e.code) };
@@ -51,6 +53,7 @@ const authService = {
   async login(email, password) {
     try {
       const cred = await auth().signInWithEmailAndPassword(email, password);
+      analyticsEvents.logEvent('user_logged_in', { method: 'email' });
       return { success: true, user: cred.user };
     } catch (e) {
       return { success: false, error: getErrorMessage(e.code) };
@@ -79,6 +82,7 @@ const authService = {
       }
       const credential = auth.GoogleAuthProvider.credential(idToken);
       const cred = await auth().signInWithCredential(credential);
+      analyticsEvents.logEvent(cred.additionalUserInfo?.isNewUser ? 'user_registered' : 'user_logged_in', { method: 'google' });
       return { success: true, user: cred.user };
     } catch (e) {
       if (e.code === 'SIGN_IN_CANCELLED') {

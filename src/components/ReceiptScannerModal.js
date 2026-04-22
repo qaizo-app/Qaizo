@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import aiService from '../services/aiService';
+import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
@@ -105,14 +106,21 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
         setRecipient(scanResult.store || '');
         setDateStr(scanResult.date || new Date().toISOString().slice(0, 10));
         setStep('result');
+        analyticsEvents.logEvent('receipt_scanned', {
+          success: true,
+          images: images.length,
+          items_extracted: itemsResult?.length || 0,
+        });
       } else {
         setError(i18n.t('scanFailed'));
         setStep('pick');
+        analyticsEvents.logEvent('receipt_scanned', { success: false, images: images.length });
       }
     } catch (e) {
       if (__DEV__) console.error('Receipt scan error:', e);
       setError(i18n.t('scanFailed'));
       setStep('pick');
+      analyticsEvents.logEvent('receipt_scanned', { success: false, error: true });
     }
   };
 

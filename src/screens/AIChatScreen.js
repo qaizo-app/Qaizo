@@ -17,6 +17,7 @@ try {
 }
 import i18n from '../i18n';
 import aiService from '../services/aiService';
+import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
@@ -264,6 +265,7 @@ export default function AIChatScreen() {
     setMessages(prev => [...prev, userMsg]);
 
     setLoading(true);
+    analyticsEvents.logEvent('ai_chat_message_sent', { language: lang });
 
     // Check if the query needs a chart
     const [chartParams, answer] = await Promise.all([

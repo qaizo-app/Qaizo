@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
+import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
@@ -157,6 +158,17 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     } else {
       const ci2 = getCatIcon(categoryId, catGroups);
       await dataService.addTransaction({ type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
+    }
+    if (!isEdit) {
+      analyticsEvents.logEvent('transaction_added', {
+        type,
+        currency: sym(),
+        amount_bucket: analyticsEvents.amountBucket(amount.replace(',', '.')),
+        method: 'manual',
+        is_transfer: type === 'transfer',
+      });
+    } else {
+      analyticsEvents.logEvent('transaction_edited');
     }
     onSave?.(); onClose?.();
   };

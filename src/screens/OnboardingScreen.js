@@ -141,6 +141,10 @@ export default function OnboardingScreen({ onDone }) {
     try {
       await consentService.setReminderConsent(toggleStates.reminder === true);
       await consentService.setCrashReportsConsent(toggleStates.crashReports === true);
+      // Analytics consent follows the same privacy toggle — both are "help
+      // improve Qaizo" in the user's mind; keeping them separate internally
+      // lets us disable one independently from Settings later if needed.
+      await consentService.setAnalyticsConsent(toggleStates.crashReports === true);
       // If the user opted in, kick off permission request and schedule right
       // now — App.js already finished its init before the user saw this screen.
       if (toggleStates.reminder === true) {

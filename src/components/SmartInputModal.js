@@ -14,6 +14,7 @@ try {
   useSpeechRecognitionEvent = speech.useSpeechRecognitionEvent;
 } catch {}
 import aiService from '../services/aiService';
+import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import { fmt } from '../utils/currency';
@@ -113,6 +114,10 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     const result = await aiService.parseTransactionSmart(text);
     setParsed(result);
     setAiLoading(false);
+    analyticsEvents.logEvent('smart_input_used', {
+      language: i18n.getLanguage(),
+      success: !!(result && result.amount),
+    });
   };
 
   const handleSave = async () => {

@@ -68,6 +68,7 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import SetupWizardScreen from './src/screens/SetupWizardScreen';
 import authService from './src/services/authService';
 import consentService from './src/services/consentService';
+import analyticsEvents from './src/services/analyticsEvents';
 import dataService from './src/services/dataService';
 import exchangeRateService from './src/services/exchangeRateService';
 import notificationService from './src/services/notificationService';
@@ -197,8 +198,11 @@ function AppInner() {
         if (__DEV__) console.error('Error loading:', e);
       }
 
-      // Load consent first so Sentry / notifications respect the user's choice
+      // Load consent first so Sentry / notifications / analytics respect the user's choice
       await consentService.load();
+      // Apply analytics consent to the native SDK and log session start
+      await analyticsEvents.syncNativeConsent();
+      analyticsEvents.logEvent('app_opened', { platform: 'android' });
 
       // Инициализация уведомлений — only if the user consented on the
       // onboarding screen. New installs haven't seen onboarding yet, so we
