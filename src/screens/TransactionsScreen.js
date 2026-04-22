@@ -82,7 +82,7 @@ export default function TransactionsScreen({ route }) {
   };
 
   // Merge transfer pairs into single rows (memoized for 14K+ transactions)
-  const { filtered, totalFiltered, usedCategories } = useMemo(() => {
+  const { filtered, totalFiltered, usedCategories, catMeta } = useMemo(() => {
     const sorted = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
     const merged = mergeTransferPairs(sorted);
     let f = filter === 'all' ? merged : merged.filter(t => t.type === filter);
@@ -117,10 +117,23 @@ export default function TransactionsScreen({ route }) {
       if (!isNaN(max)) f = f.filter(t => t.amount <= max);
     }
 
+    // Build per-category metadata from the transactions themselves so custom
+    // categories (e.g. "алкоголь_jr6j") show their stored name/icon instead
+    // of the raw id when they aren't in the cached groups.
+    const catMeta = {};
+    for (const t of transactions) {
+      if (!t.categoryId) continue;
+      const m = catMeta[t.categoryId] || { name: null, icon: null };
+      if (!m.name && t.categoryName) m.name = t.categoryName;
+      if (!m.icon && t.icon) m.icon = t.icon;
+      catMeta[t.categoryId] = m;
+    }
+
     return {
       filtered: f,
       totalFiltered: f.reduce((s, t) => s + (t.isTransfer ? 0 : t.type === 'income' ? t.amount : -t.amount), 0),
       usedCategories: [...new Set(transactions.map(t => t.categoryId))].filter(Boolean),
+      catMeta,
     };
   }, [transactions, filter, search, dateFrom, dateTo, selCategories, selAccounts, selProjects, amountMin, amountMax]);
 
@@ -273,12 +286,16 @@ export default function TransactionsScreen({ route }) {
                   {usedCategories.map(cid => {
                     const groups = getCachedGroups();
                     const ci = getCatIcon(cid, groups);
-                    const name = getCatName(cid, groups, i18n.getLanguage());
+                    const meta = catMeta[cid] || {};
+                    // Prefer the name/icon stored on the transactions themselves,
+                    // so custom or orphaned ids don't fall back to the raw string.
+                    const name = meta.name || getCatName(cid, groups, i18n.getLanguage());
+                    const icon = meta.icon || ci.icon;
                     const sel = selCategories.includes(cid);
                     return (
                       <TouchableOpacity key={cid} style={[styles.chip, sel && { borderColor: ci.color, backgroundColor: `${ci.color}15` }]}
                         onPress={() => toggleCategory(cid)}>
-                        <CatIcon icon={ci.icon} size={12} color={sel ? ci.color : colors.textMuted} />
+                        <CatIcon icon={icon} size={12} color={sel ? ci.color : colors.textMuted} />
                         <Text style={[styles.chipText, sel && { color: ci.color }]} numberOfLines={1}>{name}</Text>
                       </TouchableOpacity>
                     );
