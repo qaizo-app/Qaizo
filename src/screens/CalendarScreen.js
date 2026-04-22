@@ -54,7 +54,8 @@ export default function CalendarScreen() {
   for (let i = 0; i < startDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  // Aggregate transactions by date
+  // Aggregate transactions by date. Transfers between accounts are not income
+  // or expense — they cancel out — so we exclude them from day totals.
   const dayData = {};
   transactions.forEach(tx => {
     const d = (tx.date || tx.createdAt || '').slice(0, 10);
@@ -63,8 +64,10 @@ export default function CalendarScreen() {
     if (y !== viewYear || m - 1 !== viewMonth) return;
     const day = parseInt(d.split('-')[2], 10);
     if (!dayData[day]) dayData[day] = { income: 0, expense: 0, txs: [] };
-    if (tx.type === 'income') dayData[day].income += tx.amount;
-    else if (tx.type === 'expense') dayData[day].expense += tx.amount;
+    if (!tx.isTransfer) {
+      if (tx.type === 'income') dayData[day].income += tx.amount;
+      else if (tx.type === 'expense') dayData[day].expense += tx.amount;
+    }
     dayData[day].txs.push(tx);
   });
 
@@ -195,16 +198,29 @@ export default function CalendarScreen() {
         {/* Selected day transactions */}
         {selectedDate && selectedTxs.length > 0 && (
           <Card style={{ marginTop: 12 }}>
-            {selectedTxs.map((tx, idx) => (
-              <View key={tx.id || idx} style={[st.txRow, idx < selectedTxs.length - 1 && st.txBorder]}>
-                <CategoryIcon categoryId={tx.categoryId} size="small" />
-                <View style={st.txInfo}>
-                  <Text style={st.txCat}>{tx.categoryName || i18n.t(tx.categoryId)}</Text>
-                  {tx.recipient ? <Text style={st.txRecipient} numberOfLines={1}>{tx.recipient}</Text> : null}
+            {selectedTxs.map((tx, idx) => {
+              const isTransfer = !!tx.isTransfer;
+              const isMerged = !!tx._mergedTransfer;
+              const txColor = isTransfer || isMerged ? colors.blue : tx.type === 'income' ? colors.green : colors.red;
+              const subtitle = isMerged
+                ? `${tx._fromAccountName || '?'} → ${tx._toAccountName || '?'}`
+                : tx.recipient;
+              return (
+                <View key={tx.id || idx} style={[st.txRow, idx < selectedTxs.length - 1 && st.txBorder]}>
+                  <CategoryIcon categoryId={tx.categoryId} size="small" />
+                  <View style={st.txInfo}>
+                    <Text style={st.txCat}>{tx.categoryName || i18n.t(tx.categoryId)}</Text>
+                    {subtitle ? <Text style={st.txRecipient} numberOfLines={1}>{subtitle}</Text> : null}
+                  </View>
+                  <Amount
+                    value={isTransfer || isMerged ? tx.amount : (tx.type === 'income' ? tx.amount : -tx.amount)}
+                    sign={!isTransfer && !isMerged}
+                    style={st.txAmount}
+                    color={txColor}
+                  />
                 </View>
-                <Amount value={tx.type === 'income' ? tx.amount : -tx.amount} sign style={st.txAmount} color={tx.type === 'income' ? colors.green : colors.red} />
-              </View>
-            ))}
+              );
+            })}
           </Card>
         )}
       </ScrollView>
