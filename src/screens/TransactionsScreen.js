@@ -14,7 +14,7 @@ import DatePickerModal from '../components/DatePickerModal';
 import FirstTimeTooltip from '../components/FirstTimeTooltip';
 import TransactionItem from '../components/TransactionItem';
 import { getCachedGroups } from '../components/CategoryIcon';
-import { getCatName } from '../components/CategoryPickerModal';
+import { getCatName, getCatIcon, CatIcon } from '../components/CategoryPickerModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
@@ -90,8 +90,10 @@ export default function TransactionsScreen({ route }) {
     // Поиск
     if (search.trim()) {
       const q = search.trim().toLowerCase();
+      const groups = getCachedGroups();
+      const lang = i18n.getLanguage();
       f = f.filter(t => {
-        const catName = (i18n.t(t.categoryId) || '').toLowerCase();
+        const catName = (t.categoryName || getCatName(t.categoryId, groups, lang) || '').toLowerCase();
         const recipient = (t.recipient || '').toLowerCase();
         const note = (t.note || '').toLowerCase();
         const amount = String(t.amount);
@@ -269,13 +271,15 @@ export default function TransactionsScreen({ route }) {
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.chipRow}>
                   {usedCategories.map(cid => {
-                    const cfg = categoryConfig[cid] || categoryConfig.other;
+                    const groups = getCachedGroups();
+                    const ci = getCatIcon(cid, groups);
+                    const name = getCatName(cid, groups, i18n.getLanguage());
                     const sel = selCategories.includes(cid);
                     return (
-                      <TouchableOpacity key={cid} style={[styles.chip, sel && { borderColor: cfg.color, backgroundColor: `${cfg.color}15` }]}
+                      <TouchableOpacity key={cid} style={[styles.chip, sel && { borderColor: ci.color, backgroundColor: `${ci.color}15` }]}
                         onPress={() => toggleCategory(cid)}>
-                        <Feather name={cfg.icon} size={12} color={sel ? cfg.color : colors.textMuted} />
-                        <Text style={[styles.chipText, sel && { color: cfg.color }]} numberOfLines={1}>{i18n.t(cid)}</Text>
+                        <CatIcon icon={ci.icon} size={12} color={sel ? ci.color : colors.textMuted} />
+                        <Text style={[styles.chipText, sel && { color: ci.color }]} numberOfLines={1}>{name}</Text>
                       </TouchableOpacity>
                     );
                   })}
