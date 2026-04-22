@@ -41,9 +41,30 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
   const loadData = async () => {
     const all = await dataService.getTransactions();
+
+    // Build transferPairId → pair map using ALL transactions, so we can display
+    // both "from → to" sides on the account screen regardless of which side the
+    // current account plays in the pair.
+    const pairMap = {};
+    for (const tx of all) {
+      if (tx.isTransfer && tx.transferPairId) {
+        if (!pairMap[tx.transferPairId]) pairMap[tx.transferPairId] = {};
+        pairMap[tx.transferPairId][tx.type] = tx;
+      }
+    }
+
     const filtered = all
       .filter(t => t.account === account.id)
-      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+      .map(tx => {
+        if (!tx.isTransfer || !tx.transferPairId) return tx;
+        const pair = pairMap[tx.transferPairId];
+        if (!pair?.expense || !pair?.income) return tx;
+        const fromName = pair.income.recipient;
+        const toName = pair.expense.recipient;
+        if (!fromName || !toName) return tx;
+        return { ...tx, note: `${fromName} → ${toName}` };
+      });
     setTransactions(filtered);
 
     // Пересчитать баланс из транзакций
