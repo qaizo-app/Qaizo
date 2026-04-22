@@ -110,7 +110,11 @@ export default function SettingsScreen() {
     else toast.show(i18n.t('errorOccurred'), 'error');
   };
 
-  const flags = { ru: '🇷🇺', he: '🇮🇱', en: '🇬🇧' };
+  const flags = {
+    ru: '🇷🇺', he: '🇮🇱', en: '🇬🇧', ar: '🇸🇦',
+    es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', pt: '🇵🇹',
+    hi: '🇮🇳', ja: '🇯🇵', zh: '🇨🇳',
+  };
   const languages = i18n.getAvailableLanguages();
   const settingsTitle = i18n.t('settings');
 
