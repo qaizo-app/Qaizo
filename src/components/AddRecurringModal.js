@@ -192,9 +192,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Сумма */}
           <View style={st.amtRow}>
-            <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
             <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32) }]} value={amount} onChangeText={setAmount}
               placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
+            <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
           </View>
 
           {/* Счёт */}

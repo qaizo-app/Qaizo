@@ -214,8 +214,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             </View>
 
             <View style={st.amtRow}>
-              <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
               <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32) }]} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
+              <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
               <TouchableOpacity style={st.calcBtn} onPress={() => setShowCalc(true)}>
                 <MaterialCommunityIcons name="calculator-variant-outline" size={18} color={colors.textDim} />
               </TouchableOpacity>
