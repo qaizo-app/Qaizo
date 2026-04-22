@@ -99,8 +99,11 @@ export default function AccountsScreen() {
   const getAccountCode = (acc) => CURRENCIES.find(c => c.symbol === acc.currency)?.code || code();
 
   // Calculate projected balance per account (current + upcoming recurring before end of month)
-  // For credit accounts, `overdraft` field stores the credit limit → same math: minAllowed = -limit
+  // For credit accounts, `overdraft` field stores the credit limit → same math: minAllowed = -limit.
+  // Only bank and credit accounts get overdraft/warning status: mortgage/debt/loan are
+  // inherently negative and asset/investment/cash/crypto don't have an overdraft concept.
   const getAccountStatus = (acc) => {
+    if (acc.type !== 'bank' && acc.type !== 'credit') return 'ok';
     const bal = acc.balance || 0;
     const limit = acc.overdraft || 0;
     const minAllowed = -limit;
