@@ -70,14 +70,14 @@ export default function MonthDetailModal({ visible, onClose, monthInfo, transact
           </View>
         </View>
 
-        {/* Sticky pie (stays in place while user scrolls the category list) */}
+        {/* Sticky pie — stays in place while user scrolls the category list */}
         {pieData.length > 0 && (
           <View style={st.pieWrap}>
             <InteractivePieChart data={pieData} size={180} hideLegend />
           </View>
         )}
 
-        <ScrollView style={st.list} showsVerticalScrollIndicator={false}>
+        <ScrollView style={st.list} showsVerticalScrollIndicator={false} contentContainerStyle={st.listContent}>
           {catRows.length === 0 ? (
             <Text style={st.empty}>{i18n.t('noData') || '—'}</Text>
           ) : (
@@ -105,7 +105,7 @@ export default function MonthDetailModal({ visible, onClose, monthInfo, transact
 }
 
 const createSt = () => StyleSheet.create({
-  container: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, maxHeight: '85%' },
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20 },
   title: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   summaryRow: { flexDirection: i18n.row(), gap: 12, marginBottom: 12 },
   summaryItem: { flex: 1, backgroundColor: colors.bg2, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.cardBorder },
@@ -113,7 +113,8 @@ const createSt = () => StyleSheet.create({
   summaryLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 4, textAlign: i18n.textAlign() },
   summaryValue: { fontSize: 14, fontWeight: '700', textAlign: i18n.textAlign() },
   list: { flex: 1 },
-  pieWrap: { alignItems: 'center', marginBottom: 8 },
+  listContent: { paddingBottom: 8 },
+  pieWrap: { alignItems: 'center', marginBottom: 12 },
   catRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
   catIconWrap: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   catName: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
