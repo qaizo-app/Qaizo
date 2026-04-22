@@ -53,6 +53,7 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
       <DashboardStack.Screen name="AIAdvisor" component={AIAdvisorScreen} />
       <DashboardStack.Screen name="Investments" component={InvestmentsScreen} />
+      <DashboardStack.Screen name="AccountHistory" component={AccountHistoryScreen} />
       <DashboardStack.Screen name="Projects" component={ProjectsScreen} />
       <DashboardStack.Screen name="Goals" component={GoalsScreen} />
       <DashboardStack.Screen name="Analytics" component={AnalyticsScreen} />

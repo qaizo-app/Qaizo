@@ -172,7 +172,7 @@ export default function InvestmentsScreen() {
 
         {invAccounts.map(acc => (
           <Card key={acc.id} style={{ marginHorizontal: 20 }}>
-            <TouchableOpacity onPress={() => navigation.navigate('AccountsTab', { screen: 'AccountHistory', params: { account: acc } })} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigation.navigate('AccountHistory', { account: acc })} activeOpacity={0.7}>
               <View style={styles.invRow}>
                 <View style={[styles.invIconWrap, { backgroundColor: colors.teal + '18' }]}>
                   <Feather name="trending-up" size={20} color={colors.teal} />
