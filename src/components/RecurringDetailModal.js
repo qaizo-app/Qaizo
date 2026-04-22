@@ -7,6 +7,8 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import Amount from './Amount';
+import { getCachedGroups } from './CategoryIcon';
+import { getCatName } from './CategoryPickerModal';
 import SwipeModal from './SwipeModal';
 
 export default function RecurringDetailModal({ visible, item, onClose, onConfirm, onSkip, onDelete, onEdit }) {
@@ -76,8 +78,8 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Feather name={cfg.icon || 'repeat'} size={24} color={cfg.color} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.title}>{item.recipient || item.categoryName || i18n.t(item.categoryId)}</Text>
-              <Text style={st.subtitle}>{item.categoryName || i18n.t(item.categoryId)}</Text>
+              <Text style={st.title}>{item.recipient || item.categoryName || getCatName(item.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
+              <Text style={st.subtitle}>{item.categoryName || getCatName(item.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
             </View>
             <Amount value={item.type === 'expense' ? -item.amount : item.amount} sign style={st.amount} color={item.type === 'expense' ? colors.red : colors.green} />
           </View>
@@ -197,7 +199,7 @@ const createSt = () => StyleSheet.create({
   emptyTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
   bottomRow: { flexDirection: i18n.row(), gap: 12 },
-  editBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.bg2 },
-  deleteBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.redSoft },
+  editBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.teal + '18', borderWidth: 1, borderColor: colors.teal + '40' },
+  deleteBtn: { flex: 1, flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.redSoft, borderWidth: 1, borderColor: colors.red + '40' },
   bottomTxt: { fontSize: 14, fontWeight: '600' },
 });
