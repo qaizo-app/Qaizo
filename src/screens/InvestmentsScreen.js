@@ -18,6 +18,7 @@ const INV_TYPES = ['pension', 'savings', 'education', 'stocks', 'bonds', 'real_e
 export default function InvestmentsScreen() {
   const navigation = useNavigation();
   const [investments, setInvestments] = useState([]);
+  const [invAccounts, setInvAccounts] = useState([]);
   const [quotes, setQuotes] = useState({});
   const [showEdit, setShowEdit] = useState(false);
   const [editInv, setEditInv] = useState(null);
@@ -34,8 +35,12 @@ export default function InvestmentsScreen() {
   const styles = createStyles();
 
   const loadData = async (force = false) => {
-    const inv = await dataService.getInvestments();
+    const [inv, accs] = await Promise.all([
+      dataService.getInvestments(),
+      dataService.getAccounts(),
+    ]);
     setInvestments(inv);
+    setInvAccounts(accs.filter(a => a.type === 'investment' && !a.archived));
     const tickers = new Set();
     inv.forEach(i => { if (i.type === 'stocks' && Array.isArray(i.holdings)) i.holdings.forEach(h => h.ticker && tickers.add(h.ticker)); });
     if (tickers.size > 0) {
@@ -64,7 +69,9 @@ export default function InvestmentsScreen() {
     }
     return null;
   };
-  const totalInvested = investments.reduce((sum, i) => sum + invValue(i), 0);
+  const totalInvested =
+    investments.reduce((sum, i) => sum + invValue(i), 0) +
+    invAccounts.reduce((sum, a) => sum + (a.balance || 0), 0);
   const totalMonthly = investments.reduce((sum, i) => sum + (i.monthly || 0), 0);
 
   const typeIcon = (t) => {
@@ -163,6 +170,25 @@ export default function InvestmentsScreen() {
           </View>
         </Card>
 
+        {invAccounts.map(acc => (
+          <Card key={acc.id} style={{ marginHorizontal: 20 }}>
+            <TouchableOpacity onPress={() => navigation.navigate('AccountsTab', { screen: 'AccountHistory', params: { account: acc } })} activeOpacity={0.7}>
+              <View style={styles.invRow}>
+                <View style={[styles.invIconWrap, { backgroundColor: colors.teal + '18' }]}>
+                  <Feather name="trending-up" size={20} color={colors.teal} />
+                </View>
+                <View style={styles.invInfo}>
+                  <Text style={styles.invName}>{acc.name}</Text>
+                  <Text style={styles.invType}>{i18n.t('investment')}</Text>
+                </View>
+                <View style={styles.invAmounts}>
+                  <Amount value={acc.balance || 0} style={styles.invBalance} numberOfLines={1} adjustsFontSizeToFit currency={acc.currency} />
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Card>
+        ))}
+
         {investments.map(inv => {
           const stats = invStats(inv);
           const value = invValue(inv);
@@ -197,7 +223,7 @@ export default function InvestmentsScreen() {
           );
         })}
 
-        {investments.length === 0 && (
+        {investments.length === 0 && invAccounts.length === 0 && (
           <Card style={{ marginHorizontal: 20, marginTop: 12 }}>
             <View style={styles.emptyWrap}>
               <Feather name="trending-up" size={32} color={colors.textMuted} />
