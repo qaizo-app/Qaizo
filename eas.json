@@ -24,9 +24,7 @@
         "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "qaizo-ece06.firebasestorage.app",
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "568492177874",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:568492177874:web:019151972555cba53b700b",
-        "EXPO_PUBLIC_GEMINI_API_KEY": "SET_VIA_EAS_SECRETS",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com",
-        "EXPO_PUBLIC_SENTRY_DSN": "SET_VIA_EAS_SECRETS"
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com"
       },
       "android": {
         "buildType": "apk"
@@ -42,9 +40,7 @@
         "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "qaizo-ece06.firebasestorage.app",
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "568492177874",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:568492177874:web:019151972555cba53b700b",
-        "EXPO_PUBLIC_GEMINI_API_KEY": "SET_VIA_EAS_SECRETS",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com",
-        "EXPO_PUBLIC_SENTRY_DSN": "SET_VIA_EAS_SECRETS"
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "568492177874-dku8ci4tcrd5b356iicj1f72vpe4bgm3.apps.googleusercontent.com"
       },
       "android": {
         "buildType": "app-bundle"
