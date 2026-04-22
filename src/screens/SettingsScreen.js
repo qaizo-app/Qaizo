@@ -13,6 +13,7 @@ import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import PinScreen from './PinScreen';
 import ExportModal from '../components/ExportModal';
 import ImportModal from '../components/ImportModal';
+import RateAppModal from '../components/RateAppModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
 import dataService from '../services/dataService';
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
   const [curSymbol, setCurSymbol] = useState(sym());
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showRate, setShowRate] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [monthlyExtra, setMonthlyExtra] = useState('');
@@ -434,6 +436,15 @@ export default function SettingsScreen() {
           </Card>
         )}
 
+        {/* Rate Qaizo */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => setShowRate(true)}>
+          <View style={styles.sectionLeft}>
+            <Feather name="star" size={18} color={colors.yellow} />
+            <Text style={styles.sectionText}>{i18n.t('rateApp')}</Text>
+          </View>
+          <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Share Qaizo */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => {
           const url = 'https://play.google.com/store/apps/details?id=com.qaizo.app';
@@ -502,6 +513,7 @@ export default function SettingsScreen() {
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
       <ImportModal visible={showImport} onClose={() => setShowImport(false)} onImported={() => toast.show(i18n.t('importDone'), 'success')} />
+      <RateAppModal visible={showRate} onClose={() => setShowRate(false)} />
 
       <ConfirmModal visible={showLangRestart}
         title={i18n.t('langChanged')} message={i18n.t('restartApp')}

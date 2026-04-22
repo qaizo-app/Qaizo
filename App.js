@@ -71,9 +71,11 @@ import consentService from './src/services/consentService';
 import analyticsEvents from './src/services/analyticsEvents';
 import dataService from './src/services/dataService';
 import exchangeRateService from './src/services/exchangeRateService';
+import feedbackService from './src/services/feedbackService';
 import notificationService from './src/services/notificationService';
 import securityService from './src/services/securityService';
 import PinScreen from './src/screens/PinScreen';
+import RateAppModal from './src/components/RateAppModal';
 import { colors } from './src/theme/colors';
 import { CURRENCIES, setCurrency } from './src/utils/currency';
 import { ToastProvider } from './src/components/ToastProvider';
@@ -112,6 +114,7 @@ function AppInner() {
   const [authSkipped, setAuthSkipped] = useState(false);
   const [locked, setLocked] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [showRatePrompt, setShowRatePrompt] = useState(false);
 
   const navTheme = {
     ...DefaultTheme,
@@ -198,6 +201,9 @@ function AppInner() {
         if (__DEV__) console.error('Error loading:', e);
       }
 
+      // Stamp first-run date so rate-prompt gating has a stable anchor.
+      feedbackService.ensureInstallDate().catch(() => {});
+
       // Load consent first so Sentry / notifications / analytics respect the user's choice
       await consentService.load();
       // Warm the category cache so notification bodies and other background
@@ -257,6 +263,22 @@ function AppInner() {
       notifSub?.remove?.();
     };
   }, []);
+
+  // Trigger the rate prompt only when the user is past onboarding/auth/pin
+  // AND has logged enough transactions over enough days. A short delay keeps
+  // the modal from clobbering the first paint after login.
+  useEffect(() => {
+    if (screen !== 'app' || locked || !ready) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const txs = await dataService.getTransactions();
+        const should = await feedbackService.shouldPrompt({ transactionCount: txs.length });
+        if (!cancelled && should) setShowRatePrompt(true);
+      } catch (e) {}
+    }, 8000);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [screen, locked, ready]);
 
   const handleOnboardingDone = async () => {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
@@ -330,6 +352,7 @@ function AppInner() {
       <NavigationContainer theme={navTheme} key={`nav-${themeKey}`}>
         <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
         <AppNavigator pendingAction={pendingAction} onPendingActionHandled={() => setPendingAction(null)} />
+        <RateAppModal visible={showRatePrompt} onClose={() => setShowRatePrompt(false)} />
       </NavigationContainer>
     </GestureHandlerRootView>
     </SafeAreaProvider>
