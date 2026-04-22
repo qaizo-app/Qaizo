@@ -4,6 +4,7 @@ let Sentry = null;
 try {
   Sentry = require('@sentry/react-native');
   const appJson = require('./app.json');
+  const consentSvc = require('./src/services/consentService').default;
   const version = appJson?.expo?.version || '0.0.0';
   const build = appJson?.expo?.android?.versionCode || 0;
   Sentry.init({
@@ -16,6 +17,9 @@ try {
     enableAppStartTracking: false,
     enableNativeFramesTracking: false,
     attachScreenshot: false,
+    // Drop events when the user has opted out of crash reporting.
+    // consentSvc defaults to true until load() reads the persisted value.
+    beforeSend: (event) => consentSvc.getCrashReportsConsent() ? event : null,
   });
 } catch (e) {
   // Sentry not available (Expo Go) — app continues without crash reporting
@@ -63,6 +67,7 @@ import AuthScreen from './src/screens/AuthScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SetupWizardScreen from './src/screens/SetupWizardScreen';
 import authService from './src/services/authService';
+import consentService from './src/services/consentService';
 import dataService from './src/services/dataService';
 import exchangeRateService from './src/services/exchangeRateService';
 import notificationService from './src/services/notificationService';
@@ -192,15 +197,22 @@ function AppInner() {
         if (__DEV__) console.error('Error loading:', e);
       }
 
-      // Инициализация уведомлений
+      // Load consent first so Sentry / notifications respect the user's choice
+      await consentService.load();
+
+      // Инициализация уведомлений — only if the user consented on the
+      // onboarding screen. New installs haven't seen onboarding yet, so we
+      // defer scheduling until onDone persists the consent.
       try {
         await notificationService.setupAndroidChannel();
         await notificationService.setupNotificationCategories();
-        const granted = await notificationService.requestPermission();
-        if (granted) {
-          await notificationService.scheduleRecurringNotifications();
-          await notificationService.scheduleStreakReminder();
-          await notificationService.scheduleWeeklySummary();
+        if (consentService.getReminderConsent()) {
+          const granted = await notificationService.requestPermission();
+          if (granted) {
+            await notificationService.scheduleRecurringNotifications();
+            await notificationService.scheduleStreakReminder();
+            await notificationService.scheduleWeeklySummary();
+          }
         }
       } catch (e) {}
 

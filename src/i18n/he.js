@@ -330,6 +330,19 @@ export default {
   onb6f2: 'סנכרון ענן — לא תאבד כלום',
   onb6f3: '11 שפות, עובד בכל מקום בעולם',
 
+  // Onboarding consent slides
+  onbReminderTitle: 'תזכורת יומית',
+  onbReminderSub: 'נזכיר לך כל יום לרשום הוצאות',
+  onbReminderToggle: 'הצג תזכורת',
+  onbReminderInfo: 'הפעל כדי לקבל התראות יומיות להוספת הוצאות. תמיד אפשר לשנות בהגדרות.',
+  onbPrivacyTitle: 'פרטיות',
+  onbPrivacySub: 'עזור לנו לשפר את Qaizo',
+  onbPrivacyToggle: 'שלח דוחות קריסה אנונימיים',
+  onbPrivacyInfo: 'כאשר מופעל, נתוני קריסות אנונימיים נשלחים כדי לתקן באגים מהר יותר. מידע אישי אינו משותף. ניתן לכבות בהגדרות.',
+  onbPrivacyLegal: 'בהמשך, אתה מסכים ל',
+  noTransactionsHint: 'לחץ על הכפתור הירוק + למטה כדי להוסיף את העסקה הראשונה',
+  txSwipeHint: 'החלק עסקה שמאלה או ימינה כדי לערוך או למחוק',
+
   // Setup Wizard
   wizCurrencyTitle: 'בחר מטבע',
   wizCurrencySub: 'המטבע הראשי של האפליקציה. אפשר לשנות מאוחר יותר.',

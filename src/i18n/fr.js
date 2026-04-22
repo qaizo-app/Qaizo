@@ -328,6 +328,20 @@ export default {
   onb6f2: 'Synchronisation cloud — ne perdez jamais vos données',
   onb6f3: '11 langues, fonctionne partout dans le monde',
 
+  // Onboarding consent slides
+  onbReminderTitle: 'Rappel quotidien',
+  onbReminderSub: 'Nous vous rappellerons chaque jour d\'enregistrer vos dépenses',
+  onbReminderToggle: 'Afficher le rappel',
+  onbReminderInfo: 'Activez pour recevoir des rappels quotidiens. Modifiable à tout moment dans les paramètres.',
+  onbPrivacyTitle: 'Confidentialité',
+  onbPrivacySub: 'Aidez-nous à améliorer Qaizo',
+  onbPrivacyToggle: 'Envoyer des rapports d\'incident anonymes',
+  onbPrivacyInfo: 'Les données anonymes sont envoyées pour corriger les bugs plus vite. Aucune donnée personnelle. Désactivable à tout moment.',
+  onbPrivacyLegal: 'En continuant, vous acceptez nos',
+  noTransactionsHint: 'Appuyez sur le bouton vert + pour ajouter votre première transaction',
+  txSwipeHint: 'Balayez une transaction à gauche ou à droite pour modifier ou supprimer',
+
+
   // Setup Wizard
   wizCurrencyTitle: 'Choisissez votre devise',
   wizCurrencySub: 'Devise principale de votre application. Vous pouvez la modifier plus tard.',

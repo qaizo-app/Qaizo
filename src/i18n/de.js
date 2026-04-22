@@ -328,6 +328,20 @@ export default {
   onb6f2: 'Cloud-Sync — verliere nie deine Daten',
   onb6f3: '11 Sprachen, funktioniert überall auf der Welt',
 
+  // Onboarding consent slides
+  onbReminderTitle: 'Tägliche Erinnerung',
+  onbReminderSub: 'Wir erinnern dich täglich, deine Ausgaben einzutragen',
+  onbReminderToggle: 'Erinnerung anzeigen',
+  onbReminderInfo: 'Aktiviere, um tägliche Benachrichtigungen zu erhalten. Kann jederzeit in den Einstellungen geändert werden.',
+  onbPrivacyTitle: 'Datenschutz',
+  onbPrivacySub: 'Hilf uns, Qaizo zu verbessern',
+  onbPrivacyToggle: 'Anonyme Absturzberichte senden',
+  onbPrivacyInfo: 'Anonyme Absturzdaten werden gesendet, um Fehler schneller zu beheben. Keine persönlichen Daten. Jederzeit deaktivierbar.',
+  onbPrivacyLegal: 'Durch Fortfahren stimmst du zu:',
+  noTransactionsHint: 'Tippe auf den grünen + Button, um die erste Transaktion hinzuzufügen',
+  txSwipeHint: 'Wische eine Transaktion nach links oder rechts, um zu bearbeiten oder löschen',
+
+
   // Setup Wizard
   wizCurrencyTitle: 'Währung auswählen',
   wizCurrencySub: 'Hauptwährung für deine App. Du kannst sie später ändern.',

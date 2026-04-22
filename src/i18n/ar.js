@@ -324,6 +324,20 @@ export default {
   onb5f3: 'تصدير إلى CSV أو Excel أو PDF في أي وقت',
   onb6Title: 'آمن وخاص',
   onb6Sub: 'بياناتك تبقى ملكك',
+
+  // Onboarding consent slides
+  onbReminderTitle: 'تذكير يومي',
+  onbReminderSub: 'سنذكرك كل يوم بتسجيل مصاريفك',
+  onbReminderToggle: 'إظهار التذكير',
+  onbReminderInfo: 'فعّل لتلقي إشعارات يومية. يمكن التغيير لاحقاً في الإعدادات.',
+  onbPrivacyTitle: 'الخصوصية',
+  onbPrivacySub: 'ساعدنا في تحسين Qaizo',
+  onbPrivacyToggle: 'إرسال تقارير الأعطال المجهولة',
+  onbPrivacyInfo: 'تُرسل بيانات مجهولة عن الأعطال لإصلاح الأخطاء بسرعة. لا بيانات شخصية. يمكن إيقافه في الإعدادات.',
+  onbPrivacyLegal: 'بالمتابعة، فإنك توافق على',
+  noTransactionsHint: 'اضغط على زر + الأخضر بالأسفل لإضافة معاملتك الأولى',
+  txSwipeHint: 'مرر المعاملة يساراً أو يميناً للتعديل أو الحذف',
+
   onb6f1: 'رمز PIN وقفل بيومتري',
   onb6f2: 'مزامنة سحابية — لن تفقد بياناتك أبداً',
   onb6f3: '11 لغة، يعمل في أي مكان في العالم',

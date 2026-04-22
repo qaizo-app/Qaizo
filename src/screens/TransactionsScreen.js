@@ -11,6 +11,7 @@ import AddTransactionModal from '../components/AddTransactionModal';
 import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
 import DatePickerModal from '../components/DatePickerModal';
+import FirstTimeTooltip from '../components/FirstTimeTooltip';
 import TransactionItem from '../components/TransactionItem';
 import { getCachedGroups } from '../components/CategoryIcon';
 import { getCatName } from '../components/CategoryPickerModal';
@@ -364,6 +365,11 @@ export default function TransactionsScreen({ route }) {
         </View>
       )}
 
+      {/* First-time swipe hint */}
+      {filtered.length > 0 && (
+        <FirstTimeTooltip storageKey="tx_swipe_hint" text={i18n.t('txSwipeHint')} icon="chevrons-right" />
+      )}
+
       {/* List */}
       <FlatList
         data={filtered}
@@ -391,6 +397,9 @@ export default function TransactionsScreen({ route }) {
             <Text style={styles.emptyText}>
               {search || activeFilterCount > 0 ? i18n.t('noResults') : i18n.t('noTransactions')}
             </Text>
+            {!(search || activeFilterCount > 0) && (
+              <Text style={styles.emptyHint}>{i18n.t('noTransactionsHint')}</Text>
+            )}
           </View>
         }
       />
@@ -469,8 +478,9 @@ const createStyles = () => StyleSheet.create({
   hint: { color: colors.textMuted, fontSize: 12, opacity: 0.6 },
 
   list: { paddingHorizontal: 20, paddingBottom: 120 },
-  emptyContainer: { alignItems: 'center', paddingVertical: 60 },
+  emptyContainer: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 40 },
   emptyText: { color: colors.textMuted, fontSize: 14, fontWeight: '600', marginTop: 12 },
+  emptyHint: { color: colors.textMuted, fontSize: 12, marginTop: 8, textAlign: 'center', lineHeight: 18, opacity: 0.8 },
 
   fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16 },
 });

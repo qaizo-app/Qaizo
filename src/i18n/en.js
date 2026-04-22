@@ -332,6 +332,19 @@ export default {
   onb6f2: 'Cloud sync — never lose your data',
   onb6f3: '11 languages, works anywhere in the world',
 
+  // Onboarding consent slides
+  onbReminderTitle: 'Daily Reminder',
+  onbReminderSub: 'We\'ll remind you every day to log your expenses',
+  onbReminderToggle: 'Show reminder notification',
+  onbReminderInfo: 'Turn on to get daily notifications for adding expenses. You can always change it later in Settings.',
+  onbPrivacyTitle: 'Privacy',
+  onbPrivacySub: 'Help us improve Qaizo',
+  onbPrivacyToggle: 'Send anonymous crash reports',
+  onbPrivacyInfo: 'When enabled, anonymous crash data is sent to help fix bugs faster. No personal data is shared. You can turn this off anytime in Settings.',
+  onbPrivacyLegal: 'By continuing, you agree to our',
+  noTransactionsHint: 'Tap the green + button below to add your first transaction',
+  txSwipeHint: 'Swipe a transaction left or right to edit or delete',
+
   // Setup Wizard
   wizCurrencyTitle: 'Choose your currency',
   wizCurrencySub: 'Main currency for your app. You can change it later.',

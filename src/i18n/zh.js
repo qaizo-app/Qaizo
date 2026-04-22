@@ -325,6 +325,20 @@ export default {
   onb5f3: '随时导出CSV、Excel或PDF',
   onb6Title: '安全且私密',
   onb6Sub: '你的数据只属于你',
+
+  // Onboarding consent slides
+  onbReminderTitle: '每日提醒',
+  onbReminderSub: '我们每天提醒您记录支出',
+  onbReminderToggle: '显示提醒',
+  onbReminderInfo: '开启以接收每日通知。可随时在设置中更改。',
+  onbPrivacyTitle: '隐私',
+  onbPrivacySub: '帮助我们改进 Qaizo',
+  onbPrivacyToggle: '发送匿名崩溃报告',
+  onbPrivacyInfo: '发送匿名数据以更快修复错误。不包含个人信息。可随时在设置中关闭。',
+  onbPrivacyLegal: '继续即表示您同意我们的',
+  noTransactionsHint: '点击下方绿色 + 按钮添加您的第一笔交易',
+  txSwipeHint: '向左或向右滑动交易以编辑或删除',
+
   onb6f1: 'PIN码和生物识别锁',
   onb6f2: '云端同步——数据永不丢失',
   onb6f3: '支持11种语言，全球通用',

@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import { Dimensions, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
+import FirstTimeTooltip from '../components/FirstTimeTooltip';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
@@ -258,10 +259,8 @@ export default function AccountsScreen() {
           <Amount value={totalBalance} sign style={styles.totalAmount} color={totalBalance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
         </View>
 
-        {/* Hint */}
-        <Text style={styles.hint}>
-          {i18n.t('accountHint')}
-        </Text>
+        {/* First-time tooltip replaces the static hint */}
+        <FirstTimeTooltip storageKey="accounts_long_press" text={i18n.t('accountHint')} icon="info" />
 
         {/* Reorder mode — grouped by type so the order matches the normal view */}
         {reorderMode && grouped.map(({ typeId, accs }) => {

@@ -325,6 +325,20 @@ export default {
   onb5f3: 'いつでもCSV、Excel、PDFにエクスポート',
   onb6Title: '安全＆プライベート',
   onb6Sub: 'あなたのデータはあなたのもの',
+
+  // Onboarding consent slides
+  onbReminderTitle: '毎日のリマインダー',
+  onbReminderSub: '毎日、支出の記録をリマインドします',
+  onbReminderToggle: 'リマインダーを表示',
+  onbReminderInfo: 'オンにして毎日の通知を受け取ります。設定でいつでも変更できます。',
+  onbPrivacyTitle: 'プライバシー',
+  onbPrivacySub: 'Qaizoの改善にご協力ください',
+  onbPrivacyToggle: '匿名のクラッシュレポートを送信',
+  onbPrivacyInfo: '匿名データを送信してバグを素早く修正します。個人データは含まれません。設定でいつでもオフにできます。',
+  onbPrivacyLegal: '続行することで、以下に同意します:',
+  noTransactionsHint: '下の緑色の + ボタンをタップして最初の取引を追加',
+  txSwipeHint: '取引を左右にスワイプして編集または削除',
+
   onb6f1: 'PINコードと生体認証ロック',
   onb6f2: 'クラウド同期 — データを失う心配なし',
   onb6f3: '11言語対応、世界中どこでも使える',

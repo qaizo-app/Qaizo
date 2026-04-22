@@ -328,6 +328,20 @@ export default {
   onb6f2: 'Sincronização na nuvem — nunca perca seus dados',
   onb6f3: '11 idiomas, funciona em qualquer lugar do mundo',
 
+  // Onboarding consent slides
+  onbReminderTitle: 'Lembrete diário',
+  onbReminderSub: 'Lembraremos você todos os dias de registrar seus gastos',
+  onbReminderToggle: 'Mostrar lembrete',
+  onbReminderInfo: 'Ative para receber notificações diárias. Pode ser alterado em Configurações.',
+  onbPrivacyTitle: 'Privacidade',
+  onbPrivacySub: 'Ajude-nos a melhorar o Qaizo',
+  onbPrivacyToggle: 'Enviar relatórios anônimos de falhas',
+  onbPrivacyInfo: 'Dados anônimos enviados para corrigir bugs mais rápido. Sem dados pessoais. Pode desativar a qualquer momento.',
+  onbPrivacyLegal: 'Ao continuar, você concorda com nossos',
+  noTransactionsHint: 'Toque no botão verde + abaixo para adicionar sua primeira transação',
+  txSwipeHint: 'Deslize uma transação para a esquerda ou direita para editar ou excluir',
+
+
   // Setup Wizard
   wizCurrencyTitle: 'Escolha sua moeda',
   wizCurrencySub: 'Moeda principal do aplicativo. Você pode alterar depois.',
