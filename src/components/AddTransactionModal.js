@@ -73,13 +73,20 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           setType(editTransaction.isTransfer ? 'transfer' : editTransaction.type);
           setAmount(String(editTransaction.amount));
           setCategoryId(editTransaction.categoryId || 'food');
-          setRecipient(editTransaction.recipient || '');
+          setRecipient(editTransaction.isTransfer ? '' : (editTransaction.recipient || ''));
           setNote(editTransaction.note || '');
           setTags(editTransaction.tags || []);
           setDateStr(editTransaction.date ? editTransaction.date.slice(0, 10) : '');
           setSelAcc(editTransaction.account || (sorted.length > 0 ? sorted[0].id : ''));
           setSelProject(editTransaction.projectId || '');
           setShowMore(!!(editTransaction.recipient || editTransaction.tags?.length || editTransaction.projectId));
+          // Restore "to" account for transfer pair — find the partner row.
+          if (editTransaction.isTransfer && editTransaction.transferPairId) {
+            const partner = txs.find(t => t.transferPairId === editTransaction.transferPairId && t.id !== editTransaction.id);
+            if (partner) setToAcc(partner.account);
+          } else {
+            setToAcc('');
+          }
         } else {
           setAmount(''); setRecipient(''); setNote(''); setTags([]); setSelProject('');
           setType('expense'); setCategoryId('food'); setShowMore(false);
@@ -118,8 +125,28 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     }
 
     if (isEdit) {
-      const ci = getCatIcon(categoryId, catGroups);
-      await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
+      // Transfer edit: keep both sides of the pair in sync (account, recipient, amount, date, tags).
+      if (editTransaction.isTransfer && editTransaction.transferPairId) {
+        if (!toAcc || selAcc === toAcc) return;
+        const fn = accounts.find(a => a.id === selAcc)?.name || '';
+        const tn = accounts.find(a => a.id === toAcc)?.name || '';
+        const amt = parseFloat(amount.replace(',', '.'));
+        const allTxs = await dataService.getTransactions();
+        const partner = allTxs.find(t => t.transferPairId === editTransaction.transferPairId && t.id !== editTransaction.id);
+        await dataService.updateTransaction(editTransaction.id, {
+          type: 'expense', amount: amt, categoryId: 'transfer', icon: 'repeat',
+          recipient: tn, note: note || `→ ${tn}`, date: txDate, account: selAcc, tags,
+        });
+        if (partner) {
+          await dataService.updateTransaction(partner.id, {
+            type: 'income', amount: amt, categoryId: 'transfer', icon: 'repeat',
+            recipient: fn, note: note || `← ${fn}`, date: txDate, account: toAcc, tags,
+          });
+        }
+      } else {
+        const ci = getCatIcon(categoryId, catGroups);
+        await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
+      }
     } else if (type === 'transfer') {
       if (selAcc === toAcc) return;
       const fn = accounts.find(a => a.id === selAcc)?.name || '';
@@ -301,23 +328,27 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 </>
               )}
 
-              <TextInput style={st.input} value={recipient}
-                onChangeText={(t) => { setRecipient(t); setShowRecipients(t.length > 0); }}
-                onFocus={() => { if (recipient.length === 0 && knownRecipients.length > 0) setShowRecipients(true); }}
-                onBlur={() => setTimeout(() => setShowRecipients(false), 200)}
-                placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
-              {showRecipients && knownRecipients.filter(r => !recipient || r.toLowerCase().includes(recipient.toLowerCase())).length > 0 && (
-                <View style={st.recipientList}>
-                  {knownRecipients
-                    .filter(r => !recipient || r.toLowerCase().includes(recipient.toLowerCase()))
-                    .slice(0, 5)
-                    .map(r => (
-                      <TouchableOpacity key={r} style={st.recipientItem}
-                        onPress={() => { setRecipient(r); setShowRecipients(false); }}>
-                        <Text style={st.recipientText}>{r}</Text>
-                      </TouchableOpacity>
-                    ))}
-                </View>
+              {type !== 'transfer' && (
+                <>
+                  <TextInput style={st.input} value={recipient}
+                    onChangeText={(t) => { setRecipient(t); setShowRecipients(t.length > 0); }}
+                    onFocus={() => { if (recipient.length === 0 && knownRecipients.length > 0) setShowRecipients(true); }}
+                    onBlur={() => setTimeout(() => setShowRecipients(false), 200)}
+                    placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
+                  {showRecipients && knownRecipients.filter(r => !recipient || r.toLowerCase().includes(recipient.toLowerCase())).length > 0 && (
+                    <View style={st.recipientList}>
+                      {knownRecipients
+                        .filter(r => !recipient || r.toLowerCase().includes(recipient.toLowerCase()))
+                        .slice(0, 5)
+                        .map(r => (
+                          <TouchableOpacity key={r} style={st.recipientItem}
+                            onPress={() => { setRecipient(r); setShowRecipients(false); }}>
+                            <Text style={st.recipientText}>{r}</Text>
+                          </TouchableOpacity>
+                        ))}
+                    </View>
+                  )}
+                </>
               )}
 
               {/* Project */}
