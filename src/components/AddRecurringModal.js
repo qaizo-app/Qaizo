@@ -100,14 +100,18 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       contractEndDate: contractEndDate || null,
     };
 
+    let saved = null;
     if (isEdit) {
       await dataService.updateRecurring(editItem.id, data);
+      saved = { ...editItem, ...data };
     } else {
-      await dataService.addRecurring(data);
+      saved = await dataService.addRecurring(data);
     }
     onClose?.();
-    // Small delay to ensure Firestore offline cache is updated before reload
-    setTimeout(() => onSave?.(), 100);
+    // Pass the persisted item back so the parent can append to its state
+    // immediately, bypassing the Firestore offline-cache propagation delay
+    // that caused new recurring payments to appear only on next focus.
+    onSave?.(saved);
   };
 
   const intervalLabel = (m) => {

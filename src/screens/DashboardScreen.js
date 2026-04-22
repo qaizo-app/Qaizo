@@ -547,7 +547,21 @@ export default function DashboardScreen() {
         onSave={handleBudgetSave} onDelete={handleBudgetDelete} onClose={() => setBudgetModal(null)} />
       <AddRecurringModal visible={showRecurring || !!editRecurring}
         onClose={() => { setShowRecurring(false); setEditRecurring(null); }}
-        onSave={() => loadData()} editItem={editRecurring} />
+        onSave={(saved) => {
+          // Optimistic update so the new/edited item shows up instantly
+          // without waiting for the Firestore cache to propagate.
+          if (saved) {
+            setRecurring(prev => {
+              const idx = prev.findIndex(r => r.id === saved.id);
+              if (idx >= 0) {
+                const next = [...prev]; next[idx] = saved; return next;
+              }
+              return [...prev, saved];
+            });
+          }
+          loadData();
+        }}
+        editItem={editRecurring} />
       <RecurringDetailModal visible={!!recDetail} item={recDetail}
         onClose={() => setRecDetail(null)}
         onConfirm={(id) => { handleConfirmRecurring(id); setRecDetail(null); }}
