@@ -24,6 +24,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
+  const [toAcc, setToAcc] = useState('');
   const [startDate, setStartDate] = useState('');
   const [intervalMonths, setIntervalMonths] = useState(1);
   const [endType, setEndType] = useState('none');
@@ -43,12 +44,13 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
         const active = accs.filter(a => a.isActive !== false);
         setAccounts(active);
         if (editItem) {
-          setType(editItem.type || 'expense');
+          setType(editItem.isTransfer ? 'transfer' : (editItem.type || 'expense'));
           setAmount(String(editItem.amount));
           setCategoryId(editItem.categoryId || 'rent');
           setRecipient(editItem.recipient || '');
           setNote(editItem.note || '');
           setSelAcc(editItem.account || (active[0]?.id || ''));
+          setToAcc(editItem.toAccount || '');
           setStartDate(editItem.nextDate ? editItem.nextDate.slice(0, 10) : '');
           setIntervalMonths(editItem.intervalMonths || 1);
           setEndType(editItem.endType || 'none');
@@ -62,6 +64,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           setRecipient(''); setNote(''); setIntervalMonths(1);
           setStartDate(''); setEndType('none'); setTotalCount('12'); setEndDate('');
           setNotify(true); setAutoConfirm(false); setContractEndDate('');
+          setToAcc('');
           if (active.length > 0) setSelAcc(active[0].id);
         }
       });
@@ -69,8 +72,10 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   }, [visible, editItem]);
 
   const cats = type === 'income' ? INC : EXP;
-  const tc = type === 'expense' ? colors.red : colors.green;
+  const tc = type === 'expense' ? colors.red : type === 'income' ? colors.green : colors.blue;
   const getAI = (t) => (accountTypeConfig[t] || accountTypeConfig.bank).icon;
+
+  const transferReady = type !== 'transfer' || (selAcc && toAcc && selAcc !== toAcc);
 
   const handleSave = async () => {
     if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
@@ -81,15 +86,22 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       nextDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
     }
 
+    const isTransfer = type === 'transfer';
+    if (isTransfer && (!selAcc || !toAcc || selAcc === toAcc)) return;
+
     const data = {
-      type,
+      // Persist type as 'expense' for transfers so legacy filters that group
+      // on type keep working; isTransfer + toAccount flag the pair at confirm.
+      type: isTransfer ? 'expense' : type,
       amount: parseFloat(amount.replace(',', '.')),
-      categoryId,
-      icon: categoryConfig[categoryId]?.icon || 'repeat',
-      recipient: recipient.trim(),
+      categoryId: isTransfer ? 'transfer' : categoryId,
+      icon: isTransfer ? 'repeat' : (categoryConfig[categoryId]?.icon || 'repeat'),
+      recipient: isTransfer ? '' : recipient.trim(),
       note: note.trim(),
       currency: sym(),
       account: selAcc,
+      toAccount: isTransfer ? toAcc : null,
+      isTransfer: isTransfer || false,
       intervalMonths,
       nextDate,
       endType,
@@ -163,8 +175,8 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           <TouchableOpacity style={st.cancelBtn} onPress={close}>
             <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
-            onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
+          <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: (amount && parseFloat(amount.replace(',', '.')) > 0 && transferReady) ? 1 : 0.35 }]}
+            onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0 || !transferReady}>
             <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
             <Text style={st.saveTxt}>{i18n.t('save')}</Text>
           </TouchableOpacity>
@@ -176,15 +188,23 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Тип */}
           <View style={st.typeRow}>
-            {['expense', 'income'].map(t => {
+            {['expense', 'income', 'transfer'].map(t => {
               const a = type === t;
-              const c = t === 'expense' ? colors.red : colors.green;
+              const c = t === 'expense' ? colors.red : t === 'income' ? colors.green : colors.blue;
+              const label = t === 'expense'
+                ? i18n.t('expenseType')
+                : t === 'income'
+                  ? i18n.t('incomeType')
+                  : i18n.t('transfer');
               return (
                 <TouchableOpacity key={t} style={[st.typeBtn, a && { backgroundColor: `${c}15`, borderWidth: 1, borderColor: `${c}40` }]}
-                  onPress={() => { setType(t); setCategoryId(t === 'income' ? 'salary_me' : 'rent'); }}>
-                  <Text style={[st.typeTxt, a && { color: colors.text }]}>
-                    {t === 'expense' ? i18n.t('expenseType') : i18n.t('incomeType')}
-                  </Text>
+                  onPress={() => {
+                    setType(t);
+                    if (t === 'income') setCategoryId('salary_me');
+                    else if (t === 'expense') setCategoryId('rent');
+                    else setCategoryId('transfer');
+                  }}>
+                  <Text style={[st.typeTxt, a && { color: colors.text }]}>{label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -197,37 +217,73 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
             <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
           </View>
 
-          {/* Счёт */}
-          <Text style={st.label}>{i18n.t('account')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-            {accounts.filter(acc => type === 'income' ? ['cash', 'bank'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
-              const sl = selAcc === acc.id;
-              return (
-                <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
-                  onPress={() => setSelAcc(acc.id)}>
-                  <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
-                  <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {type === 'transfer' ? (
+            <>
+              {/* Откуда */}
+              <Text style={st.label}>{i18n.t('from')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
+                  const sl = selAcc === acc.id;
+                  return (
+                    <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
+                      onPress={() => setSelAcc(acc.id)}>
+                      <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
+                      <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-          {/* Категория */}
-          <Text style={st.label}>{i18n.t('category')}</Text>
-          {(() => { const ci = getCatIcon(categoryId, catGroups); return (
-          <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
-            <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
-              {ci.icon?.startsWith('ion:')
-                ? <Ionicons name={ci.icon.slice(4)} size={20} color={ci.color} />
-                : <Feather name={ci.icon} size={20} color={ci.color} />}
-            </View>
-            <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, i18n.getLanguage())}</Text>
-            <Feather name="chevron-down" size={18} color={colors.textMuted} />
-          </TouchableOpacity>); })()}
+              {/* Куда */}
+              <Text style={st.label}>{i18n.t('to')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type) && acc.id !== selAcc).map(acc => {
+                  const sl = toAcc === acc.id;
+                  return (
+                    <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: colors.blue, backgroundColor: colors.blueSoft }]}
+                      onPress={() => setToAcc(acc.id)}>
+                      <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? colors.blue : colors.textMuted} />
+                      <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </>
+          ) : (
+            <>
+              {/* Счёт */}
+              <Text style={st.label}>{i18n.t('account')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {accounts.filter(acc => type === 'income' ? ['cash', 'bank'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
+                  const sl = selAcc === acc.id;
+                  return (
+                    <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
+                      onPress={() => setSelAcc(acc.id)}>
+                      <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
+                      <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-          {/* Получатель */}
-          <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
-            placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
+              {/* Категория */}
+              <Text style={st.label}>{i18n.t('category')}</Text>
+              {(() => { const ci = getCatIcon(categoryId, catGroups); return (
+              <TouchableOpacity style={st.catPickerBtn} onPress={() => setShowCatPicker(true)} activeOpacity={0.7}>
+                <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
+                  {ci.icon?.startsWith('ion:')
+                    ? <Ionicons name={ci.icon.slice(4)} size={20} color={ci.color} />
+                    : <Feather name={ci.icon} size={20} color={ci.color} />}
+                </View>
+                <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, i18n.getLanguage())}</Text>
+                <Feather name="chevron-down" size={18} color={colors.textMuted} />
+              </TouchableOpacity>); })()}
+
+              {/* Получатель */}
+              <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
+                placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
+            </>
+          )}
 
           {/* Расписание — одна кнопка */}
           <TouchableOpacity style={st.scheduleBtn} onPress={() => setShowSchedule(true)}>

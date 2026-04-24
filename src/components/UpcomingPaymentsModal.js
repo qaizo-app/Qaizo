@@ -47,20 +47,37 @@ function formatDate(iso) {
   } catch (e) { return ''; }
 }
 
-export default function UpcomingPaymentsModal({ visible, onClose, recurring = [], transactions = [], currency }) {
+export default function UpcomingPaymentsModal({
+  visible,
+  onClose,
+  recurring = [],
+  transactions = [],
+  currency,
+  accounts = [],
+  perspectiveAccountId,
+}) {
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const st = createSt();
+
+  const accNameById = useMemo(() => {
+    const map = {};
+    for (const a of accounts) map[a.id] = a.name || '';
+    return map;
+  }, [accounts]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return recurring;
     return recurring.filter(r => {
-      const name = (r.recipient || catName(r.categoryId, r.categoryName) || '').toLowerCase();
+      const transferName = r.isTransfer
+        ? `${accNameById[r.account] || ''} ${accNameById[r.toAccount] || ''}`
+        : '';
+      const name = (r.recipient || catName(r.categoryId, r.categoryName) || transferName || '').toLowerCase();
       const amt = String(r.amount || '');
       return name.includes(q) || amt.includes(q);
     });
-  }, [recurring, query]);
+  }, [recurring, query, accNameById]);
 
   const handleClose = () => {
     setQuery('');
@@ -69,7 +86,11 @@ export default function UpcomingPaymentsModal({ visible, onClose, recurring = []
   };
 
   const renderItem = ({ item: rec }) => {
-    const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
+    const isTransferIn = rec.isTransfer && perspectiveAccountId && rec.toAccount === perspectiveAccountId;
+    const isTransferOut = rec.isTransfer && perspectiveAccountId && rec.account === perspectiveAccountId;
+    const cfg = rec.isTransfer
+      ? { icon: 'repeat', color: colors.blue }
+      : (categoryConfig[rec.categoryId] || categoryConfig.other);
     const nd = rec.nextDate ? new Date(rec.nextDate) : null;
     const diffDays = nd ? Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24)) : null;
     const dateLabel = diffDays == null
@@ -79,7 +100,9 @@ export default function UpcomingPaymentsModal({ visible, onClose, recurring = []
         : diffDays === 1
           ? i18n.t('tomorrow')
           : `${diffDays} ${i18n.t('days')}`;
-    const name = rec.recipient || catName(rec.categoryId, rec.categoryName);
+    const name = rec.isTransfer
+      ? `${accNameById[rec.account] || '—'} → ${accNameById[rec.toAccount] || '—'}`
+      : (rec.recipient || catName(rec.categoryId, rec.categoryName));
     const isExpanded = expandedId === rec.id;
     const history = isExpanded ? matchHistory(rec, transactions) : [];
     const historyPreview = history.slice(0, HISTORY_PREVIEW);
@@ -98,8 +121,13 @@ export default function UpcomingPaymentsModal({ visible, onClose, recurring = []
           <View style={st.info}>
             <Text style={st.name} numberOfLines={1}>{name}</Text>
             <Text style={st.meta} numberOfLines={1}>
-              <Text style={{ color: rec.type === 'expense' ? colors.red : colors.green }}>
-                {rec.type === 'expense' ? '-' : '+'}
+              <Text style={{
+                color: isTransferIn ? colors.green
+                  : isTransferOut ? colors.red
+                  : rec.isTransfer ? colors.blue
+                  : rec.type === 'expense' ? colors.red : colors.green,
+              }}>
+                {isTransferIn ? '+' : isTransferOut ? '-' : rec.isTransfer ? '' : (rec.type === 'expense' ? '-' : '+')}
                 {Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
                 {currency || sym()}
               </Text>

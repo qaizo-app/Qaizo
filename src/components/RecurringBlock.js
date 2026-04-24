@@ -14,6 +14,7 @@ export default function RecurringBlock({
   recurring,
   upcoming,
   today,
+  accounts = [],
   onAdd,
   onEdit,
   onDelete,
@@ -21,6 +22,7 @@ export default function RecurringBlock({
   onConfirm,
   onDetail,
 }) {
+  const accName = (id) => accounts.find(a => a.id === id)?.name || '';
   if (recurring.length === 0) return null;
   return (
     <View>
@@ -30,11 +32,16 @@ export default function RecurringBlock({
             <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
           </View>
           {upcoming.map(rec => {
-            const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
+            const cfg = rec.isTransfer
+              ? { icon: 'repeat', color: colors.blue }
+              : (categoryConfig[rec.categoryId] || categoryConfig.other);
             const nd = new Date(rec.nextDate);
             const diffDays = Math.ceil((nd - today) / (1000 * 60 * 60 * 24));
             const isOverdue = diffDays <= 0;
             const dateLabel = isOverdue ? i18n.t('today') : diffDays === 1 ? i18n.t('tomorrow') : `${diffDays} ${i18n.t('days')}`;
+            const displayName = rec.isTransfer
+              ? `${accName(rec.account) || '—'} → ${accName(rec.toAccount) || '—'}`
+              : (rec.recipient || catName(rec.categoryId, rec.categoryName));
             const renderRecSwipeActions = () => (
               <View style={{ flexDirection: i18n.row() }}>
                 <TouchableOpacity style={[st.recSwipeBtn, { backgroundColor: 'rgba(251,191,36,0.15)' }]}
@@ -54,10 +61,10 @@ export default function RecurringBlock({
                     <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
                   </View>
                   <View style={st.recInfo}>
-                    <Text style={st.recName} numberOfLines={1}>{rec.recipient || catName(rec.categoryId, rec.categoryName)}</Text>
+                    <Text style={st.recName} numberOfLines={1}>{displayName}</Text>
                     <Text style={st.recMeta} numberOfLines={1}>
-                      <Text style={{ color: rec.type === 'expense' ? colors.red : colors.green }}>
-                        {rec.type === 'expense' ? '-' : '+'}{Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}
+                      <Text style={{ color: rec.isTransfer ? colors.blue : (rec.type === 'expense' ? colors.red : colors.green) }}>
+                        {rec.isTransfer ? '' : rec.type === 'expense' ? '-' : '+'}{Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}
                       </Text>
                       {' · '}{dateLabel}
                     </Text>

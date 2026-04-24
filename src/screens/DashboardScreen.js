@@ -493,6 +493,7 @@ export default function DashboardScreen() {
                   recurring={recurring}
                   upcoming={upcoming}
                   today={today}
+                  accounts={accounts}
                   onAdd={() => setShowRecurring(true)}
                   onEdit={(rec) => setEditRecurring(rec)}
                   onDelete={handleDeleteRecurring}

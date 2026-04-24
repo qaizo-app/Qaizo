@@ -30,6 +30,7 @@ const PERIODS = [
 export default function AccountHistoryScreen({ route, navigation }) {
   const { account } = route.params;
   const [transactions, setTransactions] = useState([]);
+  const [allAccounts, setAllAccounts] = useState([]);
   const [upcomingRecurring, setUpcomingRecurring] = useState([]);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [currentBalance, setCurrentBalance] = useState(account.balance || 0);
@@ -73,6 +74,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
     // Пересчитать баланс из транзакций
     const accs = await dataService.getAccounts();
+    setAllAccounts(accs);
     const acc = accs.find(a => a.id === account.id);
     if (acc) setCurrentBalance(acc.balance || 0);
 
@@ -81,7 +83,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
     const now = new Date();
     const horizon = new Date(now); horizon.setDate(horizon.getDate() + 30);
     const upcoming = rec
-      .filter(r => r.account === account.id && r.isActive !== false && r.nextDate)
+      .filter(r => r.isActive !== false && r.nextDate)
+      .filter(r => r.account === account.id || (r.isTransfer && r.toAccount === account.id))
       .filter(r => new Date(r.nextDate) <= horizon)
       .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate));
     setUpcomingRecurring(upcoming);
@@ -133,7 +136,11 @@ export default function AccountHistoryScreen({ route, navigation }) {
       <View style={styles.upcomingCard}>
         <Text style={styles.upcomingTitle}>{i18n.t('upcomingPayments')}</Text>
         {upcomingPreview.map((rec, idx) => {
-          const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
+          const isTransferIn = rec.isTransfer && rec.toAccount === account.id;
+          const isTransferOut = rec.isTransfer && rec.account === account.id;
+          const cfg = rec.isTransfer
+            ? { icon: 'repeat', color: colors.blue }
+            : (categoryConfig[rec.categoryId] || categoryConfig.other);
           const nd = new Date(rec.nextDate);
           const diffDays = Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24));
           const isOverdue = diffDays <= 0;
@@ -142,6 +149,19 @@ export default function AccountHistoryScreen({ route, navigation }) {
             : diffDays === 1
               ? i18n.t('tomorrow')
               : `${diffDays} ${i18n.t('days')}`;
+
+          let displayName;
+          if (rec.isTransfer) {
+            const fromName = allAccounts.find(a => a.id === rec.account)?.name || '—';
+            const toName = allAccounts.find(a => a.id === rec.toAccount)?.name || '—';
+            displayName = `${fromName} → ${toName}`;
+          } else {
+            displayName = rec.recipient || catName(rec.categoryId, rec.categoryName);
+          }
+
+          const sign = isTransferIn ? '+' : isTransferOut ? '-' : (rec.type === 'expense' ? '-' : '+');
+          const amountColor = isTransferIn ? colors.green : isTransferOut ? colors.red : (rec.type === 'expense' ? colors.red : colors.green);
+
           return (
             <View key={rec.id} style={[styles.upcomingRow, idx === 0 && { borderTopWidth: 0, paddingTop: 0 }]}>
               <View style={[styles.upcomingIcon, { backgroundColor: cfg.color + '20' }]}>
@@ -149,11 +169,11 @@ export default function AccountHistoryScreen({ route, navigation }) {
               </View>
               <View style={styles.upcomingInfo}>
                 <Text style={styles.upcomingName} numberOfLines={1}>
-                  {rec.recipient || catName(rec.categoryId, rec.categoryName)}
+                  {displayName}
                 </Text>
                 <Text style={styles.upcomingMeta} numberOfLines={1}>
-                  <Text style={{ color: rec.type === 'expense' ? colors.red : colors.green }}>
-                    {rec.type === 'expense' ? '-' : '+'}
+                  <Text style={{ color: amountColor }}>
+                    {sign}
                     {Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
                     {account.currency || sym()}
                   </Text>
@@ -245,7 +265,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onClose={() => setShowAllUpcoming(false)}
         recurring={upcomingRecurring}
         transactions={transactions}
-        currency={account.currency} />
+        currency={account.currency}
+        accounts={allAccounts}
+        perspectiveAccountId={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${deleteTarget.categoryName || getCatName(deleteTarget.categoryId, getCachedGroups(), i18n.getLanguage())} — ${deleteTarget.amount} ${sym()}` : ''}

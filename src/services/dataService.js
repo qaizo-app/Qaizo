@@ -583,18 +583,43 @@ const dataService = {
       }
       if (!rec) return false;
 
-      await this.addTransaction({
-        type: rec.type,
-        amount: rec.amount,
-        categoryId: rec.categoryId,
-        icon: rec.icon || 'repeat',
-        recipient: rec.recipient || '',
-        note: rec.note || '',
-        currency: rec.currency || '₪',
-        date: new Date().toISOString(),
-        account: rec.account,
-        tags: rec.tags || [],
-      });
+      if (rec.isTransfer && rec.toAccount) {
+        // Scheduled transfer: materialize as a linked expense/income pair
+        // so running balances and account filters behave like a one-off
+        // transfer created from AddTransactionModal.
+        const pairId = generateId();
+        const nowIso = new Date().toISOString();
+        const accs = await this.getAccounts();
+        const fromName = accs.find(a => a.id === rec.account)?.name || '';
+        const toName = accs.find(a => a.id === rec.toAccount)?.name || '';
+        await this.addTransaction({
+          type: 'expense', amount: rec.amount, categoryId: 'transfer', icon: 'repeat',
+          recipient: toName, note: rec.note || `→ ${toName}`,
+          currency: rec.currency || '₪', date: nowIso,
+          account: rec.account, isTransfer: true, transferPairId: pairId,
+          tags: rec.tags || [],
+        });
+        await this.addTransaction({
+          type: 'income', amount: rec.amount, categoryId: 'transfer', icon: 'repeat',
+          recipient: fromName, note: rec.note || `← ${fromName}`,
+          currency: rec.currency || '₪', date: nowIso,
+          account: rec.toAccount, isTransfer: true, transferPairId: pairId,
+          tags: rec.tags || [],
+        });
+      } else {
+        await this.addTransaction({
+          type: rec.type,
+          amount: rec.amount,
+          categoryId: rec.categoryId,
+          icon: rec.icon || 'repeat',
+          recipient: rec.recipient || '',
+          note: rec.note || '',
+          currency: rec.currency || '₪',
+          date: new Date().toISOString(),
+          account: rec.account,
+          tags: rec.tags || [],
+        });
+      }
 
       const next = new Date(rec.nextDate);
       next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
