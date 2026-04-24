@@ -8,6 +8,7 @@ import { ActivityIndicator, Animated, AppState, Dimensions, Image, Modal, Refres
 import * as Notifications from 'expo-notifications';
 import AddRecurringModal from '../components/AddRecurringModal';
 import ConfirmRecurringModal from '../components/ConfirmRecurringModal';
+import UpcomingPaymentsModal from '../components/UpcomingPaymentsModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import BalanceCard from '../components/BalanceCard';
 import BarChartCard from '../components/BarChartCard';
@@ -53,6 +54,7 @@ export default function DashboardScreen() {
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [recDetail, setRecDetail] = useState(null);
   const [confirmRec, setConfirmRec] = useState(null);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [quickTemplate, setQuickTemplate] = useState(null);
   const [showQuickSelect, setShowQuickSelect] = useState(false);
   const [quickTab, setQuickTab] = useState('categories');
@@ -514,6 +516,7 @@ export default function DashboardScreen() {
                   onDelete={handleDeleteRecurring}
                   onSkip={(id) => openRecurringConfirm(recurring.find(r => r.id === id) || null)}
                   onConfirm={(id) => openRecurringConfirm(recurring.find(r => r.id === id) || null)}
+                  onShowAll={() => setShowAllUpcoming(true)}
                   onDetail={(rec) => setRecDetail(rec)}
                 />
               );
@@ -599,6 +602,13 @@ export default function DashboardScreen() {
         onClose={() => setConfirmRec(null)}
         onConfirm={async (id, overrides) => { setConfirmRec(null); await handleConfirmRecurring(id, overrides); }}
         onSkip={async (id, overrides) => { setConfirmRec(null); await handleSkipRecurring(id, overrides); }} />
+
+      <UpcomingPaymentsModal
+        visible={showAllUpcoming}
+        onClose={() => setShowAllUpcoming(false)}
+        recurring={upcoming}
+        transactions={transactions}
+        accounts={accounts} />
       {/* Quick category select */}
       {showQuickSelect && (
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>

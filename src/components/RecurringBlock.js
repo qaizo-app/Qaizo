@@ -12,6 +12,8 @@ import { catName } from '../utils/categoryName';
 import { getCachedGroups } from '../utils/categoryCache';
 import { getCatIcon } from './CategoryPickerModal';
 
+const UPCOMING_PREVIEW = 5;
+
 export default function RecurringBlock({
   recurring,
   upcoming,
@@ -23,9 +25,12 @@ export default function RecurringBlock({
   onSkip,
   onConfirm,
   onDetail,
+  onShowAll,
 }) {
   const accName = (id) => accounts.find(a => a.id === id)?.name || '';
   if (recurring.length === 0) return null;
+  const preview = upcoming.slice(0, UPCOMING_PREVIEW);
+  const hasMore = upcoming.length > UPCOMING_PREVIEW;
   return (
     <View>
       {upcoming.length > 0 ? (
@@ -33,7 +38,7 @@ export default function RecurringBlock({
           <View style={st.blockTitleRow}>
             <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
           </View>
-          {upcoming.map(rec => {
+          {preview.map(rec => {
             // Prefer the icon/color captured at save time (covers custom
             // categories), then the cached user groups, then the built-in
             // categoryConfig. Falls back to repeat+muted so we never show
@@ -92,6 +97,14 @@ export default function RecurringBlock({
               </Swipeable>
             );
           })}
+          {hasMore && (
+            <TouchableOpacity style={st.showMoreBtn} onPress={() => onShowAll?.()}>
+              <Text style={st.showMoreTxt}>
+                {i18n.t('showMore')} ({upcoming.length})
+              </Text>
+              <Feather name={i18n.chevronRight()} size={16} color={colors.green} />
+            </TouchableOpacity>
+          )}
         </Card>
       ) : (
         <Card>
@@ -116,4 +129,6 @@ const st = StyleSheet.create({
   recConfirm: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
   recSwipeBtn: { width: 60, justifyContent: 'center', alignItems: 'center' },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+  showMoreBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, marginTop: 8 },
+  showMoreTxt: { color: colors.green, fontSize: 13, fontWeight: '700' },
 });
