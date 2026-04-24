@@ -20,6 +20,9 @@ export default {
   rateSend: 'Отправить',
   rateThanks: 'Спасибо — получили!',
   rateSendFailed: 'Не отправилось — попробуйте позже',
+  recipientHistory: 'История по получателю',
+  totalSpent: 'Всего потрачено',
+  more: 'ещё',
   // Tabs
   dashboard: 'Главная',
   transactions: 'Транзакции',

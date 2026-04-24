@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
 import BalanceLineChart from '../components/BalanceLineChart';
 import ConfirmModal from '../components/ConfirmModal';
+import UpcomingPaymentsModal from '../components/UpcomingPaymentsModal';
 import TransactionItem from '../components/TransactionItem';
 import { getCachedGroups } from '../components/CategoryIcon';
 import { getCatName } from '../components/CategoryPickerModal';
@@ -30,6 +31,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const { account } = route.params;
   const [transactions, setTransactions] = useState([]);
   const [upcomingRecurring, setUpcomingRecurring] = useState([]);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [currentBalance, setCurrentBalance] = useState(account.balance || 0);
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
@@ -121,12 +123,16 @@ export default function AccountHistoryScreen({ route, navigation }) {
       onDuplicate={handleDuplicate} />
   );
 
+  const UPCOMING_PREVIEW = 5;
+  const upcomingPreview = upcomingRecurring.slice(0, UPCOMING_PREVIEW);
+  const hasMoreUpcoming = upcomingRecurring.length > UPCOMING_PREVIEW;
+
   const renderUpcomingBlock = () => {
     if (upcomingRecurring.length === 0) return null;
     return (
       <View style={styles.upcomingCard}>
         <Text style={styles.upcomingTitle}>{i18n.t('upcomingPayments')}</Text>
-        {upcomingRecurring.map((rec, idx) => {
+        {upcomingPreview.map((rec, idx) => {
           const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
           const nd = new Date(rec.nextDate);
           const diffDays = Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24));
@@ -157,6 +163,14 @@ export default function AccountHistoryScreen({ route, navigation }) {
             </View>
           );
         })}
+        {hasMoreUpcoming && (
+          <TouchableOpacity style={styles.showMoreBtn} onPress={() => setShowAllUpcoming(true)}>
+            <Text style={styles.showMoreTxt}>
+              {i18n.t('showMore')} ({upcomingRecurring.length})
+            </Text>
+            <Feather name={i18n.chevronRight()} size={16} color={colors.green} />
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -226,6 +240,13 @@ export default function AccountHistoryScreen({ route, navigation }) {
       <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
+      <UpcomingPaymentsModal
+        visible={showAllUpcoming}
+        onClose={() => setShowAllUpcoming(false)}
+        recurring={upcomingRecurring}
+        transactions={transactions}
+        currency={account.currency} />
+
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${deleteTarget.categoryName || getCatName(deleteTarget.categoryId, getCachedGroups(), i18n.getLanguage())} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
@@ -254,6 +275,8 @@ const createStyles = () => StyleSheet.create({
   upcomingInfo:{flex:1},
   upcomingName:{color:colors.text,fontSize:14,fontWeight:'600',textAlign:i18n.textAlign()},
   upcomingMeta:{color:colors.textDim,fontSize:12,marginTop:2,writingDirection:'ltr'},
+  showMoreBtn:{flexDirection:i18n.row(),alignItems:'center',justifyContent:'center',gap:6,paddingTop:12,marginTop:8,borderTopWidth:1,borderTopColor:colors.divider},
+  showMoreTxt:{color:colors.green,fontSize:13,fontWeight:'700'},
   periodRow:{flexDirection:'row',gap:6,marginBottom:10},
   periodBtn:{paddingHorizontal:10,paddingVertical:6,borderRadius:8,backgroundColor:colors.bg2,borderWidth:1,borderColor:colors.cardBorder},
   periodBtnActive:{borderColor:colors.green,backgroundColor:colors.greenSoft},
