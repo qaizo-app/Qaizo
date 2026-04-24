@@ -79,7 +79,7 @@ export default function UpcomingPaymentsModal({
   const renderItem = ({ item: rec }) => {
     const isTransferIn = rec.isTransfer && perspectiveAccountId && rec.toAccount === perspectiveAccountId;
     const isTransferOut = rec.isTransfer && perspectiveAccountId && rec.account === perspectiveAccountId;
-    const savedIcon = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal'
+    const savedIcon = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal' && rec.icon !== 'repeat'
       ? { icon: rec.icon, color: rec.iconColor || categoryConfig[rec.categoryId]?.color || colors.textDim }
       : null;
     const fromGroups = !rec.isTransfer && !savedIcon ? getCatIcon(rec.categoryId, getCachedGroups()) : null;

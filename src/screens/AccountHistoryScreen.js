@@ -139,7 +139,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         {upcomingPreview.map((rec, idx) => {
           const isTransferIn = rec.isTransfer && rec.toAccount === account.id;
           const isTransferOut = rec.isTransfer && rec.account === account.id;
-          const savedIcon = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal'
+          const savedIcon = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal' && rec.icon !== 'repeat'
             ? { icon: rec.icon, color: rec.iconColor || categoryConfig[rec.categoryId]?.color || colors.textDim }
             : null;
           const fromGroups = !rec.isTransfer && !savedIcon ? getCatIcon(rec.categoryId, getCachedGroups()) : null;

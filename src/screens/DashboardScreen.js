@@ -514,7 +514,7 @@ export default function DashboardScreen() {
                   onAdd={() => setShowRecurring(true)}
                   onEdit={(rec) => setEditRecurring(rec)}
                   onDelete={handleDeleteRecurring}
-                  onSkip={(id) => openRecurringConfirm(recurring.find(r => r.id === id) || null)}
+                  onSkip={handleSkipRecurring}
                   onConfirm={(id) => openRecurringConfirm(recurring.find(r => r.id === id) || null)}
                   onShowAll={() => setShowAllUpcoming(true)}
                   onDetail={(rec) => setRecDetail(rec)}
@@ -592,7 +592,7 @@ export default function DashboardScreen() {
       <RecurringDetailModal visible={!!recDetail} item={recDetail}
         onClose={() => setRecDetail(null)}
         onConfirm={(id) => { const r = recurring.find(x => x.id === id); setRecDetail(null); if (r) openRecurringConfirm(r); }}
-        onSkip={(id) => { const r = recurring.find(x => x.id === id); setRecDetail(null); if (r) openRecurringConfirm(r); }}
+        onSkip={(id) => { setRecDetail(null); handleSkipRecurring(id); }}
         onDelete={(id) => { handleDeleteRecurring(id); setRecDetail(null); }}
         onEdit={(item) => { setRecDetail(null); setEditRecurring(item); }} />
 

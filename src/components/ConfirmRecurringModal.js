@@ -71,7 +71,7 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
 
   const isTransfer = !!item.isTransfer;
   const typeColor = isTransfer ? colors.blue : item.type === 'expense' ? colors.red : colors.green;
-  const savedIcon = !isTransfer && item.icon && item.icon !== 'more-horizontal'
+  const savedIcon = !isTransfer && item.icon && item.icon !== 'more-horizontal' && item.icon !== 'repeat'
     ? { icon: item.icon, color: item.iconColor || categoryConfig[item.categoryId]?.color || colors.textDim }
     : null;
   const fromGroups = !isTransfer && !savedIcon ? getCatIcon(item.categoryId, getCachedGroups()) : null;

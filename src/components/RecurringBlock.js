@@ -43,7 +43,12 @@ export default function RecurringBlock({
             // categories), then the cached user groups, then the built-in
             // categoryConfig. Falls back to repeat+muted so we never show
             // the raw "more-horizontal" dots placeholder.
-            const resolved = !rec.isTransfer && (rec.icon && rec.icon !== 'more-horizontal')
+            // Treat 'more-horizontal' (old categoryConfig.other default) and
+            // 'repeat' (old AddRecurringModal default before 87cf05b) as
+            // placeholders — both mean "we didn't really capture a category
+            // icon at save time" and should fall through to the cached
+            // groups lookup so custom categories render with their real icon.
+            const resolved = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal' && rec.icon !== 'repeat'
               ? { icon: rec.icon, color: rec.iconColor || categoryConfig[rec.categoryId]?.color || colors.textDim }
               : null;
             const fromGroups = !rec.isTransfer && !resolved ? getCatIcon(rec.categoryId, getCachedGroups()) : null;

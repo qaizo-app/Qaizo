@@ -30,7 +30,7 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
 
   if (!item) return null;
 
-  const savedIcon = !item.isTransfer && item.icon && item.icon !== 'more-horizontal'
+  const savedIcon = !item.isTransfer && item.icon && item.icon !== 'more-horizontal' && item.icon !== 'repeat'
     ? { icon: item.icon, color: item.iconColor || categoryConfig[item.categoryId]?.color || colors.textDim }
     : null;
   const fromGroups = !item.isTransfer && !savedIcon ? getCatIcon(item.categoryId, getCachedGroups()) : null;
