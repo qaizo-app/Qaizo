@@ -201,21 +201,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
   };
 
 
-  return (
-    <GestureHandlerRootView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Feather name={i18n.backIcon()} size={22} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>{account.name}</Text>
-          <Text style={styles.headerType}>{account.accountNumber ? `${account.accountNumber} · ` : ''}{i18n.t(account.type)}</Text>
-        </View>
-        <View style={[styles.headerIcon, { backgroundColor: `${cfg.color}18` }]}>
-          <MaterialCommunityIcons name={cfg.icon} size={22} color={cfg.color} />
-        </View>
-      </View>
-
+  const ListHeader = () => (
+    <>
       {chartData.length >= 2 ? (
         <View style={styles.chartCard}>
           <View style={styles.periodRow}>
@@ -251,12 +238,35 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       {renderUpcomingBlock()}
 
-      <View style={styles.countRow}>
-        <Text style={styles.countText}>{i18n.t('transactions')}</Text>
-        <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
+      {/* Rectangular transactions section — edge-to-edge, no rounded corners,
+         so it visually reads as a separate "block" under the rounded
+         upcoming-payments card above. */}
+      <View style={styles.txSectionHeader}>
+        <View style={styles.countRow}>
+          <Text style={styles.countText}>{i18n.t('transactions')}</Text>
+          <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
+        </View>
+      </View>
+    </>
+  );
+
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Feather name={i18n.backIcon()} size={22} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerName}>{account.name}</Text>
+          <Text style={styles.headerType}>{account.accountNumber ? `${account.accountNumber} · ` : ''}{i18n.t(account.type)}</Text>
+        </View>
+        <View style={[styles.headerIcon, { backgroundColor: `${cfg.color}18` }]}>
+          <MaterialCommunityIcons name={cfg.icon} size={22} color={cfg.color} />
+        </View>
       </View>
 
       <FlatList data={withBalance} keyExtractor={item=>item.id} renderItem={renderItem}
+        ListHeaderComponent={ListHeader}
         initialNumToRender={15} maxToRenderPerBatch={10} updateCellsBatchingPeriod={100}
         windowSize={5} removeClippedSubviews={true}
         contentContainerStyle={styles.list}
@@ -309,11 +319,12 @@ const createStyles = () => StyleSheet.create({
   periodBtnActive:{borderColor:colors.green,backgroundColor:colors.greenSoft},
   periodTxt:{color:colors.textDim,fontSize:11,fontWeight:'700'},
   periodTxtActive:{color:colors.green},
-  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,marginBottom:8},
+  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,paddingVertical:12},
   countText:{color:colors.text,fontSize:16,fontWeight:'700'},
   countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
   countNum:{color:colors.textDim,fontSize:14,fontWeight:'700'},
-  list:{paddingHorizontal:20,paddingBottom:120},
+  txSectionHeader:{backgroundColor:colors.bg2,borderTopWidth:1,borderTopColor:colors.cardBorder,marginTop:4},
+  list:{backgroundColor:colors.bg2,paddingHorizontal:20,paddingBottom:120},
   balLine:{paddingStart:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
   runBal:{fontSize:12,fontWeight:'500'},
   empty:{alignItems:'center',paddingVertical:50},
