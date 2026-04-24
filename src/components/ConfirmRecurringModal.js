@@ -262,9 +262,11 @@ const createSt = () => StyleSheet.create({
     color: colors.textDim, fontSize: 11, fontWeight: '700',
     letterSpacing: 1, marginBottom: 6, marginTop: 4, textAlign: i18n.textAlign(),
   },
-  amtRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, marginBottom: 14 },
+  amtRow: { flexDirection: i18n.row(), alignItems: 'baseline', gap: 6, marginBottom: 14 },
   cur: { fontSize: 28, fontWeight: '800' },
-  amtIn: { flex: 1, color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1, padding: 0 },
+  // Intrinsic width: TextInput hugs the typed number so the currency symbol
+  // sits right next to it instead of being pushed to the other edge.
+  amtIn: { minWidth: 40, color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1, padding: 0 },
   row: {
     flexDirection: i18n.row(), alignItems: 'center', gap: 12,
     backgroundColor: colors.card, borderRadius: 14, padding: 14,
@@ -286,7 +288,7 @@ const createSt = () => StyleSheet.create({
   },
   skipTxt: { color: colors.textDim, fontSize: 15, fontWeight: '700' },
   confirmBtn: {
-    flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14,
+    flex: 1, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
   },
   confirmTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
