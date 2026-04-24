@@ -128,6 +128,8 @@ export default {
   handyman: '兼职',
   sales: '销售',
   rental_income: '租金收入',
+  keren_hishtalmut: '进修基金',
+  pension: '养老金',
   other_income: '其他收入',
   food: '餐饮',
   transport: '交通',

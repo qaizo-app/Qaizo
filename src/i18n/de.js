@@ -128,6 +128,8 @@ export default {
   handyman: 'Nebenjob',
   sales: 'Verkäufe',
   rental_income: 'Mieteinnahmen',
+  keren_hishtalmut: 'Bildungsfonds',
+  pension: 'Rente',
   other_income: 'Sonstige Einnahmen',
   food: 'Lebensmittel',
   transport: 'Transport',

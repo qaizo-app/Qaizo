@@ -128,6 +128,8 @@ export default {
   handyman: 'عمل جانبي',
   sales: 'مبيعات',
   rental_income: 'دخل الإيجار',
+  keren_hishtalmut: 'صندوق تدريب',
+  pension: 'معاش',
   other_income: 'دخل آخر',
   food: 'طعام',
   transport: 'مواصلات',

@@ -128,6 +128,8 @@ export default {
   handyman: 'साइड जॉब',
   sales: 'बिक्री',
   rental_income: 'किराया आय',
+  keren_hishtalmut: 'अध्ययन निधि',
+  pension: 'पेंशन',
   other_income: 'अन्य आय',
   food: 'खाना',
   transport: 'परिवहन',

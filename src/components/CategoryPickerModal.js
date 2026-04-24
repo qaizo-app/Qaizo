@@ -75,6 +75,8 @@ export const DEFAULT_GROUPS = [
       { id:'rental_income', name:{ru:'Аренда',he:'שכירות',en:'Rental'}, icon:'home' },
       { id:'handyman', name:{ru:'Подработка',he:'עבודה נוספת',en:'Side Job'}, icon:'tool' },
       { id:'sales', name:{ru:'Продажи',he:'מכירות',en:'Sales'}, icon:'package' },
+      { id:'keren_hishtalmut', name:{ru:'Керен иштальмут',he:'קרן השתלמות',en:'Study Fund'}, icon:'trending-up' },
+      { id:'pension', name:{ru:'Пенсия',he:'פנסיה',en:'Pension'}, icon:'umbrella' },
     ]},
 ];
 

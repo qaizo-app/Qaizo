@@ -11,8 +11,8 @@ import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './C
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
-const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
-const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','other_income','transfer'].includes(k));
+const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income'];
+const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income','transfer'].includes(k));
 
 export default function AddRecurringModal({ visible, onClose, onSave, editItem }) {
   const [type, setType] = useState('expense');

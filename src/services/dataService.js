@@ -33,6 +33,8 @@ const DEFAULT_CATEGORIES = {
     { id: 'handyman', icon: 'tool', color: '#34d399' },
     { id: 'sales', icon: 'package', color: '#6ee7b7' },
     { id: 'rental_income', icon: 'home', color: '#059669' },
+    { id: 'keren_hishtalmut', icon: 'trending-up', color: '#14b8a6' },
+    { id: 'pension', icon: 'umbrella', color: '#0891b2' },
     { id: 'other_income', icon: 'plus-circle', color: '#a7f3d0' },
   ],
   expense: [

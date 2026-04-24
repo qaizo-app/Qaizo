@@ -144,6 +144,8 @@ export const categoryConfig = {
   rental_income:  { icon: 'home',          color: '#059669' },
   handyman:       { icon: 'tool',          color: '#2dd4bf' },
   sales:          { icon: 'package',       color: '#6ee7b7' },
+  keren_hishtalmut: { icon: 'trending-up', color: '#14b8a6' },
+  pension:        { icon: 'umbrella',      color: '#0891b2' },
   other_income:   { icon: 'plus-circle',   color: '#a7f3d0' },
   transfer:       { icon: 'repeat',        color: '#60a5fa' },
 };

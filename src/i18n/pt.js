@@ -128,6 +128,8 @@ export default {
   handyman: 'Trabalho extra',
   sales: 'Vendas',
   rental_income: 'Renda de aluguel',
+  keren_hishtalmut: 'Fundo de estudos',
+  pension: 'Pensão',
   other_income: 'Outras receitas',
   food: 'Alimentação',
   transport: 'Transporte',

@@ -13,8 +13,8 @@ import DatePickerModal from './DatePickerModal';
 import CalculatorModal from './CalculatorModal';
 import SwipeModal from './SwipeModal';
 
-const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','other_income'];
-const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','other_income','transfer'].includes(k));
+const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income'];
+const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income','transfer'].includes(k));
 
 export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount, initialType }) {
   const [type, setType] = useState(initialType || 'expense');

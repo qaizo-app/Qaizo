@@ -131,6 +131,8 @@ export default {
   handyman: 'Подработка',
   sales: 'Продажи',
   rental_income: 'Аренда',
+  keren_hishtalmut: 'Керен иштальмут',
+  pension: 'Пенсия',
   other_income: 'Другой доход',
   food: 'Еда',
   transport: 'Транспорт',

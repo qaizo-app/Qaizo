@@ -128,6 +128,8 @@ export default {
   handyman: 'עבודה נוספת',
   sales: 'מכירות',
   rental_income: 'שכירות',
+  keren_hishtalmut: 'קרן השתלמות',
+  pension: 'פנסיה',
   other_income: 'הכנסה אחרת',
   food: 'אוכל',
   transport: 'תחבורה',
