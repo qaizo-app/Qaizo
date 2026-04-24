@@ -18,7 +18,6 @@ import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import Amount from '../components/Amount';
 import { catName } from '../utils/categoryName';
-import { getCachedGroups } from '../utils/categoryCache';
 import { getCatIcon } from '../components/CategoryPickerModal';
 import { sym } from '../utils/currency';
 
