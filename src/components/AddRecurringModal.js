@@ -34,6 +34,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [notify, setNotify] = useState(true);
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [contractEndDate, setContractEndDate] = useState('');
+  const [tags, setTags] = useState([]);
+  const [userTags, setUserTags] = useState([]);
+  const [newTagText, setNewTagText] = useState('');
   const isEdit = !!editItem;
   const st = createSt();
 
@@ -59,6 +62,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       setNotify(editItem.notify !== false);
       setAutoConfirm(editItem.autoConfirm === true);
       setContractEndDate(editItem.contractEndDate || '');
+      setTags(Array.isArray(editItem.tags) ? editItem.tags : []);
     } else {
       setType('expense');
       setAmount('');
@@ -75,9 +79,11 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       setNotify(true);
       setAutoConfirm(false);
       setContractEndDate('');
+      setTags([]);
       setShowCatPicker(false);
       setShowSchedule(false);
     }
+    setNewTagText('');
 
     // Side data — doesn't feed into form defaults for a NEW item except
     // the default account, which is filled in once accounts arrive.
@@ -91,7 +97,12 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
         setSelAcc(prev => prev || active[0].id);
       }
     });
+    dataService.getTags().then(saved => {
+      if (Array.isArray(saved)) setUserTags(saved);
+    });
   }, [visible, editItem]);
+
+  const togTag = (tag) => setTags(p => p.includes(tag) ? p.filter(t => t !== tag) : [...p, tag]);
 
   const cats = type === 'income' ? INC : EXP;
   const tc = type === 'expense' ? colors.red : type === 'income' ? colors.green : colors.blue;
@@ -140,6 +151,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       notify,
       autoConfirm,
       contractEndDate: contractEndDate || null,
+      tags: Array.isArray(tags) ? tags : [],
     };
 
     let saved = null;
@@ -330,6 +342,57 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           <TextInput style={st.input} value={note} onChangeText={setNote}
             placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} />
 
+          {/* Теги */}
+          <Text style={st.label}>{i18n.t('tags')}</Text>
+          <View style={st.tagsRow}>
+            {userTags.map((tag, idx) => {
+              const tagColors = ['#34d399','#60a5fa','#fb923c','#a78bfa','#f472b6','#fbbf24','#2dd4bf','#f87171'];
+              const tgC = tagColors[idx % tagColors.length];
+              const sl = tags.includes(tag);
+              return (
+                <TouchableOpacity key={tag} style={[st.tagChip, sl && { borderColor: tgC, backgroundColor: `${tgC}15` }]}
+                  onPress={() => togTag(tag)}
+                  onLongPress={() => {
+                    dataService.deleteTag(tag);
+                    setUserTags(prev => prev.filter(t => t !== tag));
+                    setTags(prev => prev.filter(t => t !== tag));
+                  }}>
+                  <Text style={[st.tagTxt, sl && { color: tgC }]}>{tag}</Text>
+                </TouchableOpacity>
+              );
+            })}
+            <View style={st.newTagWrap}>
+              <TextInput
+                style={st.newTagInput}
+                value={newTagText}
+                onChangeText={setNewTagText}
+                placeholder={i18n.t('newTag')}
+                placeholderTextColor={colors.textMuted}
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  const t = newTagText.trim();
+                  if (t && !userTags.includes(t)) {
+                    dataService.addTag(t);
+                    setUserTags(prev => [...prev, t]);
+                    setTags(prev => [...prev, t]);
+                  }
+                  setNewTagText('');
+                }}
+              />
+              <TouchableOpacity style={st.newTagBtn} onPress={() => {
+                const t = newTagText.trim();
+                if (t && !userTags.includes(t)) {
+                  dataService.addTag(t);
+                  setUserTags(prev => [...prev, t]);
+                  setTags(prev => [...prev, t]);
+                }
+                setNewTagText('');
+              }}>
+                <Feather name="plus" size={16} color={colors.green} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* התראות */}
           <View style={st.toggleRow}>
             <View style={{ flex: 1 }}>
@@ -406,4 +469,10 @@ const createSt = () => StyleSheet.create({
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   saveTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  tagsRow: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  tagChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent' },
+  tagTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+  newTagWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder, paddingStart: 10 },
+  newTagInput: { color: colors.text, fontSize: 12, paddingVertical: 8, minWidth: 80, maxWidth: 120 },
+  newTagBtn: { paddingHorizontal: 10, paddingVertical: 8 },
 });
