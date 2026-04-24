@@ -238,14 +238,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       {renderUpcomingBlock()}
 
-      {/* Rectangular transactions section — edge-to-edge, no rounded corners,
-         so it visually reads as a separate "block" under the rounded
-         upcoming-payments card above. */}
-      <View style={styles.txSectionHeader}>
-        <View style={styles.countRow}>
-          <Text style={styles.countText}>{i18n.t('transactions')}</Text>
-          <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
-        </View>
+      <View style={styles.countRow}>
+        <Text style={styles.countText}>{i18n.t('transactions')}</Text>
+        <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
       </View>
     </>
   );
@@ -319,12 +314,11 @@ const createStyles = () => StyleSheet.create({
   periodBtnActive:{borderColor:colors.green,backgroundColor:colors.greenSoft},
   periodTxt:{color:colors.textDim,fontSize:11,fontWeight:'700'},
   periodTxtActive:{color:colors.green},
-  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,paddingVertical:12},
+  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,marginBottom:8},
   countText:{color:colors.text,fontSize:16,fontWeight:'700'},
   countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
   countNum:{color:colors.textDim,fontSize:14,fontWeight:'700'},
-  txSectionHeader:{backgroundColor:colors.bg2,borderTopWidth:1,borderTopColor:colors.cardBorder,marginTop:4},
-  list:{backgroundColor:colors.bg2,paddingHorizontal:20,paddingBottom:120},
+  list:{paddingHorizontal:20,paddingBottom:120},
   balLine:{paddingStart:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
   runBal:{fontSize:12,fontWeight:'500'},
   empty:{alignItems:'center',paddingVertical:50},
