@@ -111,13 +111,21 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     const isTransfer = type === 'transfer';
     if (isTransfer && (!selAcc || !toAcc || selAcc === toAcc)) return;
 
+    // Resolve icon/color/name from the user's actual category groups so
+    // custom categories (ids like "аренда_1tyf") don't fall back to the
+    // generic "other" icon or leak the raw id into the list as a name.
+    const picked = isTransfer ? null : getCatIcon(categoryId, catGroups);
+    const resolvedName = isTransfer ? '' : getCatName(categoryId, catGroups, i18n.getLanguage());
+
     const data = {
       // Persist type as 'expense' for transfers so legacy filters that group
       // on type keep working; isTransfer + toAccount flag the pair at confirm.
       type: isTransfer ? 'expense' : type,
       amount: parseFloat(amount.replace(',', '.')),
       categoryId: isTransfer ? 'transfer' : categoryId,
-      icon: isTransfer ? 'repeat' : (categoryConfig[categoryId]?.icon || 'repeat'),
+      categoryName: resolvedName,
+      icon: isTransfer ? 'repeat' : (picked?.icon || 'circle'),
+      iconColor: isTransfer ? null : (picked?.color || null),
       recipient: isTransfer ? '' : recipient.trim(),
       note: note.trim(),
       currency: sym(),

@@ -9,6 +9,8 @@ import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon } from './CategoryPickerModal';
 
 export default function RecurringBlock({
   recurring,
@@ -32,9 +34,17 @@ export default function RecurringBlock({
             <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
           </View>
           {upcoming.map(rec => {
+            // Prefer the icon/color captured at save time (covers custom
+            // categories), then the cached user groups, then the built-in
+            // categoryConfig. Falls back to repeat+muted so we never show
+            // the raw "more-horizontal" dots placeholder.
+            const resolved = !rec.isTransfer && (rec.icon && rec.icon !== 'more-horizontal')
+              ? { icon: rec.icon, color: rec.iconColor || categoryConfig[rec.categoryId]?.color || colors.textDim }
+              : null;
+            const fromGroups = !rec.isTransfer && !resolved ? getCatIcon(rec.categoryId, getCachedGroups()) : null;
             const cfg = rec.isTransfer
               ? { icon: 'repeat', color: colors.blue }
-              : (categoryConfig[rec.categoryId] || categoryConfig.other);
+              : (resolved || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[rec.categoryId] || categoryConfig.other));
             const nd = new Date(rec.nextDate);
             const diffDays = Math.ceil((nd - today) / (1000 * 60 * 60 * 24));
             const isOverdue = diffDays <= 0;

@@ -23,6 +23,8 @@ import i18n from '../i18n';
 import { categoryConfig, colors } from '../theme/colors';
 import Amount from './Amount';
 import { catName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon } from './CategoryPickerModal';
 import { sym } from '../utils/currency';
 import { matchHistory as matchRecurringHistory, summarizeHistory } from '../utils/recurringHistory';
 
@@ -77,9 +79,13 @@ export default function UpcomingPaymentsModal({
   const renderItem = ({ item: rec }) => {
     const isTransferIn = rec.isTransfer && perspectiveAccountId && rec.toAccount === perspectiveAccountId;
     const isTransferOut = rec.isTransfer && perspectiveAccountId && rec.account === perspectiveAccountId;
+    const savedIcon = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal'
+      ? { icon: rec.icon, color: rec.iconColor || categoryConfig[rec.categoryId]?.color || colors.textDim }
+      : null;
+    const fromGroups = !rec.isTransfer && !savedIcon ? getCatIcon(rec.categoryId, getCachedGroups()) : null;
     const cfg = rec.isTransfer
       ? { icon: 'repeat', color: colors.blue }
-      : (categoryConfig[rec.categoryId] || categoryConfig.other);
+      : (savedIcon || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[rec.categoryId] || categoryConfig.other));
     const nd = rec.nextDate ? new Date(rec.nextDate) : null;
     const diffDays = nd ? Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24)) : null;
     const dateLabel = diffDays == null

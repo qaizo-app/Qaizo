@@ -18,6 +18,8 @@ import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import Amount from '../components/Amount';
 import { catName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon } from '../components/CategoryPickerModal';
 import { sym } from '../utils/currency';
 
 const PERIODS = [
@@ -138,9 +140,13 @@ export default function AccountHistoryScreen({ route, navigation }) {
         {upcomingPreview.map((rec, idx) => {
           const isTransferIn = rec.isTransfer && rec.toAccount === account.id;
           const isTransferOut = rec.isTransfer && rec.account === account.id;
+          const savedIcon = !rec.isTransfer && rec.icon && rec.icon !== 'more-horizontal'
+            ? { icon: rec.icon, color: rec.iconColor || categoryConfig[rec.categoryId]?.color || colors.textDim }
+            : null;
+          const fromGroups = !rec.isTransfer && !savedIcon ? getCatIcon(rec.categoryId, getCachedGroups()) : null;
           const cfg = rec.isTransfer
             ? { icon: 'repeat', color: colors.blue }
-            : (categoryConfig[rec.categoryId] || categoryConfig.other);
+            : (savedIcon || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[rec.categoryId] || categoryConfig.other));
           const nd = new Date(rec.nextDate);
           const diffDays = Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24));
           const isOverdue = diffDays <= 0;

@@ -24,6 +24,8 @@ import Amount from './Amount';
 import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
 import { catName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon } from './CategoryPickerModal';
 import { sym } from '../utils/currency';
 
 function isoToDisplayDate(iso, lang) {
@@ -69,9 +71,13 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
 
   const isTransfer = !!item.isTransfer;
   const typeColor = isTransfer ? colors.blue : item.type === 'expense' ? colors.red : colors.green;
+  const savedIcon = !isTransfer && item.icon && item.icon !== 'more-horizontal'
+    ? { icon: item.icon, color: item.iconColor || categoryConfig[item.categoryId]?.color || colors.textDim }
+    : null;
+  const fromGroups = !isTransfer && !savedIcon ? getCatIcon(item.categoryId, getCachedGroups()) : null;
   const cfg = isTransfer
     ? { icon: 'repeat', color: colors.blue }
-    : (categoryConfig[item.categoryId] || categoryConfig.other);
+    : (savedIcon || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[item.categoryId] || categoryConfig.other));
   const displayName = isTransfer
     ? `${accounts.find(a => a.id === selAcc)?.name || '—'} → ${accounts.find(a => a.id === toAcc)?.name || '—'}`
     : (item.recipient || catName(item.categoryId, item.categoryName));

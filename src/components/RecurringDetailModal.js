@@ -8,7 +8,7 @@ import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import Amount from './Amount';
 import { getCachedGroups } from './CategoryIcon';
-import { getCatName } from './CategoryPickerModal';
+import { getCatIcon, getCatName } from './CategoryPickerModal';
 import SwipeModal from './SwipeModal';
 import { matchHistory, summarizeHistory } from '../utils/recurringHistory';
 
@@ -30,7 +30,13 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
 
   if (!item) return null;
 
-  const cfg = categoryConfig[item.categoryId] || categoryConfig.other;
+  const savedIcon = !item.isTransfer && item.icon && item.icon !== 'more-horizontal'
+    ? { icon: item.icon, color: item.iconColor || categoryConfig[item.categoryId]?.color || colors.textDim }
+    : null;
+  const fromGroups = !item.isTransfer && !savedIcon ? getCatIcon(item.categoryId, getCachedGroups()) : null;
+  const cfg = item.isTransfer
+    ? { icon: 'repeat', color: colors.blue }
+    : (savedIcon || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[item.categoryId] || categoryConfig.other));
   const nextDate = item.nextDate ? new Date(item.nextDate) : null;
   const now = new Date();
 

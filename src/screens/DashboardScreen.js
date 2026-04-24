@@ -105,6 +105,14 @@ export default function DashboardScreen() {
     const uid = require('../services/authService').default.getUid();
     if (!uid) return;
 
+    // Warm the category cache before the upcoming-payments render so old
+    // recurring rows (missing categoryName/iconColor) can still resolve
+    // their custom-category name and icon.
+    try {
+      const { ensureCachedGroups } = require('../utils/categoryCache');
+      await ensureCachedGroups();
+    } catch (e) {}
+
     let [txs, bdg, rec, settings, accs, tpls, gls] = await Promise.all([
       dataService.getTransactions(),
       dataService.getBudgets(),
