@@ -550,7 +550,12 @@ export default function DashboardScreen() {
         onClose={() => { setShowRecurring(false); setEditRecurring(null); }}
         onSave={(saved) => {
           // Optimistic update so the new/edited item shows up instantly
-          // without waiting for the Firestore cache to propagate.
+          // without waiting for the Firestore cache to propagate. We used
+          // to also call loadData() here, but getRecurring() races against
+          // the just-committed add() in the local cache and sometimes
+          // returns stale data — overwriting the optimistic state and
+          // making the new item appear to vanish until the next focus.
+          // Trust the optimistic update; the next focus effect re-syncs.
           if (saved) {
             setRecurring(prev => {
               const idx = prev.findIndex(r => r.id === saved.id);
@@ -559,8 +564,10 @@ export default function DashboardScreen() {
               }
               return [...prev, saved];
             });
+          } else {
+            // Save failed — fall back to a fresh load so state matches disk.
+            loadData();
           }
-          loadData();
         }}
         editItem={editRecurring} />
       <RecurringDetailModal visible={!!recDetail} item={recDetail}
