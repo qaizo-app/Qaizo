@@ -38,37 +38,59 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const st = createSt();
 
   useEffect(() => {
-    if (visible) {
-      dataService.getCategories().then(saved => { if (saved && saved.length > 0) setCatGroups(saved); });
-      dataService.getAccounts().then(accs => {
-        const active = accs.filter(a => a.isActive !== false);
-        setAccounts(active);
-        if (editItem) {
-          setType(editItem.isTransfer ? 'transfer' : (editItem.type || 'expense'));
-          setAmount(String(editItem.amount));
-          setCategoryId(editItem.categoryId || 'rent');
-          setRecipient(editItem.recipient || '');
-          setNote(editItem.note || '');
-          setSelAcc(editItem.account || (active[0]?.id || ''));
-          setToAcc(editItem.toAccount || '');
-          setStartDate(editItem.nextDate ? editItem.nextDate.slice(0, 10) : '');
-          setIntervalMonths(editItem.intervalMonths || 1);
-          setEndType(editItem.endType || 'none');
-          setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
-          setEndDate(editItem.endDate || '');
-          setNotify(editItem.notify !== false);
-          setAutoConfirm(editItem.autoConfirm === true);
-          setContractEndDate(editItem.contractEndDate || '');
-        } else {
-          setType('expense'); setAmount(''); setCategoryId('rent');
-          setRecipient(''); setNote(''); setIntervalMonths(1);
-          setStartDate(''); setEndType('none'); setTotalCount('12'); setEndDate('');
-          setNotify(true); setAutoConfirm(false); setContractEndDate('');
-          setToAcc('');
-          if (active.length > 0) setSelAcc(active[0].id);
-        }
-      });
+    if (!visible) return;
+
+    // Reset form SYNCHRONOUSLY on open — don't wait on getAccounts() to settle,
+    // or stale values from the previous session leak into the new one when the
+    // promise is slow or rejects silently.
+    if (editItem) {
+      setType(editItem.isTransfer ? 'transfer' : (editItem.type || 'expense'));
+      setAmount(String(editItem.amount));
+      setCategoryId(editItem.categoryId || 'rent');
+      setRecipient(editItem.recipient || '');
+      setNote(editItem.note || '');
+      setSelAcc(editItem.account || '');
+      setToAcc(editItem.toAccount || '');
+      setStartDate(editItem.nextDate ? editItem.nextDate.slice(0, 10) : '');
+      setIntervalMonths(editItem.intervalMonths || 1);
+      setEndType(editItem.endType || 'none');
+      setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
+      setEndDate(editItem.endDate || '');
+      setNotify(editItem.notify !== false);
+      setAutoConfirm(editItem.autoConfirm === true);
+      setContractEndDate(editItem.contractEndDate || '');
+    } else {
+      setType('expense');
+      setAmount('');
+      setCategoryId('rent');
+      setRecipient('');
+      setNote('');
+      setSelAcc('');
+      setToAcc('');
+      setStartDate('');
+      setIntervalMonths(1);
+      setEndType('none');
+      setTotalCount('12');
+      setEndDate('');
+      setNotify(true);
+      setAutoConfirm(false);
+      setContractEndDate('');
+      setShowCatPicker(false);
+      setShowSchedule(false);
     }
+
+    // Side data — doesn't feed into form defaults for a NEW item except
+    // the default account, which is filled in once accounts arrive.
+    dataService.getCategories().then(saved => {
+      if (saved && saved.length > 0) setCatGroups(saved);
+    });
+    dataService.getAccounts().then(accs => {
+      const active = accs.filter(a => a.isActive !== false);
+      setAccounts(active);
+      if (!editItem && active.length > 0) {
+        setSelAcc(prev => prev || active[0].id);
+      }
+    });
   }, [visible, editItem]);
 
   const cats = type === 'income' ? INC : EXP;
