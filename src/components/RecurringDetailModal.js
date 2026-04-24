@@ -10,6 +10,7 @@ import Amount from './Amount';
 import { getCachedGroups } from './CategoryIcon';
 import { getCatName } from './CategoryPickerModal';
 import SwipeModal from './SwipeModal';
+import { matchHistory, summarizeHistory } from '../utils/recurringHistory';
 
 export default function RecurringDetailModal({ visible, item, onClose, onConfirm, onSkip, onDelete, onEdit }) {
   const [history, setHistory] = useState([]);
@@ -17,15 +18,13 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
 
   useEffect(() => {
     if (visible && item) {
-      // Ищем транзакции созданные этим платежом (по categoryId + recipient + amount)
       dataService.getTransactions().then(txs => {
-        const matched = txs.filter(tx =>
-          tx.categoryId === item.categoryId &&
-          tx.amount === item.amount &&
-          (item.recipient ? tx.recipient === item.recipient : true)
-        ).sort((a, b) => new Date(b.date) - new Date(a.date));
-        setHistory(matched);
+        setHistory(matchHistory(item, txs));
       });
+    } else {
+      // Clear stale history when the sheet closes so a quick reopen with
+      // a different item can't briefly render the previous one's list.
+      setHistory([]);
     }
   }, [visible, item]);
 
@@ -137,14 +136,42 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
           </View>
 
           {history.length > 0 ? (
-            <View style={st.historyCard}>
-              {history.slice(0, 12).map((tx, idx) => (
-                <View key={tx.id || idx} style={[st.historyRow, idx < history.length - 1 && st.historyBorder]}>
-                  <Text style={st.historyDate}>{formatDate(tx.date || tx.createdAt)}</Text>
-                  <Amount value={tx.type === 'expense' ? -tx.amount : tx.amount} sign style={st.historyAmount} color={tx.type === 'expense' ? colors.red : colors.green} />
-                </View>
-              ))}
-            </View>
+            <>
+              {/* Stats card — total, average, span of the history */}
+              {(() => {
+                const { count, total, avg, first, last } = summarizeHistory(history);
+                return (
+                  <View style={st.statsCard}>
+                    <View style={st.statCell}>
+                      <Text style={st.statLabel}>{i18n.t('totalPaid')}</Text>
+                      <Amount value={total} style={st.statValue} color={item.type === 'expense' ? colors.red : colors.green} />
+                    </View>
+                    <View style={st.statDividerV} />
+                    <View style={st.statCell}>
+                      <Text style={st.statLabel}>{i18n.t('avgPayment')}</Text>
+                      <Amount value={avg} style={st.statValue} />
+                    </View>
+                    <View style={st.statDividerV} />
+                    <View style={st.statCell}>
+                      <Text style={st.statLabel}>{i18n.t('since')}</Text>
+                      <Text style={st.statValue}>{first ? formatDate(first) : '—'}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
+
+              <View style={st.historyCard}>
+                {history.map((tx, idx) => (
+                  <View key={tx.id || idx} style={[st.historyRow, idx < history.length - 1 && st.historyBorder]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={st.historyDate}>{formatDate(tx.date || tx.createdAt)}</Text>
+                      {tx.note ? <Text style={st.historyNote} numberOfLines={1}>{tx.note}</Text> : null}
+                    </View>
+                    <Amount value={tx.type === 'expense' ? -tx.amount : tx.amount} sign style={st.historyAmount} color={tx.type === 'expense' ? colors.red : colors.green} />
+                  </View>
+                ))}
+              </View>
+            </>
           ) : (
             <View style={st.emptyHistory}>
               <Feather name="clock" size={20} color={colors.textMuted} />
@@ -190,10 +217,22 @@ const createSt = () => StyleSheet.create({
   sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
 
   historyCard: { backgroundColor: colors.bg2, borderRadius: 14, padding: 12, marginBottom: 20 },
-  historyRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
+  historyRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, gap: 8 },
   historyBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  historyDate: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
+  historyDate: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
+  historyNote: { color: colors.textMuted, fontSize: 11, marginTop: 2, textAlign: i18n.textAlign() },
   historyAmount: { fontSize: 14, fontWeight: '700' },
+  statsCard: {
+    flexDirection: i18n.row(), backgroundColor: colors.bg2, borderRadius: 14,
+    paddingVertical: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder,
+  },
+  statCell: { flex: 1, alignItems: 'center', paddingHorizontal: 4 },
+  statDividerV: { width: 1, backgroundColor: colors.divider, marginVertical: 4 },
+  statLabel: {
+    color: colors.textMuted, fontSize: 10, fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6,
+  },
+  statValue: { color: colors.text, fontSize: 13, fontWeight: '700' },
 
   emptyHistory: { alignItems: 'center', paddingVertical: 24, gap: 8, backgroundColor: colors.bg2, borderRadius: 14, marginBottom: 20 },
   emptyTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },

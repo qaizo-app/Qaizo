@@ -24,20 +24,9 @@ import { categoryConfig, colors } from '../theme/colors';
 import Amount from './Amount';
 import { catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
+import { matchHistory as matchRecurringHistory, summarizeHistory } from '../utils/recurringHistory';
 
 const HISTORY_PREVIEW = 5;
-
-function matchHistory(rec, transactions) {
-  if (!rec || !transactions) return [];
-  const byRecipient = rec.recipient
-    ? transactions.filter(t => t.recipient === rec.recipient)
-    : [];
-  if (byRecipient.length > 0) return byRecipient;
-  return transactions.filter(t =>
-    t.categoryId === rec.categoryId &&
-    Math.abs((t.amount || 0) - (rec.amount || 0)) < 0.01
-  );
-}
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -104,9 +93,9 @@ export default function UpcomingPaymentsModal({
       ? `${accNameById[rec.account] || '—'} → ${accNameById[rec.toAccount] || '—'}`
       : (rec.recipient || catName(rec.categoryId, rec.categoryName));
     const isExpanded = expandedId === rec.id;
-    const history = isExpanded ? matchHistory(rec, transactions) : [];
+    const history = isExpanded ? matchRecurringHistory(rec, transactions) : [];
     const historyPreview = history.slice(0, HISTORY_PREVIEW);
-    const totalSpent = history.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+    const { total: totalSpent } = isExpanded ? summarizeHistory(history) : { total: 0 };
 
     return (
       <View style={st.card}>

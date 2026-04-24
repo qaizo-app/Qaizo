@@ -23,6 +23,9 @@ export default {
   recipientHistory: 'История по получателю',
   totalSpent: 'Всего потрачено',
   more: 'ещё',
+  totalPaid: 'Всего оплачено',
+  avgPayment: 'В среднем',
+  since: 'С',
   // Tabs
   dashboard: 'Главная',
   transactions: 'Транзакции',
