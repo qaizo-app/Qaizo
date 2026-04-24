@@ -570,7 +570,7 @@ const dataService = {
     } catch (e) { return false; }
   },
 
-  async confirmRecurring(id) {
+  async confirmRecurring(id, overrides = {}) {
     try {
       const uid = getUid();
       let rec;
@@ -583,40 +583,44 @@ const dataService = {
       }
       if (!rec) return false;
 
-      if (rec.isTransfer && rec.toAccount) {
+      const amount = overrides.amount != null ? overrides.amount : rec.amount;
+      const account = overrides.account || rec.account;
+      const toAccount = overrides.toAccount || rec.toAccount;
+      const date = overrides.date || new Date().toISOString();
+
+      if (rec.isTransfer && toAccount) {
         // Scheduled transfer: materialize as a linked expense/income pair
         // so running balances and account filters behave like a one-off
         // transfer created from AddTransactionModal.
         const pairId = generateId();
-        const nowIso = new Date().toISOString();
         const accs = await this.getAccounts();
-        const fromName = accs.find(a => a.id === rec.account)?.name || '';
-        const toName = accs.find(a => a.id === rec.toAccount)?.name || '';
+        const fromName = accs.find(a => a.id === account)?.name || '';
+        const toName = accs.find(a => a.id === toAccount)?.name || '';
         await this.addTransaction({
-          type: 'expense', amount: rec.amount, categoryId: 'transfer', icon: 'repeat',
+          type: 'expense', amount, categoryId: 'transfer', icon: 'repeat',
           recipient: toName, note: rec.note || `→ ${toName}`,
-          currency: rec.currency || '₪', date: nowIso,
-          account: rec.account, isTransfer: true, transferPairId: pairId,
+          currency: rec.currency || '₪', date,
+          account, isTransfer: true, transferPairId: pairId,
           tags: rec.tags || [],
         });
         await this.addTransaction({
-          type: 'income', amount: rec.amount, categoryId: 'transfer', icon: 'repeat',
+          type: 'income', amount, categoryId: 'transfer', icon: 'repeat',
           recipient: fromName, note: rec.note || `← ${fromName}`,
-          currency: rec.currency || '₪', date: nowIso,
-          account: rec.toAccount, isTransfer: true, transferPairId: pairId,
+          currency: rec.currency || '₪', date,
+          account: toAccount, isTransfer: true, transferPairId: pairId,
           tags: rec.tags || [],
         });
       } else {
         await this.addTransaction({
           type: rec.type,
-          amount: rec.amount,
+          amount,
           categoryId: rec.categoryId,
           icon: rec.icon || 'repeat',
           recipient: rec.recipient || '',
           note: rec.note || '',
           currency: rec.currency || '₪',
-          date: new Date().toISOString(),
-          account: rec.account,
+          date,
+          account,
           tags: rec.tags || [],
         });
       }
@@ -638,7 +642,7 @@ const dataService = {
     } catch (e) { return false; }
   },
 
-  async skipRecurring(id) {
+  async skipRecurring(id, overrides = {}) {
     try {
       const uid = getUid();
       let rec;
@@ -651,8 +655,15 @@ const dataService = {
       }
       if (!rec) return false;
 
-      const next = new Date(rec.nextDate);
-      next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+      // If caller supplied an explicit next-occurrence date, honor it.
+      // Otherwise shift forward by one interval from the current nextDate.
+      let next;
+      if (overrides.nextDate) {
+        next = new Date(overrides.nextDate);
+      } else {
+        next = new Date(rec.nextDate);
+        next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+      }
 
       let stillActive = true;
       if (rec.endType === 'date' && rec.endDate && next > new Date(rec.endDate)) stillActive = false;

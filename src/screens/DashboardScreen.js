@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, AppState, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AddRecurringModal from '../components/AddRecurringModal';
+import ConfirmRecurringModal from '../components/ConfirmRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import BalanceCard from '../components/BalanceCard';
 import BarChartCard from '../components/BarChartCard';
@@ -51,6 +52,7 @@ export default function DashboardScreen() {
   const [editRecurring, setEditRecurring] = useState(null);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [recDetail, setRecDetail] = useState(null);
+  const [confirmRec, setConfirmRec] = useState(null);
   const [quickTemplate, setQuickTemplate] = useState(null);
   const [showQuickSelect, setShowQuickSelect] = useState(false);
   const [quickTab, setQuickTab] = useState('categories');
@@ -345,14 +347,19 @@ export default function DashboardScreen() {
     toast.show(i18n.t('saved'), 'success');
   };
   const handleBudgetDelete = async (categoryId) => { await dataService.deleteBudget(categoryId); await loadData(); };
-  const handleConfirmRecurring = async (id) => {
-    await dataService.confirmRecurring(id);
+  // Open the confirm/skip sheet where the user can tweak amount / date /
+  // account before committing. Direct-apply helpers below are kept for the
+  // auto-confirm path and any call site that already supplies overrides.
+  const openRecurringConfirm = (rec) => setConfirmRec(rec);
+
+  const handleConfirmRecurring = async (id, overrides) => {
+    await dataService.confirmRecurring(id, overrides);
     await loadData();
     notificationService.scheduleRecurringNotifications();
     toast.show(i18n.t('paymentConfirmed'), 'success');
   };
-  const handleSkipRecurring = async (id) => {
-    await dataService.skipRecurring(id);
+  const handleSkipRecurring = async (id, overrides) => {
+    await dataService.skipRecurring(id, overrides);
     await loadData();
     notificationService.scheduleRecurringNotifications();
     toast.show(i18n.t('paymentSkipped'), 'info');
@@ -497,8 +504,8 @@ export default function DashboardScreen() {
                   onAdd={() => setShowRecurring(true)}
                   onEdit={(rec) => setEditRecurring(rec)}
                   onDelete={handleDeleteRecurring}
-                  onSkip={handleSkipRecurring}
-                  onConfirm={handleConfirmRecurring}
+                  onSkip={(id) => openRecurringConfirm(recurring.find(r => r.id === id) || null)}
+                  onConfirm={(id) => openRecurringConfirm(recurring.find(r => r.id === id) || null)}
                   onDetail={(rec) => setRecDetail(rec)}
                 />
               );
@@ -573,10 +580,17 @@ export default function DashboardScreen() {
         editItem={editRecurring} />
       <RecurringDetailModal visible={!!recDetail} item={recDetail}
         onClose={() => setRecDetail(null)}
-        onConfirm={(id) => { handleConfirmRecurring(id); setRecDetail(null); }}
-        onSkip={(id) => { handleSkipRecurring(id); setRecDetail(null); }}
+        onConfirm={(id) => { const r = recurring.find(x => x.id === id); setRecDetail(null); if (r) openRecurringConfirm(r); }}
+        onSkip={(id) => { const r = recurring.find(x => x.id === id); setRecDetail(null); if (r) openRecurringConfirm(r); }}
         onDelete={(id) => { handleDeleteRecurring(id); setRecDetail(null); }}
         onEdit={(item) => { setRecDetail(null); setEditRecurring(item); }} />
+
+      <ConfirmRecurringModal
+        visible={!!confirmRec}
+        item={confirmRec}
+        onClose={() => setConfirmRec(null)}
+        onConfirm={async (id, overrides) => { setConfirmRec(null); await handleConfirmRecurring(id, overrides); }}
+        onSkip={async (id, overrides) => { setConfirmRec(null); await handleSkipRecurring(id, overrides); }} />
       {/* Quick category select */}
       {showQuickSelect && (
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>
