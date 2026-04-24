@@ -14,8 +14,9 @@ import { getCatName } from '../components/CategoryPickerModal';
 import i18n from '../i18n';
 import analyticsService from '../services/analyticsService';
 import dataService from '../services/dataService';
-import { accountTypeConfig, colors } from '../theme/colors';
+import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import Amount from '../components/Amount';
+import { catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
 
 const PERIODS = [
@@ -28,6 +29,7 @@ const PERIODS = [
 export default function AccountHistoryScreen({ route, navigation }) {
   const { account } = route.params;
   const [transactions, setTransactions] = useState([]);
+  const [upcomingRecurring, setUpcomingRecurring] = useState([]);
   const [currentBalance, setCurrentBalance] = useState(account.balance || 0);
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
@@ -71,6 +73,16 @@ export default function AccountHistoryScreen({ route, navigation }) {
     const accs = await dataService.getAccounts();
     const acc = accs.find(a => a.id === account.id);
     if (acc) setCurrentBalance(acc.balance || 0);
+
+    // Предстоящие запланированные платежи на этот счёт (30 дней вперёд)
+    const rec = await dataService.getRecurring();
+    const now = new Date();
+    const horizon = new Date(now); horizon.setDate(horizon.getDate() + 30);
+    const upcoming = rec
+      .filter(r => r.account === account.id && r.isActive !== false && r.nextDate)
+      .filter(r => new Date(r.nextDate) <= horizon)
+      .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate));
+    setUpcomingRecurring(upcoming);
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
@@ -108,6 +120,47 @@ export default function AccountHistoryScreen({ route, navigation }) {
       onEdit={(t) => setEditTx(t)}
       onDuplicate={handleDuplicate} />
   );
+
+  const renderUpcomingBlock = () => {
+    if (upcomingRecurring.length === 0) return null;
+    return (
+      <View style={styles.upcomingCard}>
+        <Text style={styles.upcomingTitle}>{i18n.t('upcomingPayments')}</Text>
+        {upcomingRecurring.map((rec, idx) => {
+          const cfg = categoryConfig[rec.categoryId] || categoryConfig.other;
+          const nd = new Date(rec.nextDate);
+          const diffDays = Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24));
+          const isOverdue = diffDays <= 0;
+          const dateLabel = isOverdue
+            ? i18n.t('today')
+            : diffDays === 1
+              ? i18n.t('tomorrow')
+              : `${diffDays} ${i18n.t('days')}`;
+          return (
+            <View key={rec.id} style={[styles.upcomingRow, idx === 0 && { borderTopWidth: 0, paddingTop: 0 }]}>
+              <View style={[styles.upcomingIcon, { backgroundColor: cfg.color + '20' }]}>
+                <Feather name={cfg.icon || 'repeat'} size={16} color={cfg.color} />
+              </View>
+              <View style={styles.upcomingInfo}>
+                <Text style={styles.upcomingName} numberOfLines={1}>
+                  {rec.recipient || catName(rec.categoryId, rec.categoryName)}
+                </Text>
+                <Text style={styles.upcomingMeta} numberOfLines={1}>
+                  <Text style={{ color: rec.type === 'expense' ? colors.red : colors.green }}>
+                    {rec.type === 'expense' ? '-' : '+'}
+                    {Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                    {account.currency || sym()}
+                  </Text>
+                  {' · '}{dateLabel}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -157,6 +210,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
         </View>
       )}
 
+      {renderUpcomingBlock()}
+
       <View style={styles.countRow}>
         <Text style={styles.countText}>{i18n.t('transactions')}</Text>
         <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
@@ -192,6 +247,13 @@ const createStyles = () => StyleSheet.create({
   balAmount:{fontSize:32,fontWeight:'800',letterSpacing:-1},
   odText:{color:colors.textMuted,fontSize:12,marginTop:8},
   chartCard:{marginHorizontal:20,marginBottom:16,backgroundColor:colors.card,borderRadius:20,padding:16,borderWidth:1,borderColor:colors.cardBorder},
+  upcomingCard:{marginHorizontal:20,marginBottom:16,backgroundColor:colors.card,borderRadius:20,padding:16,borderWidth:1,borderColor:colors.cardBorder},
+  upcomingTitle:{color:colors.text,fontSize:14,fontWeight:'700',marginBottom:12,textAlign:i18n.textAlign()},
+  upcomingRow:{flexDirection:i18n.row(),alignItems:'center',paddingVertical:10,gap:12,borderTopWidth:1,borderTopColor:colors.divider},
+  upcomingIcon:{width:36,height:36,borderRadius:12,justifyContent:'center',alignItems:'center'},
+  upcomingInfo:{flex:1},
+  upcomingName:{color:colors.text,fontSize:14,fontWeight:'600',textAlign:i18n.textAlign()},
+  upcomingMeta:{color:colors.textDim,fontSize:12,marginTop:2,writingDirection:'ltr'},
   periodRow:{flexDirection:'row',gap:6,marginBottom:10},
   periodBtn:{paddingHorizontal:10,paddingVertical:6,borderRadius:8,backgroundColor:colors.bg2,borderWidth:1,borderColor:colors.cardBorder},
   periodBtnActive:{borderColor:colors.green,backgroundColor:colors.greenSoft},
