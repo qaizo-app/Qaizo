@@ -188,6 +188,33 @@ export default function AccountsScreen() {
     if (deleteTarget) { await dataService.deleteAccount(deleteTarget.id); setDeleteTarget(null); setShowEdit(false); await loadData(); }
   };
 
+  // Move a whole type group up/down in the rendered list. Groups render
+  // in first-seen order of the accounts array, so swapping two groups
+  // means relocating every account of one type past every account of
+  // the other. Inactive accounts stay where they are so they don't get
+  // shuffled by a reorder the user only expects to affect active rows.
+  const moveGroup = async (typeId, direction) => {
+    const activeRows = accounts.filter(a => a.isActive !== false);
+    const inactiveRows = accounts.filter(a => a.isActive === false);
+
+    const typeOrder = [];
+    const byType = {};
+    for (const a of activeRows) {
+      if (!byType[a.type]) { byType[a.type] = []; typeOrder.push(a.type); }
+      byType[a.type].push(a);
+    }
+
+    const idx = typeOrder.indexOf(typeId);
+    const target = idx + direction;
+    if (idx < 0 || target < 0 || target >= typeOrder.length) return;
+    [typeOrder[idx], typeOrder[target]] = [typeOrder[target], typeOrder[idx]];
+
+    const rebuiltActive = typeOrder.flatMap(t => byType[t]);
+    const reordered = [...rebuiltActive, ...inactiveRows];
+    setAccounts(reordered);
+    await dataService.saveAccounts(reordered);
+  };
+
   // Move within a type group. direction = -1 (up) / +1 (down).
   // Swaps the account with its nearest same-type neighbor in the full accounts array.
   const moveAccount = async (accId, direction) => {
@@ -263,13 +290,21 @@ export default function AccountsScreen() {
         <FirstTimeTooltip storageKey="accounts_long_press" text={i18n.t('accountHint')} icon="info" />
 
         {/* Reorder mode — grouped by type so the order matches the normal view */}
-        {reorderMode && grouped.map(({ typeId, accs }) => {
+        {reorderMode && grouped.map(({ typeId, accs }, gIdx) => {
           const cfg = accountTypeConfig[typeId] || accountTypeConfig.bank;
+          const isFirstGroup = gIdx === 0;
+          const isLastGroup = gIdx === grouped.length - 1;
           return (
             <View key={typeId} style={{ marginBottom: 16 }}>
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} />
                 <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                <TouchableOpacity onPress={() => moveGroup(typeId, -1)} style={{ padding: 6 }} disabled={isFirstGroup}>
+                  <Feather name="chevrons-up" size={18} color={isFirstGroup ? colors.textMuted + '40' : cfg.color} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => moveGroup(typeId, 1)} style={{ padding: 6 }} disabled={isLastGroup}>
+                  <Feather name="chevrons-down" size={18} color={isLastGroup ? colors.textMuted + '40' : cfg.color} />
+                </TouchableOpacity>
               </View>
               <View style={{ marginHorizontal: 20, gap: 6 }}>
                 {accs.map((acc, idx) => {
