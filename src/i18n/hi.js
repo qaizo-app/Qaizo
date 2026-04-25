@@ -599,10 +599,10 @@ export default {
   // Smart Input
   smartInput: 'स्मार्ट इनपुट',
   smartInputHint: 'प्राकृतिक भाषा में अपने खर्च या आय का वर्णन करें',
-  smartInputPlaceholder: 'उदा. सुपरमार्केट 800 रुपये...',
+  smartInputPlaceholder: 'उदा. सुपरमार्केट 800...',
   smartExample1: 'सुपरमार्केट 450',
   smartExample2: 'वेतन मिला 12000',
-  smartExample3: 'टैक्सी 35 रुपये',
+  smartExample3: 'टैक्सी 35',
   examples: 'उदाहरण',
   confirm: 'पुष्टि करें',
 

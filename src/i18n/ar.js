@@ -599,10 +599,10 @@ export default {
   // Smart Input
   smartInput: 'إدخال ذكي',
   smartInputHint: 'صف مصروفك أو دخلك بلغة طبيعية',
-  smartInputPlaceholder: 'مثال: سوبرماركت 800 شيكل...',
+  smartInputPlaceholder: 'مثال: سوبرماركت 800...',
   smartExample1: 'سوبرماركت 450',
   smartExample2: 'استلمت راتب 12000',
-  smartExample3: 'تاكسي 35 شيكل',
+  smartExample3: 'تاكسي 35',
   examples: 'أمثلة',
   confirm: 'تأكيد',
 

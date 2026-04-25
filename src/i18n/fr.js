@@ -599,10 +599,10 @@ export default {
   // Smart Input
   smartInput: 'Saisie intelligente',
   smartInputHint: 'Décrivez votre dépense ou revenu en langage naturel',
-  smartInputPlaceholder: 'ex. Supermarché 800 shekels...',
+  smartInputPlaceholder: 'ex. Supermarché 800...',
   smartExample1: 'Supermarché 450',
   smartExample2: 'Salaire reçu 12000',
-  smartExample3: 'Taxi 35 shekels',
+  smartExample3: 'Taxi 35',
   examples: 'Exemples',
   confirm: 'Confirmer',
 

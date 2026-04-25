@@ -607,10 +607,10 @@ export default {
   // Smart Input
   smartInput: 'Entrada Inteligente',
   smartInputHint: 'Describe tu gasto o ingreso en lenguaje natural',
-  smartInputPlaceholder: 'ej. Supermercado 800 pesos...',
+  smartInputPlaceholder: 'ej. Supermercado 800...',
   smartExample1: 'Supermercado 450',
   smartExample2: 'Salario recibido 12000',
-  smartExample3: 'Taxi 35 pesos',
+  smartExample3: 'Taxi 35',
   examples: 'Ejemplos',
   confirm: 'Confirmar',
 

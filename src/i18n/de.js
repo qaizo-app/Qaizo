@@ -599,10 +599,10 @@ export default {
   // Smart Input
   smartInput: 'Schnelleingabe',
   smartInputHint: 'Beschreibe deine Ausgabe oder Einnahme in natürlicher Sprache',
-  smartInputPlaceholder: 'z.B. Supermarkt 800 Schekel...',
+  smartInputPlaceholder: 'z.B. Supermarkt 800...',
   smartExample1: 'Supermarkt 450',
   smartExample2: 'Gehalt erhalten 12000',
-  smartExample3: 'Taxi 35 Schekel',
+  smartExample3: 'Taxi 35',
   examples: 'Beispiele',
   confirm: 'Bestätigen',
 

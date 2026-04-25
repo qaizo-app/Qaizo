@@ -603,10 +603,10 @@ export default {
   // קלט חכם
   smartInput: 'קלט חכם',
   smartInputHint: 'תאר את ההוצאה או ההכנסה במילים שלך',
-  smartInputPlaceholder: 'לדוגמה: סופרמרקט 800 שקל...',
+  smartInputPlaceholder: 'לדוגמה: סופרמרקט 800...',
   smartExample1: 'סופרמרקט 450',
   smartExample2: 'קיבלתי משכורת 12000',
-  smartExample3: 'מונית 35 שקל',
+  smartExample3: 'מונית 35',
   examples: 'דוגמאות',
   confirm: 'אישור',
 

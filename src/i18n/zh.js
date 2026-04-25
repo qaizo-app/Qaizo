@@ -600,10 +600,10 @@ export default {
   // Smart Input
   smartInput: '智能输入',
   smartInputHint: '用自然语言描述您的支出或收入',
-  smartInputPlaceholder: '例如：超市800谢克尔...',
+  smartInputPlaceholder: '例如：超市800...',
   smartExample1: '超市 450',
   smartExample2: '收到薪资 12000',
-  smartExample3: '出租车 35谢克尔',
+  smartExample3: '出租车 35',
   examples: '示例',
   confirm: '确认',
 

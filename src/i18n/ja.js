@@ -601,10 +601,10 @@ export default {
   // Smart Input
   smartInput: 'スマート入力',
   smartInputHint: '自然言語で支出や収入を説明してください',
-  smartInputPlaceholder: '例：スーパーマーケット 800円...',
+  smartInputPlaceholder: '例：スーパーマーケット 800...',
   smartExample1: 'スーパーマーケット 450',
   smartExample2: '給与受取 12000',
-  smartExample3: 'タクシー 35円',
+  smartExample3: 'タクシー 35',
   examples: '例',
   confirm: '確認',
 
