@@ -335,8 +335,8 @@ export default function ShoppingListScreen() {
 
       {/* Add item modal */}
       <Modal visible={showAddItem} transparent animationType="fade" onRequestClose={() => setShowAddItem(false)}>
-        <KeyboardAvoidingView style={st.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <TouchableOpacity style={st.modalOverlay} activeOpacity={1} onPress={() => setShowAddItem(false)}>
+        <KeyboardAvoidingView style={[st.modalOverlay, { width: '100%' }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <TouchableOpacity style={[st.modalOverlay, { width: '100%' }]} activeOpacity={1} onPress={() => setShowAddItem(false)}>
             <TouchableOpacity style={st.modalCard} activeOpacity={1} onPress={() => {}}>
               <Text style={st.modalTitle}>{i18n.t('addItem')}</Text>
 
@@ -393,7 +393,7 @@ export default function ShoppingListScreen() {
                 <TouchableOpacity style={st.modalCancelBtn} onPress={() => setShowAddItem(false)}>
                   <Text style={st.modalCancelText}>{i18n.t('cancel')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[st.modalBtn, { flex: 2 }, !newItemName.trim() && { opacity: 0.4 }]} onPress={addManualItem} disabled={!newItemName.trim()}>
+                <TouchableOpacity style={[st.modalBtn, { flex: 1 }, !newItemName.trim() && { opacity: 0.4 }]} onPress={addManualItem} disabled={!newItemName.trim()}>
                   <Feather name="plus" size={18} color={colors.bg} />
                   <Text style={st.modalBtnText}>{i18n.t('add')}</Text>
                 </TouchableOpacity>
@@ -445,7 +445,12 @@ const createSt = () => StyleSheet.create({
   fab: { position: 'absolute', bottom: 100, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: colors.green, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
 
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' },
-  modalCard: { backgroundColor: colors.card, borderRadius: 20, padding: 24, width: '90%', borderWidth: 1, borderColor: colors.cardBorder },
+  // Width 92% of the parent stays hugging the screen edges; maxWidth caps
+  // it on tablets / large phones so the dialog doesn't sprawl. The inner
+  // overlay TouchableOpacity above sets width: '100%' so the percentage
+  // here resolves against the full screen width instead of collapsing to
+  // intrinsic size under alignItems:'center' on Android.
+  modalCard: { backgroundColor: colors.card, borderRadius: 20, padding: 24, width: '92%', maxWidth: 500, borderWidth: 1, borderColor: colors.cardBorder },
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '800', marginBottom: 20, textAlign: i18n.textAlign() },
   modalInput: { backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontSize: 15, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 12, textAlign: i18n.textAlign() },
   fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 4, textAlign: i18n.textAlign() },
