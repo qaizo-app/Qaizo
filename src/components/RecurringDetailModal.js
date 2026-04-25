@@ -11,6 +11,7 @@ import { getCachedGroups } from './CategoryIcon';
 import { getCatIcon, getCatName } from './CategoryPickerModal';
 import SwipeModal from './SwipeModal';
 import { matchHistory, summarizeHistory } from '../utils/recurringHistory';
+import { catName } from '../utils/categoryName';
 
 export default function RecurringDetailModal({ visible, item, onClose, onConfirm, onSkip, onDelete, onEdit }) {
   const [history, setHistory] = useState([]);
@@ -83,8 +84,8 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
               <Feather name={cfg.icon || 'repeat'} size={24} color={cfg.color} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.title}>{item.recipient || item.categoryName || getCatName(item.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
-              <Text style={st.subtitle}>{item.categoryName || getCatName(item.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
+              <Text style={st.title}>{item.recipient || catName(item.categoryId, item.categoryName)}</Text>
+              <Text style={st.subtitle}>{catName(item.categoryId, item.categoryName)}</Text>
             </View>
             <Amount value={item.type === 'expense' ? -item.amount : item.amount} sign style={st.amount} color={item.type === 'expense' ? colors.red : colors.green} />
           </View>

@@ -280,7 +280,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         perspectiveAccountId={account.id} />
 
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || getCatName(deleteTarget.categoryId, getCachedGroups(), i18n.getLanguage())} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={()=>setDeleteTarget(null)} />
     </GestureHandlerRootView>

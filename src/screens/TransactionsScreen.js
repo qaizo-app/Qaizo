@@ -19,6 +19,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { catName } from '../utils/categoryName';
 
 export default function TransactionsScreen({ route }) {
   const [transactions, setTransactions] = useState([]);
@@ -90,15 +91,13 @@ export default function TransactionsScreen({ route }) {
     // Поиск
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      const groups = getCachedGroups();
-      const lang = i18n.getLanguage();
       f = f.filter(t => {
-        const catName = (t.categoryName || getCatName(t.categoryId, groups, lang) || '').toLowerCase();
+        const catLabel = (catName(t.categoryId, t.categoryName) || '').toLowerCase();
         const recipient = (t.recipient || '').toLowerCase();
         const note = (t.note || '').toLowerCase();
         const amount = String(t.amount);
         const tags = (t.tags || []).join(' ').toLowerCase();
-        return catName.includes(q) || recipient.includes(q) || note.includes(q) || amount.includes(q) || tags.includes(q);
+        return catLabel.includes(q) || recipient.includes(q) || note.includes(q) || amount.includes(q) || tags.includes(q);
       });
     }
 
@@ -435,7 +434,7 @@ export default function TransactionsScreen({ route }) {
       <ConfirmModal
         visible={!!deleteTarget}
         title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || getCatName(deleteTarget.categoryId, getCachedGroups(), i18n.getLanguage())} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)}
       />

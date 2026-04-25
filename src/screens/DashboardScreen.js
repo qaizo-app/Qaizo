@@ -549,7 +549,7 @@ export default function DashboardScreen() {
 
       <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
-        message={deleteTarget ? `${deleteTarget.categoryName || catNameMap[deleteTarget.categoryId] || catName(deleteTarget.categoryId)} — ${deleteTarget.amount} ${sym()}` : ''}
+        message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
       <ConfirmModal visible={deleteTemplate !== null} title={i18n.t('delete')}

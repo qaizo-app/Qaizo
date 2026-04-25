@@ -9,6 +9,7 @@ import { colors } from '../theme/colors';
 import Amount from './Amount';
 import { getCatName } from './CategoryPickerModal';
 import CategoryIcon, { getCachedGroups } from './CategoryIcon';
+import { catName } from '../utils/categoryName';
 
 
 export default function TransactionItem({ transaction, onDelete, onEdit, onDuplicate, runningBalance, currency }) {
@@ -54,7 +55,7 @@ export default function TransactionItem({ transaction, onDelete, onEdit, onDupli
       <View style={styles.container}>
         <CategoryIcon categoryId={transaction.categoryId} size="medium" />
         <View style={styles.info}>
-          <Text style={styles.category} numberOfLines={1}>{transaction.categoryName || getCatName(transaction.categoryId, getCachedGroups(), i18n.getLanguage())}</Text>
+          <Text style={styles.category} numberOfLines={1}>{catName(transaction.categoryId, transaction.categoryName)}</Text>
           <Text style={styles.note} numberOfLines={1}>
             {isMergedTransfer ? `${transaction._fromAccountName} → ${transaction._toAccountName}` : (transaction.note || '')}
           </Text>

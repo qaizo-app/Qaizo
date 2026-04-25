@@ -26,9 +26,17 @@ function resolveFromGroups(id, lang) {
 }
 
 export function catName(id, storedName) {
-  if (storedName) return storedName;
-  if (!id) return '';
+  if (!id) return storedName || '';
+  // 1. Built-in i18n key wins — this is the current UI language, so
+  //    switching language re-renders old transactions in the new locale.
   const translated = i18n.t(id);
   if (translated !== id) return translated;
-  return resolveFromGroups(id, i18n.getLanguage()) || id;
+  // 2. Custom category in the user's saved groups: pick the entry for
+  //    the current language (or any available fallback inside the entry).
+  const fromGroups = resolveFromGroups(id, i18n.getLanguage());
+  if (fromGroups) return fromGroups;
+  // 3. Snapshot from save time. Used to render rows for ids that are no
+  //    longer in i18n or in the user's groups (e.g. category deleted).
+  if (storedName) return storedName;
+  return id;
 }
