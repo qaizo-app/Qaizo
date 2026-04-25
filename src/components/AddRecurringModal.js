@@ -447,9 +447,11 @@ const createSt = () => StyleSheet.create({
   typeRow: { flexDirection: i18n.row(), marginBottom: 16, backgroundColor: colors.card, borderRadius: 14, padding: 4 },
   typeBtn: { flex: 1, paddingVertical: 12, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   typeTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
-  amtRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 16, gap: 12 },
+  // alignItems: 'baseline' + intrinsic-width input keeps the currency
+  // symbol glued to the typed number instead of floating to the far edge.
+  amtRow: { flexDirection: i18n.row(), alignItems: 'baseline', marginBottom: 16, gap: 8 },
   cur: { fontSize: 32, fontWeight: '800' },
-  amtIn: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 },
+  amtIn: { minWidth: 50, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1, padding: 0 },
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8, marginTop: 4, textAlign: i18n.textAlign() },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 12, fontWeight: '500', marginStart: 6, maxWidth: 90 },
