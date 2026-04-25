@@ -26,6 +26,8 @@ export default {
   totalPaid: 'Total payé',
   avgPayment: 'Moyenne',
   since: 'Depuis',
+  addCategory: '+ Ajouter',
+  newCategory: 'Nouvelle catégorie',
   dashboard: 'Accueil',
   transactions: 'Transactions',
   accounts: 'Comptes',

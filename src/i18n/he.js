@@ -26,6 +26,8 @@ export default {
   totalPaid: 'סך שולם',
   avgPayment: 'ממוצע',
   since: 'מאז',
+  addCategory: '+ הוסף',
+  newCategory: 'קטגוריה חדשה',
   dashboard: 'ראשי',
   transactions: 'תנועות',
   accounts: 'חשבונות',

@@ -66,7 +66,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     } else {
       setType('expense');
       setAmount('');
-      setCategoryId('rent');
+      setCategoryId('food');
       setRecipient('');
       setNote('');
       setSelAcc('');
@@ -243,7 +243,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
                   onPress={() => {
                     setType(t);
                     if (t === 'income') setCategoryId('salary_me');
-                    else if (t === 'expense') setCategoryId('rent');
+                    else if (t === 'expense') setCategoryId('food');
                     else setCategoryId('transfer');
                   }}>
                   <Text style={[st.typeTxt, a && { color: colors.text }]}>{label}</Text>

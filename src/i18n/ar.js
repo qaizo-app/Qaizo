@@ -26,6 +26,8 @@ export default {
   totalPaid: 'إجمالي المدفوع',
   avgPayment: 'المتوسط',
   since: 'منذ',
+  addCategory: '+ إضافة',
+  newCategory: 'فئة جديدة',
   dashboard: 'الرئيسية',
   transactions: 'المعاملات',
   accounts: 'الحسابات',

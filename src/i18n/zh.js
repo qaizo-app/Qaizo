@@ -26,6 +26,8 @@ export default {
   totalPaid: '总支付',
   avgPayment: '平均',
   since: '从',
+  addCategory: '+ 添加',
+  newCategory: '新类别',
   dashboard: '首页',
   transactions: '交易',
   accounts: '账户',

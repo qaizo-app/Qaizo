@@ -26,6 +26,8 @@ export default {
   totalPaid: '合計支払額',
   avgPayment: '平均',
   since: 'から',
+  addCategory: '+ 追加',
+  newCategory: '新しいカテゴリ',
   dashboard: 'ホーム',
   transactions: '取引',
   accounts: '口座',

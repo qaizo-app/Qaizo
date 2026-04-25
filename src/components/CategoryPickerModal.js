@@ -121,12 +121,17 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
   const [groups, setGroups] = useState([]);
   const [topCats, setTopCats] = useState([]);
   const [search, setSearch] = useState('');
+  // groupId currently in inline-create mode; null when no group is creating.
+  const [creatingGroup, setCreatingGroup] = useState(null);
+  const [newName, setNewName] = useState('');
   const lang = i18n.getLanguage();
   const st = createSt();
 
   useEffect(() => {
     if (!visible) return;
     setSearch('');
+    setCreatingGroup(null);
+    setNewName('');
     Promise.all([dataService.getCategories(), dataService.getTransactions()]).then(([saved, txs]) => {
       const g = saved && saved.length > 0 ? saved : DEFAULT_GROUPS;
       setGroups(g);
@@ -173,6 +178,27 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
   const handleSelect = (catId) => {
     onSelect(catId);
     onClose();
+  };
+
+  // Inline create — appends a new sub to the chosen group, persists,
+  // and immediately selects the freshly-created category so the user
+  // doesn't have to dig back through the picker tree.
+  const handleCreateSub = async (groupId) => {
+    const name = newName.trim();
+    if (!name) return;
+    const id = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString(36).slice(-4);
+    const baseGroups = groups.length > 0 ? groups : DEFAULT_GROUPS;
+    const next = baseGroups.map(g => {
+      if (g.id !== groupId) return g;
+      const subs = Array.isArray(g.subs) ? g.subs.slice() : [];
+      subs.push({ id, name: { [lang]: name }, icon: 'tag' });
+      return { ...g, subs };
+    });
+    setGroups(next);
+    try { await dataService.saveCategories(next); } catch (e) {}
+    setCreatingGroup(null);
+    setNewName('');
+    handleSelect(id);
   };
 
   const renderCatButton = (catId, size = 'normal') => {
@@ -255,6 +281,41 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
                     </TouchableOpacity>
                   );
                 })}
+
+                {creatingGroup === g.id ? (
+                  <View style={st.listRow}>
+                    <View style={[st.listIcon, { backgroundColor: g.color + '18' }]}>
+                      <Feather name="tag" size={18} color={g.color} />
+                    </View>
+                    <TextInput
+                      style={[st.listName, { flex: 1, padding: 0 }]}
+                      value={newName}
+                      onChangeText={setNewName}
+                      placeholder={i18n.t('newCategory') || 'New category'}
+                      placeholderTextColor={colors.textMuted}
+                      autoFocus
+                      returnKeyType="done"
+                      onSubmitEditing={() => handleCreateSub(g.id)}
+                    />
+                    <TouchableOpacity onPress={() => handleCreateSub(g.id)} style={{ padding: 6 }}>
+                      <Feather name="check" size={18} color={colors.green} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setCreatingGroup(null); setNewName(''); }} style={{ padding: 6 }}>
+                      <Feather name="x" size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={[st.listRow, { borderBottomWidth: 0 }]}
+                    onPress={() => { setCreatingGroup(g.id); setNewName(''); }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[st.listIcon, { backgroundColor: g.color + '10', borderWidth: 1, borderColor: g.color + '40', borderStyle: 'dashed' }]}>
+                      <Feather name="plus" size={18} color={g.color} />
+                    </View>
+                    <Text style={[st.listName, { color: g.color }]}>{i18n.t('addCategory') || '+ Add'}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
           </ScrollView>

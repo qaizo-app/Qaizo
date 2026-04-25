@@ -26,6 +26,8 @@ export default {
   totalPaid: 'Total pago',
   avgPayment: 'Média',
   since: 'Desde',
+  addCategory: '+ Adicionar',
+  newCategory: 'Nova categoria',
   dashboard: 'Início',
   transactions: 'Transações',
   accounts: 'Contas',

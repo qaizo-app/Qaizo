@@ -26,6 +26,8 @@ export default {
   totalPaid: 'Всего оплачено',
   avgPayment: 'В среднем',
   since: 'С',
+  addCategory: '+ Добавить',
+  newCategory: 'Новая категория',
   // Tabs
   dashboard: 'Главная',
   transactions: 'Транзакции',

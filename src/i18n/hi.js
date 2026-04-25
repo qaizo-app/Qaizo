@@ -26,6 +26,8 @@ export default {
   totalPaid: 'कुल भुगतान',
   avgPayment: 'औसत',
   since: 'से',
+  addCategory: '+ जोड़ें',
+  newCategory: 'नई श्रेणी',
   dashboard: 'होम',
   transactions: 'लेनदेन',
   accounts: 'खाते',
