@@ -7,7 +7,7 @@ export default {
   shareAppMessage: 'אני מנהל את הכספים עם Qaizo — פשוט, פרטי וחכם. נסה גם:',
   rateApp: 'דרג את Qaizo',
   rateTitle: 'נהנה מ-Qaizo?',
-  rateSubtitle: 'לחץ על כוכב — זה לוקח שנייה ועוזר לנו מאוד.',
+  rateSubtitle: 'דרג את Qaizo — זה לוקח שנייה ועוזר לנו מאוד.',
   rateFeedbackTitle: 'עזור לנו להשתפר',
   rateFeedbackSubtitle: 'מה הפריע? אנחנו קוראים כל הודעה.',
   rateFeedbackPlaceholder: 'ספר לנו עוד (לא חובה)',

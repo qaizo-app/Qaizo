@@ -7,7 +7,7 @@ export default {
   shareAppMessage: 'أتابع أموالي مع Qaizo — بسيط، خاص، وذكي. جرّبه:',
   rateApp: 'قيّم Qaizo',
   rateTitle: 'هل تستمتع بـ Qaizo؟',
-  rateSubtitle: 'اضغط على نجمة — تستغرق ثانية وتساعدنا كثيرًا.',
+  rateSubtitle: 'قيّم Qaizo — تستغرق ثانية وتساعدنا كثيرًا.',
   rateFeedbackTitle: 'ساعدنا على التحسّن',
   rateFeedbackSubtitle: 'ما الذي أزعجك؟ نقرأ كل رسالة.',
   rateFeedbackPlaceholder: 'أخبرنا المزيد (اختياري)',

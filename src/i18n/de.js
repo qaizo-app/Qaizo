@@ -7,7 +7,7 @@ export default {
   shareAppMessage: 'Ich verwalte meine Finanzen mit Qaizo — einfach, privat und smart. Probier es aus:',
   rateApp: 'Qaizo bewerten',
   rateTitle: 'Gefällt dir Qaizo?',
-  rateSubtitle: 'Tippe auf einen Stern — dauert eine Sekunde und hilft uns sehr.',
+  rateSubtitle: 'Bewerte Qaizo — dauert eine Sekunde und hilft uns sehr.',
   rateFeedbackTitle: 'Hilf uns, besser zu werden',
   rateFeedbackSubtitle: 'Was hat gestört? Wir lesen jede Nachricht.',
   rateFeedbackPlaceholder: 'Erzähl uns mehr (optional)',

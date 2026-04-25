@@ -7,7 +7,7 @@ export default {
   shareAppMessage: "I'm tracking my money with Qaizo — simple, private, and smart. Give it a try:",
   rateApp: 'Rate Qaizo',
   rateTitle: 'Enjoying Qaizo?',
-  rateSubtitle: 'Tap a star — it takes a second and really helps.',
+  rateSubtitle: 'Rate Qaizo — it takes a second and really helps.',
   rateFeedbackTitle: 'Help us improve',
   rateFeedbackSubtitle: 'What got in your way? We read every note.',
   rateFeedbackPlaceholder: 'Tell us more (optional)',

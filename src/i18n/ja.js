@@ -7,7 +7,7 @@ export default {
   shareAppMessage: 'Qaizoで家計を管理しています — シンプルでプライベート、スマートです。試してみてください：',
   rateApp: 'Qaizoを評価',
   rateTitle: 'Qaizoはお気に入りですか？',
-  rateSubtitle: '星を選んでください — 一瞬で終わり、とても助かります。',
+  rateSubtitle: 'Qaizoを評価してください — 一瞬で終わり、とても助かります。',
   rateFeedbackTitle: '改善にご協力ください',
   rateFeedbackSubtitle: '何が問題でしたか？すべてのメッセージを読みます。',
   rateFeedbackPlaceholder: '詳しく教えてください（任意）',

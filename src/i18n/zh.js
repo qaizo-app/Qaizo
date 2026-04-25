@@ -7,7 +7,7 @@ export default {
   shareAppMessage: '我用 Qaizo 管理财务——简单、私密、智能。来试试：',
   rateApp: '给 Qaizo 评分',
   rateTitle: '喜欢 Qaizo 吗？',
-  rateSubtitle: '点一颗星——只需一秒，对我们帮助很大。',
+  rateSubtitle: '给 Qaizo 评分——只需一秒，对我们帮助很大。',
   rateFeedbackTitle: '帮助我们改进',
   rateFeedbackSubtitle: '哪里不好用？每条反馈我们都会看。',
   rateFeedbackPlaceholder: '告诉我们更多（可选）',
