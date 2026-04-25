@@ -1,6 +1,7 @@
 // src/components/RecurringBlock.js
 // Блок ближайших регулярных платежей со swipe actions
 import { Feather } from '@expo/vector-icons';
+import { useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Amount from './Amount';
@@ -28,6 +29,22 @@ export default function RecurringBlock({
   onShowAll,
 }) {
   const accName = (id) => accounts.find(a => a.id === id)?.name || '';
+  // Coordinate Swipeables — when one row opens, close the previously open
+  // one. Without this, edit/delete actions stay revealed under the row
+  // even after swiping back, and bleed visibly into the next row when
+  // the user swipes there.
+  const swipeRefs = useRef({});
+  const openRef = useRef(null);
+  const handleSwipeOpen = (id) => {
+    const next = swipeRefs.current[id];
+    if (openRef.current && openRef.current !== next) {
+      openRef.current.close?.();
+    }
+    openRef.current = next;
+  };
+  const handleSwipeClose = (id) => {
+    if (openRef.current === swipeRefs.current[id]) openRef.current = null;
+  };
   if (recurring.length === 0) return null;
   const preview = upcoming.slice(0, UPCOMING_PREVIEW);
   const hasMore = upcoming.length > UPCOMING_PREVIEW;
@@ -75,7 +92,17 @@ export default function RecurringBlock({
               </View>
             );
             return (
-              <Swipeable key={rec.id} renderRightActions={renderRecSwipeActions} renderLeftActions={renderRecSwipeActions} overshootRight={false} overshootLeft={false}>
+              <Swipeable
+                key={rec.id}
+                ref={(r) => { swipeRefs.current[rec.id] = r; }}
+                onSwipeableWillOpen={() => handleSwipeOpen(rec.id)}
+                onSwipeableClose={() => handleSwipeClose(rec.id)}
+                renderRightActions={renderRecSwipeActions}
+                renderLeftActions={renderRecSwipeActions}
+                overshootRight={false}
+                overshootLeft={false}
+                containerStyle={{ overflow: 'hidden' }}
+              >
                 <TouchableOpacity style={st.recRow} onPress={() => onDetail(rec)} activeOpacity={0.6}>
                   <View style={[st.recIcon, { backgroundColor: cfg.color + '20' }]}>
                     <Feather name={cfg.icon || 'repeat'} size={18} color={cfg.color} />
