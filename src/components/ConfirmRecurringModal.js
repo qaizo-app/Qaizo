@@ -184,7 +184,7 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
               <>
                 <Text style={st.label}>{i18n.t('from')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                  {accounts.filter(a => ['cash', 'bank', 'credit'].includes(a.type)).map(acc => {
+                  {accounts.filter(a => ['cash', 'bank', 'credit', 'investment', 'crypto', 'asset'].includes(a.type)).map(acc => {
                     const sl = selAcc === acc.id;
                     return (
                       <TouchableOpacity key={acc.id}
@@ -216,7 +216,7 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
                 <Text style={st.label}>{i18n.t('account')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
                   {accounts
-                    .filter(acc => item.type === 'income' ? ['cash', 'bank'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type))
+                    .filter(acc => item.type === 'income' ? ['cash', 'bank', 'investment', 'crypto', 'asset'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type))
                     .map(acc => {
                       const sl = selAcc === acc.id;
                       return (

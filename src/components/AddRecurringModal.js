@@ -264,7 +264,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               {/* Откуда */}
               <Text style={st.label}>{i18n.t('from')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
+                {accounts.filter(acc => ['cash', 'bank', 'credit', 'investment', 'crypto', 'asset'].includes(acc.type)).map(acc => {
                   const sl = selAcc === acc.id;
                   return (
                     <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
@@ -296,7 +296,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               {/* Счёт */}
               <Text style={st.label}>{i18n.t('account')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(acc => type === 'income' ? ['cash', 'bank'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
+                {accounts.filter(acc => type === 'income' ? ['cash', 'bank', 'investment', 'crypto', 'asset'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
                   const sl = selAcc === acc.id;
                   return (
                     <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
