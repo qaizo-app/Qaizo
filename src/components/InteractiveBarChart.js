@@ -52,7 +52,7 @@ export default function InteractiveBarChart({ data, maxBar, onBarActivate }) {
                   height: animValues[idx].interpolate({ inputRange: [0, 1], outputRange: [2, expH] }),
                 }]} />
               </View>
-              <Text style={st.barLabel}>{d.month}</Text>
+              <Text style={st.barLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{d.month}</Text>
             </TouchableOpacity>
           );
         })}

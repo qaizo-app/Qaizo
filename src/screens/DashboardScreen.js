@@ -296,7 +296,9 @@ export default function DashboardScreen() {
       });
       const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      _barData.push({ month: (fullMonths[lang] || fullMonths.en)[m.getMonth()], monthIndex: m.getMonth(), year: m.getFullYear(), income: inc, expense: exp });
+      // Short 3-letter month form so long names ("November", "Сентябрь")
+      // don't wrap to two lines in the narrow chart column.
+      _barData.push({ month: (monthNames[lang] || monthNames.en)[m.getMonth()], monthIndex: m.getMonth(), year: m.getFullYear(), income: inc, expense: exp });
     }
     const _maxBar = Math.max(..._barData.map(d => Math.max(d.income, d.expense)), 1);
 
