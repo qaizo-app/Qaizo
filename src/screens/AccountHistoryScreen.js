@@ -118,14 +118,20 @@ export default function AccountHistoryScreen({ route, navigation }) {
     return result;
   })();
 
-  const renderItem = ({ item }) => (
-    <TransactionItem transaction={item}
-      runningBalance={item.runningBalance}
-      currency={account.currency}
-      onDelete={(t) => setDeleteTarget(t)}
-      onEdit={(t) => setEditTx(t)}
-      onDuplicate={handleDuplicate} />
-  );
+  const renderItem = ({ item, index }) => {
+    const isFirst = index === 0;
+    const isLast = index === withBalance.length - 1;
+    return (
+      <View style={[styles.txWrap, isFirst && styles.txWrapFirst, isLast && styles.txWrapLast]}>
+        <TransactionItem transaction={item}
+          runningBalance={item.runningBalance}
+          currency={account.currency}
+          onDelete={(t) => setDeleteTarget(t)}
+          onEdit={(t) => setEditTx(t)}
+          onDuplicate={handleDuplicate} />
+      </View>
+    );
+  };
 
   const UPCOMING_PREVIEW = 5;
   const upcomingPreview = upcomingRecurring.slice(0, UPCOMING_PREVIEW);
@@ -267,6 +273,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={48} color={colors.textMuted} /><Text style={styles.emptyText}>{i18n.t('noTransactions')}</Text></View>} />
 
+
       <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
 
@@ -318,7 +325,10 @@ const createStyles = () => StyleSheet.create({
   countText:{color:colors.text,fontSize:16,fontWeight:'700'},
   countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
   countNum:{color:colors.textDim,fontSize:14,fontWeight:'700'},
-  list:{paddingHorizontal:20,paddingBottom:120},
+  list:{paddingBottom:120},
+  txWrap:{marginHorizontal:20,backgroundColor:colors.card,borderLeftWidth:1,borderRightWidth:1,borderColor:colors.cardBorder},
+  txWrapFirst:{borderTopWidth:1,borderTopLeftRadius:20,borderTopRightRadius:20,paddingTop:6},
+  txWrapLast:{borderBottomWidth:1,borderBottomLeftRadius:20,borderBottomRightRadius:20,paddingBottom:6,marginBottom:8},
   balLine:{paddingStart:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
   runBal:{fontSize:12,fontWeight:'500'},
   empty:{alignItems:'center',paddingVertical:50},
