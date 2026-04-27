@@ -3,23 +3,21 @@
 // the merged AndroidManifest.xml so Google Play stops failing the release
 // with "AD_ID declared in console but missing from manifest".
 //
-// We tried listing the permission in app.json `android.permissions` first,
-// but Expo prebuild silently drops Google-namespace permissions there.
-// Touching the manifest directly is the only reliable path.
-const { withAndroidManifest } = require('@expo/config-plugins');
+// Earlier attempts:
+// 1) android.permissions in app.json — Expo prebuild dropped it (Google
+//    namespace not in the standard allowlist).
+// 2) Hand-written withAndroidManifest pushing to uses-permission — built
+//    fine but the permission was missing from the resulting AAB. The push
+//    was being clobbered by prebuild's permission consolidation pass.
+// Now using the canonical AndroidConfig.Permissions helper which Expo
+// itself uses internally and guarantees survives the consolidation.
+const { withAndroidManifest, AndroidConfig } = require('@expo/config-plugins');
 
 const AD_ID = 'com.google.android.gms.permission.AD_ID';
 
 function withAdIdPermission(config) {
   return withAndroidManifest(config, (config) => {
-    const manifest = config.modResults.manifest;
-    if (!manifest['uses-permission']) manifest['uses-permission'] = [];
-    const already = manifest['uses-permission'].some(
-      (p) => p.$ && p.$['android:name'] === AD_ID
-    );
-    if (!already) {
-      manifest['uses-permission'].push({ $: { 'android:name': AD_ID } });
-    }
+    AndroidConfig.Permissions.ensurePermission(config.modResults, AD_ID);
     return config;
   });
 }
