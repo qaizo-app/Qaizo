@@ -12,6 +12,7 @@ import IconGrid from '../components/IconGrid';
 import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
+import { breadcrumb, captureError, captureMessage } from '../services/logger';
 import { colors } from '../theme/colors';
 
 // Icons prefixed with 'ion:' use Ionicons outline, others use Feather
@@ -148,9 +149,24 @@ export default function CategoriesScreen() {
   const [groups, setGroups] = useState([]);
 
   useFocusEffect(useCallback(() => {
-    dataService.getCategories().then(saved => {
-      setGroups(saved && saved.length > 0 ? saved : DEFAULT_GROUPS);
-    });
+    // Capture diagnostic info — testers reported the screen rendering empty
+    // after creating an inline category, restored only by app restart. The
+    // breadcrumbs below let Sentry pinpoint whether saved was missing, an
+    // empty array, the legacy {income,expense} object, or something else.
+    dataService.getCategories()
+      .then(saved => {
+        const shape = Array.isArray(saved) ? `array(len=${saved.length})` : (saved && typeof saved) || 'null';
+        breadcrumb('categories.load', 'getCategories resolved', { shape });
+        const next = saved && saved.length > 0 ? saved : DEFAULT_GROUPS;
+        if (!next || next.length === 0) {
+          captureMessage('CategoriesScreen rendered empty groups', 'warning', { shape });
+        }
+        setGroups(next);
+      })
+      .catch(err => {
+        captureError(err, { where: 'CategoriesScreen.getCategories' });
+        setGroups(DEFAULT_GROUPS);
+      });
   }, []));
 
   const persistGroups = (newGroups) => {

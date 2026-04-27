@@ -12,6 +12,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import cryptoService from '../services/cryptoService';
 import exchangeRateService from '../services/exchangeRateService';
+import { breadcrumb, captureError, captureMessage } from '../services/logger';
 import { accountTypeConfig, colors } from '../theme/colors';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import { CURRENCIES, sym, code, convert } from '../utils/currency';
@@ -56,9 +57,22 @@ export default function AccountsScreen() {
   const styles = createStyles();
 
   const loadData = async (force = false) => {
-    const [accs, rec] = await Promise.all([dataService.getAccounts(), dataService.getRecurring()]);
-    setAccounts(accs);
-    setRecurring(rec);
+    let accs, rec;
+    try {
+      [accs, rec] = await Promise.all([dataService.getAccounts(), dataService.getRecurring()]);
+    } catch (err) {
+      captureError(err, { where: 'AccountsScreen.loadData' });
+      return;
+    }
+    breadcrumb('accounts.load', 'fetched', { accs: accs?.length ?? 'nil', rec: rec?.length ?? 'nil' });
+    // Tester report: account list went blank after creating a category and
+    // only an app restart restored it. Capture so we can see in Sentry what
+    // came back when it next happens.
+    if (!Array.isArray(accs) || accs.length === 0) {
+      captureMessage('AccountsScreen received empty accounts', 'warning', { accs: accs?.length ?? 'nil' });
+    }
+    setAccounts(accs || []);
+    setRecurring(rec || []);
     // Group crypto accounts by currency so each batch of prices is denominated
     // in the account's chosen currency (not global).
     const byCurrency = {}; // { USD: Set('BTC','ETH'), ILS: Set('SOL'), ... }

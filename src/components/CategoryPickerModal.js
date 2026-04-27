@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import { setCachedGroups } from '../utils/categoryCache';
+import { captureError } from '../services/logger';
 import SwipeModal from './SwipeModal';
 
 // Curated icon set for inline category creation. Feather names only — keeps
@@ -235,7 +236,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
     try {
       await dataService.saveCategories(next);
     } catch (e) {
-      if (__DEV__) console.error('saveCategories failed:', e);
+      captureError(e, { where: 'CategoryPickerModal.handleCreateSub.saveCategories', groupId, baseLen: baseGroups.length });
     }
     setCreatingGroup(null);
     setNewName('');
