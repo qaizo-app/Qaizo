@@ -42,6 +42,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [periodKey, setPeriodKey] = useState('3m');
   const [confirmRec, setConfirmRec] = useState(null);
+  const [loaded, setLoaded] = useState(false);
   const lang = i18n.getLanguage();
 
   const styles = createStyles();
@@ -49,7 +50,14 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const cfg = accountTypeConfig[account.type] || accountTypeConfig.bank;
 
   const loadData = async () => {
-    const all = await dataService.getTransactions();
+    // Fetch everything in parallel and apply state updates as a single batch
+    // — sequential awaits caused 3 separate render passes per loadData call,
+    // visible as a flash both on screen-mount and after confirm/skip.
+    const [all, accs, rec] = await Promise.all([
+      dataService.getTransactions(),
+      dataService.getAccounts(),
+      dataService.getRecurring(),
+    ]);
 
     // Build transferPairId → pair map using ALL transactions, so we can display
     // both "from → to" sides on the account screen regardless of which side the
@@ -74,16 +82,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
         if (!fromName || !toName) return tx;
         return { ...tx, note: `${fromName} → ${toName}` };
       });
-    setTransactions(filtered);
 
-    // Пересчитать баланс из транзакций
-    const accs = await dataService.getAccounts();
-    setAllAccounts(accs);
     const acc = accs.find(a => a.id === account.id);
-    if (acc) setCurrentBalance(acc.balance || 0);
 
-    // Предстоящие запланированные платежи на этот счёт (30 дней вперёд)
-    const rec = await dataService.getRecurring();
     const now = new Date();
     const horizon = new Date(now); horizon.setDate(horizon.getDate() + 30);
     const upcoming = rec
@@ -91,7 +92,13 @@ export default function AccountHistoryScreen({ route, navigation }) {
       .filter(r => r.account === account.id || (r.isTransfer && r.toAccount === account.id))
       .filter(r => new Date(r.nextDate) <= horizon)
       .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate));
+
+    // All sets in the same microtask — auto-batched into a single render.
+    setTransactions(filtered);
+    setAllAccounts(accs);
+    if (acc) setCurrentBalance(acc.balance || 0);
     setUpcomingRecurring(upcoming);
+    setLoaded(true);
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
@@ -238,9 +245,15 @@ export default function AccountHistoryScreen({ route, navigation }) {
   };
 
 
-  const ListHeader = () => (
-    <>
-      {chartData.length >= 2 ? (
+  // Holds the chart/balance card swap until first load completes — without
+  // this guard the screen mounts with empty transactions, briefly renders
+  // balCard, then swaps to chartCard once data arrives, which reads as a flash.
+  const renderChartOrBalance = () => {
+    if (!loaded) {
+      return <View style={styles.chartCardPlaceholder} />;
+    }
+    if (chartData.length >= 2) {
+      return (
         <View style={styles.chartCard}>
           <View style={styles.periodRow}>
             {PERIODS.map(p => {
@@ -259,22 +272,30 @@ export default function AccountHistoryScreen({ route, navigation }) {
             currency={account.currency}
             limitLabel={account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')} />
         </View>
-      ) : (
-        // Not enough data for a chart — still show current balance + limit
-        <View style={styles.balCard}>
-          <Text style={styles.balLabel}>{i18n.t('balance')}</Text>
-          <Amount value={currentBalance} sign style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
-          {account.overdraft > 0 && (
-            <Text style={styles.odText}>
-              {account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')}:{' '}
-              <Amount value={account.overdraft} style={styles.odText} currency={account.currency} />
-            </Text>
-          )}
-        </View>
-      )}
+      );
+    }
+    // Not enough data for a chart — still show current balance + limit
+    return (
+      <View style={styles.balCard}>
+        <Text style={styles.balLabel}>{i18n.t('balance')}</Text>
+        <Amount value={currentBalance} sign style={[styles.balAmount, { color: currentBalance >= 0 ? colors.text : colors.red }]} currency={account.currency} />
+        {account.overdraft > 0 && (
+          <Text style={styles.odText}>
+            {account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')}:{' '}
+            <Amount value={account.overdraft} style={styles.odText} currency={account.currency} />
+          </Text>
+        )}
+      </View>
+    );
+  };
+
+  const ListHeader = () => (
+    <>
+      {renderChartOrBalance()}
 
       {renderUpcomingBlock()}
 
+      {/* Card-top: header sits inside the same visual card as the rows below */}
       <View style={styles.countRow}>
         <Text style={styles.countText}>{i18n.t('transactions')}</Text>
         <View style={styles.countBadge}><Text style={styles.countNum}>{transactions.length}</Text></View>
@@ -361,13 +382,21 @@ const createStyles = () => StyleSheet.create({
   periodBtnActive:{borderColor:colors.green,backgroundColor:colors.greenSoft},
   periodTxt:{color:colors.textDim,fontSize:11,fontWeight:'700'},
   periodTxtActive:{color:colors.green},
-  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:20,marginBottom:8},
+  // Card-top header for the transactions section — keeps the "Транзакции"
+  // label inside the same visual card as the rows, matching the rule that
+  // group titles live inside their card (chart/upcoming already do this).
+  countRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginHorizontal:20,paddingHorizontal:16,paddingVertical:14,backgroundColor:colors.card,borderTopLeftRadius:20,borderTopRightRadius:20,borderTopWidth:1,borderLeftWidth:1,borderRightWidth:1,borderColor:colors.cardBorder,borderBottomWidth:1,borderBottomColor:colors.divider},
   countText:{color:colors.text,fontSize:16,fontWeight:'700'},
-  countBadge:{backgroundColor:colors.card,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
+  countBadge:{backgroundColor:colors.bg2,paddingHorizontal:12,paddingVertical:4,borderRadius:10,borderWidth:1,borderColor:colors.cardBorder},
   countNum:{color:colors.textDim,fontSize:14,fontWeight:'700'},
   list:{paddingBottom:120},
+  // Reserves chart card height so the screen doesn't reflow when the chart/
+  // balance card finally renders after the first loadData.
+  chartCardPlaceholder:{marginHorizontal:20,marginBottom:16,height:280},
   txWrap:{marginHorizontal:20,backgroundColor:colors.card,borderLeftWidth:1,borderRightWidth:1,borderColor:colors.cardBorder},
-  txWrapFirst:{borderTopWidth:1,borderTopLeftRadius:20,borderTopRightRadius:20,paddingTop:6},
+  // First row no longer rounds its top — countRow already provides the card-
+  // top corner. We only keep side bg/borders for visual continuity.
+  txWrapFirst:{paddingTop:6},
   txWrapLast:{borderBottomWidth:1,borderBottomLeftRadius:20,borderBottomRightRadius:20,paddingBottom:6,marginBottom:8},
   balLine:{paddingStart:58,paddingBottom:6,borderBottomWidth:1,borderBottomColor:colors.divider},
   runBal:{fontSize:12,fontWeight:'500'},
