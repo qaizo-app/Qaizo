@@ -14,11 +14,10 @@
     "scheme": "qaizo",
     "android": {
       "package": "com.qaizo.app",
-      "versionCode": 17,
+      "versionCode": 18,
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "com.google.android.gms.permission.AD_ID"
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "ios": {
@@ -55,6 +54,7 @@
       ],
       "react-native-edge-to-edge",
       "./plugins/withResizeableActivity",
+      "./plugins/withAdIdPermission",
       "@react-native-google-signin/google-signin",
       [
         "@sentry/react-native/expo",
