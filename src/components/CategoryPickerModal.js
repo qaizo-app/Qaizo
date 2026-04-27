@@ -6,6 +6,7 @@ import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, 
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
+import { setCachedGroups } from '../utils/categoryCache';
 import SwipeModal from './SwipeModal';
 
 // Curated icon set for inline category creation. Feather names only — keeps
@@ -188,8 +189,12 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
     ? allCats.filter(c => c.name.toLowerCase().includes(search.trim().toLowerCase()))
     : null;
 
-  const handleSelect = (catId) => {
-    onSelect(catId);
+  const handleSelect = (catId, latestGroups) => {
+    // Pass updated groups back when we just created the category — the
+    // caller (AddTransactionModal / AddRecurringModal) seeded its catGroups
+    // state when it opened, so without this it can't resolve the name and
+    // would render the raw id (e.g. "ремонт_yos3").
+    onSelect(catId, latestGroups);
     onClose();
   };
 
@@ -199,8 +204,24 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
   const handleCreateSub = async (groupId) => {
     const name = newName.trim();
     if (!name) return;
-    const id = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString(36).slice(-4);
-    const baseGroups = groups.length > 0 ? groups : DEFAULT_GROUPS;
+    // Pure-ASCII id so the document key never carries non-Latin chars even
+    // for Cyrillic / Hebrew / CJK names. Display name lives in `name`.
+    const id = 'cat_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+    // If local groups state hasn't loaded yet, re-read from storage instead
+    // of falling back to DEFAULT_GROUPS — saving DEFAULT_GROUPS would wipe
+    // any custom categories the user already had. This was the root cause of
+    // the "Categories screen empty after creating a category" report.
+    let baseGroups = groups;
+    if (!Array.isArray(baseGroups) || baseGroups.length === 0) {
+      try {
+        const saved = await dataService.getCategories();
+        baseGroups = (Array.isArray(saved) && saved.length > 0) ? saved : DEFAULT_GROUPS;
+      } catch (e) {
+        baseGroups = DEFAULT_GROUPS;
+      }
+    }
+
     const next = baseGroups.map(g => {
       if (g.id !== groupId) return g;
       const subs = Array.isArray(g.subs) ? g.subs.slice() : [];
@@ -208,11 +229,18 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
       return { ...g, subs };
     });
     setGroups(next);
-    try { await dataService.saveCategories(next); } catch (e) {}
+    // Update the module-level cache so CategoryIcon and any other consumer
+    // sees the new sub immediately, without waiting for its next refetch.
+    setCachedGroups(next);
+    try {
+      await dataService.saveCategories(next);
+    } catch (e) {
+      if (__DEV__) console.error('saveCategories failed:', e);
+    }
     setCreatingGroup(null);
     setNewName('');
     setNewIcon('tag');
-    handleSelect(id);
+    handleSelect(id, next);
   };
 
   const renderCatButton = (catId, size = 'normal') => {

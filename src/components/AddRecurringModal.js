@@ -430,7 +430,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
         </ScrollView>
       )}
     </SwipeModal>
-    <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
+    <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)}
+      onSelect={(catId, latestGroups) => { setCategoryId(catId); if (latestGroups) setCatGroups(latestGroups); }}
+      type={type} />
     </>
   );
 }

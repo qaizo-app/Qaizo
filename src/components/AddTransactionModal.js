@@ -446,8 +446,11 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         )}
       </SwipeModal>
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
-      <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)} onSelect={setCategoryId} type={type} />
-      <CategoryPickerModal visible={splitCatPicker !== null} onClose={() => setSplitCatPicker(null)} onSelect={(catId) => {
+      <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)}
+        onSelect={(catId, latestGroups) => { setCategoryId(catId); if (latestGroups) setCatGroups(latestGroups); }}
+        type={type} />
+      <CategoryPickerModal visible={splitCatPicker !== null} onClose={() => setSplitCatPicker(null)} onSelect={(catId, latestGroups) => {
+        if (latestGroups) setCatGroups(latestGroups);
         if (splitCatPicker !== null) {
           const updated = [...splitRows];
           updated[splitCatPicker] = { ...updated[splitCatPicker], categoryId: catId };
