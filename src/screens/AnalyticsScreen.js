@@ -210,7 +210,7 @@ export default function AnalyticsScreen() {
         text = text.replace(`{${k}}`, String(v));
       }
     }
-    return text;
+    return text.replace(/\{currency\}/g, sym());
   };
 
   const maxDay = Math.max(...dayData.map(d => d.avg), 1);

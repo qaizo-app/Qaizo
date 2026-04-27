@@ -602,8 +602,7 @@ export default function DashboardScreen() {
         visible={!!confirmRec}
         item={confirmRec}
         onClose={() => setConfirmRec(null)}
-        onConfirm={async (id, overrides) => { setConfirmRec(null); await handleConfirmRecurring(id, overrides); }}
-        onSkip={async (id, overrides) => { setConfirmRec(null); await handleSkipRecurring(id, overrides); }} />
+        onConfirm={async (id, overrides) => { setConfirmRec(null); await handleConfirmRecurring(id, overrides); }} />
 
       <UpcomingPaymentsModal
         visible={showAllUpcoming}

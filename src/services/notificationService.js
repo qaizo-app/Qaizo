@@ -39,13 +39,19 @@ const notificationService = {
         const nextDate = new Date(rec.nextDate + 'T09:00:00');
         const now = new Date();
 
+        // ‎ = LTR mark — locks "-50 ₪" so Hebrew/Arabic recipient names
+        // don't bidi-flip the sign and currency around the number.
+        const sign = rec.type === 'expense' ? '-' : '+';
+        const amountStr = `‎${sign}${rec.amount} ${sym()}`;
+        const name = rec.recipient || catName(rec.categoryId, rec.categoryName);
+
         // Уведомление в день платежа (9:00)
         if (nextDate > now) {
           const secondsUntil = Math.floor((nextDate.getTime() - now.getTime()) / 1000);
           await Notifications.scheduleNotificationAsync({
             content: {
               title: i18n.t('recurringPayment'),
-              body: `${rec.recipient || catName(rec.categoryId, rec.categoryName)} — ${rec.type === 'expense' ? '-' : '+'}${sym()}${rec.amount}`,
+              body: `${name} — ${amountStr}`,
               data: { recurringId: rec.id },
             },
             trigger: {
@@ -66,7 +72,7 @@ const notificationService = {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: i18n.t('upcomingPayment'),
-              body: `${i18n.t('tomorrow')}: ${rec.recipient || catName(rec.categoryId, rec.categoryName)} — ${sym()}${rec.amount}`,
+              body: `${i18n.t('tomorrow')}: ${name} — ${amountStr}`,
               data: { recurringId: rec.id },
             },
             trigger: {
@@ -159,9 +165,10 @@ const notificationService = {
       }).reduce((s, t) => s + t.amount, 0);
 
       const diff = lastWeek - thisWeek;
+      const cur = sym();
       const body = diff > 0
-        ? i18n.t('weeklySummaryGood').replace('{amount}', Math.round(thisWeek)).replace('{saved}', Math.round(diff))
-        : i18n.t('weeklySummaryBad').replace('{amount}', Math.round(thisWeek)).replace('{extra}', Math.round(Math.abs(diff)));
+        ? i18n.t('weeklySummaryGood').replace('{amount}', Math.round(thisWeek)).replace('{saved}', Math.round(diff)).replace(/\{currency\}/g, cur)
+        : i18n.t('weeklySummaryBad').replace('{amount}', Math.round(thisWeek)).replace('{extra}', Math.round(Math.abs(diff))).replace(/\{currency\}/g, cur);
 
       await Notifications.scheduleNotificationAsync({
         content: {

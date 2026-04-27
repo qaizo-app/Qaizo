@@ -40,7 +40,7 @@ function isoToDisplayDate(iso, lang) {
   return `${d.getDate()} ${m} ${d.getFullYear()}`;
 }
 
-export default function ConfirmRecurringModal({ visible, item, onClose, onConfirm, onSkip }) {
+export default function ConfirmRecurringModal({ visible, item, onClose, onConfirm }) {
   const [amount, setAmount] = useState('');
   const [dateIso, setDateIso] = useState('');
   const [selAcc, setSelAcc] = useState('');
@@ -103,21 +103,6 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
     }
   };
 
-  const runSkip = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      // If the user dragged the date, treat it as "skip to this date";
-      // otherwise fall through and let skipRecurring shift by one interval.
-      const moved = item.nextDate
-        ? dateIso.slice(0, 10) !== item.nextDate.slice(0, 10)
-        : false;
-      await onSkip?.(item.id, moved ? { nextDate: dateIso } : {});
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <>
       <SwipeModal
@@ -126,12 +111,11 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
         footer={({ close }) => (
           <View style={st.btnRow}>
             <TouchableOpacity
-              style={st.skipBtn}
-              onPress={runSkip}
+              style={st.cancelBtn}
+              onPress={close}
               disabled={busy}
             >
-              <Feather name="fast-forward" size={18} color={colors.textDim} style={{ marginEnd: 6 }} />
-              <Text style={st.skipTxt}>{i18n.t('skip')}</Text>
+              <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[st.confirmBtn, { backgroundColor: typeColor, opacity: canConfirm && !busy ? 1 : 0.4 }]}
@@ -159,17 +143,17 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
 
             {/* Amount */}
             <Text style={st.label}>{i18n.t('amount')}</Text>
-            <View style={st.amtRow}>
+            <Text style={[st.amtLine, { textAlign: i18n.textAlign() }]}>
               <TextInput
-                style={[st.amtIn, { fontSize: amtFont(amount, 28) }]}
+                style={[st.amtIn, { fontSize: amtFont(amount, 28), color: typeColor }]}
                 value={amount}
                 onChangeText={setAmount}
                 placeholder="0"
                 placeholderTextColor={colors.textMuted}
                 keyboardType="decimal-pad"
               />
-              <Text style={[st.cur, { color: typeColor, fontSize: amtFont(amount, 28) }]}>{sym()}</Text>
-            </View>
+              <Text style={[st.cur, { color: typeColor, fontSize: amtFont(amount, 28) }]}>{' '}{sym()}</Text>
+            </Text>
 
             {/* Date */}
             <Text style={st.label}>{i18n.t('date') || 'Date'}</Text>
@@ -262,10 +246,10 @@ const createSt = () => StyleSheet.create({
     color: colors.textDim, fontSize: 11, fontWeight: '700',
     letterSpacing: 1, marginBottom: 6, marginTop: 4, textAlign: i18n.textAlign(),
   },
-  amtRow: { flexDirection: i18n.row(), alignItems: 'baseline', gap: 6, marginBottom: 14 },
+  // Nested TextInput inside Text so the currency symbol sits inline with the
+  // typed number instead of being pushed to the other edge by row stretching.
+  amtLine: { marginBottom: 14 },
   cur: { fontSize: 28, fontWeight: '800' },
-  // Intrinsic width: TextInput hugs the typed number so the currency symbol
-  // sits right next to it instead of being pushed to the other edge.
   amtIn: { minWidth: 40, color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1, padding: 0 },
   row: {
     flexDirection: i18n.row(), alignItems: 'center', gap: 12,
@@ -281,15 +265,16 @@ const createSt = () => StyleSheet.create({
   },
   chipTxt: { color: colors.textDim, fontSize: 12, fontWeight: '500', marginStart: 6, maxWidth: 100 },
   btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
-  skipBtn: {
-    flex: 1, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14,
+  cancelBtn: {
+    flex: 1, paddingVertical: 16, borderRadius: 14,
     backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.cardBorder,
   },
-  skipTxt: { color: colors.textDim, fontSize: 15, fontWeight: '700' },
+  cancelTxt: { color: colors.textDim, fontSize: 15, fontWeight: '700' },
   confirmBtn: {
     flex: 1, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'transparent',
   },
   confirmTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });
