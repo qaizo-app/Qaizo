@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
 import BalanceLineChart from '../components/BalanceLineChart';
 import ConfirmModal from '../components/ConfirmModal';
+import ConfirmRecurringModal from '../components/ConfirmRecurringModal';
 import UpcomingPaymentsModal from '../components/UpcomingPaymentsModal';
 import TransactionItem from '../components/TransactionItem';
 import { getCachedGroups } from '../components/CategoryIcon';
@@ -15,6 +16,7 @@ import { getCatName } from '../components/CategoryPickerModal';
 import i18n from '../i18n';
 import analyticsService from '../services/analyticsService';
 import dataService from '../services/dataService';
+import notificationService from '../services/notificationService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import Amount from '../components/Amount';
 import { catName } from '../utils/categoryName';
@@ -39,6 +41,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [editTx, setEditTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [periodKey, setPeriodKey] = useState('3m');
+  const [confirmRec, setConfirmRec] = useState(null);
   const lang = i18n.getLanguage();
 
   const styles = createStyles();
@@ -95,6 +98,23 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
   const handleDelete = async () => {
     if (deleteTarget) { await dataService.deleteTransaction(deleteTarget.id); setDeleteTarget(null); await loadData(); }
+  };
+  // Quick skip from the row — silent, no modal. Mirrors Dashboard's >>.
+  const handleSkipRecurring = async (id) => {
+    await dataService.skipRecurring(id);
+    await loadData();
+    notificationService.scheduleRecurringNotifications();
+  };
+  // Confirm via modal so the user can tweak amount / date / account before
+  // committing. Triggered by the ✓ button on a row.
+  const handleConfirmRecurring = async (id, overrides) => {
+    await dataService.confirmRecurring(id, overrides);
+    await loadData();
+    notificationService.scheduleRecurringNotifications();
+  };
+  const openRecurringConfirm = (id) => {
+    const r = upcomingRecurring.find(x => x.id === id);
+    if (r) setConfirmRec(r);
   };
   const handleDuplicate = async (tx) => {
     await dataService.addTransaction({ ...tx, id: undefined, createdAt: undefined, date: new Date().toISOString(), note: tx.note ? `${tx.note} (copy)` : '(copy)' });
@@ -191,6 +211,17 @@ export default function AccountHistoryScreen({ route, navigation }) {
                   {' · '}{dateLabel}
                 </Text>
               </View>
+              <View style={styles.upcomingActions}>
+                <TouchableOpacity style={styles.upcomingSkip} onPress={() => handleSkipRecurring(rec.id)}>
+                  <Feather name="fast-forward" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.upcomingConfirm, isOverdue && { backgroundColor: colors.yellow + '20' }]}
+                  onPress={() => openRecurringConfirm(rec.id)}
+                >
+                  <Feather name="check" size={16} color={isOverdue ? colors.yellow : colors.green} />
+                </TouchableOpacity>
+              </View>
             </View>
           );
         })}
@@ -286,6 +317,12 @@ export default function AccountHistoryScreen({ route, navigation }) {
         accounts={allAccounts}
         perspectiveAccountId={account.id} />
 
+      <ConfirmRecurringModal
+        visible={!!confirmRec}
+        item={confirmRec}
+        onClose={() => setConfirmRec(null)}
+        onConfirm={async (id, overrides) => { setConfirmRec(null); await handleConfirmRecurring(id, overrides); }} />
+
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
@@ -314,6 +351,9 @@ const createStyles = () => StyleSheet.create({
   upcomingInfo:{flex:1},
   upcomingName:{color:colors.text,fontSize:14,fontWeight:'600',textAlign:i18n.textAlign()},
   upcomingMeta:{color:colors.textDim,fontSize:12,marginTop:2,writingDirection:'ltr'},
+  upcomingActions:{flexDirection:i18n.row(),gap:6},
+  upcomingSkip:{width:36,height:36,borderRadius:12,backgroundColor:colors.bg2,justifyContent:'center',alignItems:'center'},
+  upcomingConfirm:{width:36,height:36,borderRadius:12,backgroundColor:colors.greenSoft,justifyContent:'center',alignItems:'center'},
   showMoreBtn:{flexDirection:i18n.row(),alignItems:'center',justifyContent:'center',gap:6,paddingTop:12,marginTop:8,borderTopWidth:1,borderTopColor:colors.divider},
   showMoreTxt:{color:colors.green,fontSize:13,fontWeight:'700'},
   periodRow:{flexDirection:'row',gap:6,marginBottom:10},
