@@ -2,11 +2,22 @@
 // Выбор категории: топ-5 часто используемых + полный список с поиском
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import SwipeModal from './SwipeModal';
+
+// Curated icon set for inline category creation. Feather names only — keeps
+// the picker visually consistent with the built-in categories.
+const PICKER_ICONS = [
+  'tag', 'shopping-cart', 'shopping-bag', 'coffee', 'home', 'heart',
+  'book-open', 'gift', 'phone', 'tv', 'globe', 'tool',
+  'droplet', 'zap', 'sun', 'umbrella', 'briefcase', 'smile',
+  'star', 'target', 'scissors', 'dollar-sign', 'trending-up', 'camera',
+  'music', 'film', 'package', 'truck', 'layers', 'navigation',
+  'map-pin', 'users', 'plus-circle',
+];
 
 export const DEFAULT_GROUPS = [
   { id: 'home', name: { ru:'Дом', he:'בית', en:'Home' }, icon: 'home', color: '#60a5fa',
@@ -124,6 +135,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
   // groupId currently in inline-create mode; null when no group is creating.
   const [creatingGroup, setCreatingGroup] = useState(null);
   const [newName, setNewName] = useState('');
+  const [newIcon, setNewIcon] = useState('tag');
   const lang = i18n.getLanguage();
   const st = createSt();
 
@@ -132,6 +144,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
     setSearch('');
     setCreatingGroup(null);
     setNewName('');
+    setNewIcon('tag');
     Promise.all([dataService.getCategories(), dataService.getTransactions()]).then(([saved, txs]) => {
       const g = saved && saved.length > 0 ? saved : DEFAULT_GROUPS;
       setGroups(g);
@@ -191,13 +204,14 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
     const next = baseGroups.map(g => {
       if (g.id !== groupId) return g;
       const subs = Array.isArray(g.subs) ? g.subs.slice() : [];
-      subs.push({ id, name: { [lang]: name }, icon: 'tag' });
+      subs.push({ id, name: { [lang]: name }, icon: newIcon || 'tag' });
       return { ...g, subs };
     });
     setGroups(next);
     try { await dataService.saveCategories(next); } catch (e) {}
     setCreatingGroup(null);
     setNewName('');
+    setNewIcon('tag');
     handleSelect(id);
   };
 
@@ -283,26 +297,41 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
                 })}
 
                 {creatingGroup === g.id ? (
-                  <View style={st.listRow}>
-                    <View style={[st.listIcon, { backgroundColor: g.color + '18' }]}>
-                      <Feather name="tag" size={18} color={g.color} />
+                  <View style={st.createBlock}>
+                    <View style={st.listRow}>
+                      <View style={[st.listIcon, { backgroundColor: g.color + '18' }]}>
+                        <Feather name={newIcon} size={18} color={g.color} />
+                      </View>
+                      <TextInput
+                        style={[st.listName, { flex: 1, padding: 0 }]}
+                        value={newName}
+                        onChangeText={setNewName}
+                        placeholder={i18n.t('newCategory') || 'New category'}
+                        placeholderTextColor={colors.textMuted}
+                        autoFocus
+                        returnKeyType="done"
+                        onSubmitEditing={() => handleCreateSub(g.id)}
+                      />
+                      <TouchableOpacity onPress={() => handleCreateSub(g.id)} style={{ padding: 6 }} disabled={!newName.trim()}>
+                        <Feather name="check" size={18} color={newName.trim() ? colors.green : colors.textMuted} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => { setCreatingGroup(null); setNewName(''); setNewIcon('tag'); }} style={{ padding: 6 }}>
+                        <Feather name="x" size={18} color={colors.textMuted} />
+                      </TouchableOpacity>
                     </View>
-                    <TextInput
-                      style={[st.listName, { flex: 1, padding: 0 }]}
-                      value={newName}
-                      onChangeText={setNewName}
-                      placeholder={i18n.t('newCategory') || 'New category'}
-                      placeholderTextColor={colors.textMuted}
-                      autoFocus
-                      returnKeyType="done"
-                      onSubmitEditing={() => handleCreateSub(g.id)}
-                    />
-                    <TouchableOpacity onPress={() => handleCreateSub(g.id)} style={{ padding: 6 }}>
-                      <Feather name="check" size={18} color={colors.green} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { setCreatingGroup(null); setNewName(''); }} style={{ padding: 6 }}>
-                      <Feather name="x" size={18} color={colors.textMuted} />
-                    </TouchableOpacity>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.iconStrip} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+                      {PICKER_ICONS.map(ic => {
+                        const sel = ic === newIcon;
+                        return (
+                          <TouchableOpacity key={ic}
+                            onPress={() => setNewIcon(ic)}
+                            style={[st.iconBtn, sel && { backgroundColor: g.color + '25', borderColor: g.color }]}
+                          >
+                            <Feather name={ic} size={18} color={sel ? g.color : colors.textDim} />
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
                   </View>
                 ) : (
                   <TouchableOpacity
@@ -325,8 +354,10 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
   );
 }
 
+const SCREEN_H = Dimensions.get('window').height;
+
 const createSt = () => StyleSheet.create({
-  container: { maxHeight: 500 },
+  container: { flex: 1, maxHeight: Math.round(SCREEN_H * 0.85) },
   title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16 },
 
   topSection: { marginBottom: 16 },
@@ -340,7 +371,7 @@ const createSt = () => StyleSheet.create({
   searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: colors.cardBorder },
   searchInput: { flex: 1, color: colors.text, fontSize: 14, padding: 0 },
 
-  list: { maxHeight: 300 },
+  list: { flex: 1 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 20 },
 
   groupSection: { marginBottom: 16 },
@@ -351,4 +382,12 @@ const createSt = () => StyleSheet.create({
   listInfo: { flex: 1 },
   listName: { color: colors.text, fontSize: 14, fontWeight: '600' },
   listGroup: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+
+  createBlock: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+  iconStrip: { paddingVertical: 4, marginBottom: 8 },
+  iconBtn: {
+    width: 40, height: 40, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent',
+  },
 });
