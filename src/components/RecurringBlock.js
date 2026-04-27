@@ -151,7 +151,10 @@ export default function RecurringBlock({
 const st = StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  recRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
+  // Solid bg matches the parent Card so when the row slides back over the
+  // swipe-action underlay, the icons get fully covered instead of bleeding
+  // through during the close animation.
+  recRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12, backgroundColor: colors.card },
   recIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   recInfo: { flex: 1 },
   recName: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
