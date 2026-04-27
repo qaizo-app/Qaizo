@@ -28,6 +28,8 @@ export default {
   since: 'منذ',
   addCategory: '+ إضافة',
   newCategory: 'فئة جديدة',
+  addItem: 'إضافة منتج',
+  itemName: 'اسم المنتج',
   dashboard: 'الرئيسية',
   transactions: 'المعاملات',
   accounts: 'الحسابات',

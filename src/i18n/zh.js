@@ -28,6 +28,8 @@ export default {
   since: '从',
   addCategory: '+ 添加',
   newCategory: '新类别',
+  addItem: '添加商品',
+  itemName: '商品名称',
   dashboard: '首页',
   transactions: '交易',
   accounts: '账户',

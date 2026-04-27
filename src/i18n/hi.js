@@ -28,6 +28,8 @@ export default {
   since: 'से',
   addCategory: '+ जोड़ें',
   newCategory: 'नई श्रेणी',
+  addItem: 'आइटम जोड़ें',
+  itemName: 'आइटम का नाम',
   dashboard: 'होम',
   transactions: 'लेनदेन',
   accounts: 'खाते',

@@ -28,6 +28,8 @@ export default {
   since: 'Desde',
   addCategory: '+ Añadir',
   newCategory: 'Nueva categoría',
+  addItem: 'Añadir artículo',
+  itemName: 'Nombre del artículo',
   dashboard: 'Inicio',
   transactions: 'Transacciones',
   accounts: 'Cuentas',

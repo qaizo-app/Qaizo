@@ -28,6 +28,8 @@ export default {
   since: 'から',
   addCategory: '+ 追加',
   newCategory: '新しいカテゴリ',
+  addItem: 'アイテムを追加',
+  itemName: 'アイテム名',
   dashboard: 'ホーム',
   transactions: '取引',
   accounts: '口座',
