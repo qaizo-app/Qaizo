@@ -20,6 +20,14 @@ try {
     // Drop events when the user has opted out of crash reporting.
     // consentSvc defaults to true until load() reads the persisted value.
     beforeSend: (event) => consentSvc.getCrashReportsConsent() ? event : null,
+    beforeBreadcrumb: (breadcrumb) => {
+      if (breadcrumb?.category === 'console' &&
+          typeof breadcrumb.message === 'string' &&
+          breadcrumb.message.includes('namespaced API')) {
+        return null;
+      }
+      return breadcrumb;
+    },
   });
 } catch (e) {
   // Sentry not available (Expo Go) — app continues without crash reporting
