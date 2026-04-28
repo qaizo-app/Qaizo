@@ -10,9 +10,9 @@ No mention of any specific market or local currency — copy is universal.
 
 ---
 
-## App name (max 50 chars)
+## App name (max 30 chars)
 
-**Qaizo — Smart AI Personal Finance**
+**Qaizo — AI Personal Finance**
 
 ## Short description — max 80 chars
 
