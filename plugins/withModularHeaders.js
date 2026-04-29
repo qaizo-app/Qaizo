@@ -2,13 +2,6 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-// @react-native-firebase v24 on iOS requires use_frameworks! :linkage => :static
-// so that FirebaseAuth-Swift.h (generated Swift ObjC bridge header) is accessible
-// at <FirebaseAuth/FirebaseAuth-Swift.h> inside the framework bundle.
-//
-// use_frameworks! causes Clang to enforce module imports strictly, which breaks
-// RNFBFirestore: "RCTBridgeModule must be imported from module 'RNFBApp.RNFBAppModule'".
-// Fix: set CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES for RNFB targets.
 module.exports = function withModularHeaders(config) {
   return withDangerousMod(config, [
     'ios',
@@ -21,27 +14,42 @@ module.exports = function withModularHeaders(config) {
       podfile = podfile.replace(/\nuse_frameworks! :linkage => :static/g, '');
       podfile = podfile.replace(/\$RNFirebaseAsStaticFramework = true\n\n/g, '');
 
-      // 1. Static frameworks — required for Swift ObjC bridge headers to be accessible
+      // 1. Static frameworks — required for FirebaseAuth-Swift.h to be accessible
       podfile = podfile.replace(
         /^(platform :ios.+)$/m,
         '$1\nuse_frameworks! :linkage => :static'
       );
 
-      // 2. Allow non-modular includes in RNFB framework modules.
-      //    Fixes: "declaration of 'RCTBridgeModule' must be imported from module
-      //    'RNFBApp.RNFBAppModule' before it is required"
-      if (!podfile.includes('CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES')) {
-        podfile += `
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    if target.name.start_with?('RNFB') || target.name == 'React-Core'
-      target.build_configurations.each do |config|
-        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      // 2. Inject CLANG fix INSIDE existing post_install block (multiple hooks unsupported).
+      //    Finds the closing ) of react_native_post_install(...) by counting parens,
+      //    then inserts our build settings block right after it.
+      if (podfile.includes('react_native_post_install(') &&
+          !podfile.includes('CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES')) {
+
+        const marker = 'react_native_post_install(';
+        const markerIdx = podfile.indexOf(marker);
+        const openParen = podfile.indexOf('(', markerIdx + marker.length - 1);
+
+        let depth = 0;
+        let closeIdx = openParen;
+        for (let i = openParen; i < podfile.length; i++) {
+          if (podfile[i] === '(') depth++;
+          else if (podfile[i] === ')') {
+            depth--;
+            if (depth === 0) { closeIdx = i; break; }
+          }
+        }
+
+        const fix = `
+    installer.pods_project.targets.each do |target|
+      if target.name.start_with?('RNFB') || target.name == 'React-Core'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        end
       end
-    end
-  end
-end
-`;
+    end`;
+
+        podfile = podfile.slice(0, closeIdx + 1) + fix + podfile.slice(closeIdx + 1);
       }
 
       fs.writeFileSync(podfilePath, podfile);
