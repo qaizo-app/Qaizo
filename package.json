@@ -46,6 +46,7 @@
     "@sentry/react-native": "~7.2.0",
     "expo": "~54.0.33",
     "expo-auth-session": "~7.0.10",
+    "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.8",
     "expo-document-picker": "~14.0.8",
