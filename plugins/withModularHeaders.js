@@ -2,12 +2,13 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-// @react-native-firebase v24 on iOS:
-// - Global use_modular_headers! breaks gRPC-Core module map
-// - Global use_frameworks! breaks RCTBridgeModule import order in RNFBFirestore
-// Solution: apply :modular_headers => true ONLY to pods that actually need it:
-//   - ObjC Firebase deps (so Firebase Swift pods can import them)
-//   - FirebaseAuth + FirebaseCore (so RNFBApp can import FirebaseAuth-Swift.h)
+// @react-native-firebase v24 on iOS requires use_frameworks! :linkage => :static
+// so that FirebaseAuth-Swift.h (generated Swift ObjC bridge header) is accessible
+// at <FirebaseAuth/FirebaseAuth-Swift.h> inside the framework bundle.
+//
+// use_frameworks! causes Clang to enforce module imports strictly, which breaks
+// RNFBFirestore: "RCTBridgeModule must be imported from module 'RNFBApp.RNFBAppModule'".
+// Fix: set CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES for RNFB targets.
 module.exports = function withModularHeaders(config) {
   return withDangerousMod(config, [
     'ios',
@@ -20,32 +21,27 @@ module.exports = function withModularHeaders(config) {
       podfile = podfile.replace(/\nuse_frameworks! :linkage => :static/g, '');
       podfile = podfile.replace(/\$RNFirebaseAsStaticFramework = true\n\n/g, '');
 
-      if (!podfile.includes("pod 'GoogleUtilities'")) {
-        const pods = [
-          // ObjC pods required by Firebase Swift modules
-          "  pod 'GoogleUtilities', :modular_headers => true",
-          "  pod 'FirebaseCoreInternal', :modular_headers => true",
-          "  pod 'FirebaseAuthInterop', :modular_headers => true",
-          "  pod 'FirebaseAppCheckInterop', :modular_headers => true",
-          "  pod 'RecaptchaInterop', :modular_headers => true",
-          "  pod 'FirebaseFirestoreInternal', :modular_headers => true",
-          // Swift pods — modular_headers enables Swift ObjC bridge header generation
-          // so RNFBApp can import <FirebaseAuth/FirebaseAuth-Swift.h>
-          "  pod 'FirebaseAuth', :modular_headers => true",
-          "  pod 'FirebaseCore', :modular_headers => true",
-        ].join('\n');
+      // 1. Static frameworks — required for Swift ObjC bridge headers to be accessible
+      podfile = podfile.replace(
+        /^(platform :ios.+)$/m,
+        '$1\nuse_frameworks! :linkage => :static'
+      );
 
-        if (/[ \t]+use_expo_modules!/.test(podfile)) {
-          podfile = podfile.replace(
-            /([ \t]+use_expo_modules!)/,
-            `$1\n${pods}`
-          );
-        } else {
-          podfile = podfile.replace(
-            /^(target '[^']+' do\s*\n)/m,
-            `$1${pods}\n`
-          );
-        }
+      // 2. Allow non-modular includes in RNFB framework modules.
+      //    Fixes: "declaration of 'RCTBridgeModule' must be imported from module
+      //    'RNFBApp.RNFBAppModule' before it is required"
+      if (!podfile.includes('CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES')) {
+        podfile += `
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    if target.name.start_with?('RNFB') || target.name == 'React-Core'
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
+  end
+end
+`;
       }
 
       fs.writeFileSync(podfilePath, podfile);
