@@ -33,6 +33,7 @@
     "production": {
       "distribution": "store",
       "channel": "production",
+      "image": "macos-sequoia-15.2-xcode-16.2",
       "env": {
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAP3qu6pOnmc-JQxt4LtXMX_0UYUAnWYUE",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "qaizo-ece06.firebaseapp.com",
