@@ -54,7 +54,6 @@
       ],
       "react-native-edge-to-edge",
       "./plugins/withResizeableActivity",
-      "./plugins/withAdIdPermission",
       "@react-native-google-signin/google-signin",
       [
         "@sentry/react-native/expo",
@@ -62,7 +61,8 @@
           "organization": "qaizo",
           "project": "qaizo"
         }
-      ]
+      ],
+      "./plugins/withAdIdPermission"
     ],
     "extra": {
       "eas": {
