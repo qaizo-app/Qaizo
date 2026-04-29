@@ -46,8 +46,7 @@ module.exports = function withModularHeaders(config) {
       target.build_configurations.each do |config|
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
         if target.name.start_with?('RNFB')
-          cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-          config.build_settings['OTHER_CFLAGS'] = cflags + ' -Wno-non-modular-include-in-framework-module'
+          config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-non-modular-include-in-framework-module'
         end
       end
     end`;
