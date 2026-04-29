@@ -22,6 +22,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.qaizo.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow Qaizo to recognize your speech",
         "NSMicrophoneUsageDescription": "Allow Qaizo to access your microphone for voice input"
@@ -54,7 +55,12 @@
       ],
       "react-native-edge-to-edge",
       "./plugins/withResizeableActivity",
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.568492177874-hq9u4u5nsa08b6ctf5c890atocko05iu"
+        }
+      ],
       [
         "@sentry/react-native/expo",
         {

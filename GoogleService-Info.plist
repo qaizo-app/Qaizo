@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>568492177874-hq9u4u5nsa08b6ctf5c890atocko05iu.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.568492177874-hq9u4u5nsa08b6ctf5c890atocko05iu</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>568492177874-d6a49h1mrar101kgqmuv226lfi8ittei.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC4CwvQt9it998jWhrp-hT7y6OhLPldGqo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>568492177874</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.qaizo.app</string>
+	<key>PROJECT_ID</key>
+	<string>qaizo-ece06</string>
+	<key>STORAGE_BUCKET</key>
+	<string>qaizo-ece06.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:568492177874:ios:776f43c3b2a5a6663b700b</string>
+</dict>
+</plist>
