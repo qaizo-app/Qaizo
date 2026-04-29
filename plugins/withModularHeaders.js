@@ -14,15 +14,14 @@ module.exports = function withModularHeaders(config) {
       podfile = podfile.replace(/\nuse_frameworks! :linkage => :static/g, '');
       podfile = podfile.replace(/\$RNFirebaseAsStaticFramework = true\n\n/g, '');
 
-      // 1. Static frameworks — required for FirebaseAuth-Swift.h to be accessible
+      // Static frameworks: required for FirebaseAuth-Swift.h to be in framework Headers
       podfile = podfile.replace(
         /^(platform :ios.+)$/m,
         '$1\nuse_frameworks! :linkage => :static'
       );
 
-      // 2. Inject CLANG fix INSIDE existing post_install block (multiple hooks unsupported).
-      //    Finds the closing ) of react_native_post_install(...) by counting parens,
-      //    then inserts our build settings block right after it.
+      // Inject inside existing post_install block (multiple hooks are unsupported).
+      // Finds closing ) of react_native_post_install(...) by paren-counting, injects after it.
       if (podfile.includes('react_native_post_install(') &&
           !podfile.includes('CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES')) {
 
@@ -40,11 +39,15 @@ module.exports = function withModularHeaders(config) {
           }
         }
 
+        // Apply to ALL targets — fixes "RCTBridgeModule must be imported from
+        // module RNFBApp.RNFBAppModule" when use_frameworks! enforces strict module imports.
         const fix = `
     installer.pods_project.targets.each do |target|
-      if target.name.start_with?('RNFB') || target.name == 'React-Core'
-        target.build_configurations.each do |config|
-          config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        if target.name.start_with?('RNFB')
+          cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
+          config.build_settings['OTHER_CFLAGS'] = cflags + ' -Wno-non-modular-include-in-framework-module'
         end
       end
     end`;
