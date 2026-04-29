@@ -2,10 +2,12 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-// @react-native-firebase v24 on iOS requires:
-//   1. use_frameworks! :linkage => :static  — makes Swift pods expose their headers correctly
-//   2. $RNFirebaseAsStaticFramework = true  — tells RNFB pods to configure for static frameworks,
-//      which fixes the RCTBridgeModule module import order issue in RNFBFirestore/RNFBApp
+// @react-native-firebase v24 on iOS:
+// - Global use_modular_headers! breaks gRPC-Core module map
+// - Global use_frameworks! breaks RCTBridgeModule import order in RNFBFirestore
+// Solution: apply :modular_headers => true ONLY to pods that actually need it:
+//   - ObjC Firebase deps (so Firebase Swift pods can import them)
+//   - FirebaseAuth + FirebaseCore (so RNFBApp can import FirebaseAuth-Swift.h)
 module.exports = function withModularHeaders(config) {
   return withDangerousMod(config, [
     'ios',
@@ -13,23 +15,37 @@ module.exports = function withModularHeaders(config) {
       const podfilePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
       let podfile = fs.readFileSync(podfilePath, 'utf8');
 
-      // Clean up anything injected by previous plugin versions
+      // Clean up anything from previous plugin versions
       podfile = podfile.replace(/\nuse_modular_headers!/g, '');
       podfile = podfile.replace(/\nuse_frameworks! :linkage => :static/g, '');
       podfile = podfile.replace(/\$RNFirebaseAsStaticFramework = true\n\n/g, '');
 
-      // 1. Static frameworks (required for Swift pods to expose their ObjC bridging headers)
-      podfile = podfile.replace(
-        /^(platform :ios.+)$/m,
-        '$1\nuse_frameworks! :linkage => :static'
-      );
+      if (!podfile.includes("pod 'GoogleUtilities'")) {
+        const pods = [
+          // ObjC pods required by Firebase Swift modules
+          "  pod 'GoogleUtilities', :modular_headers => true",
+          "  pod 'FirebaseCoreInternal', :modular_headers => true",
+          "  pod 'FirebaseAuthInterop', :modular_headers => true",
+          "  pod 'FirebaseAppCheckInterop', :modular_headers => true",
+          "  pod 'RecaptchaInterop', :modular_headers => true",
+          "  pod 'FirebaseFirestoreInternal', :modular_headers => true",
+          // Swift pods — modular_headers enables Swift ObjC bridge header generation
+          // so RNFBApp can import <FirebaseAuth/FirebaseAuth-Swift.h>
+          "  pod 'FirebaseAuth', :modular_headers => true",
+          "  pod 'FirebaseCore', :modular_headers => true",
+        ].join('\n');
 
-      // 2. Tell RNFB pods they're in static framework mode (fixes RCTBridgeModule import order)
-      if (!podfile.includes('$RNFirebaseAsStaticFramework')) {
-        podfile = podfile.replace(
-          /^(target '[^']+' do)/m,
-          '$RNFirebaseAsStaticFramework = true\n\n$1'
-        );
+        if (/[ \t]+use_expo_modules!/.test(podfile)) {
+          podfile = podfile.replace(
+            /([ \t]+use_expo_modules!)/,
+            `$1\n${pods}`
+          );
+        } else {
+          podfile = podfile.replace(
+            /^(target '[^']+' do\s*\n)/m,
+            `$1${pods}\n`
+          );
+        }
       }
 
       fs.writeFileSync(podfilePath, podfile);
