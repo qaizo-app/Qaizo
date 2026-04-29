@@ -445,6 +445,7 @@ export default {
   rememberPassword: 'पासवर्ड याद है?',
   continueWithout: 'पंजीकरण के बिना जारी रखें',
   continueWithGoogle: 'Google के साथ जारी रखें',
+  continueWithApple: 'Apple के साथ जारी रखें',
   resetSent: 'रीसेट लिंक आपके ईमेल पर भेजा गया',
   verifyEmailTitle: 'अपना ईमेल सत्यापित करें',
   verifyEmailMessage: 'हमने आपके ईमेल पर एक सत्यापन लिंक भेजा। लिंक पर क्लिक करें और फिर साइन इन करने के लिए वापस आएं।',

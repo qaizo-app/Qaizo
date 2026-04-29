@@ -22,15 +22,20 @@
     },
     "ios": {
       "bundleIdentifier": "com.qaizo.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "deploymentTarget": "16.0",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow Qaizo to recognize your speech",
-        "NSMicrophoneUsageDescription": "Allow Qaizo to access your microphone for voice input"
+        "NSMicrophoneUsageDescription": "Allow Qaizo to access your microphone for voice input",
+        "NSFaceIDUsageDescription": "Allow Qaizo to use Face ID to unlock the app"
       }
     },
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "@invertase/react-native-apple-authentication",
       "expo-localization",
       "./plugins/withTransparentAutofill",
       [

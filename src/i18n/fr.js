@@ -445,6 +445,7 @@ export default {
   rememberPassword: 'Vous vous souvenez du mot de passe ?',
   continueWithout: 'Continuer sans inscription',
   continueWithGoogle: 'Continuer avec Google',
+  continueWithApple: 'Continuer avec Apple',
   resetSent: 'Lien de réinitialisation envoyé à votre e-mail',
   verifyEmailTitle: 'Vérifiez votre e-mail',
   verifyEmailMessage: 'Nous avons envoyé un lien de vérification à votre e-mail. Cliquez sur le lien puis revenez vous connecter.',

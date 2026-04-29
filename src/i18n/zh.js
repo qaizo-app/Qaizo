@@ -446,6 +446,7 @@ export default {
   rememberPassword: '记起密码了？',
   continueWithout: '不注册继续',
   continueWithGoogle: '使用Google继续',
+  continueWithApple: '使用Apple继续',
   resetSent: '重置链接已发送至您的邮箱',
   verifyEmailTitle: '验证您的邮箱',
   verifyEmailMessage: '我们已向您的邮箱发送验证链接。点击链接后返回登录。',

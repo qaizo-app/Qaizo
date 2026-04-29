@@ -452,6 +452,7 @@ export default {
   rememberPassword: '¿Recuerdas tu contraseña?',
   continueWithout: 'Continuar sin registro',
   continueWithGoogle: 'Continuar con Google',
+  continueWithApple: 'Continuar con Apple',
   resetSent: 'Enlace de restablecimiento enviado a tu correo',
   verifyEmailTitle: 'Verifica tu correo',
   verifyEmailMessage: 'Enviamos un enlace de verificación a tu correo. Haz clic en el enlace y luego regresa para iniciar sesión.',

@@ -442,6 +442,7 @@ export default {
   rememberPassword: 'Вспомнили пароль?',
   continueWithout: 'Продолжить без регистрации',
   continueWithGoogle: 'Войти через Google',
+  continueWithApple: 'Войти через Apple',
   resetSent: 'Ссылка для сброса отправлена на email',
   verifyEmailTitle: 'Подтвердите email',
   verifyEmailMessage: 'Мы отправили ссылку для подтверждения на ваш email. Нажмите на ссылку и вернитесь для входа.',

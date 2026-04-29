@@ -13,6 +13,13 @@ try {
   // Native module not available (Expo Go) — Google Sign-In disabled
 }
 
+let appleAuth = null;
+try {
+  appleAuth = require('@invertase/react-native-apple-authentication').default;
+} catch (e) {
+  // Native module not available (Expo Go / Android) — Apple Sign-In disabled
+}
+
 const authService = {
 
   // Текущий пользователь
@@ -89,6 +96,28 @@ const authService = {
         return { success: false, error: 'Google sign-in cancelled' };
       }
       return { success: false, error: e.message || 'Google sign-in failed' };
+    }
+  },
+
+  // Apple Sign-In (native, iOS only)
+  async loginWithApple() {
+    try {
+      if (!appleAuth) return { success: false, error: 'Apple Sign-In not available' };
+      const appleAuthRequest = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      });
+      const { identityToken, nonce } = appleAuthRequest;
+      if (!identityToken) return { success: false, error: 'No identity token received' };
+      const credential = auth.AppleAuthProvider.credential(identityToken, nonce);
+      const cred = await auth().signInWithCredential(credential);
+      analyticsEvents.logEvent(cred.additionalUserInfo?.isNewUser ? 'user_registered' : 'user_logged_in', { method: 'apple' });
+      return { success: true, user: cred.user };
+    } catch (e) {
+      if (e.code === appleAuth?.Error?.CANCELED) {
+        return { success: false, error: 'Apple sign-in cancelled' };
+      }
+      return { success: false, error: e.message || 'Apple sign-in failed' };
     }
   },
 

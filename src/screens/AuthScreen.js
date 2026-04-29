@@ -83,6 +83,14 @@ export default function AuthScreen({ onSkip }) {
     if (!result.success) setError(result.error);
   };
 
+  const handleApple = async () => {
+    setLoading(true);
+    setError('');
+    const result = await authService.loginWithApple();
+    setLoading(false);
+    if (!result.success && result.error !== 'Apple sign-in cancelled') setError(result.error);
+  };
+
   const handleSubmit = () => {
     if (mode === 'login') handleLogin();
     else if (mode === 'register') handleRegister();
@@ -199,6 +207,12 @@ export default function AuthScreen({ onSkip }) {
               <Text style={st.googleG}>G</Text>
               <Text style={st.googleTxt}>{i18n.t('continueWithGoogle')}</Text>
             </TouchableOpacity>
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity style={st.appleBtn} onPress={handleApple} disabled={loading} activeOpacity={0.8}>
+                <Text style={st.appleLogo}></Text>
+                <Text style={st.appleTxt}>{i18n.t('continueWithApple')}</Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
 
@@ -306,6 +320,9 @@ const createSt = () => StyleSheet.create({
   googleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderRadius: 14, paddingVertical: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10, marginBottom: 8 },
   googleG: { fontSize: 20, fontWeight: '800', color: '#4285F4' },
   googleTxt: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  appleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', borderRadius: 14, paddingVertical: 16, gap: 10, marginBottom: 8 },
+  appleLogo: { fontSize: 20, color: '#fff', lineHeight: 24 },
+  appleTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
   skipBtn: { alignItems: 'center', marginTop: 20 },
   skipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textDecorationLine: 'underline' },

@@ -446,6 +446,7 @@ export default {
   rememberPassword: 'パスワードを覚えていますか？',
   continueWithout: '登録せずに続ける',
   continueWithGoogle: 'Googleで続ける',
+  continueWithApple: 'Appleで続ける',
   resetSent: 'リセットリンクをメールに送信しました',
   verifyEmailTitle: 'メールを確認してください',
   verifyEmailMessage: '確認リンクをメールに送りました。リンクをクリックしてからサインインに戻ってください。',

@@ -448,6 +448,7 @@ export default {
   rememberPassword: 'Remember password?',
   continueWithout: 'Continue without registration',
   continueWithGoogle: 'Continue with Google',
+  continueWithApple: 'Continue with Apple',
   resetSent: 'Reset link sent to your email',
   verifyEmailTitle: 'Verify your email',
   verifyEmailMessage: 'We sent a verification link to your email. Click the link and then come back to sign in.',

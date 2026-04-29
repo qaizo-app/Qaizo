@@ -436,6 +436,7 @@ export default {
   rememberPassword: 'נזכרת בסיסמה?',
   continueWithout: 'המשך ללא הרשמה',
   continueWithGoogle: 'התחבר עם Google',
+  continueWithApple: 'התחבר עם Apple',
   resetSent: 'קישור לאיפוס נשלח למייל',
   verifyEmailTitle: 'אמת את האימייל שלך',
   verifyEmailMessage: 'שלחנו קישור אימות לאימייל שלך. לחץ על הקישור ואז חזור להתחבר.',

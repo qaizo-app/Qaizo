@@ -445,6 +445,7 @@ export default {
   rememberPassword: 'تذكر كلمة المرور؟',
   continueWithout: 'المتابعة بدون تسجيل',
   continueWithGoogle: 'المتابعة مع Google',
+  continueWithApple: 'المتابعة مع Apple',
   resetSent: 'تم إرسال رابط الإعادة إلى بريدك الإلكتروني',
   verifyEmailTitle: 'تحقق من بريدك الإلكتروني',
   verifyEmailMessage: 'أرسلنا رابط تحقق إلى بريدك الإلكتروني. انقر على الرابط ثم عد لتسجيل الدخول.',
