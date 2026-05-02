@@ -96,11 +96,14 @@ export default function FreeMoneyTodayBlock({
   const pct = freeToday > 0 ? Math.min(Math.round((spentToday / absFree) * 100), 100) : 100;
   const barColor = pct > 80 ? colors.red : pct > 50 ? colors.yellow : colors.green;
 
+  const st = createSt();
   return (
     <Card>
       <TouchableOpacity style={st.freeTop} onPress={onToggle} activeOpacity={0.7}>
         <Feather name={hasNoIncomeData ? 'info' : isCrisis ? 'alert-triangle' : 'sun'} size={18} color={freeTodayColor} />
-        <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={st.freeLabel}>{i18n.t('freeMoneyToday')}</Text>
+        </View>
         <Text style={st.freeDays}>{daysLeft} {i18n.t('daysLeft')}</Text>
         <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
       </TouchableOpacity>
@@ -111,7 +114,9 @@ export default function FreeMoneyTodayBlock({
           activeOpacity={0.7}
           style={{ backgroundColor: colors.blue + '12', borderRadius: 10, padding: 10, marginBottom: 8, flexDirection: i18n.row(), alignItems: 'center', gap: 6 }}
         >
-          <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600', flex: 1 }}>{i18n.t('addIncomeHint')}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign() }}>{i18n.t('addIncomeHint')}</Text>
+          </View>
           <Feather name={i18n.chevronRight()} size={14} color={colors.blue} />
         </TouchableOpacity>
       )}
@@ -158,14 +163,14 @@ export default function FreeMoneyTodayBlock({
   );
 }
 
-const st = StyleSheet.create({
-  freeTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  freeLabel: { color: colors.text, fontSize: 14, fontWeight: '700', flex: 1 },
+const createSt = () => StyleSheet.create({
+  freeTop: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 8 },
+  freeLabel: { color: colors.text, fontSize: 14, fontWeight: '700', textAlign: i18n.textAlign() },
   freeDays: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 8, writingDirection: 'ltr' },
   freeBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden', marginBottom: 10 },
   freeBarFill: { height: 6, borderRadius: 3 },
   freeDetails: { gap: 4 },
-  freeDetail: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  freeDetail: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   freeDetailTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600', flexShrink: 1 },
 });

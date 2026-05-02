@@ -10,7 +10,7 @@ export default function PieChartCard({ pieData }) {
   if (pieData.length === 0) return null;
   return (
     <Card>
-      <Text style={st.blockTitle}>{i18n.t('expensesByCategory')}</Text>
+      <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('expensesByCategory')}</Text>
       <InteractivePieChart data={pieData} size={200} />
     </Card>
   );

@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 export default function GoalsBlock({ goals, expanded, onToggle }) {
+  const st = createSt();
   if (goals.length === 0) return null;
   return (
     <Card>
@@ -35,14 +36,14 @@ export default function GoalsBlock({ goals, expanded, onToggle }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  goalRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  goalRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, paddingVertical: 8 },
   goalDot: { width: 8, height: 8, borderRadius: 4 },
   goalInfo: { flex: 1 },
-  goalName: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 4 },
+  goalName: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 4, textAlign: i18n.textAlign() },
   goalBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden' },
   goalBarFill: { height: 6, borderRadius: 3 },
-  goalPct: { fontSize: 12, fontWeight: '700', minWidth: 40, textAlign: 'right' },
+  goalPct: { fontSize: 12, fontWeight: '700', minWidth: 40, textAlign: i18n.isRTL() ? 'left' : 'right' },
 });

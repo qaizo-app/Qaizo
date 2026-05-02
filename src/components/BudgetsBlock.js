@@ -20,6 +20,7 @@ export default function BudgetsBlock({
   onToggle,
   onBudgetPress,
 }) {
+  const st = createSt();
   if (budgetRows.length === 0) return null;
   return (
     <Card>
@@ -100,7 +101,7 @@ export default function BudgetsBlock({
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   totalPct: { fontSize: 14, fontWeight: '700' },
