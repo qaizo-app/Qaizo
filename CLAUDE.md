@@ -106,6 +106,55 @@ npm run check-tasks      # Check and update task completion
 
 ---
 
+## iOS RTL Rules (MANDATORY — violations cause Hebrew text misalignment on iOS)
+
+### Rule 1: Never use `flex:1` on `<Text>` inside a row container
+iOS ignores `textAlign` when `<Text>` has `flex:1` inside `flexDirection:'row'`. Use `<RowText>` instead.
+
+```jsx
+// WRONG — works on Android, broken on iOS Hebrew:
+<View style={{flexDirection:'row'}}>
+  <Text style={{flex:1, textAlign:'right'}}>label</Text>
+</View>
+
+// CORRECT — use RowText from src/components/RowText.js:
+import RowText from '../components/RowText';
+<View style={{flexDirection:'row'}}>
+  <RowText style={{textAlign:'right'}}>label</RowText>
+</View>
+```
+
+`<TextInput>` and `textAlign:'center'` are NOT affected — do not wrap those.
+
+### Rule 2: Never call i18n functions inside module-level StyleSheet.create()
+`StyleSheet.create()` at module level is evaluated once at import time, before the language is loaded from AsyncStorage. All `i18n.row()`, `i18n.textAlign()`, `i18n.isRTL()` calls inside it get frozen with wrong values.
+
+```jsx
+// WRONG — frozen at import time:
+const st = StyleSheet.create({
+  row: { flexDirection: i18n.row() },
+  title: { textAlign: i18n.textAlign() },
+});
+
+// CORRECT — factory function called inside the component:
+const createSt = () => StyleSheet.create({
+  row: { flexDirection: i18n.row() },
+  title: { textAlign: i18n.textAlign() },
+});
+export default function MyScreen() {
+  const st = createSt(); // re-evaluated on every render
+  ...
+}
+```
+
+### Summary checklist for every new component/screen:
+- [ ] `StyleSheet.create()` is inside a `createSt()` factory, called inside the component
+- [ ] No `<Text style={{flex:1}}>` inside row containers — use `<RowText>` instead
+- [ ] `flexDirection` in row containers uses `i18n.row()` (not hardcoded `'row'`)
+- [ ] Header icon groups use `flexDirection: i18n.row()` so order flips in RTL
+
+---
+
 ## Environment Setup
 1. Copy `.env.example` to `.env` and fill in API keys
 2. `npm install`
