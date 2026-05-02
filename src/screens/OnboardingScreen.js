@@ -27,6 +27,7 @@ const SLIDES = [
 ];
 
 function InfoSlide({ item, isActive }) {
+  const st = createSt();
   const iconScale = useRef(new Animated.Value(0)).current;
   const titleFade = useRef(new Animated.Value(0)).current;
   const featureFades = useRef(item.features.map(() => new Animated.Value(0))).current;
@@ -69,6 +70,7 @@ function InfoSlide({ item, isActive }) {
 }
 
 function ToggleSlide({ item, value, onChange }) {
+  const st = createSt();
   const iconScale = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -124,6 +126,7 @@ function ToggleSlide({ item, value, onChange }) {
 }
 
 export default function OnboardingScreen({ onDone }) {
+  const st = createSt();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [toggleStates, setToggleStates] = useState(() => {
     const initial = {};
@@ -228,7 +231,7 @@ export default function OnboardingScreen({ onDone }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   logoRow: { paddingTop: 60, alignItems: 'center', marginBottom: 8 },
   logo: { color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1 },
@@ -267,3 +270,4 @@ const st = StyleSheet.create({
   nextBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   nextTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 });
+

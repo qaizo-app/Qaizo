@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 const PREFIX = 'qaizo_tooltip_seen_';
 
 export default function FirstTimeTooltip({ storageKey, text, icon = 'info', position = 'bottom', style }) {
+  const st = createSt();
   const [visible, setVisible] = useState(false);
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -43,7 +44,7 @@ export default function FirstTimeTooltip({ storageKey, text, icon = 'info', posi
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   container: { alignSelf: 'stretch', paddingHorizontal: 20, marginBottom: 10 },
   card: {
     flexDirection: i18n.row(), alignItems: 'center', gap: 8,

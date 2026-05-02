@@ -28,6 +28,7 @@ export default function RecurringBlock({
   onDetail,
   onShowAll,
 }) {
+  const st = createSt();
   const accName = (id) => accounts.find(a => a.id === id)?.name || '';
   // Coordinate Swipeables — when one row opens, close the previously open
   // one. Without this, edit/delete actions stay revealed under the row
@@ -53,7 +54,7 @@ export default function RecurringBlock({
       {upcoming.length > 0 ? (
         <Card>
           <View style={st.blockTitleRow}>
-            <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('upcomingPayments')}</Text>
+            <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
           </View>
           {preview.map(rec => {
             // Prefer the icon/color captured at save time (covers custom
@@ -151,7 +152,7 @@ export default function RecurringBlock({
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   blockTitleRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   // Solid bg matches the parent Card so when the row slides back over the
