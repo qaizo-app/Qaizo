@@ -58,7 +58,7 @@ function InfoSlide({ item, isActive }) {
       </Animated.View>
       <View style={st.featureList}>
         {item.features.map((fk, idx) => (
-          <Animated.View key={idx} style={[st.featureRow, { opacity: featureFades[idx], transform: [{ translateX: featureFades[idx].interpolate({ inputRange: [0, 1], outputRange: [i18n.isRTL() ? -30 : 30, 0] }) }] }]}>
+          <Animated.View key={idx} style={[st.featureRow, { flexDirection: i18n.row(), opacity: featureFades[idx], transform: [{ translateX: featureFades[idx].interpolate({ inputRange: [0, 1], outputRange: [i18n.isRTL() ? -30 : 30, 0] }) }] }]}>
             <View style={[st.featureDot, { backgroundColor: item.color }]} />
             <Text style={st.featureText}>{i18n.t(fk)}</Text>
           </Animated.View>

@@ -283,6 +283,8 @@ export default {
   afterN: 'אחרי N פעמים',
   untilDate: 'עד תאריך',
   repeatCount: 'חזרות',
+  installments: 'תשלומים',
+  totalPurchaseAmount: 'סכום הרכישה',
   endDate: 'תאריך סיום',
   tomorrow: 'מחר',
   days: 'ימים',

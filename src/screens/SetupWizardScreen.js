@@ -269,8 +269,8 @@ const createSt = () => StyleSheet.create({
   stepTitle: { color: colors.text, fontSize: 20, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
   stepSub: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
 
-  fieldLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, alignSelf: 'stretch' },
-  input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder, alignSelf: 'stretch' },
+  fieldLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, alignSelf: 'stretch', textAlign: i18n.textAlign() },
+  input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder, alignSelf: 'stretch', textAlign: i18n.textAlign() },
 
   optionGrid: { flexDirection: i18n.row(), gap: 12, marginBottom: 28 },
   currPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.cardBorder, gap: 12, alignSelf: 'stretch' },
@@ -283,11 +283,11 @@ const createSt = () => StyleSheet.create({
 
   balRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 20, alignSelf: 'stretch' },
   balCur: { color: colors.green, fontSize: 32, fontWeight: '700', marginEnd: 8 },
-  balInput: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '700' },
+  balInput: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '700', textAlign: i18n.textAlign() },
 
   catGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16, alignSelf: 'stretch' },
   catBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.cardBorder, flexDirection: i18n.row(), alignItems: 'center', gap: 6 },
-  catTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  catTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign() },
 
   twoBtn: { flexDirection: i18n.row(), gap: 12, alignSelf: 'stretch' },
   skipBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },

@@ -34,6 +34,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [notify, setNotify] = useState(true);
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [contractEndDate, setContractEndDate] = useState('');
+  const [totalPurchaseAmount, setTotalPurchaseAmount] = useState('');
   const [tags, setTags] = useState([]);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
@@ -59,6 +60,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       setEndType(editItem.endType || 'none');
       setTotalCount(editItem.totalCount ? String(editItem.totalCount) : '12');
       setEndDate(editItem.endDate || '');
+      setTotalPurchaseAmount(editItem.totalPurchaseAmount ? String(editItem.totalPurchaseAmount) : '');
       setNotify(editItem.notify !== false);
       setAutoConfirm(editItem.autoConfirm === true);
       setContractEndDate(editItem.contractEndDate || '');
@@ -76,6 +78,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       setEndType('none');
       setTotalCount('12');
       setEndDate('');
+      setTotalPurchaseAmount('');
       setNotify(true);
       setAutoConfirm(false);
       setContractEndDate('');
@@ -148,6 +151,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       endType,
       totalCount: endType === 'count' ? parseInt(totalCount, 10) || 12 : null,
       endDate: endType === 'date' ? endDate : null,
+      totalPurchaseAmount: (endType === 'count' && totalPurchaseAmount) ? parseFloat(totalPurchaseAmount.replace(',', '.')) || null : null,
       notify,
       autoConfirm,
       contractEndDate: contractEndDate || null,
@@ -258,6 +262,78 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
             <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
           </View>
+
+          {/* Кнопка Рассрочка — только для расходов */}
+          {type === 'expense' && (
+            <TouchableOpacity
+              style={[st.installmentChip, endType === 'count' && st.installmentChipActive]}
+              onPress={() => {
+                if (endType === 'count') {
+                  setEndType('none');
+                  setTotalPurchaseAmount('');
+                } else {
+                  setEndType('count');
+                  if (totalCount === '12') setTotalCount('');
+                }
+              }}
+            >
+              <Feather name="credit-card" size={14} color={endType === 'count' ? colors.blue : colors.textMuted} />
+              <Text style={[st.installmentChipTxt, endType === 'count' && { color: colors.blue }]}>
+                {i18n.t('installments')}
+              </Text>
+              {endType === 'count' && <Feather name="x" size={12} color={colors.blue} />}
+            </TouchableOpacity>
+          )}
+
+          {/* Блок рассрочки — показывается когда endType = 'count' */}
+          {endType === 'count' && type === 'expense' && (
+            <View style={st.tashlumimBlock}>
+              <View style={st.tashlumimRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.label}>{i18n.t('totalPurchaseAmount')}</Text>
+                  <View style={st.tashlumimInputRow}>
+                    <TextInput
+                      style={st.tashlumimInput}
+                      value={totalPurchaseAmount}
+                      onChangeText={(v) => {
+                        setTotalPurchaseAmount(v);
+                        const total = parseFloat(v.replace(',', '.'));
+                        const count = parseInt(totalCount, 10);
+                        if (total > 0 && count > 0) {
+                          setAmount(String(Math.round((total / count) * 100) / 100));
+                        }
+                      }}
+                      placeholder="2000"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="decimal-pad"
+                    />
+                    <Text style={st.tashlumimCur}>{sym()}</Text>
+                  </View>
+                </View>
+                <View style={st.tashlumimDivider}>
+                  <Feather name="divide" size={16} color={colors.textMuted} />
+                </View>
+                <View style={{ alignItems: 'center', minWidth: 70 }}>
+                  <Text style={st.label}>{i18n.t('repeatCount')}</Text>
+                  <TextInput
+                    style={[st.tashlumimInput, { textAlign: 'center' }]}
+                    value={totalCount}
+                    onChangeText={(v) => {
+                      setTotalCount(v);
+                      const total = parseFloat(totalPurchaseAmount.replace(',', '.'));
+                      const count = parseInt(v, 10);
+                      if (total > 0 && count > 0) {
+                        setAmount(String(Math.round((total / count) * 100) / 100));
+                      }
+                    }}
+                    keyboardType="numeric"
+                    placeholder="10"
+                    placeholderTextColor={colors.textMuted}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
 
           {type === 'transfer' ? (
             <>
@@ -453,7 +529,7 @@ const createSt = () => StyleSheet.create({
   // symbol glued to the typed number instead of floating to the far edge.
   amtRow: { flexDirection: i18n.row(), alignItems: 'baseline', marginBottom: 16, gap: 8 },
   cur: { fontSize: 32, fontWeight: '800' },
-  amtIn: { minWidth: 50, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1, padding: 0 },
+  amtIn: { minWidth: 50, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1, padding: 0, textAlign: i18n.textAlign() },
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8, marginTop: 4, textAlign: i18n.textAlign() },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 12, fontWeight: '500', marginStart: 6, maxWidth: 90 },
@@ -479,4 +555,13 @@ const createSt = () => StyleSheet.create({
   newTagWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder, paddingStart: 10 },
   newTagInput: { color: colors.text, fontSize: 12, paddingVertical: 8, minWidth: 80, maxWidth: 120 },
   newTagBtn: { paddingHorizontal: 10, paddingVertical: 8 },
+  installmentChip: { flexDirection: i18n.row(), alignItems: 'center', alignSelf: 'flex-start', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1.5, borderColor: 'transparent', marginBottom: 12 },
+  installmentChipActive: { borderColor: `${colors.blue}50`, backgroundColor: `${colors.blue}10` },
+  installmentChipTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  tashlumimBlock: { backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: `${colors.blue}30` },
+  tashlumimRow: { flexDirection: i18n.row(), alignItems: 'flex-end', gap: 8 },
+  tashlumimInputRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 4 },
+  tashlumimInput: { flex: 1, backgroundColor: colors.bg, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 15, fontWeight: '700', borderWidth: 1, borderColor: colors.cardBorder },
+  tashlumimCur: { color: colors.blue, fontSize: 15, fontWeight: '700' },
+  tashlumimDivider: { paddingBottom: 12, paddingHorizontal: 4 },
 });

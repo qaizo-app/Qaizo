@@ -114,6 +114,9 @@ export default function RecurringBlock({
                         {rec.isTransfer ? '' : rec.type === 'expense' ? '-' : '+'}{Math.abs(rec.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sym()}
                       </Text>
                       {' · '}{dateLabel}
+                      {rec.endType === 'count' && rec.totalCount ? (
+                        <Text style={st.recProgress}>{' · '}{(rec.completedCount || 0)}/{rec.totalCount}</Text>
+                      ) : null}
                     </Text>
                   </View>
                   <View style={st.recActions}>
@@ -166,4 +169,5 @@ const st = StyleSheet.create({
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
   showMoreBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, marginTop: 8 },
   showMoreTxt: { color: colors.green, fontSize: 13, fontWeight: '700' },
+  recProgress: { color: colors.blue, fontWeight: '700' },
 });

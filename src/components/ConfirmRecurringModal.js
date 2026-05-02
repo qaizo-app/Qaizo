@@ -250,7 +250,7 @@ const createSt = () => StyleSheet.create({
   // typed number instead of being pushed to the other edge by row stretching.
   amtLine: { marginBottom: 14 },
   cur: { fontSize: 28, fontWeight: '800' },
-  amtIn: { minWidth: 40, color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1, padding: 0 },
+  amtIn: { minWidth: 40, color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1, padding: 0, textAlign: i18n.textAlign() },
   row: {
     flexDirection: i18n.row(), alignItems: 'center', gap: 12,
     backgroundColor: colors.card, borderRadius: 14, padding: 14,

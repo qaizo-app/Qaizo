@@ -283,6 +283,8 @@ export default {
   afterN: 'N बार के बाद',
   untilDate: 'तिथि तक',
   repeatCount: 'दोहराव की संख्या',
+  installments: 'किस्त',
+  totalPurchaseAmount: 'कुल खरीद मूल्य',
   endDate: 'अंत तिथि',
   tomorrow: 'कल',
   days: 'दिन',

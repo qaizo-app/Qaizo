@@ -283,6 +283,8 @@ export default {
   afterN: 'Após N vezes',
   untilDate: 'Até a data',
   repeatCount: 'Quantidade de repetições',
+  installments: 'Parcelas',
+  totalPurchaseAmount: 'Valor total da compra',
   endDate: 'Data de término',
   tomorrow: 'Amanhã',
   days: 'dias',

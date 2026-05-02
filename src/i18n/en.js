@@ -285,6 +285,8 @@ export default {
   afterN: 'After N times',
   untilDate: 'Until date',
   repeatCount: 'Repeat count',
+  installments: 'Installments',
+  totalPurchaseAmount: 'Total purchase price',
   endDate: 'End date',
   tomorrow: 'Tomorrow',
   days: 'days',

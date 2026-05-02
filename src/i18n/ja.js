@@ -284,6 +284,8 @@ export default {
   afterN: 'N回後',
   untilDate: '日付まで',
   repeatCount: '繰り返し回数',
+  installments: '分割払い',
+  totalPurchaseAmount: '購入合計金額',
   endDate: '終了日',
   tomorrow: '明日',
   days: '日',

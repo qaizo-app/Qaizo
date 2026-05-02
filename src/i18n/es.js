@@ -289,6 +289,8 @@ export default {
   afterN: 'Después de N veces',
   untilDate: 'Hasta fecha',
   repeatCount: 'Cantidad de repeticiones',
+  installments: 'Cuotas',
+  totalPurchaseAmount: 'Precio total de compra',
   endDate: 'Fecha de fin',
   tomorrow: 'Mañana',
   days: 'días',

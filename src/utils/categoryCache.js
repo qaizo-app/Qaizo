@@ -16,6 +16,11 @@ export function setCachedGroups(groups) {
   if (Array.isArray(groups)) _cachedGroups = groups;
 }
 
+export function invalidateCachedGroups() {
+  _cachedGroups = null;
+  _loading = null;
+}
+
 // Lazy loader so background callers (services, notifications) can warm the
 // cache without pulling in CategoryIcon. Returns the loaded groups array.
 export async function ensureCachedGroups() {

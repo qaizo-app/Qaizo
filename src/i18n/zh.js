@@ -284,6 +284,8 @@ export default {
   afterN: '重复N次后',
   untilDate: '至指定日期',
   repeatCount: '重复次数',
+  installments: '分期付款',
+  totalPurchaseAmount: '购买总金额',
   endDate: '结束日期',
   tomorrow: '明天',
   days: '天',

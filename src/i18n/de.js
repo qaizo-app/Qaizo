@@ -283,6 +283,8 @@ export default {
   afterN: 'Nach N Mal',
   untilDate: 'Bis Datum',
   repeatCount: 'Anzahl Wiederholungen',
+  installments: 'Ratenzahlung',
+  totalPurchaseAmount: 'Gesamtkaufpreis',
   endDate: 'Enddatum',
   tomorrow: 'Morgen',
   days: 'Tage',

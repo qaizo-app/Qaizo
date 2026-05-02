@@ -478,7 +478,7 @@ const createSt = () => StyleSheet.create({
   typeTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   amtRow: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 16, gap: 8, backgroundColor: colors.bg2, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.cardBorder },
   cur: { fontSize: 32, fontWeight: '800' },
-  amtIn: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1, minWidth: 60 },
+  amtIn: { flex: 1, color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1, minWidth: 60, textAlign: i18n.textAlign() },
   calcBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   dateBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 10, minHeight: 34, borderWidth: 1, borderColor: colors.cardBorder, gap: 4 },
   dateTxt: { color: colors.textDim, fontSize: 12, fontWeight: '600' },

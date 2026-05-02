@@ -283,6 +283,8 @@ export default {
   afterN: 'بعد N مرات',
   untilDate: 'حتى تاريخ',
   repeatCount: 'عدد التكرارات',
+  installments: 'أقساط',
+  totalPurchaseAmount: 'إجمالي مبلغ الشراء',
   endDate: 'تاريخ الانتهاء',
   tomorrow: 'غداً',
   days: 'أيام',

@@ -13,6 +13,7 @@ import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { breadcrumb, captureError, captureMessage } from '../services/logger';
+import { invalidateCachedGroups, setCachedGroups } from '../utils/categoryCache';
 import { colors } from '../theme/colors';
 
 // Icons prefixed with 'ion:' use Ionicons outline, others use Feather
@@ -171,6 +172,8 @@ export default function CategoriesScreen() {
 
   const persistGroups = (newGroups) => {
     setGroups(newGroups);
+    setCachedGroups(newGroups);
+    invalidateCachedGroups();
     dataService.saveCategories(newGroups);
   };
   const [expandedGroup, setExpandedGroup] = useState(null);
@@ -296,14 +299,14 @@ export default function CategoriesScreen() {
                   : <Feather name={group.icon} size={18} color={group.color} />}
               </View>
               <Text style={styles.groupName} numberOfLines={1}>{getName(group.name)}</Text>
-              <Text style={styles.subCount}>{group.subs.length}</Text>
+              <Text style={styles.subCount}>{(group.subs || []).length}</Text>
               <Feather name={expandedGroup === group.id ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
             </TouchableOpacity>
 
             {/* Sub-categories */}
             {expandedGroup === group.id && (
               <View style={styles.subsContainer}>
-                {group.subs.map(sub => (
+                {(group.subs || []).map(sub => (
                   <TouchableOpacity key={sub.id} style={styles.subRow} onPress={() => openEditSub(sub, group)}
                     onLongPress={async () => {
                       try {
@@ -407,7 +410,7 @@ const createStyles = () => StyleSheet.create({
   addSubText: { fontSize: 12, fontWeight: '600' },
 
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: i18n.textAlign() },
-  fieldLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 8, textAlign: i18n.textAlign() },
+  fieldLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 8, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
 
   iconGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 16 },

@@ -453,7 +453,7 @@ const createSt = () => StyleSheet.create({
   modalCard: { backgroundColor: colors.card, borderRadius: 20, padding: 24, width: '92%', maxWidth: 500, borderWidth: 1, borderColor: colors.cardBorder },
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '800', marginBottom: 20, textAlign: i18n.textAlign() },
   modalInput: { backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontSize: 15, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 12, textAlign: i18n.textAlign() },
-  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 4, textAlign: i18n.textAlign() },
+  fieldLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 4, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
   rowFields: { flexDirection: i18n.row(), gap: 10 },
   modalBtn: { backgroundColor: colors.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
   modalBtnText: { color: colors.bg, fontSize: 16, fontWeight: '700' },

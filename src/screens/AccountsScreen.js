@@ -585,7 +585,7 @@ const createStyles = () => StyleSheet.create({
   addCoinBtn:{width:44,height:44,borderRadius:12,backgroundColor:colors.orange,justifyContent:'center',alignItems:'center'},
 
   modalTitle:{color:colors.text,fontSize:20,fontWeight:'700',marginBottom:20,textAlign:i18n.textAlign()},
-  fieldLabel:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4,textAlign:i18n.textAlign()},
+  fieldLabel:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:0.5,marginBottom:6,marginTop:4,textAlign:i18n.textAlign(),alignSelf:'stretch'},
   input:{backgroundColor:colors.card,borderRadius:14,padding:14,color:colors.text,fontSize:16,marginBottom:12,borderWidth:1,borderColor:colors.cardBorder,textAlign:i18n.textAlign()},
   typeChip:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:14,paddingVertical:10,borderRadius:12,backgroundColor:colors.card,marginEnd:8,borderWidth:1.5,borderColor:'transparent'},
   typeChipText:{color:colors.textMuted,fontSize:12,fontWeight:'600',marginStart:6},
@@ -597,7 +597,7 @@ const createStyles = () => StyleSheet.create({
   billingTxt:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
   balRow:{flexDirection:i18n.row(),alignItems:'center',marginBottom:16},
   balCur:{fontSize:32,fontWeight:'700',marginEnd:8},
-  balInput:{flex:1,color:colors.text,fontSize:32,fontWeight:'700'},
+  balInput:{flex:1,color:colors.text,fontSize:32,fontWeight:'700',textAlign:i18n.textAlign()},
   toggleRow:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingVertical:16,marginBottom:8,borderTopWidth:1,borderTopColor:colors.divider},
   toggleLabel:{color:colors.text,fontSize:14,fontWeight:'600'},
   toggleSub:{color:colors.textMuted,fontSize:12,marginTop:2},

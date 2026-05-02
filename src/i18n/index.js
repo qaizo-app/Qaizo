@@ -66,13 +66,21 @@ const i18n = {
     return currentLang === 'he' || currentLang === 'ar';
   },
 
-  // RTL handled by I18nManager — always return 'row'
-  row() { return 'row'; },
+  // I18nManager.forceRTL persists on iOS across sessions and requires a full
+  // native restart to change. reloadAsync() only reloads JS, so isRTL can be
+  // out of sync with the current language. We compensate:
+  //   lang=RTL  + system=RTL  → 'row'         (in sync, system handles it)
+  //   lang=RTL  + system=LTR  → 'row-reverse' (system not applied yet — JS mirrors)
+  //   lang=LTR  + system=LTR  → 'row'         (normal)
+  //   lang=LTR  + system=RTL  → 'row-reverse' (stale system RTL — counteract it)
+  row() {
+    const langIsRTL = currentLang === 'he' || currentLang === 'ar';
+    return langIsRTL === I18nManager.isRTL ? 'row' : 'row-reverse';
+  },
   textAlign() { return (currentLang === 'he' || currentLang === 'ar') ? 'right' : 'left'; },
-  // Back arrow icon — depends on SYSTEM RTL (I18nManager flips layout but not icons)
-  backIcon() { return I18nManager.isRTL ? 'arrow-right' : 'arrow-left'; },
-  chevronLeft() { return I18nManager.isRTL ? 'chevron-right' : 'chevron-left'; },
-  chevronRight() { return I18nManager.isRTL ? 'chevron-left' : 'chevron-right'; },
+  backIcon() { return (currentLang === 'he' || currentLang === 'ar') ? 'arrow-right' : 'arrow-left'; },
+  chevronLeft() { return (currentLang === 'he' || currentLang === 'ar') ? 'chevron-right' : 'chevron-left'; },
+  chevronRight() { return (currentLang === 'he' || currentLang === 'ar') ? 'chevron-left' : 'chevron-right'; },
 };
 
 export default i18n;

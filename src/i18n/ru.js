@@ -291,6 +291,8 @@ export default {
   afterN: 'После N раз',
   untilDate: 'До даты',
   repeatCount: 'Повторений',
+  installments: 'Рассрочка',
+  totalPurchaseAmount: 'Сумма покупки',
   endDate: 'Дата окончания',
   tomorrow: 'Завтра',
   days: 'дн.',

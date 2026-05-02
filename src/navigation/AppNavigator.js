@@ -368,7 +368,7 @@ const createStyles = () => StyleSheet.create({
   menuContainer: { position: 'absolute', bottom: 120, left: 20, right: 20, backgroundColor: colors.card, borderRadius: 20, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
   menuIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
+  menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
   comingSoonBadge: { color: colors.textMuted, fontSize: 10, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
 
   fabOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 },
