@@ -120,7 +120,9 @@ export default function AuthScreen({ onSkip }) {
         {error ? (
           <View style={st.errorBox}>
             <Feather name="alert-circle" size={16} color={colors.red} />
-            <Text style={st.errorTxt}>{error}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={st.errorTxt}>{error}</Text>
+            </View>
           </View>
         ) : null}
 
@@ -290,12 +292,12 @@ const createSt = () => StyleSheet.create({
   logo: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
-  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24 },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24, textAlign: i18n.textAlign() },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
-  errorTxt: { color: colors.red, fontSize: 12, fontWeight: '600', flex: 1 },
+  errorTxt: { color: colors.red, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign() },
 
-  inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
+  inputWrap: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 14 },
   inputIcon: { marginStart: 16 },
   input: { flex: 1, color: colors.text, fontSize: 16, paddingVertical: 16, paddingHorizontal: 12, textAlign: i18n.textAlign() },
   eyeBtn: { paddingHorizontal: 16, paddingVertical: 16 },
