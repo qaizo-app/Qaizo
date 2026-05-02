@@ -53,7 +53,7 @@ export default function RecurringBlock({
       {upcoming.length > 0 ? (
         <Card>
           <View style={st.blockTitleRow}>
-            <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
+            <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('upcomingPayments')}</Text>
           </View>
           {preview.map(rec => {
             // Prefer the icon/color captured at save time (covers custom
@@ -143,7 +143,7 @@ export default function RecurringBlock({
         </Card>
       ) : (
         <Card>
-          <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
+          <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('upcomingPayments')}</Text>
           <Text style={st.recEmptyTxt}>{i18n.t('noUpcoming')}</Text>
         </Card>
       )}

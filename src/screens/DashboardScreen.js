@@ -427,7 +427,7 @@ export default function DashboardScreen() {
             </View>
             <Text style={st.subtitle}>{dateStr}</Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 8, flexShrink: 0 }}>
+          <View style={{ flexDirection: i18n.row(), gap: 8, flexShrink: 0 }}>
           <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
             <Feather name="sliders" size={18} color={colors.textDim} />
           </TouchableOpacity>

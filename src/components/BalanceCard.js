@@ -8,6 +8,7 @@ import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 export default function BalanceCard({ balance, totalIncome, totalExpense, now }) {
+  const st = createSt();
   const dayOfMonth = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const showForecast = dayOfMonth >= 3 && totalExpense > 0;
@@ -52,14 +53,14 @@ export default function BalanceCard({ balance, totalIncome, totalExpense, now })
   );
 }
 
-const st = StyleSheet.create({
-  balLabel: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 8, textAlign: i18n.isRTL() ? 'right' : 'left' },
+const createSt = () => StyleSheet.create({
+  balLabel: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign() },
   balAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
   forecastRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, flexWrap: 'wrap' },
   forecastText: { color: colors.textMuted, fontSize: 12, fontWeight: '500', flexShrink: 1 },
   forecastAmount: { fontSize: 14, fontWeight: '700', flexShrink: 1 },
   incExpRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },
-  incExpItem: { flex: 1 },
+  incExpItem: { flex: 1, alignItems: i18n.isRTL() ? 'flex-end' : 'flex-start' },
   incExpHead: { flexDirection: i18n.row(), alignItems: 'center', marginBottom: 6 },
   dividerV: { width: 1, height: 40, backgroundColor: colors.divider, marginHorizontal: 16 },
   incLabel: { color: colors.green, fontSize: 12, fontWeight: '600' },
