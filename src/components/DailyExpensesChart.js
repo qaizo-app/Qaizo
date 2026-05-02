@@ -8,6 +8,7 @@ import i18n from '../i18n';
 import { sym } from '../utils/currency';
 
 export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) {
+  const st = createSt();
   const [selectedDay, setSelectedDay] = useState(null);
   const maxDaily = Math.max(...dailyExp, 1);
   const animValue = useRef(new Animated.Value(0)).current;
@@ -75,7 +76,7 @@ export default function DailyExpensesChart({ dailyExp, avgDaily, daysInMonth }) 
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   tooltip: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12, marginBottom: 8, alignSelf: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   tooltipDay: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   tooltipAmount: { color: colors.text, fontSize: 14, fontWeight: '700' },
