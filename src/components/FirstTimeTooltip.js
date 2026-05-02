@@ -34,7 +34,9 @@ export default function FirstTimeTooltip({ storageKey, text, icon = 'info', posi
     <Animated.View style={[st.container, { opacity }, style]} pointerEvents="box-none">
       <TouchableOpacity style={st.card} onPress={dismiss} activeOpacity={0.85}>
         <Feather name={icon} size={14} color={colors.green} />
-        <Text style={st.text}>{text}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={st.text}>{text}</Text>
+        </View>
         <Feather name="x" size={12} color={colors.textDim} />
       </TouchableOpacity>
     </Animated.View>
@@ -50,5 +52,5 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: `${colors.green}40`,
     paddingHorizontal: 12, paddingVertical: 8,
   },
-  text: { flex: 1, color: colors.text, fontSize: 12, fontWeight: '500', textAlign: i18n.textAlign() },
+  text: { color: colors.text, fontSize: 12, fontWeight: '500', textAlign: i18n.textAlign() },
 });

@@ -209,7 +209,9 @@ export default function SettingsScreen() {
             {languages.map((l, idx) => (
               <TouchableOpacity key={l.code} style={[styles.optRow, idx < languages.length - 1 && styles.optBorder]} onPress={() => changeLang(l.code)}>
                 <Text style={styles.optEmoji}>{flags[l.code]}</Text>
-                <Text style={styles.optText}>{l.name}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.optText}>{l.name}</Text>
+                </View>
                 <View style={[styles.radio, lang === l.code && styles.radioOn]}>
                   {lang === l.code && <View style={styles.radioDot} />}
                 </View>
@@ -245,7 +247,9 @@ export default function SettingsScreen() {
               <TouchableOpacity key={opt.mode} style={[styles.optRow, idx < arr.length - 1 && styles.optBorder]}
                 onPress={() => { setThemeMode(opt.mode); setOpenSection(null); }}>
                 <Feather name={opt.icon} size={18} color={colors.textDim} style={{ }} />
-                <Text style={styles.optText}>{opt.label}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.optText}>{opt.label}</Text>
+                </View>
                 <View style={[styles.radio, themeMode === opt.mode && styles.radioOn]}>
                   {themeMode === opt.mode && <View style={styles.radioDot} />}
                 </View>
@@ -270,7 +274,9 @@ export default function SettingsScreen() {
             {['sunday', 'monday', 'saturday'].map((day, idx) => (
               <TouchableOpacity key={day} style={[styles.optRow, idx < 2 && styles.optBorder]}
                 onPress={() => changeWeekStart(day)}>
-                <Text style={styles.optText}>{i18n.t(day)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.optText}>{i18n.t(day)}</Text>
+                </View>
                 <View style={[styles.radio, weekStart === day && styles.radioOn]}>
                   {weekStart === day && <View style={styles.radioDot} />}
                 </View>
@@ -323,7 +329,9 @@ export default function SettingsScreen() {
           <Card>
             <View style={[styles.optRow, styles.optBorder]}>
               <Feather name="lock" size={18} color={colors.green} />
-              <Text style={styles.optText}>{i18n.t('pinCode')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('pinCode')}</Text>
+              </View>
               <Switch
                 value={pinEnabled}
                 onValueChange={(val) => {
@@ -337,7 +345,9 @@ export default function SettingsScreen() {
             {pinEnabled && bioAvailable && (
               <View style={styles.optRow}>
                 <Feather name="smartphone" size={18} color={colors.teal} />
-                <Text style={styles.optText}>{i18n.t('biometricLock')}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.optText}>{i18n.t('biometricLock')}</Text>
+                </View>
                 <Switch
                   value={bioEnabled}
                   onValueChange={async (val) => {
@@ -374,21 +384,29 @@ export default function SettingsScreen() {
           <Card>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={() => { setOpenSection(null); setShowExport(true); }}>
               <Feather name="upload" size={18} color={colors.green} style={{ }} />
-              <Text style={styles.optText}>{i18n.t('exportData')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('exportData')}</Text>
+              </View>
               <Text style={styles.sectionValue}>CSV / Excel / PDF</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={() => { setOpenSection(null); setShowImport(true); }}>
               <Feather name="download" size={18} color={colors.blue} style={{ }} />
-              <Text style={styles.optText}>{i18n.t('importData')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('importData')}</Text>
+              </View>
               <Text style={styles.sectionValue}>CSV / Excel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleRecalc}>
               <Feather name="refresh-cw" size={18} color={colors.blue} style={{ }} />
-              <Text style={styles.optText}>{i18n.t('recalculate')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('recalculate')}</Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.optRow} onPress={() => setShowClearData(true)}>
               <Feather name="trash-2" size={18} color={colors.red} style={{ }} />
-              <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('clearData')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('clearData')}</Text>
+              </View>
             </TouchableOpacity>
           </Card>
         )}
@@ -407,7 +425,9 @@ export default function SettingsScreen() {
               <>
                 <View style={[styles.optRow, styles.optBorder]}>
                   <Feather name="mail" size={16} color={colors.textDim} />
-                  <Text style={styles.optText}>{currentUser.email}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.optText}>{currentUser.email}</Text>
+                  </View>
                 </View>
                 <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={async () => {
                   await authService.logout();
@@ -415,11 +435,15 @@ export default function SettingsScreen() {
                   setLangVersion(n => n + 1);
                 }}>
                   <Feather name="log-out" size={16} color={colors.red} />
-                  <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('logout')}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('logout')}</Text>
+                  </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.optRow} onPress={() => setShowDeleteAccount(true)}>
                   <Feather name="user-x" size={16} color={colors.red} />
-                  <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('deleteAccount')}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.optText, { color: colors.red }]}>{i18n.t('deleteAccount')}</Text>
+                  </View>
                 </TouchableOpacity>
               </>
             ) : (
@@ -430,7 +454,9 @@ export default function SettingsScreen() {
                 }).catch(() => Alert.alert('', i18n.t('restartApp')));
               }}>
                 <Feather name="log-in" size={16} color={colors.green} />
-                <Text style={[styles.optText, { color: colors.green }]}>{i18n.t('loginOrRegister')}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.optText, { color: colors.green }]}>{i18n.t('loginOrRegister')}</Text>
+                </View>
               </TouchableOpacity>
             )}
           </Card>
@@ -591,7 +617,7 @@ const createStyles = () => StyleSheet.create({
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1, textAlign: 'center' },
 
-  groupTitle: { color: colors.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginHorizontal: 24, marginTop: 24, marginBottom: 4 },
+  groupTitle: { color: colors.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginHorizontal: 24, marginTop: 24, marginBottom: 4, textAlign: i18n.textAlign() },
   sectionBtn: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
   sectionLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 12 },
   sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
@@ -604,7 +630,7 @@ const createStyles = () => StyleSheet.create({
   optRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 16, gap: 12 },
   optBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   optEmoji: { fontSize: 20 },
-  optText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '500', textAlign: i18n.textAlign() },
+  optText: { color: colors.text, fontSize: 16, fontWeight: '500', textAlign: i18n.textAlign() },
 
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.textMuted, justifyContent: 'center', alignItems: 'center' },
   radioOn: { borderColor: colors.green },

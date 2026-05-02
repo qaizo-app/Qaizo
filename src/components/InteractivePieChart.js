@@ -151,9 +151,11 @@ export default function InteractivePieChart({ data, size = 220, donut = true, hi
                 activeOpacity={0.7}
               >
                 <View style={[st.legendDot, { backgroundColor: slice.color }]} />
-                <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
-                  {slice.name}
-                </Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.legendName, isSelected && st.legendNameActive]} numberOfLines={1}>
+                    {slice.name}
+                  </Text>
+                </View>
                 <Amount value={slice.amount} style={[st.legendAmount, isSelected && st.legendAmountActive]} />
                 <Text style={st.legendPct}>{Math.round(slice.pct * 100)}%</Text>
               </TouchableOpacity>
@@ -175,7 +177,7 @@ const createSt = () => StyleSheet.create({
   legendRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, gap: 10 },
   legendRowActive: { backgroundColor: colors.bg2 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendName: { flex: 1, color: colors.textDim, fontSize: 12, fontWeight: '600', textAlign: rtl() ? 'right' : 'left' },
+  legendName: { color: colors.textDim, fontSize: 12, fontWeight: '600', textAlign: rtl() ? 'right' : 'left' },
   legendNameActive: { color: colors.text },
   legendAmount: { color: colors.textDim, fontSize: 12, fontWeight: '700' },
   legendAmountActive: { color: colors.text },

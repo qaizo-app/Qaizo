@@ -312,7 +312,9 @@ export default function AccountsScreen() {
             <View key={typeId} style={{ marginBottom: 16 }}>
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} />
-                <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                </View>
                 <TouchableOpacity onPress={() => moveGroup(typeId, -1)} style={{ padding: 6 }} disabled={isFirstGroup}>
                   <Feather name="chevrons-up" size={18} color={isFirstGroup ? colors.textMuted + '40' : cfg.color} />
                 </TouchableOpacity>
@@ -327,7 +329,9 @@ export default function AccountsScreen() {
                   return (
                     <View key={acc.id} style={{ flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 }}>
                       <MaterialCommunityIcons name={cfg.icon} size={18} color={cfg.color} />
-                      <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600', flex: 1 }}>{acc.name}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>{acc.name}</Text>
+                      </View>
                       <TouchableOpacity onPress={() => moveAccount(acc.id, -1)} style={{ padding: 6 }} disabled={isFirst}>
                         <Feather name="chevron-up" size={20} color={isFirst ? colors.textMuted + '40' : colors.text} />
                       </TouchableOpacity>
@@ -349,7 +353,9 @@ export default function AccountsScreen() {
             <View key={typeId}>
               <View style={styles.groupHeader}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ }} />
-                <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                </View>
                 <Amount value={sum} sign style={styles.groupSum} color={sum >= 0 ? colors.textDim : colors.red} />
               </View>
               <View style={styles.tilesRow}>
@@ -364,7 +370,9 @@ export default function AccountsScreen() {
           <View>
             <View style={styles.groupHeader}>
               <Feather name="archive" size={14} color={colors.textMuted} style={{ }} />
-              <Text style={styles.groupTitle}>{i18n.t('inactive')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.groupTitle}>{i18n.t('inactive')}</Text>
+              </View>
             </View>
             <View style={styles.tilesRow}>
               {inactive.map(acc => (
@@ -554,13 +562,13 @@ const createStyles = () => StyleSheet.create({
   addBtn:{width:44,height:44,borderRadius:14,backgroundColor:colors.green,justifyContent:'center',alignItems:'center'},
 
   totalCard:{marginHorizontal:24,marginBottom:8,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:colors.greenSoft},
-  totalLabel:{color:colors.textDim,fontSize:12,marginBottom:6,textAlign:i18n.textAlign()},
+  totalLabel:{color:colors.textDim,fontSize:12,marginBottom:6,textAlign:i18n.textAlign(),alignSelf:'stretch'},
   totalAmount:{fontSize:32,fontWeight:'800',textAlign:i18n.textAlign()},
 
   hint:{color:colors.textMuted,fontSize:12,textAlign:'center',marginBottom:12,opacity:0.5},
 
   groupHeader:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:24,marginTop:20,marginBottom:8,gap:6},
-  groupTitle:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',flex:1,textAlign:i18n.textAlign()},
+  groupTitle:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',textAlign:i18n.textAlign()},
   groupSum:{fontSize:12,fontWeight:'600'},
 
   tilesRow:{flexDirection:i18n.row(),flexWrap:'wrap',paddingHorizontal:24,gap:TILE_GAP},

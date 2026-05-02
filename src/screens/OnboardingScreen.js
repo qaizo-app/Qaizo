@@ -89,7 +89,9 @@ function ToggleSlide({ item, value, onChange }) {
 
       {/* Toggle row */}
       <View style={[st.toggleCard, { borderColor: `${item.color}40`, backgroundColor: `${item.color}08` }]}>
-        <Text style={st.toggleLabel}>{i18n.t(item.toggleLabel)}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={st.toggleLabel}>{i18n.t(item.toggleLabel)}</Text>
+        </View>
         <Switch value={value} onValueChange={onChange}
           trackColor={{ false: colors.cardBorder, true: `${item.color}60` }}
           thumbColor={value ? item.color : colors.textMuted} />
@@ -98,7 +100,9 @@ function ToggleSlide({ item, value, onChange }) {
       {/* Info hint */}
       <View style={st.infoRow}>
         <Feather name="info" size={14} color={colors.textMuted} />
-        <Text style={st.infoText}>{i18n.t(item.infoText)}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={st.infoText}>{i18n.t(item.infoText)}</Text>
+        </View>
       </View>
 
       {item.showLegal && (
@@ -246,9 +250,9 @@ const st = StyleSheet.create({
 
   // Toggle slide
   toggleCard: { alignSelf: 'stretch', flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', padding: 16, borderRadius: 14, borderWidth: 1, marginBottom: 16 },
-  toggleLabel: { color: colors.text, fontSize: 15, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
+  toggleLabel: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
   infoRow: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 8, alignSelf: 'stretch', paddingHorizontal: 4 },
-  infoText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, flex: 1, textAlign: i18n.textAlign() },
+  infoText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, textAlign: i18n.textAlign() },
   legalRow: { marginTop: 16, alignSelf: 'stretch', paddingHorizontal: 4 },
   legalText: { color: colors.textMuted, fontSize: 11, lineHeight: 18, textAlign: 'center' },
   legalLink: { color: colors.green, textDecorationLine: 'underline' },

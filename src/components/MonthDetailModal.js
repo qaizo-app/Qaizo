@@ -86,7 +86,9 @@ export default function MonthDetailModal({ visible, onClose, monthInfo, transact
                 <View style={[st.catIconWrap, { backgroundColor: row.color + '18' }]}>
                   <CatIcon icon={row.icon} size={18} color={row.color} />
                 </View>
-                <Text style={st.catName} numberOfLines={1}>{row.name}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.catName} numberOfLines={1}>{row.name}</Text>
+                </View>
                 <Amount value={row.amount} style={st.catAmount} />
                 <Text style={st.catPct}>{row.pct}%</Text>
               </View>
@@ -117,7 +119,7 @@ const createSt = () => StyleSheet.create({
   pieWrap: { alignItems: 'center', marginBottom: 12 },
   catRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 12 },
   catIconWrap: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  catName: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
+  catName: { color: colors.text, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
   catAmount: { color: colors.text, fontSize: 14, fontWeight: '700' },
   catPct: { color: colors.textDim, fontSize: 12, fontWeight: '600', minWidth: 34, textAlign: 'right' },
   empty: { color: colors.textDim, fontSize: 14, textAlign: 'center', marginVertical: 24 },

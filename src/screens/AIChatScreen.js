@@ -353,7 +353,9 @@ export default function AIChatScreen() {
             <View style={st.suggestionsWrap}>
               {suggestions.map((s, idx) => (
                 <TouchableOpacity key={idx} style={st.suggestionBtn} onPress={() => sendMessage(s)}>
-                  <Text style={st.suggestionText}>{s}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.suggestionText}>{s}</Text>
+                  </View>
                   <Feather name="arrow-up-right" size={14} color={colors.green} />
                 </TouchableOpacity>
               ))}
@@ -439,7 +441,7 @@ const createSt = () => StyleSheet.create({
   emptyHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
   suggestionsWrap: { width: '100%', gap: 8 },
   suggestionBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.cardBorder },
-  suggestionText: { color: colors.text, fontSize: 14, fontWeight: '500', flex: 1, textAlign: i18n.textAlign() },
+  suggestionText: { color: colors.text, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
 
   loadingRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   loadingText: { color: colors.textMuted, fontSize: 12 },

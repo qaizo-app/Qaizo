@@ -201,7 +201,9 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
               ].map((ex, idx) => (
                 <View key={idx} style={st.exRow}>
                   <Feather name="corner-down-right" size={14} color={colors.textMuted} />
-                  <Text style={st.exText}>{ex}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.exText}>{ex}</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -268,7 +270,7 @@ const createStyles = () => StyleSheet.create({
   examples: { paddingHorizontal: 24, marginBottom: 16 },
   exTitle: { color: colors.textDim, fontSize: 12, fontWeight: '600', marginBottom: 8, textAlign: i18n.textAlign() },
   exRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8 },
-  exText: { color: colors.textSecondary, fontSize: 14, textAlign: i18n.textAlign(), flex: 1 },
+  exText: { color: colors.textSecondary, fontSize: 14, textAlign: i18n.textAlign() },
 
   resultCard: { backgroundColor: colors.card, borderRadius: 20, marginHorizontal: 20, padding: 20, borderWidth: 1, borderColor: colors.cardBorder },
   resultHeader: { flexDirection: i18n.row(), alignItems: 'center', gap: 14, marginBottom: 16 },

@@ -198,13 +198,17 @@ export default function AIAdvisorScreen() {
               {cashFlow.isAtRisk && (
                 <View style={st.riskBanner}>
                   <Feather name="alert-octagon" size={16} color={colors.red} />
-                  <Text style={st.riskText}>{i18n.t('aiCashFlowWarning')}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.riskText}>{i18n.t('aiCashFlowWarning')}</Text>
+                  </View>
                 </View>
               )}
               {cashFlow.upcoming.slice(0, 5).map((item, idx) => (
                 <View key={idx} style={st.cfRow}>
                   <Text style={st.cfDate}>{item.date}</Text>
-                  <Text style={st.cfName}>{i18n.t(item.name) || item.name}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.cfName}>{i18n.t(item.name) || item.name}</Text>
+                  </View>
                   <Amount
                     value={item.type === 'expense' ? -item.amount : item.amount}
                     sign={item.type === 'expense'}
@@ -353,10 +357,10 @@ const createStyles = () => StyleSheet.create({
   cfValue: { fontSize: 14, fontWeight: '700' },
   cfRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.divider },
   cfDate: { color: colors.textMuted, fontSize: 12, fontWeight: '600', width: 30 },
-  cfName: { flex: 1, color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginStart: 10, textAlign: i18n.textAlign() },
+  cfName: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginStart: 10, textAlign: i18n.textAlign() },
   cfAmount: { fontSize: 14, fontWeight: '700' },
   riskBanner: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
-  riskText: { color: colors.red, fontSize: 12, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
+  riskText: { color: colors.red, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign() },
 
   // Insights
   insightRow: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 14 },

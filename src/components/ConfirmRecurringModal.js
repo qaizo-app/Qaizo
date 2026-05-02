@@ -159,7 +159,9 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
             <Text style={st.label}>{i18n.t('date') || 'Date'}</Text>
             <TouchableOpacity style={st.row} onPress={() => setShowDatePicker(true)}>
               <Feather name="calendar" size={18} color={colors.textDim} />
-              <Text style={st.rowTxt}>{isoToDisplayDate(dateIso, i18n.getLanguage())}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={st.rowTxt}>{isoToDisplayDate(dateIso, i18n.getLanguage())}</Text>
+              </View>
               <Feather name={i18n.chevronRight()} size={16} color={colors.textMuted} />
             </TouchableOpacity>
 
@@ -256,7 +258,7 @@ const createSt = () => StyleSheet.create({
     backgroundColor: colors.card, borderRadius: 14, padding: 14,
     marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder,
   },
-  rowTxt: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
+  rowTxt: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   chip: {
     flexDirection: i18n.row(), alignItems: 'center',
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12,
