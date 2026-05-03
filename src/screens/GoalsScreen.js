@@ -195,7 +195,7 @@ export default function GoalsScreen() {
             <TextInput style={st.input} value={name} onChangeText={setName}
               placeholder={i18n.t('goalName')} placeholderTextColor={colors.textMuted} autoFocus />
 
-            <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ flexDirection: i18n.row(), gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text style={st.label}>{i18n.t('targetAmount')}</Text>
                 <TextInput style={st.input} value={targetAmount} onChangeText={setTargetAmount}
@@ -288,7 +288,7 @@ export default function GoalsScreen() {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },
   addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
@@ -297,24 +297,24 @@ const createSt = () => StyleSheet.create({
   emptyText: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },
 
   goalCard: { marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: colors.cardBorder },
-  goalTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
+  goalTop: { flexDirection: i18n.row(), alignItems: 'center', gap: 14, marginBottom: 14 },
   goalIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   goalInfo: { flex: 1 },
   goalName: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 4 },
   goalMeta: { color: colors.textDim, fontSize: 12, fontWeight: '500' },
 
-  progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  progressRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   progressSaved: { fontSize: 16, fontWeight: '700' },
   progressTarget: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
   progressBar: { height: 10, backgroundColor: colors.bg2, borderRadius: 5, overflow: 'hidden', marginBottom: 6 },
   progressFill: { height: 10, borderRadius: 5 },
-  progressPct: { fontSize: 12, fontWeight: '700', textAlign: 'right' },
+  progressPct: { fontSize: 12, fontWeight: '700', textAlign: i18n.isRTL() ? 'left' : 'right' },
 
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16, paddingHorizontal: 24 },
   form: { paddingHorizontal: 24, paddingBottom: 30 },
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, marginTop: 16 },
   input: { color: colors.text, fontSize: 16, backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder },
-  dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
+  dateBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
   dateTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
 
   iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -323,7 +323,7 @@ const createSt = () => StyleSheet.create({
   colorBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, transform: [{ scale: 1.15 }] },
 
-  btnRow: { flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
+  btnRow: { flexDirection: i18n.row(), gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelBtnText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
