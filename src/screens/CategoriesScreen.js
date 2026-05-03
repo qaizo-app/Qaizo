@@ -298,9 +298,8 @@ export default function CategoriesScreen() {
                   ? <Ionicons name={group.icon.slice(4)} size={18} color={group.color} />
                   : <Feather name={group.icon} size={18} color={group.color} />}
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.groupName} numberOfLines={1}>{getName(group.name)}</Text>
-              </View>
+              <Text style={styles.groupName} numberOfLines={1}>{getName(group.name)}</Text>
+              <View style={{ flex: 1 }} />
               <Text style={styles.subCount}>{(group.subs || []).length}</Text>
               <Feather name={expandedGroup === group.id ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -326,9 +325,8 @@ export default function CategoriesScreen() {
                         ? <Ionicons name={sub.icon.slice(4)} size={14} color={group.color} />
                         : <Feather name={sub.icon} size={14} color={group.color} />}
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.subName} numberOfLines={1}>{getName(sub.name)}</Text>
-                    </View>
+                    <Text style={styles.subName} numberOfLines={1}>{getName(sub.name)}</Text>
+                    <View style={{ flex: 1 }} />
                     <Feather name="edit-2" size={14} color={colors.textMuted} />
                   </TouchableOpacity>
                 ))}
@@ -402,13 +400,13 @@ const createStyles = () => StyleSheet.create({
 
   groupRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 20, marginTop: 8, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10 },
   groupIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  groupName: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
+  groupName: { color: colors.text, fontSize: 16, fontWeight: '600', flexShrink: 1 },
   subCount: { color: colors.textMuted, fontSize: 12, fontWeight: '600', backgroundColor: colors.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
 
   subsContainer: { marginHorizontal: 20, marginTop: 4, backgroundColor: colors.card, borderRadius: 14, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
   subRow: { flexDirection: i18n.row(), alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 10 },
   subIcon: { width: 32, height: 32, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
-  subName: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },
+  subName: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', flexShrink: 1 },
 
   addSubBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', padding: 12, gap: 6 },
   addSubText: { fontSize: 12, fontWeight: '600' },

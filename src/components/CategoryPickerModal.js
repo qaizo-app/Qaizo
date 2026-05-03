@@ -391,26 +391,26 @@ const createSt = () => StyleSheet.create({
 
   topSection: { marginBottom: 16 },
   sectionLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
-  topGrid: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  topGrid: { flexDirection: i18n.row(), gap: 8, flexWrap: 'wrap' },
   catBtn: { alignItems: 'center', gap: 6, width: 62 },
   catBtnTop: { width: 62 },
   catIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   catName: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
 
-  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: colors.cardBorder },
+  searchRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 12, gap: 10, borderWidth: 1, borderColor: colors.cardBorder },
   searchInput: { flex: 1, color: colors.text, fontSize: 14, padding: 0 },
 
   list: { flex: 1 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 20 },
 
   groupSection: { marginBottom: 16 },
-  groupTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  groupTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign() },
 
-  listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  listRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
   listIcon: { width: 36, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   listInfo: { flex: 1 },
-  listName: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  listGroup: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  listName: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
+  listGroup: { color: colors.textMuted, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
 
   createBlock: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   iconStrip: { paddingVertical: 4, marginBottom: 8 },
