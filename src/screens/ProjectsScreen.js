@@ -200,17 +200,17 @@ export default function ProjectsScreen() {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },
   addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
   empty: { alignItems: 'center', marginTop: 80, gap: 16 },
   emptyText: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },
-  emptyBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.green, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
+  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.green, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
   emptyBtnText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
 
-  projectRow: { flexDirection: i18n.row(), alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 14 },
+  projectRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 14 },
   projectIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   projectInfo: { flex: 1 },
   projectName: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 4 },
@@ -227,16 +227,16 @@ const createSt = () => StyleSheet.create({
   colorBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   colorBtnActive: { borderColor: colors.text, transform: [{ scale: 1.15 }] },
 
-  btnRow: { flexDirection: i18n.row(), gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
+  btnRow: { flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelBtnText: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
-  saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  saveBtn: { flex: 2, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
   saveBtnText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end', zIndex: 100 },
   actionSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
   actionTitle: { color: colors.text, fontSize: 20, fontWeight: '700', textAlign: 'center', marginBottom: 20 },
-  actionBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.divider },
   actionBtnText: { color: colors.text, fontSize: 16, fontWeight: '600' },
   actionCancelBtn: { alignItems: 'center', paddingVertical: 16, marginTop: 8, borderRadius: 14, backgroundColor: colors.bg2 },
   actionCancelText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
