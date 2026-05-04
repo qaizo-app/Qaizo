@@ -233,7 +233,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
                   <Feather name={item.icon} size={22} color={item.color} />
                 </View>
                 <View style={styles.menuTextWrap}>
-                  <Text style={styles.menuText}>{i18n.t(item.key)}</Text>
+                  <Text style={[styles.menuText, { textAlign: i18n.textAlign() }]}>{i18n.t(item.key)}</Text>
                 </View>
                 {item.comingSoon && <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>}
               </TouchableOpacity>
