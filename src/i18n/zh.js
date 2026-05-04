@@ -289,6 +289,7 @@ export default {
   endDate: '结束日期',
   tomorrow: '明天',
   days: '天',
+  daysOverdue: '天逾期',
   noUpcoming: '暂无即将到来的付款',
   recurringPayment: '定期付款',
   oneTimePayment: '一次性交易',

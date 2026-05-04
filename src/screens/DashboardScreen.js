@@ -611,7 +611,8 @@ export default function DashboardScreen() {
         onClose={() => setShowAllUpcoming(false)}
         recurring={upcoming}
         transactions={transactions}
-        accounts={accounts} />
+        accounts={accounts}
+        onDetail={(rec) => { setShowAllUpcoming(false); setRecDetail(rec); }} />
       {/* Quick category select */}
       {showQuickSelect && (
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>

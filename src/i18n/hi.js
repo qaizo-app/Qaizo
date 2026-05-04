@@ -288,6 +288,7 @@ export default {
   endDate: 'अंत तिथि',
   tomorrow: 'कल',
   days: 'दिन',
+  daysOverdue: 'दिन विलंबित',
   noUpcoming: 'कोई आगामी भुगतान नहीं',
   recurringPayment: 'आवर्ती भुगतान',
   oneTimePayment: 'एकमुश्त लेनदेन',

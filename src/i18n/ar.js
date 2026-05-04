@@ -288,6 +288,7 @@ export default {
   endDate: 'تاريخ الانتهاء',
   tomorrow: 'غداً',
   days: 'أيام',
+  daysOverdue: 'أيام تأخير',
   noUpcoming: 'لا توجد مدفوعات قادمة',
   recurringPayment: 'دفعة متكررة',
   oneTimePayment: 'معاملة لمرة واحدة',

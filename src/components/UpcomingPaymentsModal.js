@@ -46,6 +46,7 @@ export default function UpcomingPaymentsModal({
   currency,
   accounts = [],
   perspectiveAccountId,
+  onDetail,
 }) {
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
@@ -88,13 +89,18 @@ export default function UpcomingPaymentsModal({
       : (savedIcon || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[rec.categoryId] || categoryConfig.other));
     const nd = rec.nextDate ? new Date(rec.nextDate) : null;
     const diffDays = nd ? Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24)) : null;
+    const isOverdue = diffDays != null && diffDays < 0;
+    const isToday = diffDays === 0;
     const dateLabel = diffDays == null
       ? ''
-      : diffDays <= 0
-        ? i18n.t('today')
-        : diffDays === 1
-          ? i18n.t('tomorrow')
-          : `${diffDays} ${i18n.t('days')}`;
+      : isOverdue
+        ? `${Math.abs(diffDays)} ${i18n.t('daysOverdue')}`
+        : isToday
+          ? i18n.t('today')
+          : diffDays === 1
+            ? i18n.t('tomorrow')
+            : `${diffDays} ${i18n.t('days')}`;
+    const chevronColor = isOverdue ? colors.red : isToday ? colors.yellow : colors.textMuted;
     const name = rec.isTransfer
       ? `${accNameById[rec.account] || '—'} → ${accNameById[rec.toAccount] || '—'}`
       : (rec.recipient || catName(rec.categoryId, rec.categoryName));
@@ -107,7 +113,7 @@ export default function UpcomingPaymentsModal({
       <View style={st.card}>
         <TouchableOpacity
           style={st.row}
-          onPress={() => setExpandedId(isExpanded ? null : rec.id)}
+          onPress={() => onDetail ? onDetail(rec) : setExpandedId(isExpanded ? null : rec.id)}
           activeOpacity={0.7}
         >
           <View style={[st.icon, { backgroundColor: cfg.color + '20' }]}>
@@ -129,11 +135,7 @@ export default function UpcomingPaymentsModal({
               {dateLabel ? ` · ${dateLabel}` : ''}
             </Text>
           </View>
-          <Feather
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={18}
-            color={colors.textMuted}
-          />
+          <Feather name={i18n.chevronRight()} size={18} color={chevronColor} />
         </TouchableOpacity>
 
         {isExpanded && (

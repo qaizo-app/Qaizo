@@ -288,6 +288,7 @@ export default {
   endDate: 'Enddatum',
   tomorrow: 'Morgen',
   days: 'Tage',
+  daysOverdue: 'Tage überfällig',
   noUpcoming: 'Keine bevorstehenden Zahlungen',
   recurringPayment: 'Wiederkehrende Zahlung',
   oneTimePayment: 'Einmalige Transaktion',

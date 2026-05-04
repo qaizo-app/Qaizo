@@ -24,7 +24,7 @@ import { catName } from '../utils/categoryName';
 export default function TransactionsScreen({ route }) {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [activeFilters, setActiveFilters] = useState(['income', 'expense', 'transfer']);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -86,7 +86,12 @@ export default function TransactionsScreen({ route }) {
   const { filtered, totalFiltered, usedCategories, catMeta } = useMemo(() => {
     const sorted = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
     const merged = mergeTransferPairs(sorted);
-    let f = filter === 'all' ? merged : merged.filter(t => t.type === filter);
+    let f = merged.filter(t => {
+      if (t.isTransfer) return activeFilters.includes('transfer');
+      if (t.type === 'income') return activeFilters.includes('income');
+      if (t.type === 'expense') return activeFilters.includes('expense');
+      return true;
+    });
 
     // Поиск
     if (search.trim()) {
@@ -134,7 +139,17 @@ export default function TransactionsScreen({ route }) {
       usedCategories: [...new Set(transactions.map(t => t.categoryId))].filter(Boolean),
       catMeta,
     };
-  }, [transactions, filter, search, dateFrom, dateTo, selCategories, selAccounts, selProjects, amountMin, amountMax]);
+  }, [transactions, activeFilters, search, dateFrom, dateTo, selCategories, selAccounts, selProjects, amountMin, amountMax]);
+
+  const toggleFilter = (type) => {
+    setActiveFilters(prev => {
+      if (prev.includes(type)) {
+        if (prev.length === 1) return prev; // don't deselect last
+        return prev.filter(f => f !== type);
+      }
+      return [...prev, type];
+    });
+  };
 
   const toggleCategory = (cid) => setSelCategories(prev => prev.includes(cid) ? prev.filter(c => c !== cid) : [...prev, cid]);
   const toggleAccount = (aid) => setSelAccounts(prev => prev.includes(aid) ? prev.filter(a => a !== aid) : [...prev, aid]);
@@ -213,15 +228,16 @@ export default function TransactionsScreen({ route }) {
 
       {/* Filters */}
       <View style={styles.filters}>
-        {['all', 'expense', 'income'].map(f => {
-          const active = filter === f;
-          const label = f === 'all' ? i18n.t('all') : f === 'income' ? i18n.t('incomeType') : i18n.t('expenseType');
-          const ic = f === 'all' ? 'list' : f === 'income' ? 'trending-up' : 'trending-down';
-          const ac = f === 'expense' ? colors.red : f === 'income' ? colors.green : colors.blue;
+        {[
+          { key: 'income', label: i18n.t('incomeType'), icon: 'trending-up', color: colors.green },
+          { key: 'expense', label: i18n.t('expenseType'), icon: 'trending-down', color: colors.red },
+          { key: 'transfer', label: i18n.t('transfer'), icon: 'repeat', color: colors.blue },
+        ].map(({ key, label, icon, color }) => {
+          const active = activeFilters.includes(key);
           return (
-            <TouchableOpacity key={f} style={[styles.filterBtn, active && { borderColor: ac, backgroundColor: `${ac}10` }]} onPress={() => setFilter(f)}>
-              <Feather name={ic} size={14} color={active ? ac : colors.textMuted} style={{ marginEnd: 4 }} />
-              <Text style={[styles.filterText, active && { color: ac }]}>{label}</Text>
+            <TouchableOpacity key={key} style={[styles.filterBtn, active && { borderColor: color, backgroundColor: `${color}10` }]} onPress={() => toggleFilter(key)}>
+              <Feather name={icon} size={14} color={active ? color : colors.textMuted} style={{ marginEnd: 4 }} />
+              <Text style={[styles.filterText, active && { color }]}>{label}</Text>
             </TouchableOpacity>
           );
         })}

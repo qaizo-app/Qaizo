@@ -75,8 +75,14 @@ export default function RecurringBlock({
               : (resolved || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[rec.categoryId] || categoryConfig.other));
             const nd = new Date(rec.nextDate);
             const diffDays = Math.ceil((nd - today) / (1000 * 60 * 60 * 24));
-            const isOverdue = diffDays <= 0;
-            const dateLabel = isOverdue ? i18n.t('today') : diffDays === 1 ? i18n.t('tomorrow') : `${diffDays} ${i18n.t('days')}`;
+            const isOverdue = diffDays < 0;
+            const isToday = diffDays === 0;
+            const dateLabel = isOverdue
+              ? `${Math.abs(diffDays)} ${i18n.t('daysOverdue')}`
+              : isToday ? i18n.t('today')
+              : diffDays === 1 ? i18n.t('tomorrow')
+              : `${diffDays} ${i18n.t('days')}`;
+            const chevronColor = isOverdue ? colors.red : isToday ? colors.yellow : colors.textMuted;
             const displayName = rec.isTransfer
               ? `${accName(rec.account) || '—'} → ${accName(rec.toAccount) || '—'}`
               : (rec.recipient || catName(rec.categoryId, rec.categoryName));
@@ -120,7 +126,7 @@ export default function RecurringBlock({
                       ) : null}
                     </Text>
                   </View>
-                  <Feather name={i18n.chevronRight()} size={18} color={isOverdue ? colors.yellow : colors.textMuted} />
+                  <Feather name={i18n.chevronRight()} size={18} color={chevronColor} />
                 </TouchableOpacity>
               </Swipeable>
             );

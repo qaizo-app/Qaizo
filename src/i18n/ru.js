@@ -296,6 +296,7 @@ export default {
   endDate: 'Дата окончания',
   tomorrow: 'Завтра',
   days: 'дн.',
+  daysOverdue: 'дн. просрочки',
   noUpcoming: 'Нет предстоящих платежей',
   recurringPayment: 'Запланированный платёж',
   oneTimePayment: 'Разовая транзакция',

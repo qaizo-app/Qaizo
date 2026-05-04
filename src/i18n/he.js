@@ -288,6 +288,7 @@ export default {
   endDate: 'תאריך סיום',
   tomorrow: 'מחר',
   days: 'ימים',
+  daysOverdue: 'ימי איחור',
   noUpcoming: 'אין תשלומים קרובים',
   recurringPayment: 'תשלום קבוע',
   oneTimePayment: 'תנועה חד פעמית',

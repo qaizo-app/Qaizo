@@ -220,11 +220,11 @@ export default function AnalyticsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
         <View style={st.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={st.backBtn}>
-            <Feather name={i18n.backIcon()} size={22} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={st.title}>{i18n.t('analytics')}</Text>
           <View style={{ width: 44 }} />
+          <Text style={st.title}>{i18n.t('analytics')}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Calendar')} style={st.backBtn}>
+            <Feather name="calendar" size={22} color={colors.text} />
+          </TouchableOpacity>
         </View>
 
         {/* Period selector */}

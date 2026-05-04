@@ -289,6 +289,7 @@ export default {
   endDate: '終了日',
   tomorrow: '明日',
   days: '日',
+  daysOverdue: '日延滞',
   noUpcoming: '近日の支払いはありません',
   recurringPayment: '定期支払い',
   oneTimePayment: '一時取引',
