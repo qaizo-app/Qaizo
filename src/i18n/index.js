@@ -66,16 +66,17 @@ const i18n = {
     return currentLang === 'he' || currentLang === 'ar';
   },
 
-  // I18nManager.forceRTL persists on iOS across sessions and requires a full
-  // native restart to change. reloadAsync() only reloads JS, so isRTL can be
-  // out of sync with the current language. We compensate:
-  //   lang=RTL  + system=RTL  → 'row'         (in sync, system handles it)
-  //   lang=RTL  + system=LTR  → 'row-reverse' (system not applied yet — JS mirrors)
-  //   lang=LTR  + system=LTR  → 'row'         (normal)
-  //   lang=LTR  + system=RTL  → 'row-reverse' (stale system RTL — counteract it)
+  // I18nManager.forceRTL persists across sessions and requires a full native
+  // restart to change. JS reloads (Fast Refresh) reset currentLang but keep
+  // I18nManager.isRTL. Two cases:
+  //
+  //   system=RTL  → always 'row': the OS already mirrors the layout,
+  //                 'row-reverse' would double-flip and produce LTR.
+  //   system=LTR  → 'row-reverse' only when lang is RTL (compensates for
+  //                 missing restart so Hebrew looks right during testing).
   row() {
-    const langIsRTL = currentLang === 'he' || currentLang === 'ar';
-    return langIsRTL === I18nManager.isRTL ? 'row' : 'row-reverse';
+    if (I18nManager.isRTL) return 'row';
+    return (currentLang === 'he' || currentLang === 'ar') ? 'row-reverse' : 'row';
   },
   textAlign() { return (currentLang === 'he' || currentLang === 'ar') ? 'right' : 'left'; },
   backIcon() { return (currentLang === 'he' || currentLang === 'ar') ? 'arrow-right' : 'arrow-left'; },
