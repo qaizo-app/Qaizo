@@ -210,14 +210,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
               listeners={() => ({
                 tabPress: (e) => {
                   e.preventDefault();
-                  if (showQuickSelect) { setShowQuickSelect(false); }
-                  else {
-                    Promise.all([dataService.getQuickTemplates(), dataService.getAccounts()]).then(([t, a]) => {
-                      setQuickTemplates(t);
-                      setAccounts(a.filter(acc => acc.isActive !== false));
-                    });
-                    setShowQuickSelect(true);
-                  }
+                  if (showAddMenu) { closeAddMenu(); } else { openAddMenu(); }
                 },
               })}
             />
@@ -232,14 +225,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
               listeners={() => ({
                 tabPress: (e) => {
                   e.preventDefault();
-                  if (showQuickSelect) { setShowQuickSelect(false); }
-                  else {
-                    Promise.all([dataService.getQuickTemplates(), dataService.getAccounts()]).then(([t, a]) => {
-                      setQuickTemplates(t);
-                      setAccounts(a.filter(acc => acc.isActive !== false));
-                    });
-                    setShowQuickSelect(true);
-                  }
+                  if (showAddMenu) { closeAddMenu(); } else { openAddMenu(); }
                 },
               })}
             />
@@ -278,23 +264,6 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
         <TouchableOpacity style={styles.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>
           <View style={styles.quickSelectSheet}>
             <Text style={styles.quickSelectTitle}>{i18n.t('quickAdd')}</Text>
-
-            {/* Action row — Smart Input / Receipt / Recurring / Manual */}
-            <View style={styles.quickActions}>
-              {[
-                { icon: 'edit-3',      color: '#a78bfa', key: 'smartInput',      action: () => { setShowQuickSelect(false); setShowSmartInput(true); } },
-                { icon: 'camera',      color: colors.teal, key: 'scanReceipt',   action: () => { setShowQuickSelect(false); setShowReceipt(true); } },
-                { icon: 'repeat',      color: '#60a5fa', key: 'recurringPayment',action: () => { setShowQuickSelect(false); setShowRecurring(true); } },
-                { icon: 'plus-circle', color: colors.green, key: 'oneTimePayment',action: () => { setShowQuickSelect(false); setShowAdd(true); } },
-              ].map(btn => (
-                <TouchableOpacity key={btn.key} style={styles.quickActionBtn} onPress={btn.action} activeOpacity={0.7}>
-                  <View style={[styles.quickActionIcon, { backgroundColor: btn.color + '18' }]}>
-                    <Feather name={btn.icon} size={20} color={btn.color} />
-                  </View>
-                  <Text style={styles.quickActionTxt} numberOfLines={1}>{i18n.t(btn.key)}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
 
             <View style={styles.quickTabs}>
               <TouchableOpacity style={[styles.quickTabBtn, quickTab === 'templates' && styles.quickTabActive]} onPress={() => setQuickTab('templates')}>
