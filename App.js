@@ -122,6 +122,7 @@ function AppInner() {
   const [authSkipped, setAuthSkipped] = useState(false);
   const [locked, setLocked] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [pendingNotif, setPendingNotif] = useState(null);
   const [showRatePrompt, setShowRatePrompt] = useState(false);
 
   const navTheme = {
@@ -240,11 +241,19 @@ function AppInner() {
         }
       } catch (e) {}
 
-      // Слушатель кнопок действий в уведомлениях
+      // Слушатель нажатий на уведомления
       const notifSub = Notifications.addNotificationResponseReceivedListener(response => {
         const action = response.actionIdentifier;
+        const data = response.notification.request.content.data || {};
         if (action === 'add_income' || action === 'add_expense') {
           setPendingAction(action);
+        } else {
+          // Обычное нажатие на уведомление (default tap)
+          if (data.recurringId) {
+            setPendingNotif({ type: 'recurring', recurringId: data.recurringId });
+          } else if (data.type === 'streak_reminder' || data.type === 'weekly_summary') {
+            setPendingNotif({ type: 'smart_input' });
+          }
         }
       });
 
@@ -359,7 +368,10 @@ function AppInner() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavigationContainer theme={navTheme} key={`nav-${themeKey}`}>
         <StatusBar barStyle={statusStyle} backgroundColor={colors.bg} />
-        <AppNavigator pendingAction={pendingAction} onPendingActionHandled={() => setPendingAction(null)} />
+        <AppNavigator
+          pendingAction={pendingAction} onPendingActionHandled={() => setPendingAction(null)}
+          pendingNotif={pendingNotif} onPendingNotifHandled={() => setPendingNotif(null)}
+        />
         <RateAppModal visible={showRatePrompt} onClose={() => setShowRatePrompt(false)} />
       </NavigationContainer>
     </GestureHandlerRootView>

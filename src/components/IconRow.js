@@ -49,11 +49,14 @@ export default function IconRow({
   disabled,
 }) {
   const Container = onPress ? TouchableOpacity : View;
-  // RTL: use 'auto' — iOS/Android detect Hebrew/Arabic Unicode and align right automatically.
-  // Explicit 'right' is flipped to physical-left by I18nManager.isRTL=true (same reason
-  // the global StyleSheet patch in App.js strips textAlign:'right').
-  // LTR: explicit 'left' — don't rely on defaults.
-  const resolvedTextAlign = textAlign ?? (i18n.isRTL() ? 'auto' : 'left');
+  // RTL: no explicit textAlign — iOS detects Hebrew/Arabic Unicode bidi and
+  // aligns right naturally. This matches how TransactionItem and other screens
+  // work after the global StyleSheet patch in App.js strips textAlign:'right'.
+  // Explicit 'auto' behaves differently from "unset" on iOS RTL mode.
+  // LTR: explicit 'left'.
+  const textAlignStyle = textAlign != null
+    ? { textAlign }
+    : i18n.isRTL() ? null : { textAlign: 'left' };
 
   return (
     <Container
@@ -83,7 +86,7 @@ export default function IconRow({
       {/* Text block — flex:1 on View wrapper (not on Text) to satisfy iOS RTL rule */}
       <View style={{ flex: 1 }}>
         {children ?? (
-          <Text style={[{ textAlign: resolvedTextAlign }, textStyle]}>
+          <Text style={[textAlignStyle, textStyle]}>
             {text}
           </Text>
         )}

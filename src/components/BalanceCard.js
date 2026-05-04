@@ -42,6 +42,18 @@ export default function BalanceCard({ balance, totalIncome, totalExpense, now })
         </View>
       </View>
 
+      {totalIncome > 0 && (
+        <View style={st.progressWrap}>
+          <View style={st.progressTrack}>
+            <View style={[st.progressFill, {
+              width: `${Math.min(Math.round((totalExpense / totalIncome) * 100), 100)}%`,
+              backgroundColor: totalExpense >= totalIncome ? colors.red : totalExpense / totalIncome > 0.75 ? colors.yellow : colors.green,
+            }]} />
+          </View>
+          <Text style={st.progressLabel}>{Math.min(Math.round((totalExpense / totalIncome) * 100), 100)}%</Text>
+        </View>
+      )}
+
       {showForecast && (
         <View style={st.forecastRow}>
           <Feather name="activity" size={14} color={colors.textMuted} />
@@ -56,7 +68,11 @@ export default function BalanceCard({ balance, totalIncome, totalExpense, now })
 const createSt = () => StyleSheet.create({
   balLabel: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign() },
   balAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
-  forecastRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.divider, flexWrap: 'wrap' },
+  progressWrap: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginTop: 12 },
+  progressTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.divider, overflow: 'hidden' },
+  progressFill: { height: 5, borderRadius: 3 },
+  progressLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700', minWidth: 34, textAlign: 'right' },
+  forecastRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.divider, flexWrap: 'wrap' },
   forecastText: { color: colors.textMuted, fontSize: 12, fontWeight: '500', flexShrink: 1 },
   forecastAmount: { fontSize: 14, fontWeight: '700', flexShrink: 1 },
   incExpRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.cardHighlight, borderRadius: 14, padding: 16 },

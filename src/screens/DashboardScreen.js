@@ -262,8 +262,8 @@ export default function DashboardScreen() {
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
 
-    const _totalIncome = _thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const _totalExpense = _thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const _totalIncome = _thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+    const _totalExpense = _thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
     const _balance = _totalIncome - _totalExpense;
     const recentTxRaw = [...transactions].sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
     const _recentTx = mergeTransferPairs(recentTxRaw).slice(0, 3);
@@ -296,8 +296,8 @@ export default function DashboardScreen() {
         const d = new Date(t.date || t.createdAt);
         return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear();
       });
-      const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      const inc = mTxs.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+      const exp = mTxs.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
       // Short 3-letter month form so long names ("November", "Сентябрь")
       // don't wrap to two lines in the narrow chart column.
       _barData.push({ month: (monthNames[lang] || monthNames.en)[m.getMonth()], monthIndex: m.getMonth(), year: m.getFullYear(), income: inc, expense: exp });

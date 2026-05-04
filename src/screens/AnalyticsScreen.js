@@ -123,7 +123,7 @@ export default function AnalyticsScreen() {
 
         // Expenses pie
         const catTotals = {};
-        periodTxs.filter(t => t.type === 'expense').forEach(t => {
+        periodTxs.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
           const cat = t.categoryId || 'other';
           catTotals[cat] = (catTotals[cat] || 0) + t.amount;
         });
@@ -139,7 +139,7 @@ export default function AnalyticsScreen() {
 
         // Income pie
         const incTotals = {};
-        periodTxs.filter(t => t.type === 'income').forEach(t => {
+        periodTxs.filter(t => t.type === 'income' && !t.isTransfer).forEach(t => {
           const cat = t.categoryId || 'other_income';
           incTotals[cat] = (incTotals[cat] || 0) + t.amount;
         });
@@ -154,8 +154,8 @@ export default function AnalyticsScreen() {
         setIncomePieData(incPie);
 
         // Totals
-        setTotalIncome(periodTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0));
-        setTotalExpense(periodTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0));
+        setTotalIncome(periodTxs.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0));
+        setTotalExpense(periodTxs.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0));
 
         setTopPayees(analyticsService.getTopPayees(txs, Math.max(1, Math.ceil(getEffectiveDays() / 30))));
         setMonthCompare(analyticsService.getMonthComparison(txs));

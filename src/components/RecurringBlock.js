@@ -120,15 +120,7 @@ export default function RecurringBlock({
                       ) : null}
                     </Text>
                   </View>
-                  <View style={st.recActions}>
-                    <TouchableOpacity style={st.recSkip} onPress={() => onSkip(rec.id)}>
-                      <Feather name="fast-forward" size={16} color={colors.textMuted} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[st.recConfirm, isOverdue && { backgroundColor: colors.yellow + '20' }]}
-                      onPress={() => onConfirm(rec.id)}>
-                      <Feather name="check" size={16} color={isOverdue ? colors.yellow : colors.green} />
-                    </TouchableOpacity>
-                  </View>
+                  <Feather name={i18n.chevronRight()} size={18} color={isOverdue ? colors.yellow : colors.textMuted} />
                 </TouchableOpacity>
               </Swipeable>
             );
@@ -163,9 +155,6 @@ const createSt = () => StyleSheet.create({
   recInfo: { flex: 1 },
   recName: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   recMeta: { color: colors.textDim, fontSize: 12, marginTop: 2, writingDirection: 'ltr' },
-  recActions: { flexDirection: i18n.row(), gap: 8 },
-  recSkip: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
-  recConfirm: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center' },
   recSwipeBtn: { width: 60, justifyContent: 'center', alignItems: 'center' },
   recEmptyTxt: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
   showMoreBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, marginTop: 8 },

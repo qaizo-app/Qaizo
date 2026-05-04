@@ -15,6 +15,7 @@ import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
+import RecurringDetailModal from '../components/RecurringDetailModal';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import MonthlyReportScreen from '../screens/MonthlyReportScreen';
@@ -58,6 +59,7 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="Projects" component={ProjectsScreen} />
       <DashboardStack.Screen name="Goals" component={GoalsScreen} />
       <DashboardStack.Screen name="Analytics" component={AnalyticsScreen} />
+      <DashboardStack.Screen name="Calendar" component={CalendarScreen} />
       <DashboardStack.Screen name="ShoppingList" component={ShoppingListScreen} />
       <DashboardStack.Screen name="AIChat" component={AIChatScreen} />
     </DashboardStack.Navigator>
@@ -71,7 +73,7 @@ const tabConfig = {
   Transactions: { icon: 'list',        labelKey: 'transactions', color: '#60a5fa' },
   Add:          { icon: 'plus',        labelKey: null,           color: colors.green },
   AccountsTab:  { icon: 'credit-card', labelKey: 'accounts',     color: '#f59e0b' },
-  Calendar:     { icon: 'calendar',    labelKey: 'calendarView', color: '#a78bfa' },
+  AnalyticsTab: { icon: 'pie-chart',   labelKey: 'analytics',    color: '#a78bfa' },
 };
 
 const ADD_MENU = [
@@ -82,7 +84,7 @@ const ADD_MENU = [
   { key: 'scanReceipt',     icon: 'camera',    color: colors.teal },
 ];
 
-export default function AppNavigator({ pendingAction, onPendingActionHandled }) {
+export default function AppNavigator({ pendingAction, onPendingActionHandled, pendingNotif, onPendingNotifHandled }) {
   const [, setLangVer] = useState(0);
   useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
   const insets = useSafeAreaInsets();
@@ -101,8 +103,22 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
     else if (pendingAction === 'add_expense') { setAddInitialType('expense'); setShowAdd(true); }
     onPendingActionHandled?.();
   }, [pendingAction]);
+
+  useEffect(() => {
+    if (!pendingNotif) return;
+    if (pendingNotif.type === 'smart_input') {
+      setShowSmartInput(true);
+    } else if (pendingNotif.type === 'recurring' && pendingNotif.recurringId) {
+      dataService.getRecurring().then(list => {
+        const item = list.find(r => r.id === pendingNotif.recurringId);
+        if (item) setNotifRecItem(item);
+      });
+    }
+    onPendingNotifHandled?.();
+  }, [pendingNotif]);
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
+  const [notifRecItem, setNotifRecItem] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showQuickSelect, setShowQuickSelect] = useState(false);
   const [quickTemplate, setQuickTemplate] = useState(null);
@@ -188,14 +204,20 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
       >
         {i18n.isRTL() ? (
           <>
-            <Tab.Screen name="Calendar" component={CalendarScreen} />
+            <Tab.Screen name="AnalyticsTab" component={AnalyticsScreen} />
             <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
             <Tab.Screen name="Add" component={EmptyScreen}
               listeners={() => ({
                 tabPress: (e) => {
                   e.preventDefault();
-                  if (showAddMenu) closeAddMenu();
-                  else openAddMenu();
+                  if (showQuickSelect) { setShowQuickSelect(false); }
+                  else {
+                    Promise.all([dataService.getQuickTemplates(), dataService.getAccounts()]).then(([t, a]) => {
+                      setQuickTemplates(t);
+                      setAccounts(a.filter(acc => acc.isActive !== false));
+                    });
+                    setShowQuickSelect(true);
+                  }
                 },
               })}
             />
@@ -210,13 +232,19 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
               listeners={() => ({
                 tabPress: (e) => {
                   e.preventDefault();
-                  if (showAddMenu) closeAddMenu();
-                  else openAddMenu();
+                  if (showQuickSelect) { setShowQuickSelect(false); }
+                  else {
+                    Promise.all([dataService.getQuickTemplates(), dataService.getAccounts()]).then(([t, a]) => {
+                      setQuickTemplates(t);
+                      setAccounts(a.filter(acc => acc.isActive !== false));
+                    });
+                    setShowQuickSelect(true);
+                  }
                 },
               })}
             />
             <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
-            <Tab.Screen name="Calendar" component={CalendarScreen} />
+            <Tab.Screen name="AnalyticsTab" component={AnalyticsScreen} />
           </>
         )}
       </Tab.Navigator>
@@ -250,6 +278,23 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
         <TouchableOpacity style={styles.fabOverlay} activeOpacity={1} onPress={() => setShowQuickSelect(false)}>
           <View style={styles.quickSelectSheet}>
             <Text style={styles.quickSelectTitle}>{i18n.t('quickAdd')}</Text>
+
+            {/* Action row — Smart Input / Receipt / Recurring / Manual */}
+            <View style={styles.quickActions}>
+              {[
+                { icon: 'edit-3',      color: '#a78bfa', key: 'smartInput',      action: () => { setShowQuickSelect(false); setShowSmartInput(true); } },
+                { icon: 'camera',      color: colors.teal, key: 'scanReceipt',   action: () => { setShowQuickSelect(false); setShowReceipt(true); } },
+                { icon: 'repeat',      color: '#60a5fa', key: 'recurringPayment',action: () => { setShowQuickSelect(false); setShowRecurring(true); } },
+                { icon: 'plus-circle', color: colors.green, key: 'oneTimePayment',action: () => { setShowQuickSelect(false); setShowAdd(true); } },
+              ].map(btn => (
+                <TouchableOpacity key={btn.key} style={styles.quickActionBtn} onPress={btn.action} activeOpacity={0.7}>
+                  <View style={[styles.quickActionIcon, { backgroundColor: btn.color + '18' }]}>
+                    <Feather name={btn.icon} size={20} color={btn.color} />
+                  </View>
+                  <Text style={styles.quickActionTxt} numberOfLines={1}>{i18n.t(btn.key)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <View style={styles.quickTabs}>
               <TouchableOpacity style={[styles.quickTabBtn, quickTab === 'templates' && styles.quickTabActive]} onPress={() => setQuickTab('templates')}>
@@ -379,6 +424,11 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
       <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
         onClose={() => setQuickTemplate(null)} onSaved={() => setQuickTemplate(null)} />
+      <RecurringDetailModal visible={!!notifRecItem} item={notifRecItem}
+        onClose={() => setNotifRecItem(null)}
+        onConfirm={() => setNotifRecItem(null)}
+        onSkip={() => setNotifRecItem(null)}
+        onDelete={() => setNotifRecItem(null)} />
     </View>
   );
 }
@@ -398,6 +448,10 @@ const createStyles = () => StyleSheet.create({
   fabOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 },
   quickSelectSheet: { position: 'absolute', right: 24, left: 24, bottom: 170, backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder, padding: 20 },
   quickSelectTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
+  quickActions: { flexDirection: i18n.row(), gap: 8, marginBottom: 16 },
+  quickActionBtn: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 10 },
+  quickActionIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  quickActionTxt: { color: colors.textSecondary, fontSize: 10, fontWeight: '600', textAlign: 'center' },
   quickTabs: { flexDirection: 'row', marginBottom: 16, backgroundColor: colors.bg, borderRadius: 12, padding: 3 },
   quickTabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10 },
   quickTabActive: { backgroundColor: colors.card },
