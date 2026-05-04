@@ -270,7 +270,7 @@ export default function DashboardScreen() {
 
     // PIE CHART
     const _catTotals = {};
-    _thisMonth.filter(t => t.type === 'expense').forEach(t => {
+    _thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
       const cat = t.categoryId || 'other';
       _catTotals[cat] = (_catTotals[cat] || 0) + t.amount;
     });
