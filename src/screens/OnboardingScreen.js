@@ -126,6 +126,8 @@ function ToggleSlide({ item, value, onChange }) {
 }
 
 export default function OnboardingScreen({ onDone }) {
+  const [, setLangVer] = useState(0);
+  useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
   const st = createSt();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [toggleStates, setToggleStates] = useState(() => {

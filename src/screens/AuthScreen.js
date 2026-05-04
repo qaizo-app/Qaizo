@@ -1,7 +1,7 @@
 // src/screens/AuthScreen.js
 // Логин / Регистрация — тёмная тема
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ConfirmModal from '../components/ConfirmModal';
 import i18n from '../i18n';
@@ -19,6 +19,8 @@ export default function AuthScreen({ onSkip }) {
   const [error, setError] = useState('');
   const [showResetSent, setShowResetSent] = useState(false);
   const [showVerifyEmail, setShowVerifyEmail] = useState(false);
+  const [, setLangVer] = useState(0);
+  useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
   const st = createSt();
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
