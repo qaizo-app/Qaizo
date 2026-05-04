@@ -84,6 +84,8 @@ export default function DashboardScreen() {
   const bellAnim = useRef(new Animated.Value(1)).current;
   const aiGlow = useRef(new Animated.Value(0)).current;
   const toast = useToast();
+  const [, setLangVer] = useState(0);
+  useEffect(() => i18n.onLanguageChange(() => setLangVer(v => v + 1)), []);
 
   // Слушаем входящие уведомления
   useEffect(() => {
