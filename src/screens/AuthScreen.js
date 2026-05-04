@@ -311,7 +311,7 @@ const createSt = () => StyleSheet.create({
   mainBtn: { backgroundColor: colors.green, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginTop: 8, marginBottom: 12 },
   mainBtnTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
-  linkBtn: { alignItems: i18n.isRTL() ? 'flex-end' : 'center', paddingVertical: 8 },
+  linkBtn: { flexDirection: i18n.row(), justifyContent: i18n.isRTL() ? 'flex-start' : 'center', paddingVertical: 8 },
   linkTxt: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
 
   switchRow: { flexDirection: i18n.row(), justifyContent: i18n.isRTL() ? 'flex-start' : 'center', alignItems: 'center', gap: 6, marginTop: 24 },
@@ -328,6 +328,6 @@ const createSt = () => StyleSheet.create({
   appleLogo: { fontSize: 20, color: '#fff', lineHeight: 24 },
   appleTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
-  skipBtn: { alignItems: i18n.isRTL() ? 'flex-end' : 'center', marginTop: 20 },
+  skipBtn: { flexDirection: i18n.row(), justifyContent: i18n.isRTL() ? 'flex-start' : 'center', marginTop: 20 },
   skipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textDecorationLine: 'underline' },
 });
