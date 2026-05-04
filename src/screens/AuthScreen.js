@@ -294,7 +294,7 @@ const createSt = () => StyleSheet.create({
   logo: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
-  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24, textAlign: i18n.textAlign() },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
   errorTxt: { color: colors.red, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign() },
@@ -311,10 +311,10 @@ const createSt = () => StyleSheet.create({
   mainBtn: { backgroundColor: colors.green, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginTop: 8, marginBottom: 12 },
   mainBtnTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
 
-  linkBtn: { flexDirection: i18n.row(), justifyContent: i18n.isRTL() ? 'flex-start' : 'center', paddingVertical: 8 },
+  linkBtn: { alignItems: 'center', paddingVertical: 8 },
   linkTxt: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
 
-  switchRow: { flexDirection: i18n.row(), justifyContent: i18n.isRTL() ? 'flex-start' : 'center', alignItems: 'center', gap: 6, marginTop: 24 },
+  switchRow: { flexDirection: i18n.row(), justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24 },
   switchTxt: { color: colors.textMuted, fontSize: 14 },
   switchLink: { color: colors.green, fontSize: 14, fontWeight: '700' },
 
@@ -328,6 +328,6 @@ const createSt = () => StyleSheet.create({
   appleLogo: { fontSize: 20, color: '#fff', lineHeight: 24 },
   appleTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
-  skipBtn: { flexDirection: i18n.row(), justifyContent: i18n.isRTL() ? 'flex-start' : 'center', marginTop: 20 },
+  skipBtn: { flexDirection: i18n.row(), justifyContent: 'center', marginTop: 20 },
   skipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textDecorationLine: 'underline' },
 });
