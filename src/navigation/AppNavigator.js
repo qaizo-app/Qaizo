@@ -185,19 +185,39 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
           };
         }}
       >
-        <Tab.Screen name="Dashboard" component={DashboardStackScreen} />
-        <Tab.Screen name="Transactions" component={TransactionsScreen} />
-        <Tab.Screen name="Add" component={EmptyScreen}
-          listeners={() => ({
-            tabPress: (e) => {
-              e.preventDefault();
-              if (showAddMenu) closeAddMenu();
-              else openAddMenu();
-            },
-          })}
-        />
-        <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
-        <Tab.Screen name="Calendar" component={CalendarScreen} />
+        {i18n.isRTL() ? (
+          <>
+            <Tab.Screen name="Calendar" component={CalendarScreen} />
+            <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
+            <Tab.Screen name="Add" component={EmptyScreen}
+              listeners={() => ({
+                tabPress: (e) => {
+                  e.preventDefault();
+                  if (showAddMenu) closeAddMenu();
+                  else openAddMenu();
+                },
+              })}
+            />
+            <Tab.Screen name="Transactions" component={TransactionsScreen} />
+            <Tab.Screen name="Dashboard" component={DashboardStackScreen} />
+          </>
+        ) : (
+          <>
+            <Tab.Screen name="Dashboard" component={DashboardStackScreen} />
+            <Tab.Screen name="Transactions" component={TransactionsScreen} />
+            <Tab.Screen name="Add" component={EmptyScreen}
+              listeners={() => ({
+                tabPress: (e) => {
+                  e.preventDefault();
+                  if (showAddMenu) closeAddMenu();
+                  else openAddMenu();
+                },
+              })}
+            />
+            <Tab.Screen name="AccountsTab" component={AccountsStackScreen} />
+            <Tab.Screen name="Calendar" component={CalendarScreen} />
+          </>
+        )}
       </Tab.Navigator>
 
       {/* Add Menu Overlay */}
