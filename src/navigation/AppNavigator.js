@@ -232,7 +232,9 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled }) 
                 <View style={[styles.menuIcon, { backgroundColor: item.color + '20' }]}>
                   <Feather name={item.icon} size={22} color={item.color} />
                 </View>
-                <Text style={styles.menuText}>{i18n.t(item.key)}</Text>
+                <View style={styles.menuTextWrap}>
+                  <Text style={styles.menuText}>{i18n.t(item.key)}</Text>
+                </View>
                 {item.comingSoon && <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>}
               </TouchableOpacity>
             ))}
@@ -386,9 +388,10 @@ const createStyles = () => StyleSheet.create({
   menuOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 },
   menuOverlayBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   menuContainer: { position: 'absolute', bottom: 120, left: 20, right: 20, backgroundColor: colors.card, borderRadius: 20, padding: 8, borderWidth: 1, borderColor: colors.cardBorder },
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
+  menuItem: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 14 },
   menuIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  menuText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
+  menuTextWrap: { flex: 1 },
+  menuText: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
   comingSoonBadge: { color: colors.textMuted, fontSize: 10, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
 
   fabOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 },
