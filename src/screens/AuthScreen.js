@@ -114,9 +114,11 @@ export default function AuthScreen({ onSkip }) {
         </View>
 
         {/* Заголовок */}
-        <Text style={st.title}>
-          {mode === 'login' ? i18n.t('authLogin') : mode === 'register' ? i18n.t('authRegister') : i18n.t('authReset')}
-        </Text>
+        <View style={{ flexDirection: i18n.row(), alignSelf: 'stretch' }}>
+          <Text style={st.title}>
+            {mode === 'login' ? i18n.t('authLogin') : mode === 'register' ? i18n.t('authRegister') : i18n.t('authReset')}
+          </Text>
+        </View>
 
         {/* Ошибка */}
         {error ? (
@@ -132,7 +134,7 @@ export default function AuthScreen({ onSkip }) {
         {mode === 'register' && (
           <View style={st.inputWrap}>
             <Feather name="user" size={18} color={colors.textMuted} style={st.inputIcon} />
-            <TextInput style={st.input} value={name} onChangeText={setName}
+            <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={name} onChangeText={setName}
               placeholder={i18n.t('yourName')} placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
               autoComplete="name" textContentType="name" />
@@ -142,7 +144,7 @@ export default function AuthScreen({ onSkip }) {
         {/* Email */}
         <View style={st.inputWrap}>
           <Feather name="mail" size={18} color={colors.textMuted} style={st.inputIcon} />
-          <TextInput style={st.input} value={email} onChangeText={setEmail}
+          <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={email} onChangeText={setEmail}
             placeholder={i18n.t('emailPlaceholder')} placeholderTextColor={colors.textMuted}
             keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
             autoComplete="email" textContentType="emailAddress" />
@@ -153,7 +155,7 @@ export default function AuthScreen({ onSkip }) {
           <>
             <View style={st.inputWrap}>
               <Feather name="lock" size={18} color={colors.textMuted} style={st.inputIcon} />
-              <TextInput style={st.input} value={password} onChangeText={setPassword}
+              <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={password} onChangeText={setPassword}
                 placeholder={i18n.t('password')} placeholderTextColor={colors.textMuted}
                 secureTextEntry={!showPass} autoCapitalize="none"
                 autoComplete="password" textContentType="password" />
@@ -178,7 +180,7 @@ export default function AuthScreen({ onSkip }) {
             {mode === 'register' && (
               <View style={st.inputWrap}>
                 <Feather name="check-circle" size={18} color={confirmPass && confirmPass === password ? colors.green : colors.textMuted} style={st.inputIcon} />
-                <TextInput style={st.input} value={confirmPass} onChangeText={setConfirmPass}
+                <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={confirmPass} onChangeText={setConfirmPass}
                   placeholder={i18n.t('confirmPassword')} placeholderTextColor={colors.textMuted}
                   secureTextEntry={!showPass} autoCapitalize="none"
                   autoComplete="password" textContentType="newPassword" />
@@ -294,7 +296,7 @@ const createSt = () => StyleSheet.create({
   logo: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 },
   slogan: { color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 6 },
 
-  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 24 },
 
   errorBox: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 12, padding: 14, marginBottom: 16 },
   errorTxt: { color: colors.red, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign() },
