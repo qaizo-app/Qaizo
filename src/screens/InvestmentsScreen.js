@@ -386,7 +386,7 @@ const createStyles = () => StyleSheet.create({
   invInfo: { flex: 1 },
   invName: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
   invType: { color: colors.textMuted, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
-  invAmounts: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
+  invAmounts: { alignItems: i18n.row() === 'row' ? 'flex-end' : 'flex-start' },
   invBalance: { color: colors.text, fontSize: 16, fontWeight: '700' },
   invMonthly: { color: colors.green, fontSize: 12, marginTop: 2, fontWeight: '600' },
   emptyWrap: { alignItems: 'center', paddingVertical: 24, gap: 10 },

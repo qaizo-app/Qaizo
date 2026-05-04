@@ -424,7 +424,7 @@ const createSt = () => StyleSheet.create({
 
   messagesList: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
   msgRow: { marginBottom: 12 },
-  msgRowUser: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
+  msgRowUser: { alignItems: i18n.row() === 'row' ? 'flex-end' : 'flex-start' },
   msgRowAI: { flexDirection: i18n.row(), alignItems: 'flex-start', gap: 8 },
   aiAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
   bubble: { maxWidth: '80%', borderRadius: 18, padding: 14 },

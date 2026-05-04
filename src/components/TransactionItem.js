@@ -93,7 +93,7 @@ const createStyles = () => StyleSheet.create({
   info: { flex: 1 },
   category: { color: colors.text, fontSize: 14, fontWeight: '600', letterSpacing: -0.2, textAlign: i18n.textAlign() },
   note: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: i18n.textAlign() },
-  amountContainer: { alignItems: i18n.isRTL() ? 'flex-start' : 'flex-end' },
+  amountContainer: { alignItems: i18n.row() === 'row' ? 'flex-end' : 'flex-start' },
   amount: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3, writingDirection: 'ltr' },
   date: { color: colors.textMuted, fontSize: 12, marginTop: 3, alignSelf: 'flex-end' },
   runBal: { fontSize: 10, fontWeight: '500', marginTop: 2, alignSelf: 'flex-end' },
