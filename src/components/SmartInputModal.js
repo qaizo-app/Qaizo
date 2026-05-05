@@ -28,6 +28,8 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
   const inputRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const debounceTimer = useRef(null);
+  const lastAIRequestText = useRef(''); // prevent duplicate AI calls for same text
   const st = createStyles();
   const hasVoice = !!ExpoSpeechRecognitionModule;
 
@@ -53,7 +55,8 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       handleTextChange(transcript);
       // Auto-trigger AI parse when final result received
       if (e.isFinal && transcript.length > 3) {
-        setTimeout(() => handleSmartParse(), 300);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        setTimeout(() => handleSmartParse(transcript), 300);
       }
     }
   });
@@ -79,8 +82,13 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     if (visible) {
       setText('');
       setParsed(null);
+      lastAIRequestText.current = '';
       setTimeout(() => inputRef.current?.focus(), 300);
     } else {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
       if (isListening && ExpoSpeechRecognitionModule) {
         ExpoSpeechRecognitionModule.stop();
         setIsListening(false);
@@ -103,15 +111,27 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     if (val.length > 3) {
       const result = aiService.parseTransaction(val);
       setParsed(result);
+      // Auto-trigger AI parse after 1s of inactivity (debounce)
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        if (!isListening) handleSmartParse(val);
+      }, 1000);
     } else {
       setParsed(null);
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
     }
   };
 
-  const handleSmartParse = async () => {
-    if (text.length < 3) return;
+  const handleSmartParse = async (overrideText) => {
+    const t = (overrideText !== undefined ? overrideText : text);
+    if (!t || t.length < 3) return;
+    if (lastAIRequestText.current === t) return; // already requested same text
+    lastAIRequestText.current = t;
     setAiLoading(true);
-    const result = await aiService.parseTransactionSmart(text);
+    const result = await aiService.parseTransactionSmart(t);
     setParsed(result);
     setAiLoading(false);
     analyticsEvents.logEvent('smart_input_used', {
@@ -232,16 +252,6 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                   </Text>
                 </View>
               </View>
-
-              {/* Tax reserve for income */}
-              {parsed.type === 'income' && parsed.amount > 0 && (
-                <View style={st.taxRow}>
-                  <Feather name="shield" size={14} color={colors.yellow} />
-                  <Text style={st.taxText}>
-                    {i18n.t('taxReserve')}: {fmt(Math.round(parsed.amount * 0.34))} ({i18n.t('maam')} + {i18n.t('tax')})
-                  </Text>
-                </View>
-              )}
 
               <TouchableOpacity style={st.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.8}>
                 <Feather name="check" size={20} color={colors.bg} />

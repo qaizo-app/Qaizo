@@ -81,7 +81,7 @@ function parseTransaction(text) {
   });
 
   // Если категория — доходная, ставим тип income
-  if (['salary_me', 'salary_spouse', 'rental_income', 'other_income'].includes(categoryId)) {
+  if (['salary_me', 'salary_spouse', 'rental_income', 'other_income', 'handyman'].includes(categoryId)) {
     return { amount, type: 'income', categoryId, recipient: extractPayee(input), note: text.trim() };
   }
 
@@ -413,11 +413,12 @@ EXPENSE CATEGORIES (id → meaning / typical keywords across RU/HE/EN):
   other        → используй когда совпадение слабое или категория не подходит ни к одной из выше
 
 INCOME CATEGORIES:
-  salary_me      → моя зарплата, salary, משכורת, получил зп
+  salary_me      → моя зарплата, salary, משכורת, получил зп (regular paid employment)
   salary_spouse  → зарплата супруга/мужа/жены
-  handyman       → подработка, фриланс, гонорар, чаевые, side job, side gig
-  rental_income  → доход от сдачи квартиры
-  other_income   → возврат, кэшбэк, бонус, приз, выигрыш, дивиденд, прибыль, refund
+  handyman       → подработка, фриланс, гонорар, чаевые, side job, עבודה נוספת, freelance
+  rental_income  → доход от сдачи квартиры/недвижимости, השכרה
+  other_income   → возврат налога / החזר מס / החזר ממס הכנסה / tax refund / возврат от налоговой / кэшбэк, бонус, приз, выигрыш, дивиденд, прибыль, cashback, refund, prize, lottery
+  IMPORTANT: tax refund (החזר מס / החזר ממס הכנסה / возврат налога) is OTHER_INCOME, NOT salary_me — a refund is not a salary even though the word "מס הכנסה" contains "הכנסה".
 
 INCOME vs EXPENSE — defaults to EXPENSE unless income trigger is clear:
   Income triggers (RU): зарплата, получил, заработал, подработал, выиграл, возврат, бонус, фриланс, чаевые, прибыль, кэшбэк, дивиденд
@@ -441,26 +442,68 @@ EXAMPLES (input → output):
   "ארוחת ערב 180" → {"amount":180,"type":"expense","categoryId":"restaurant","recipient":"","note":"ארוחת ערב 180"}
   "דלק פז 280" → {"amount":280,"type":"expense","categoryId":"fuel","recipient":"Paz","note":"דלק פז 280"}
 
+WORD-FORM NUMBERS (voice input often produces these — you MUST convert to numeric value):
+  CRITICAL: voice-to-text in Hebrew often returns informal forms like "12 אלף" or "חמש אלף" instead of digits. Always interpret as multiplication.
+  "12 אלף" / "12 thousand" / "12 тысяч" / "12k" / "12 K" → 12000
+  "חמש אלף" / "חמשת אלפים" / "חמש אלפים" → 5000
+  "שש אלף" / "ששת אלפים" → 6000
+  "שבע אלף" / "שבעת אלפים" → 7000
+  "שמונה אלף" / "שמונת אלפים" → 8000
+  "תשע אלף" / "תשעת אלפים" → 9000
+  "עשר אלף" / "עשרת אלפים" → 10000
+  "אחד עשר אלף" / "11 אלף" → 11000
+  "fifteen hundred" / "1.5k" → 1500
+  "пять тысяч" → 5000
+  "десять тысяч" → 10000
+  Hebrew number words: אחד/אחת=1, שניים/שני/שתיים=2, שלוש/שלושה=3, ארבע/ארבעה=4, חמש/חמישה=5, שש/שישה=6, שבע/שבעה=7, שמונה=8, תשע/תשעה=9, עשר/עשרה=10, אחד עשר=11, שתים עשרה=12, עשרים=20, חמישים=50, מאה=100, אלף=1000
+  Russian number words: один=1, два=2, три=3, четыре=4, пять=5, шесть=6, семь=7, восемь=8, девять=9, десять=10, сто=100, тысяча=1000
+  Rule: ANY Hebrew/Russian/English number word + "אלף"/"אלפים"/"thousand"/"тысяч"/"k" → multiply word by 1000.
+    "חמש אלף" = 5 × 1000 = 5000 (NOT 5)
+    "שמונה אלפים" = 8 × 1000 = 8000 (NOT 8)
+    "две тысячи" = 2 × 1000 = 2000 (NOT 2)
+    "twenty thousand" = 20 × 1000 = 20000 (NOT 20)
+
+WORD-NUMBER EXAMPLES:
+  "משכורת 12 אלף" → {"amount":12000,"type":"income","categoryId":"salary_me","recipient":"","note":"משכורת 12 אלף"}
+  "החזר מס הכנסה חמש אלף" → {"amount":5000,"type":"income","categoryId":"other_income","recipient":"","note":"החזר מס הכנסה חמש אלף"}
+  "получил зарплату 12 тысяч" → {"amount":12000,"type":"income","categoryId":"salary_me","recipient":"","note":"получил зарплату 12 тысяч"}
+  "ремонт пять тысяч" → {"amount":5000,"type":"expense","categoryId":"household","recipient":"","note":"ремонт пять тысяч"}
+  "salary fifteen thousand" → {"amount":15000,"type":"income","categoryId":"salary_me","recipient":"","note":"salary fifteen thousand"}
+
 OUTPUT FORMAT — respond with raw JSON only, no markdown fences, no explanation:
 {"amount": number, "type": "expense" | "income", "categoryId": "id from list above", "recipient": "store/payee name or empty string", "note": "<original input text exactly>"}
 
 RULES:
-- Extract numeric amount from input (handle 1,234 / 1.234 / 28.50 / 1500₪ / 180 שח / 200 nis).
+- Extract numeric amount from input. Handle digit forms (1,234 / 1.234 / 28.50 / 1500₪ / 180 שח / 200 nis) AND word forms (see WORD-FORM NUMBERS section above — voice input often returns "12 אלף" instead of "12000").
 - "type" defaults to "expense"; switch to "income" only if a clear income trigger word is present.
 - Pick the BEST matching categoryId. If confidence is low (<70%) or nothing fits clearly, use "other" — DO NOT guess.
 - "recipient" = store/payee/brand name if mentioned, otherwise empty string. Capitalize known brands ("Shufersal","Paz","Ikea","Netflix","Castro","Uber","Bolt").
 - "note" = preserve user's original input verbatim, do not paraphrase.`;
 
+  console.log('[Smart] input text:', JSON.stringify(text));
   const result = await callGemini(prompt);
+  console.log('[Smart] AI raw response:', JSON.stringify(result));
   if (result) {
     try {
       // Извлекаем JSON из ответа (может быть обёрнут в ```)
       const jsonStr = result.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(jsonStr);
+      console.log('[Smart] parsed:', JSON.stringify(parsed));
       if (parsed.amount && parsed.type && parsed.categoryId) {
+        // Hard guarantee: income categories must have type=income, regardless of what AI returned
+        const incomeCategories = ['salary_me', 'salary_spouse', 'rental_income', 'other_income', 'handyman'];
+        if (incomeCategories.includes(parsed.categoryId)) {
+          parsed.type = 'income';
+        }
+        console.log('[Smart] final result:', JSON.stringify(parsed));
         return parsed;
       }
-    } catch (e) {}
+      console.log('[Smart] FAIL: parsed missing required fields, falling back to local parser');
+    } catch (e) {
+      console.log('[Smart] FAIL: JSON parse error:', e.message);
+    }
+  } else {
+    console.log('[Smart] FAIL: no AI response, falling back to local parser');
   }
 
   // Фоллбэк на локальный парсер
