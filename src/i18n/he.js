@@ -127,6 +127,7 @@ export default {
   addFirstTransaction: 'הוסף תנועה ראשונה',
   investmentsByMonth: 'השקעות לפי חודש',
   investmentsByMonthEmpty: 'לא נמצאו תנועות שמשויכות להשקעות. השתמש בקטגוריה פנסיה/חיסכון/השתלמות או שייך לחשבון השקעות.',
+  discussWithAI: 'שאל את ה-AI',
   saveAsTemplate: 'לשמור כקלט מהיר?',
   templateSuggestMessage: 'הוספת "{category}" {count} פעמים ב-30 הימים האחרונים. לשמור כקלט מהיר?',
   templateSaved: 'נשמר כקלט מהיר',

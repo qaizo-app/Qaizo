@@ -130,6 +130,7 @@ export default {
   addFirstTransaction: 'Добавить первую транзакцию',
   investmentsByMonth: 'Инвестиции по месяцам',
   investmentsByMonthEmpty: 'Не найдено транзакций инвестиций. Используй категорию Пенсия/Сбережения/Образование или счёт типа Инвестиции.',
+  discussWithAI: 'Обсудить с AI',
   saveAsTemplate: 'Сохранить как быстрый ввод?',
   templateSuggestMessage: 'Ты добавил "{category}" {count} раз за последние 30 дней. Сохранить как быстрый ввод?',
   templateSaved: 'Шаблон быстрого ввода сохранён',

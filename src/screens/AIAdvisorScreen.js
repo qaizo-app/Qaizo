@@ -229,6 +229,7 @@ export default function AIAdvisorScreen() {
 
         {insights && insights.length > 0 ? insights.map((insight, idx) => {
           const color = typeColors[insight.type];
+          const askText = `${insight.title}: ${insight.text}`;
           return (
             <Card key={idx} style={{ marginHorizontal: 20 }}>
               <View style={st.insightRow}>
@@ -240,6 +241,12 @@ export default function AIAdvisorScreen() {
                   <Text style={st.insightText}>{insight.text}</Text>
                 </View>
               </View>
+              <TouchableOpacity style={st.askAiBtn} activeOpacity={0.7}
+                onPress={() => navigation.navigate('AIChat', { initialQuestion: askText })}>
+                <Feather name="message-circle" size={14} color={colors.green} />
+                <Text style={st.askAiTxt}>{i18n.t('discussWithAI')}</Text>
+                <Feather name={i18n.chevronRight()} size={14} color={colors.green} />
+              </TouchableOpacity>
             </Card>
           );
         }) : (
@@ -267,6 +274,7 @@ export default function AIAdvisorScreen() {
               </Card>
             ) : geminiTips?.map((tip, idx) => {
               const color = typeColors[tip.type] || colors.blue;
+              const askText = `${tip.title}: ${tip.text}`;
               return (
                 <Card key={`gemini-${idx}`} style={{ marginHorizontal: 20 }}>
                   <View style={st.insightRow}>
@@ -278,6 +286,12 @@ export default function AIAdvisorScreen() {
                       <Text style={st.insightText}>{tip.text}</Text>
                     </View>
                   </View>
+                  <TouchableOpacity style={st.askAiBtn} activeOpacity={0.7}
+                    onPress={() => navigation.navigate('AIChat', { initialQuestion: askText })}>
+                    <Feather name="message-circle" size={14} color={colors.green} />
+                    <Text style={st.askAiTxt}>{i18n.t('discussWithAI')}</Text>
+                    <Feather name={i18n.chevronRight()} size={14} color={colors.green} />
+                  </TouchableOpacity>
                 </Card>
               );
             })}
@@ -367,6 +381,8 @@ const createStyles = () => StyleSheet.create({
   insightIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   insightTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 4, textAlign: i18n.textAlign() },
   insightText: { color: colors.textDim, fontSize: 12, lineHeight: 20, textAlign: i18n.textAlign() },
+  askAiBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: i18n.row() === 'row' ? 'flex-start' : 'flex-end', gap: 6, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.divider },
+  askAiTxt: { color: colors.green, fontSize: 12, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
   emptyWrap: { alignItems: 'center', paddingVertical: 24, gap: 12 },
   emptyText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
 

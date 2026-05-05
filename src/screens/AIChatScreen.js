@@ -179,7 +179,7 @@ function formatK(n) {
 
 // ─── MAIN SCREEN ────────────────────────────────────────
 
-export default function AIChatScreen() {
+export default function AIChatScreen({ route }) {
   const navigation = useNavigation();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -197,6 +197,20 @@ export default function AIChatScreen() {
       setTxData({ transactions: txs, budgets: bdg });
     });
   }, []));
+
+  // If navigated with an initialQuestion (e.g. from AIAdvisor "Discuss with AI"
+  // button on an insight), auto-send it once the screen is ready.
+  const initialQuestion = route?.params?.initialQuestion;
+  const initialQuestionSent = useRef(false);
+  useEffect(() => {
+    if (initialQuestion && !initialQuestionSent.current && txData.transactions !== undefined) {
+      initialQuestionSent.current = true;
+      // Defer slightly so the chat screen is fully mounted and txData has loaded
+      setTimeout(() => sendMessage(initialQuestion), 400);
+      // Clear param so back-and-forth navigation doesn't re-trigger
+      try { navigation.setParams?.({ initialQuestion: undefined }); } catch (e) {}
+    }
+  }, [initialQuestion, txData.transactions]);
 
   // ─── Voice recognition ─────────────────────────────────
   useSpeechRecognitionEvent('result', (ev) => {
@@ -437,8 +451,8 @@ const createSt = () => StyleSheet.create({
 
   emptyWrap: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 24 },
   emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.greenSoft, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 8 },
-  emptyHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign() },
+  emptyHint: { color: colors.textDim, fontSize: 14, textAlign: i18n.textAlign(), lineHeight: 20, marginBottom: 24 },
   suggestionsWrap: { width: '100%', gap: 8 },
   suggestionBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.cardBorder },
   suggestionText: { color: colors.text, fontSize: 14, fontWeight: '500', textAlign: i18n.textAlign() },

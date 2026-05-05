@@ -220,11 +220,22 @@ export default function AnalyticsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
         <View style={st.header}>
-          <View style={{ width: 44 }} />
-          <Text style={st.title}>{i18n.t('analytics')}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Calendar')} style={st.backBtn}>
-            <Feather name="calendar" size={22} color={colors.text} />
+          <TouchableOpacity
+            onPress={() => {
+              // AnalyticsScreen is registered twice: as a Tab (AnalyticsTab)
+              // and inside DashboardStack. Use goBack when there's a stack
+              // history; otherwise jump to the Dashboard tab.
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Dashboard');
+              }
+            }}
+            style={st.backBtn}>
+            <Feather name={i18n.backIcon()} size={22} color={colors.text} />
           </TouchableOpacity>
+          <Text style={st.title}>{i18n.t('analytics')}</Text>
+          <View style={{ width: 44 }} />
         </View>
 
         {/* Period selector */}
@@ -323,7 +334,7 @@ export default function AnalyticsScreen() {
                     <View style={[st.insightIcon, { backgroundColor: ins.color + '18' }]}>
                       <Feather name={ins.icon} size={18} color={ins.color} />
                     </View>
-                    <Text style={st.insightText}>{formatInsight(ins)}</Text>
+                    <View style={{ flex: 1 }}><Text style={st.insightText}>{formatInsight(ins)}</Text></View>
                   </View>
                 ))
               )}
@@ -606,10 +617,10 @@ const createSt = () => StyleSheet.create({
   scoreBarFill: { height: 8, borderRadius: 4 },
 
   // Insights
-  insightRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  insightRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 12, paddingVertical: 12 },
   insightBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   insightIcon: { width: 36, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  insightText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', flex: 1, lineHeight: 20 },
+  insightText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', lineHeight: 20, textAlign: i18n.textAlign() },
 
   // Month comparison
   compareRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },

@@ -169,8 +169,8 @@ function calculateDailyBudget(transactions, budgets) {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
   const remaining = income - expense;
 
   if (remaining <= 0 || income <= 0) return null;
@@ -182,7 +182,7 @@ function calculateDailyBudget(transactions, budgets) {
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = yesterday.toISOString().split('T')[0];
   const yesterdayExpense = thisMonth
-    .filter(t => t.type === 'expense' && (t.date || t.createdAt || '').startsWith(yStr))
+    .filter(t => t.type === 'expense' && !t.isTransfer && (t.date || t.createdAt || '').startsWith(yStr))
     .reduce((s, t) => s + t.amount, 0);
 
   const prevDailyBudget = daysLeft > 0 ? Math.round((remaining + yesterdayExpense) / (daysLeft + 1)) : dailyBudget;
@@ -206,19 +206,19 @@ function generateInsights(transactions, budgets, accounts, recurring) {
     return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
   const savingsRate = income > 0 ? Math.round((balance / income) * 100) : 0;
 
   // Категории этого месяца
   const catTotals = {};
-  thisMonth.filter(t => t.type === 'expense').forEach(t => {
+  thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
   // Категории прошлого месяца
   const lastCatTotals = {};
-  lastMonth.filter(t => t.type === 'expense').forEach(t => {
+  lastMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
     lastCatTotals[t.categoryId] = (lastCatTotals[t.categoryId] || 0) + t.amount;
   });
 
@@ -723,11 +723,11 @@ async function getPersonalAdvice(transactions, budgets, lang) {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
 
   const catTotals = {};
-  thisMonth.filter(t => t.type === 'expense').forEach(t => {
+  thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
 
@@ -1013,10 +1013,11 @@ function buildChartData(chartParams, transactions) {
   });
 
   if (chartType === 'pie') {
-    // Category breakdown
+    // Category breakdown — exclude inter-account transfers, they shouldn't
+    // appear as a "spending" category.
     const typeFilter = filter === 'income' ? 'income' : 'expense';
     const catTotals = {};
-    filtered.filter(t => t.type === typeFilter).forEach(t => {
+    filtered.filter(t => t.type === typeFilter && !t.isTransfer).forEach(t => {
       catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
     });
     return {
@@ -1038,14 +1039,14 @@ function buildChartData(chartParams, transactions) {
         const td = new Date(tx.date || tx.createdAt);
         return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate();
       });
-      const income = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const expense = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      const income = dayTxs.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+      const expense = dayTxs.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
       data.push({ day: d.getDate(), date: `${d.getMonth() + 1}/${d.getDate()}`, income, expense });
     }
     return { type: 'cashflow', data, totalIncome: data.reduce((s, d) => s + d.income, 0), totalExpense: data.reduce((s, d) => s + d.expense, 0) };
   }
 
-  // Default: bar chart (daily amounts)
+  // Default: bar chart (daily amounts) — exclude inter-account transfers
   const typeFilter = filter === 'income' ? 'income' : 'expense';
   const data = [];
   for (let i = 0; i <= days; i++) {
@@ -1053,7 +1054,7 @@ function buildChartData(chartParams, transactions) {
     d.setDate(d.getDate() + i);
     const dayTotal = filtered.filter(tx => {
       const td = new Date(tx.date || tx.createdAt);
-      return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate() && tx.type === typeFilter;
+      return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate() && tx.type === typeFilter && !tx.isTransfer;
     }).reduce((s, t) => s + t.amount, 0);
     data.push({ day: d.getDate(), date: `${d.getMonth() + 1}/${d.getDate()}`, amount: dayTotal });
   }
@@ -1073,11 +1074,11 @@ async function chatWithAI(question, transactions, budgets, lang) {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
 
   const catTotals = {};
-  last90.filter(t => t.type === 'expense').forEach(t => {
+  last90.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
 
@@ -1090,6 +1091,7 @@ async function chatWithAI(question, transactions, budgets, lang) {
   const monthlyIncomes = {};
   const monthlyExpenses = {};
   last90.forEach(t => {
+    if (t.isTransfer) return; // transfers between accounts aren't real income/expense
     const d = new Date(t.date || t.createdAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     if (t.type === 'income') monthlyIncomes[key] = (monthlyIncomes[key] || 0) + t.amount;
@@ -1107,7 +1109,7 @@ async function chatWithAI(question, transactions, budgets, lang) {
 
   // Top payees
   const payeeTotals = {};
-  last90.filter(t => t.type === 'expense' && t.recipient).forEach(t => {
+  last90.filter(t => t.type === 'expense' && !t.isTransfer && t.recipient).forEach(t => {
     payeeTotals[t.recipient] = (payeeTotals[t.recipient] || 0) + t.amount;
   });
   const topPayees = Object.entries(payeeTotals)
@@ -1118,7 +1120,7 @@ async function chatWithAI(question, transactions, budgets, lang) {
 
   // This month categories
   const thisMonthCats = {};
-  thisMonth.filter(t => t.type === 'expense').forEach(t => {
+  thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
     thisMonthCats[t.categoryId] = (thisMonthCats[t.categoryId] || 0) + t.amount;
   });
   const thisMonthTopCats = Object.entries(thisMonthCats)
@@ -1130,9 +1132,9 @@ async function chatWithAI(question, transactions, budgets, lang) {
   // Today's transactions
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const todayTxs = transactions.filter(t => (t.date || t.createdAt || '').slice(0, 10) === todayStr);
-  const todayExpense = todayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const todayIncome = todayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const todayDetail = todayTxs.map(t => `${t.type === 'income' ? '+' : '-'}${Math.round(t.amount)} ${t.categoryId}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
+  const todayExpense = todayTxs.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const todayIncome = todayTxs.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const todayDetail = todayTxs.map(t => `${t.type === 'income' && !t.isTransfer ? '+' : '-'}${Math.round(t.amount)} ${t.categoryId}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
 
   const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();

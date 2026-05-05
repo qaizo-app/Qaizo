@@ -127,6 +127,7 @@ export default {
   addFirstTransaction: 'Add first transaction',
   investmentsByMonth: 'Investments by month',
   investmentsByMonthEmpty: 'No transactions detected as investments. Use category Pension/Savings/Education or post to an investment-type account.',
+  discussWithAI: 'Discuss with AI',
   saveAsTemplate: 'Save as quick-add?',
   templateSuggestMessage: 'You\'ve added "{category}" {count} times in the last 30 days. Save as a quick-add template?',
   templateSaved: 'Quick-add template saved',
