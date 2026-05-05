@@ -144,6 +144,11 @@ export default function GoalsScreen() {
           <View style={st.empty}>
             <Feather name="target" size={48} color={colors.textMuted} />
             <Text style={st.emptyText}>{i18n.t('noGoals')}</Text>
+            <Text style={st.emptyHint}>{i18n.t('goalsEmptyHint')}</Text>
+            <TouchableOpacity style={st.emptyBtn} onPress={openAdd} activeOpacity={0.85}>
+              <Feather name="plus" size={16} color={colors.bg} />
+              <Text style={st.emptyBtnText}>{i18n.t('createFirstGoal')}</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -293,8 +298,11 @@ const createSt = () => StyleSheet.create({
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },
   addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
 
-  empty: { alignItems: 'center', marginTop: 80, gap: 16 },
-  emptyText: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },
+  empty: { alignItems: 'center', marginTop: 80, gap: 12, paddingHorizontal: 32 },
+  emptyText: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: 4 },
+  emptyHint: { color: colors.textMuted, fontSize: 13, fontWeight: '500', textAlign: 'center', lineHeight: 18 },
+  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.green, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 14, marginTop: 12 },
+  emptyBtnText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
 
   goalCard: { marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: colors.cardBorder },
   goalTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },

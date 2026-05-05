@@ -32,15 +32,18 @@ export default function InvestmentsScreen() {
   const [newAvgCost, setNewAvgCost] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [transactions, setTransactions] = useState([]);
   const styles = createStyles();
 
   const loadData = async (force = false) => {
-    const [inv, accs] = await Promise.all([
+    const [inv, accs, txs] = await Promise.all([
       dataService.getInvestments(),
       dataService.getAccounts(),
+      dataService.getTransactions(),
     ]);
     setInvestments(inv);
     setInvAccounts(accs.filter(a => a.type === 'investment' && !a.archived));
+    setTransactions(txs);
     const tickers = new Set();
     inv.forEach(i => { if (i.type === 'stocks' && Array.isArray(i.holdings)) i.holdings.forEach(h => h.ticker && tickers.add(h.ticker)); });
     if (tickers.size > 0) {
@@ -73,6 +76,49 @@ export default function InvestmentsScreen() {
     investments.reduce((sum, i) => sum + invValue(i), 0) +
     invAccounts.reduce((sum, a) => sum + (a.balance || 0), 0);
   const totalMonthly = investments.reduce((sum, i) => sum + (i.monthly || 0), 0);
+
+  // Monthly investment history — last 6 months.
+  // Money flowing INTO investments — counted by any of these signals:
+  //  1. Category is one of pension/investment/savings/children/education.
+  //  2. Account is an investment-type account.
+  //  3. recipient/note/note mentions an investment fund keyword (קרן פנסיה,
+  //     השתלמות, גמל, pension fund, retirement, etc) — catches cases where
+  //     user wrote on a regular bank account but it's clearly a deposit to
+  //     an investment fund.
+  const monthlyInvestData = (() => {
+    const now = new Date();
+    const months = [];
+    const investAccountIds = new Set(invAccounts.map(a => a.id));
+    const investCategoryIds = new Set(['pension', 'investment', 'savings', 'children', 'education']);
+    const investKeywords = ['פנסיה', 'השתלמות', 'גמל', 'pension', 'retirement', 'gemel', 'hashtalmut'];
+
+    let totalCounted = 0, totalSkipped = 0;
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleString(i18n.getLanguage(), { month: 'short' });
+      let amount = 0;
+      transactions.forEach(t => {
+        const td = new Date(t.date || t.createdAt);
+        if (td.getFullYear() !== d.getFullYear() || td.getMonth() !== d.getMonth()) return;
+        const isInvestCat = investCategoryIds.has(t.categoryId);
+        const isInvestAcc = t.account && investAccountIds.has(t.account);
+        const blob = `${t.recipient || ''} ${t.note || ''}`.toLowerCase();
+        const hasInvestKw = investKeywords.some(k => blob.includes(k));
+        if (isInvestCat || isInvestAcc || hasInvestKw) {
+          amount += t.amount || 0;
+          totalCounted++;
+        } else {
+          totalSkipped++;
+        }
+      });
+      months.push({ key: ym, label, amount });
+    }
+    if (__DEV__) console.log('[Invest] monthly chart — txs counted:', totalCounted, 'skipped:', totalSkipped, 'invAccounts:', invAccounts.length, 'months:', months.map(m => `${m.label}:${m.amount}`).join(' '));
+    return months;
+  })();
+  const investMaxMonthly = Math.max(1, ...monthlyInvestData.map(m => m.amount));
+  const investTotal6m = monthlyInvestData.reduce((s, m) => s + m.amount, 0);
 
   const typeIcon = (t) => {
     switch (t) {
@@ -170,6 +216,40 @@ export default function InvestmentsScreen() {
           </View>
         </Card>
 
+        {/* Monthly investment history — last 6 months. Always visible if user
+            has any investment data at all, so they can see if their txs are
+            being detected. */}
+        {(investments.length > 0 || invAccounts.length > 0) && (
+          <Card style={{ marginHorizontal: 20 }}>
+            <View style={styles.monthlyChartHeader}>
+              <Text style={styles.monthlyChartTitle}>{i18n.t('investmentsByMonth')}</Text>
+              <Amount value={investTotal6m} style={styles.monthlyChartTotal} />
+            </View>
+            {investTotal6m === 0 ? (
+              <Text style={styles.monthlyChartEmpty}>{i18n.t('investmentsByMonthEmpty')}</Text>
+            ) : (
+              <View style={styles.monthlyChartRow}>
+                {monthlyInvestData.map((m, idx) => {
+                  const pct = (m.amount / investMaxMonthly) * 100;
+                  return (
+                    <View key={m.key} style={styles.monthlyChartCol}>
+                      {m.amount > 0 && (
+                        <Text style={styles.monthlyChartAmount} numberOfLines={1} adjustsFontSizeToFit>
+                          {m.amount >= 1000 ? `${(m.amount / 1000).toFixed(m.amount >= 10000 ? 0 : 1)}k` : Math.round(m.amount)}
+                        </Text>
+                      )}
+                      <View style={styles.monthlyChartBarTrack}>
+                        <View style={[styles.monthlyChartBarFill, { height: `${Math.max(2, pct)}%` }]} />
+                      </View>
+                      <Text style={styles.monthlyChartLabel}>{m.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </Card>
+        )}
+
         {invAccounts.map(acc => (
           <Card key={acc.id} style={{ marginHorizontal: 20 }}>
             <TouchableOpacity onPress={() => navigation.navigate('AccountHistory', { account: acc })} activeOpacity={0.7}>
@@ -229,6 +309,10 @@ export default function InvestmentsScreen() {
               <Feather name="trending-up" size={32} color={colors.textMuted} />
               <Text style={styles.emptyTitle}>{i18n.t('noInvestments')}</Text>
               <Text style={styles.emptyText}>{i18n.t('investmentsHint')}</Text>
+              <TouchableOpacity style={styles.emptyBtn} onPress={openAdd} activeOpacity={0.85}>
+                <Feather name="plus" size={16} color={colors.bg} />
+                <Text style={styles.emptyBtnText}>{i18n.t('addFirstInvestment')}</Text>
+              </TouchableOpacity>
             </View>
           </Card>
         )}
@@ -381,6 +465,18 @@ const createStyles = () => StyleSheet.create({
   monthlyRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },
   monthlyLabel: { color: colors.textDim, fontSize: 12 },
   monthlyAmount: { color: colors.green, fontSize: 16, fontWeight: '700' },
+
+  monthlyChartHeader: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  monthlyChartTitle: { color: colors.text, fontSize: 14, fontWeight: '700', textAlign: i18n.textAlign() },
+  monthlyChartTotal: { color: colors.teal, fontSize: 13, fontWeight: '700' },
+  monthlyChartRow: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'flex-end', height: 140, paddingTop: 16 },
+  monthlyChartCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%', gap: 4 },
+  monthlyChartAmount: { color: colors.teal, fontSize: 10, fontWeight: '700' },
+  monthlyChartBarTrack: { width: 16, flex: 1, justifyContent: 'flex-end', backgroundColor: 'transparent' },
+  monthlyChartBarFill: { width: '100%', backgroundColor: colors.teal, borderTopLeftRadius: 4, borderTopRightRadius: 4, minHeight: 2 },
+  monthlyChartLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'center' },
+  monthlyChartEmpty: { color: colors.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, paddingVertical: 12 },
+
   invRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 12 },
   invIconWrap: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   invInfo: { flex: 1 },
@@ -392,6 +488,8 @@ const createStyles = () => StyleSheet.create({
   emptyWrap: { alignItems: 'center', paddingVertical: 24, gap: 10 },
   emptyTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
   emptyText: { color: colors.textDim, fontSize: 12, textAlign: 'center', lineHeight: 20, paddingHorizontal: 12 },
+  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.green, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 14, marginTop: 8 },
+  emptyBtnText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
 
   // Modal
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: i18n.textAlign() },

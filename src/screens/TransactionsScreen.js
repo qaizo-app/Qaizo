@@ -26,7 +26,6 @@ export default function TransactionsScreen({ route }) {
   const [accounts, setAccounts] = useState([]);
   const [activeFilters, setActiveFilters] = useState(['income', 'expense', 'transfer']);
   const [search, setSearch] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
@@ -175,11 +174,6 @@ export default function TransactionsScreen({ route }) {
   const handleEdit = (tx) => { setEditTx(tx); };
   const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
 
-  const toggleSearch = () => {
-    if (showSearch) { setSearch(''); }
-    setShowSearch(!showSearch);
-  };
-
   const getAccIcon = (type) => (accountTypeConfig[type] || accountTypeConfig.bank).icon;
 
   return (
@@ -188,9 +182,6 @@ export default function TransactionsScreen({ route }) {
       <View style={styles.header}>
         <Text style={styles.title}>{i18n.t('transactions')}</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={[styles.searchBtn, showSearch && styles.searchBtnActive]} onPress={toggleSearch}>
-            <Feather name={showSearch ? 'x' : 'search'} size={18} color={showSearch ? colors.green : colors.textDim} />
-          </TouchableOpacity>
           <TouchableOpacity style={[styles.searchBtn, showFilters && styles.filterBtnActive]} onPress={() => setShowFilters(!showFilters)}>
             <Feather name="sliders" size={18} color={showFilters ? colors.teal : colors.textDim} />
             {activeFilterCount > 0 && (
@@ -205,26 +196,23 @@ export default function TransactionsScreen({ route }) {
         </View>
       </View>
 
-      {/* Search bar */}
-      {showSearch && (
-        <View style={styles.searchRow}>
-          <Feather name="search" size={16} color={colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            value={search}
-            onChangeText={setSearch}
-            placeholder={i18n.t('searchPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            autoFocus
-            returnKeyType="search"
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
-              <Feather name="x-circle" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+      {/* Search bar — always visible */}
+      <View style={styles.searchRow}>
+        <Feather name="search" size={16} color={colors.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder={i18n.t('searchPlaceholder')}
+          placeholderTextColor={colors.textMuted}
+          returnKeyType="search"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Feather name="x-circle" size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Filters */}
       <View style={styles.filters}>
@@ -388,12 +376,12 @@ export default function TransactionsScreen({ route }) {
             </Text>
           )}
           <Amount value={totalFiltered} sign style={styles.summaryAmount} color={totalFiltered >= 0 ? colors.green : colors.red} />
-          {!showSearch && !showFilters && (
+          {search.length === 0 && !showFilters && (
             <Text style={styles.hint}>
               ← {i18n.t('swipeHint')}
             </Text>
           )}
-          {showSearch && search.length > 0 && (
+          {search.length > 0 && (
             <Text style={styles.hint}>
               {i18n.t('found')}: {filtered.length}
             </Text>
@@ -434,7 +422,13 @@ export default function TransactionsScreen({ route }) {
               {search || activeFilterCount > 0 ? i18n.t('noResults') : i18n.t('noTransactions')}
             </Text>
             {!(search || activeFilterCount > 0) && (
-              <Text style={styles.emptyHint}>{i18n.t('noTransactionsHint')}</Text>
+              <>
+                <Text style={styles.emptyHint}>{i18n.t('noTransactionsHint')}</Text>
+                <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
+                  <Feather name="plus" size={16} color={colors.bg} />
+                  <Text style={styles.emptyBtnText}>{i18n.t('addFirstTransaction')}</Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
         }
@@ -515,8 +509,10 @@ const createStyles = () => StyleSheet.create({
 
   list: { paddingHorizontal: 20, paddingBottom: 120 },
   emptyContainer: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 40 },
-  emptyText: { color: colors.textMuted, fontSize: 14, fontWeight: '600', marginTop: 12 },
-  emptyHint: { color: colors.textMuted, fontSize: 12, marginTop: 8, textAlign: 'center', lineHeight: 18, opacity: 0.8 },
+  emptyText: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: 12 },
+  emptyHint: { color: colors.textMuted, fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 18 },
+  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.green, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 14, marginTop: 16 },
+  emptyBtnText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
 
   fab: { position: 'absolute', right: 24, bottom: 100, width: 60, height: 60, borderRadius: 18, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: colors.green, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16 },
 });
