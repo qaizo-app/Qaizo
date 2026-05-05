@@ -32,6 +32,7 @@ const CATEGORY_KEYWORDS = {
   cosmetics: ['стрижка', 'парикмахер', 'маникюр', 'תספורת', 'מספרה', 'haircut', 'salon', 'салон', 'beauty', 'יופי', 'краска', 'крем', 'קרם', 'косметика', 'קוסמטיקה', 'spa', 'ספא', 'friseur', 'peluquería', 'coiffeur'],
   electronics: ['компьютер', 'мחשב', 'computer', 'laptop', 'ноутбук', 'техника', 'אלקטרוניקה', 'гаджет', 'gadget', 'наушники', 'אוזניות', 'headphones', 'зарядка', 'מטען', 'charger'],
   insurance: ['страховка', 'ביטוח', 'insurance', 'полис', 'פוליסה', 'versicherung', 'seguro', 'assurance'],
+  pension: ['пенсия', 'пенсионный', 'קרן פנסיה', 'פנסיה', 'גמל', 'קופת גמל', 'השתלמות', 'קרן השתלמות', 'pension', 'retirement', 'pension fund'],
   rent: ['аренда', 'квартира', 'שכירות', 'דירה', 'rent', 'apartment', 'miete', 'alquiler', 'loyer'],
   arnona: ['арнона', 'ארנונה', 'arnona', 'municipal', 'муниципалитет', 'עירייה'],
   vaad: ['ваад', 'ועד בית', 'vaad', 'building committee', 'управление домом'],
@@ -59,7 +60,7 @@ function parseTransaction(text) {
   if (!amount || isNaN(amount)) return null;
 
   // Определяем тип: доход или расход
-  const incomeWords = ['зарплата', 'доход', 'получил', 'заработал', 'возврат', 'подработ', 'выиграл', 'выигрыш', 'перевод от', 'перевели', 'вернули', 'кэшбэк', 'бонус', 'приз', 'гонорар', 'фриланс', 'халтур', 'чаевые', 'прибыль', 'дивиденд', 'משכורת', 'הכנסה', 'קיבלתי', 'הרווחתי', 'זיכוי', 'בונוס', 'טיפ', 'salary', 'income', 'received', 'earned', 'refund', 'cashback', 'bonus', 'won', 'prize', 'tip', 'freelance', 'profit', 'dividend', 'payout'];
+  const incomeWords = ['зарплата', 'доход', 'получил', 'поступил', 'поступление', 'начислено', 'заработал', 'возврат', 'подработ', 'выиграл', 'выигрыш', 'перевод от', 'перевели', 'вернули', 'кэшбэк', 'бонус', 'приз', 'гонорар', 'фриланс', 'халтур', 'чаевые', 'прибыль', 'дивиденд', 'משכורת', 'הכנסה', 'קיבלתי', 'הרווחתי', 'זיכוי', 'בונוס', 'טיפ', 'נכנס', 'הופקד', 'התקבל', 'זוכה', 'salary', 'income', 'received', 'incoming', 'deposit', 'earned', 'refund', 'cashback', 'bonus', 'won', 'prize', 'tip', 'freelance', 'profit', 'dividend', 'payout'];
   const isIncome = incomeWords.some(w => input.includes(w));
   const type = isIncome ? 'income' : 'expense';
 
@@ -379,11 +380,33 @@ async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) 
   return null;
 }
 
+// Brand keywords for credit card brand detection (used for both AI selection and UI chip filtering)
+const CARD_BRAND_KEYWORDS = {
+  visa: ['visa', 'ויזה', 'виза'],
+  mastercard: ['mastercard', 'master card', 'מאסטרקארד', 'מסטרקארד', 'мастеркард', 'мастер кард'],
+  amex: ['amex', 'american express', 'אמקס', 'американ экспресс'],
+};
+
+function detectCardBrand(text) {
+  const lc = (text || '').toLowerCase();
+  for (const [brand, kws] of Object.entries(CARD_BRAND_KEYWORDS)) {
+    if (kws.some(kw => lc.includes(kw))) return brand;
+  }
+  return null;
+}
+
 // Умный парсинг транзакции через Gemini
-async function parseTransactionSmart(text) {
+async function parseTransactionSmart(text, accounts = []) {
   const lang = i18n.getLanguage();
   const currency = curCode();
   const categories = Object.keys(CATEGORY_KEYWORDS).join(', ');
+
+  // Build accounts section for prompt (only active accounts)
+  const activeAccounts = (accounts || []).filter(a => a.isActive !== false);
+  console.log('[Smart] accounts in prompt:', activeAccounts.length, activeAccounts.map(a => `${a.id}=${a.name}(${a.type})`).join(' | '));
+  const accountsSection = activeAccounts.length > 0
+    ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map(a => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a SPECIFIC account name/brand ("Visa Hapoalim", "Mastercard", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, חשבון בנק, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → return both as null\n`
+    : '';
 
   const prompt = `You are a financial transaction parser for an Israeli personal finance app. Parse the user's free-text into a transaction JSON.
 
@@ -406,7 +429,8 @@ EXPENSE CATEGORIES (id → meaning / typical keywords across RU/HE/EN):
   education    → курс, учёба взрослого, книга, university, lesson, урок (для взрослых)
   cosmetics    → парикмахер, маникюр, salon, spa, מספרה, косметика, крем
   electronics  → компьютер, ноутбук, гаджет, наушники, зарядка, אלקטרוניקה
-  insurance    → страховка, ביטוח, полис
+  insurance    → страховка, ביטוח, полис, медстраховка, autoinsurance
+  pension      → пенсия, пенсионный фонд, קרן פנסיה, פנסיה, גמל, השתלמות, pension fund, retirement
   rent         → аренда квартиры, שכירות
   arnona       → арнона, ארנונה, муниципальный налог
   vaad         → ваад байт, ועד בית, плата управляющей компании
@@ -421,9 +445,10 @@ INCOME CATEGORIES:
   IMPORTANT: tax refund (החזר מס / החזר ממס הכנסה / возврат налога) is OTHER_INCOME, NOT salary_me — a refund is not a salary even though the word "מס הכנסה" contains "הכנסה".
 
 INCOME vs EXPENSE — defaults to EXPENSE unless income trigger is clear:
-  Income triggers (RU): зарплата, получил, заработал, подработал, выиграл, возврат, бонус, фриланс, чаевые, прибыль, кэшбэк, дивиденд
-  Income triggers (EN): salary, earned, received, won, bonus, freelance, tip, profit, refund, cashback, payout, dividend
-  Income triggers (HE): משכורת, הכנסה, קיבלתי, הרווחתי, בונוס, טיפ, זיכוי, החזר
+  Income triggers (RU): зарплата, получил, поступил, поступило, поступление, пришёл/пришло, заработал, подработал, выиграл, возврат, бонус, фриланс, чаевые, прибыль, кэшбэк, дивиденд, начислено
+  Income triggers (EN): salary, earned, received, incoming, deposit, deposited, won, bonus, freelance, tip, profit, refund, cashback, payout, dividend
+  Income triggers (HE): משכורת, הכנסה, קיבלתי, הרווחתי, בונוס, טיפ, זיכוי, החזר, נכנס, נכנסה, הופקד, הופקדה, התקבל, התקבלה, זוכה
+  IMPORTANT: "נכנס תשלום" / "поступил платёж" / "incoming payment" → INCOME (money came IN to the user's account, even if going to pension/savings).
 
 EXAMPLES (input → output):
   "кофе с круассаном 28" → {"amount":28,"type":"expense","categoryId":"restaurant","recipient":"","note":"кофе с круассаном 28"}
@@ -470,24 +495,44 @@ WORD-NUMBER EXAMPLES:
   "ремонт пять тысяч" → {"amount":5000,"type":"expense","categoryId":"household","recipient":"","note":"ремонт пять тысяч"}
   "salary fifteen thousand" → {"amount":15000,"type":"income","categoryId":"salary_me","recipient":"","note":"salary fifteen thousand"}
 
+${accountsSection}
 OUTPUT FORMAT — respond with raw JSON only, no markdown fences, no explanation:
-{"amount": number, "type": "expense" | "income", "categoryId": "id from list above", "recipient": "store/payee name or empty string", "note": "<original input text exactly>"}
+{"amount": number, "type": "expense" | "income", "categoryId": "id from list above", "recipient": "store/payee name or empty string", "note": "<original input text exactly>", "accountId": null | "<id from USER ACCOUNTS>", "accountType": null | "credit" | "cash" | "bank" | "savings" | "investment"}
 
 RULES:
 - Extract numeric amount from input. Handle digit forms (1,234 / 1.234 / 28.50 / 1500₪ / 180 שח / 200 nis) AND word forms (see WORD-FORM NUMBERS section above — voice input often returns "12 אלף" instead of "12000").
 - "type" defaults to "expense"; switch to "income" only if a clear income trigger word is present.
 - Pick the BEST matching categoryId. If confidence is low (<70%) or nothing fits clearly, use "other" — DO NOT guess.
 - "recipient" = store/payee/brand name if mentioned, otherwise empty string. Capitalize known brands ("Shufersal","Paz","Ikea","Netflix","Castro","Uber","Bolt").
-- "note" = preserve user's original input verbatim, do not paraphrase.`;
+- "note" = preserve user's original input verbatim, do not paraphrase.
+- "accountId" / "accountType" — see ACCOUNT MATCHING RULES above. Both null if user said nothing about payment.`;
 
   console.log('[Smart] input text:', JSON.stringify(text));
   const result = await callGemini(prompt);
   console.log('[Smart] AI raw response:', JSON.stringify(result));
+
+  let parsed = null;
   if (result) {
+    // Try direct JSON parse first
     try {
-      // Извлекаем JSON из ответа (может быть обёрнут в ```)
       const jsonStr = result.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonStr);
+      parsed = JSON.parse(jsonStr);
+    } catch (e) {
+      // Fallback: regex-extract first {...} block (some models wrap JSON in prose)
+      const match = result.match(/\{[\s\S]*\}/);
+      if (match) {
+        try { parsed = JSON.parse(match[0]); }
+        catch (e2) { console.log('[Smart] FAIL: regex JSON extract also failed:', e2.message); }
+      } else {
+        console.log('[Smart] FAIL: no JSON found in AI response:', e.message);
+      }
+    }
+  } else {
+    console.log('[Smart] FAIL: no AI response, falling back to local parser');
+  }
+
+  if (parsed) {
+    try {
       console.log('[Smart] parsed:', JSON.stringify(parsed));
       if (parsed.amount && parsed.type && parsed.categoryId) {
         // Hard guarantee: income categories must have type=income, regardless of what AI returned
@@ -495,19 +540,57 @@ RULES:
         if (incomeCategories.includes(parsed.categoryId)) {
           parsed.type = 'income';
         }
+        // Smart account selection
+        parsed.account = null;
+        const activeAccs = (accounts || []).filter(a => a.isActive !== false);
+
+        // Brand-based selection has priority (e.g. user said "Visa" but has 3 Visa cards)
+        const detectedBrand = detectCardBrand(text);
+        if (detectedBrand) {
+          parsed.detectedBrand = detectedBrand;
+          const brandKws = CARD_BRAND_KEYWORDS[detectedBrand];
+          const brandMatches = activeAccs.filter(a => brandKws.some(kw => (a.name || '').toLowerCase().includes(kw)));
+          if (brandMatches.length === 1) {
+            parsed.account = brandMatches[0].id;
+          } else if (brandMatches.length > 1) {
+            const dataService = require('./dataService').default;
+            const allTxs = await dataService.getTransactions();
+            const brandIds = new Set(brandMatches.map(a => a.id));
+            const sorted = [...allTxs].sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+            for (const tx of sorted) {
+              if (tx.account && brandIds.has(tx.account)) { parsed.account = tx.account; break; }
+            }
+            if (!parsed.account) parsed.account = brandMatches[0].id;
+          }
+        }
+
+        // Fallback: AI gave specific accountId, or only generic type
+        if (!parsed.account) {
+          if (parsed.accountId && activeAccs.find(a => a.id === parsed.accountId)) {
+            parsed.account = parsed.accountId;
+          } else if (parsed.accountType) {
+            const matching = activeAccs.filter(a => a.type === parsed.accountType);
+            if (matching.length === 1) {
+              parsed.account = matching[0].id;
+            } else if (matching.length > 1) {
+              const dataService = require('./dataService').default;
+              parsed.account = await dataService.getLastUsedAccountByType(parsed.accountType);
+            }
+          }
+        }
         console.log('[Smart] final result:', JSON.stringify(parsed));
         return parsed;
       }
       console.log('[Smart] FAIL: parsed missing required fields, falling back to local parser');
     } catch (e) {
-      console.log('[Smart] FAIL: JSON parse error:', e.message);
+      console.log('[Smart] FAIL: error processing parsed result:', e.message);
     }
-  } else {
-    console.log('[Smart] FAIL: no AI response, falling back to local parser');
   }
 
   // Фоллбэк на локальный парсер
-  return parseTransaction(text);
+  const fallback = parseTransaction(text);
+  console.log('[Smart] FALLBACK local parser result:', JSON.stringify(fallback));
+  return fallback;
 }
 
 // Персональные советы от Gemini
@@ -999,9 +1082,12 @@ Reply ONLY with valid JSON, no explanation:
   }
 }
 
+export { detectCardBrand, CARD_BRAND_KEYWORDS };
 export default {
   parseTransaction,
   parseTransactionSmart,
+  detectCardBrand,
+  CARD_BRAND_KEYWORDS,
   calculateTaxReserve,
   predictCashFlow,
   calculateDailyBudget,

@@ -290,6 +290,20 @@ const dataService = {
     } catch (e) { return DEFAULT_ACCOUNTS; }
   },
 
+  // Smart Input helper: find the most recently used account of a given type
+  // (e.g. user said "оплатил кредиткой" but has 3 credit cards)
+  async getLastUsedAccountByType(type) {
+    const [txs, accs] = await Promise.all([this.getTransactions(), this.getAccounts()]);
+    const typeAccountIds = new Set(accs.filter(a => a.type === type && a.isActive !== false).map(a => a.id));
+    if (typeAccountIds.size === 0) return null;
+    if (typeAccountIds.size === 1) return [...typeAccountIds][0];
+    const sorted = [...txs].sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+    for (const tx of sorted) {
+      if (tx.account && typeAccountIds.has(tx.account)) return tx.account;
+    }
+    return [...typeAccountIds][0]; // fallback to first of type
+  },
+
   async saveAccounts(accounts) {
     const uid = getUid();
     if (uid) {
