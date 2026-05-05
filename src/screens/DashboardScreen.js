@@ -6,6 +6,7 @@ import { mergeTransferPairs } from '../utils/transactions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, AppState, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddRecurringModal from '../components/AddRecurringModal';
 import ConfirmRecurringModal from '../components/ConfirmRecurringModal';
 import UpcomingPaymentsModal from '../components/UpcomingPaymentsModal';
@@ -225,14 +226,49 @@ export default function DashboardScreen() {
     if (txs.length > 0 || accs.length > 0) setLoading(false);
   };
 
+  const [templateSuggestion, setTemplateSuggestion] = useState(null);
+
   useFocusEffect(useCallback(() => {
     loadData();
     // Retry after Firestore cold start
     const timer = setTimeout(() => {
       loadData().then(() => setLoading(false));
     }, 2000);
+    // Check for pending quick-template suggestion (set after addTransaction)
+    AsyncStorage.getItem('pending_template_suggestion').then(raw => {
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.categoryId) {
+          setTemplateSuggestion(parsed);
+        } else {
+          // Malformed flag — clear it
+          AsyncStorage.removeItem('pending_template_suggestion').catch(() => {});
+        }
+      } catch (e) {
+        AsyncStorage.removeItem('pending_template_suggestion').catch(() => {});
+      }
+    });
     return () => clearTimeout(timer);
   }, []));
+
+  const handleAcceptTemplate = async () => {
+    if (!templateSuggestion) return;
+    const tpl = { name: '', categoryId: templateSuggestion.categoryId, account: templateSuggestion.account || null };
+    const existing = await dataService.getQuickTemplates();
+    await dataService.saveQuickTemplates([...existing, tpl]);
+    await AsyncStorage.removeItem('pending_template_suggestion');
+    setTemplateSuggestion(null);
+    toast.show(i18n.t('templateSaved'), 'success');
+  };
+
+  const handleDismissTemplate = async () => {
+    if (templateSuggestion) {
+      await dataService.dismissQuickTemplateSuggestion(templateSuggestion.categoryId, templateSuggestion.account);
+    }
+    await AsyncStorage.removeItem('pending_template_suggestion');
+    setTemplateSuggestion(null);
+  };
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') loadData();
@@ -453,7 +489,7 @@ export default function DashboardScreen() {
           <TouchableOpacity style={st.aiHintBanner} activeOpacity={0.8}
             onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }}>
             <Feather name="message-circle" size={16} color="#fff" />
-            <Text style={st.aiHintText} numberOfLines={1}>{i18n.t('aiHint')}</Text>
+            <View style={{ flex: 1 }}><Text style={st.aiHintText} numberOfLines={1}>{i18n.t('aiHint')}</Text></View>
             <TouchableOpacity onPress={() => setShowAiHint(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
@@ -556,6 +592,16 @@ export default function DashboardScreen() {
         message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+      <ConfirmModal visible={!!(templateSuggestion && templateSuggestion.categoryId)} icon="bookmark"
+        confirmColor={colors.green}
+        title={i18n.t('saveAsTemplate')}
+        message={templateSuggestion && templateSuggestion.categoryId
+          ? (i18n.t('templateSuggestMessage') || '')
+              .replace('{category}', i18n.t(templateSuggestion.categoryId))
+              .replace('{count}', String(templateSuggestion.count || 0))
+          : ''}
+        confirmText={i18n.t('save')} cancelText={i18n.t('notNow')}
+        onConfirm={handleAcceptTemplate} onCancel={handleDismissTemplate} />
       <ConfirmModal visible={deleteTemplate !== null} title={i18n.t('delete')}
         message={deleteTemplate !== null && quickTemplates[deleteTemplate] ? (quickTemplates[deleteTemplate].name || i18n.t(quickTemplates[deleteTemplate].categoryId)) : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}

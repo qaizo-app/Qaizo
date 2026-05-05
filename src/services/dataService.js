@@ -190,6 +190,14 @@ const dataService = {
           notif.notifyProjectBudgetThreshold(newTx.projectId).catch(() => {});
         } catch (e) { /* noop — notifications optional */ }
       }
+      // Quick-template suggestion: stash it in AsyncStorage so the Dashboard
+      // can pick it up on next focus and prompt the user. Doesn't block the
+      // save flow.
+      if (newTx.type === 'expense') {
+        this.suggestQuickTemplate(newTx).then(s => {
+          if (s) AsyncStorage.setItem('pending_template_suggestion', JSON.stringify(s)).catch(() => {});
+        }).catch(() => {});
+      }
       return newTx;
     } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
   },
@@ -768,6 +776,56 @@ const dataService = {
   },
 
   // ─── QUICK TEMPLATES ─────────────────────────────────────
+  // After a transaction is saved, check whether the user has repeated the same
+  // pattern (categoryId + account) at least 3 times in the last 30 days, has
+  // no matching template yet, and hasn't dismissed this exact pattern before.
+  // Returns { categoryId, account } or null.
+  async suggestQuickTemplate(justAdded) {
+    try {
+      if (!justAdded || !justAdded.categoryId || justAdded.type !== 'expense') return null;
+      const [txs, templates, dismissedRaw] = await Promise.all([
+        this.getTransactions(),
+        this.getQuickTemplates(),
+        AsyncStorage.getItem('quick_template_suggest_dismissed'),
+      ]);
+      const dismissed = dismissedRaw ? JSON.parse(dismissedRaw) : [];
+      const patternKey = `${justAdded.categoryId}|${justAdded.account || ''}`;
+
+      // Already a template for this exact pattern? Skip.
+      const exists = templates.some(t => t.categoryId === justAdded.categoryId && (t.account || '') === (justAdded.account || ''));
+      if (exists) return null;
+
+      // Already dismissed this pattern? Skip.
+      if (dismissed.includes(patternKey)) return null;
+
+      // Count matching transactions in last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const matches = txs.filter(t =>
+        t.type === 'expense' &&
+        t.categoryId === justAdded.categoryId &&
+        (t.account || '') === (justAdded.account || '') &&
+        new Date(t.date || t.createdAt) >= thirtyDaysAgo
+      );
+      if (matches.length < 3) return null;
+
+      return { categoryId: justAdded.categoryId, account: justAdded.account || null, count: matches.length };
+    } catch (e) {
+      if (__DEV__) console.error('suggestQuickTemplate:', e);
+      return null;
+    }
+  },
+
+  async dismissQuickTemplateSuggestion(categoryId, account) {
+    try {
+      const raw = await AsyncStorage.getItem('quick_template_suggest_dismissed');
+      const list = raw ? JSON.parse(raw) : [];
+      const key = `${categoryId}|${account || ''}`;
+      if (!list.includes(key)) list.push(key);
+      await AsyncStorage.setItem('quick_template_suggest_dismissed', JSON.stringify(list));
+    } catch (e) { /* noop */ }
+  },
+
   async getQuickTemplates() {
     const uid = getUid();
     if (uid) return getDocData('quickTemplates', []);
