@@ -73,7 +73,7 @@ export default function InteractiveBarChart({ data, maxBar, onBarActivate }) {
 }
 
 const createSt = () => StyleSheet.create({
-  chart: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'flex-end', height: 140, paddingTop: 24 },
+  chart: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'flex-end', height: 180, paddingTop: 24 },
   barGroup: { flex: 1, alignItems: 'center', paddingVertical: 4, borderRadius: 8 },
   barLabels: { alignItems: 'center', marginBottom: 4, minHeight: 14 },
   barAmount: { fontSize: 10, fontWeight: '700' },

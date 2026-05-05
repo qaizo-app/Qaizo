@@ -142,7 +142,7 @@ export default function RecurringBlock({
         </Card>
       ) : (
         <Card>
-          <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('upcomingPayments')}</Text>
+          <Text style={st.blockTitle}>{i18n.t('upcomingPayments')}</Text>
           <Text style={st.recEmptyTxt}>{i18n.t('noUpcoming')}</Text>
         </Card>
       )}

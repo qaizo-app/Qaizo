@@ -143,7 +143,7 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
 
             {/* Amount */}
             <Text style={st.label}>{i18n.t('amount')}</Text>
-            <Text style={[st.amtLine, { textAlign: i18n.textAlign() }]}>
+            <Text style={st.amtLine}>
               <TextInput
                 style={[st.amtIn, { fontSize: amtFont(amount, 28), color: typeColor }]}
                 value={amount}
@@ -250,7 +250,7 @@ const createSt = () => StyleSheet.create({
   },
   // Nested TextInput inside Text so the currency symbol sits inline with the
   // typed number instead of being pushed to the other edge by row stretching.
-  amtLine: { marginBottom: 14 },
+  amtLine: { marginBottom: 14, textAlign: i18n.textAlign() },
   cur: { fontSize: 28, fontWeight: '800' },
   amtIn: { minWidth: 40, color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -1, padding: 0, textAlign: i18n.textAlign() },
   row: {

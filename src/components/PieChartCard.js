@@ -8,14 +8,15 @@ import { colors } from '../theme/colors';
 
 export default function PieChartCard({ pieData }) {
   if (pieData.length === 0) return null;
+  const st = createSt();
   return (
     <Card>
-      <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('expensesByCategory')}</Text>
+      <Text style={st.blockTitle}>{i18n.t('expensesByCategory')}</Text>
       <InteractivePieChart data={pieData} size={200} />
     </Card>
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
 });

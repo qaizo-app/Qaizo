@@ -8,14 +8,15 @@ import { colors } from '../theme/colors';
 
 export default function BarChartCard({ barData, maxBar, onBarActivate }) {
   if (!barData.some(d => d.income > 0 || d.expense > 0)) return null;
+  const st = createSt();
   return (
     <Card>
-      <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('sixMonths')}</Text>
+      <Text style={st.blockTitle}>{i18n.t('sixMonths')}</Text>
       <InteractiveBarChart data={barData} maxBar={maxBar} onBarActivate={onBarActivate} />
     </Card>
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
 });

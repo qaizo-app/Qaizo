@@ -8,9 +8,10 @@ import i18n from '../i18n';
 import { colors } from '../theme/colors';
 
 export default function RecentTxBlock({ recentTx, accounts, onDelete, onEdit, onDuplicate }) {
+  const st = createSt();
   return (
     <Card>
-      <Text style={[st.blockTitle, { textAlign: i18n.textAlign() }]}>{i18n.t('recentTransactions')}</Text>
+      <Text style={st.blockTitle}>{i18n.t('recentTransactions')}</Text>
       {recentTx.length > 0 ? recentTx.map(tx => (
         <TransactionItem key={tx.id} transaction={tx}
           currency={accounts?.find(a => a.id === tx.account)?.currency}
@@ -27,7 +28,7 @@ export default function RecentTxBlock({ recentTx, accounts, onDelete, onEdit, on
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   blockTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: i18n.textAlign() },
   empty: { alignItems: 'center', paddingVertical: 32 },
   emptyText: { color: colors.textMuted, fontSize: 14, marginTop: 12 },
