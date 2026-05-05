@@ -241,6 +241,11 @@ function AppInner() {
         }
       } catch (e) {}
 
+      // Auto-execute any recurring payments marked autoConfirm whose nextDate
+      // has passed. Catches up missed months too. Runs once on every app
+      // startup so the user gets fresh transactions without thinking about it.
+      try { await dataService.autoExecuteRecurring(); } catch (e) {}
+
       // Слушатель нажатий на уведомления
       const notifSub = Notifications.addNotificationResponseReceivedListener(response => {
         const action = response.actionIdentifier;

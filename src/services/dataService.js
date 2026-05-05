@@ -665,6 +665,42 @@ const dataService = {
     } catch (e) { return false; }
   },
 
+  // Auto-execute due recurring payments. Loops over active recurring items
+  // and confirms (creates a transaction + advances nextDate) any whose
+  // nextDate has passed AND have autoConfirm=true.
+  // Designed to be called once at app startup. Returns count of confirmed.
+  // Loops until no more due items exist (handles the case where multiple
+  // intervals were missed while the app was closed).
+  async autoExecuteRecurring() {
+    try {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let confirmed = 0;
+      // Safety limit so a misconfigured item can't loop forever
+      const MAX_ITERATIONS = 100;
+      for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
+        const items = await this.getRecurring();
+        const due = items.filter(r =>
+          r.isActive !== false &&
+          r.autoConfirm === true &&
+          r.nextDate &&
+          r.nextDate <= todayStr
+        );
+        if (due.length === 0) break;
+        for (const rec of due) {
+          // Use the nextDate as the transaction date so missed-month
+          // catchups land on the correct historical month.
+          await this.confirmRecurring(rec.id, { date: new Date(rec.nextDate).toISOString() });
+          confirmed++;
+        }
+      }
+      if (__DEV__ && confirmed > 0) console.log('[autoExecuteRecurring] confirmed:', confirmed);
+      return confirmed;
+    } catch (e) {
+      if (__DEV__) console.error('autoExecuteRecurring:', e);
+      return 0;
+    }
+  },
+
   async skipRecurring(id, overrides = {}) {
     try {
       const uid = getUid();

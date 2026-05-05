@@ -148,7 +148,16 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
     setNewName('');
     setNewIcon('tag');
     Promise.all([dataService.getCategories(), dataService.getTransactions()]).then(([saved, txs]) => {
-      const g = saved && saved.length > 0 ? saved : DEFAULT_GROUPS;
+      let g = saved && saved.length > 0 ? saved : DEFAULT_GROUPS;
+      // Backfill required default groups if user's saved structure pre-dates them.
+      // Without income_group present, the picker filtered for type='income' would
+      // show an empty list — including the "+ Add" inline-create button.
+      const requiredIds = ['income_group'];
+      const missing = requiredIds.filter(rid => !g.find(group => group.id === rid));
+      if (missing.length > 0) {
+        const fromDefault = DEFAULT_GROUPS.filter(group => missing.includes(group.id));
+        g = [...g, ...fromDefault];
+      }
       setGroups(g);
 
       // Top 5 most used in last 30 days
