@@ -2,7 +2,9 @@
 // Умный ввод транзакций — пользователь пишет текст, ИИ разбирает
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Keyboard, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const SCREEN_H = Dimensions.get('window').height;
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
 
@@ -38,6 +40,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
   const debounceTimer = useRef(null);
   const lastAIRequestText = useRef(''); // prevent duplicate AI calls for same text
   const [accounts, setAccounts] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -113,9 +116,11 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       setText('');
       setParsed(null);
       lastAIRequestText.current = '';
-      // Load accounts for smart account selection
+      // Load accounts + projects for smart selection
       dataService.getAccounts().then(accs => setAccounts(accs.filter(a => a.isActive !== false)));
-      setTimeout(() => inputRef.current?.focus(), 300);
+      dataService.getProjects().then(setProjects);
+      // Don't auto-focus the input — keyboard would pop up immediately and cover
+      // the modal. User taps the mic for voice or the input for typing when ready.
     } else {
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
@@ -183,13 +188,19 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     lastAIRequestText.current = t;
     setIsPending(false); // AI is taking over — debounce/dictation phase done
     setAiLoading(true);
-    // Ensure accounts are loaded before AI call (race-condition guard)
+    // Ensure accounts and projects are loaded before AI call (race-condition guard)
     let accs = accounts;
     if (accs.length === 0) {
       accs = (await dataService.getAccounts()).filter(a => a.isActive !== false);
       setAccounts(accs);
     }
-    const result = await aiService.parseTransactionSmart(t, accs);
+    let projs = projects;
+    if (projs.length === 0) {
+      projs = await dataService.getProjects();
+      setProjects(projs);
+    }
+    console.log('[SmartUI] sending to AI — accounts:', accs.length, 'projects:', projs.length, projs.map(p => p.name).join('|'));
+    const result = await aiService.parseTransactionSmart(t, accs, projs);
     console.log('[SmartUI] setParsed result:', JSON.stringify(result));
     setParsed(result);
     setAiLoading(false);
@@ -221,6 +232,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       note: parsed.note || '',
       date: new Date().toISOString(),
       account: parsed.account || null,
+      projectId: parsed.projectId || null,
     };
 
     await dataService.addTransaction(tx);
@@ -233,17 +245,19 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={st.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={st.overlay} behavior="padding" keyboardVerticalOffset={0}>
         <View style={st.modal}>
-          {/* Header */}
+          {/* Header — pinned, never scrolls off-screen even when keyboard opens */}
           <View style={st.header}>
-            <TouchableOpacity onPress={onClose} style={st.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={st.closeBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
               <Feather name="x" size={22} color={colors.textMuted} />
             </TouchableOpacity>
             <Text style={st.title}>{i18n.t('smartInput')}</Text>
             <View style={{ width: 36 }} />
           </View>
 
+          <ScrollView style={st.scrollBody} contentContainerStyle={{ paddingBottom: 20 }}
+            keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {/* Hint */}
           <Text style={st.hint}>{i18n.t('smartInputHint')}</Text>
 
@@ -384,12 +398,35 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                 );
               })()}
 
+              {/* Project chips — only if user has projects */}
+              {projects.length > 0 && (
+                <View style={st.accountSection}>
+                  <Text style={st.accountLabel}>{i18n.t('project')}</Text>
+                  <View style={st.accountChips}>
+                    {projects.map(p => {
+                      const sel = parsed.projectId === p.id;
+                      const pc = p.color || '#60a5fa';
+                      return (
+                        <TouchableOpacity key={p.id}
+                          style={[st.accountChip, sel && { borderColor: pc, backgroundColor: pc + '20' }]}
+                          onPress={() => setParsed({ ...parsed, projectId: sel ? null : p.id })}
+                          activeOpacity={0.7}>
+                          <Feather name={p.icon || 'folder'} size={12} color={sel ? pc : colors.textMuted} style={{ marginEnd: 4 }} />
+                          <Text style={[st.accountChipTxt, sel && { color: pc, fontWeight: '700' }]} numberOfLines={1}>{p.name}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
               <TouchableOpacity style={st.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.8}>
                 <Feather name="check" size={20} color={colors.bg} />
                 <Text style={st.saveTxt}>{saving ? '...' : i18n.t('confirm')}</Text>
               </TouchableOpacity>
             </View>
           )}
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
 
@@ -419,7 +456,8 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
 
 const createStyles = () => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  modal: { backgroundColor: colors.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 40, borderWidth: 1, borderColor: colors.cardBorder, borderBottomWidth: 0 },
+  modal: { backgroundColor: colors.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 20, borderWidth: 1, borderColor: colors.cardBorder, borderBottomWidth: 0, flex: 1, marginTop: Math.round(SCREEN_H * 0.05) },
+  scrollBody: { flex: 1 },
   header: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
   closeBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center' },
   title: { color: colors.text, fontSize: 16, fontWeight: '700' },

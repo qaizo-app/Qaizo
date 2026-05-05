@@ -334,7 +334,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                     <View style={[st.catPickerIcon, { backgroundColor: ci.color + '18' }]}>
                       <CatIcon icon={ci.icon} size={20} color={ci.color} />
                     </View>
-                    <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, lang)}</Text>
+                    <View style={{ flex: 1 }}><Text style={st.catPickerText}>{getCatName(categoryId, catGroups, lang)}</Text></View>
                     <Feather name="chevron-down" size={18} color={colors.textMuted} />
                   </TouchableOpacity>); })()}
                 </>
@@ -364,22 +364,26 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
               )}
 
               {/* Project */}
-              <Text style={st.label}>{i18n.t('project')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                <View style={st.tagsRow}>
-                  {projects.map(p => {
-                    const sel = selProject === p.id;
-                    const pc = p.color || '#60a5fa';
-                    return (
-                      <TouchableOpacity key={p.id} style={[st.tagChip, sel && { borderColor: pc, backgroundColor: `${pc}15` }]}
-                        onPress={() => setSelProject(sel ? '' : p.id)}>
-                        <Feather name={p.icon || 'folder'} size={14} color={sel ? pc : colors.textMuted} style={{ marginEnd: 4 }} />
-                        <Text style={[st.tagTxt, sel && { color: pc }]}>{p.name}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </ScrollView>
+              {projects.length > 0 && (
+                <>
+                  <Text style={st.label}>{i18n.t('project')}</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                    <View style={st.tagsRow}>
+                      {projects.map(p => {
+                        const sel = selProject === p.id;
+                        const pc = p.color || '#60a5fa';
+                        return (
+                          <TouchableOpacity key={p.id} style={[st.tagChip, sel && { borderColor: pc, backgroundColor: `${pc}15` }]}
+                            onPress={() => setSelProject(sel ? '' : p.id)}>
+                            <Feather name={p.icon || 'folder'} size={14} color={sel ? pc : colors.textMuted} style={{ marginEnd: 4 }} />
+                            <Text style={[st.tagTxt, sel && { color: pc }]}>{p.name}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                </>
+              )}
 
               <TouchableOpacity style={st.moreBtn} onPress={() => setShowMore(!showMore)}>
                 <Feather name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textDim} />

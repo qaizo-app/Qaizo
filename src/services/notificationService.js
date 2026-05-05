@@ -2,10 +2,13 @@
 // Локальные уведомления (без remote push — не поддерживается в Expo Go SDK 53+)
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
 import dataService from './dataService';
+
+const PROJECT_BUDGET_NOTIFIED_KEY = 'project_budget_notified_thresholds';
 
 // Настройка отображения уведомлений когда приложение открыто
 Notifications.setNotificationHandler({
@@ -187,6 +190,60 @@ const notificationService = {
       });
     } catch (e) {
       if (__DEV__) console.error('scheduleWeeklySummary:', e);
+    }
+  },
+
+  // Project budget threshold — fire immediate notification when total crosses 80% or 100%
+  // for the first time. Uses AsyncStorage to remember last notified threshold per project
+  // so we don't spam the user on every transaction once over budget.
+  async notifyProjectBudgetThreshold(projectId) {
+    try {
+      if (!projectId) return;
+      const projects = await dataService.getProjects();
+      const project = projects.find(p => p.id === projectId);
+      if (!project || !project.budget || project.budget <= 0) return;
+
+      const txs = await dataService.getTransactions();
+      const projectTxs = txs.filter(t => t.projectId === projectId);
+      const total = projectTxs.reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : -t.amount), 0);
+      const pct = (total / project.budget) * 100;
+
+      const stateRaw = await AsyncStorage.getItem(PROJECT_BUDGET_NOTIFIED_KEY);
+      const state = stateRaw ? JSON.parse(stateRaw) : {};
+      const lastNotified = state[projectId] || 0;
+
+      let crossedThreshold = null;
+      if (pct >= 100 && lastNotified < 100) crossedThreshold = 100;
+      else if (pct >= 80 && lastNotified < 80) crossedThreshold = 80;
+
+      // Reset notified state if user dropped back below 80% (e.g. deleted transactions)
+      if (pct < 80 && lastNotified > 0) {
+        delete state[projectId];
+        await AsyncStorage.setItem(PROJECT_BUDGET_NOTIFIED_KEY, JSON.stringify(state));
+        return;
+      }
+
+      if (!crossedThreshold) return;
+
+      const cur = sym();
+      const body = crossedThreshold === 100
+        ? `${i18n.t('budgetExceeded')} (${Math.round(total)}/${Math.round(project.budget)} ${cur})`
+        : `${i18n.t('budget80')} (${Math.round(total)}/${Math.round(project.budget)} ${cur})`;
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: project.name,
+          body,
+          data: { type: 'project_budget', projectId },
+          categoryIdentifier: 'quick_add',
+        },
+        trigger: null, // immediate
+      });
+
+      state[projectId] = crossedThreshold;
+      await AsyncStorage.setItem(PROJECT_BUDGET_NOTIFIED_KEY, JSON.stringify(state));
+    } catch (e) {
+      if (__DEV__) console.error('notifyProjectBudgetThreshold:', e);
     }
   },
 

@@ -183,6 +183,13 @@ const dataService = {
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([newTx, ...txs]));
       }
       if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
+      // Fire-and-forget project budget threshold check (does not block transaction save)
+      if (newTx.projectId && newTx.type === 'expense') {
+        try {
+          const notif = require('./notificationService').default;
+          notif.notifyProjectBudgetThreshold(newTx.projectId).catch(() => {});
+        } catch (e) { /* noop — notifications optional */ }
+      }
       return newTx;
     } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
   },

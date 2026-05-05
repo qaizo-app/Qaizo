@@ -380,6 +380,66 @@ async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) 
   return null;
 }
 
+// Cross-language semantic synonyms for project name matching.
+// If a project is named in one language and the user types in another,
+// these synonym groups bridge them.
+const PROJECT_SYNONYMS = [
+  ['свадьба', 'свадеб', 'свадебн', 'wedding', 'חתונה', 'חתונת'],
+  ['ремонт', 'renovation', 'remodel', 'שיפוץ', 'שיפוצים'],
+  ['поездка', 'путешеств', 'отпуск', 'trip', 'travel', 'vacation', 'טיול', 'נסיעה', 'חופש'],
+  ['машин', 'авто', 'car', 'auto', 'vehicle', 'רכב', 'מכונית', 'אוטו'],
+  ['подарок', 'подарк', 'gift', 'present', 'מתנה', 'מתנות'],
+  ['малыш', 'ребен', 'детск', 'baby', 'newborn', 'תינוק', 'תינוקת'],
+  ['дом', 'home', 'house', 'בית', 'דירה'],
+];
+
+// Strip Hebrew prefixes (ל, ב, מ, כ, ה) and lowercase
+function normalizeWord(s) {
+  if (!s) return '';
+  let n = s.toLowerCase().trim();
+  // Strip common Hebrew preposition/article prefixes
+  n = n.replace(/^[להבכמש]/, '');
+  return n;
+}
+
+function matchProjectInText(text, projectsList) {
+  if (!projectsList || projectsList.length === 0 || !text) return null;
+  const lc = text.toLowerCase();
+  const lcWords = lc.split(/[\s,.;:!?()\-—–"'`]+/).filter(Boolean);
+  const lcWordsNormalized = lcWords.map(normalizeWord);
+
+  for (const p of projectsList) {
+    const projName = (p.name || '').toLowerCase().trim();
+    if (!projName) continue;
+
+    // 1. Direct substring match (e.g. "בחתונה" contains "חתונה")
+    if (lc.includes(projName)) return p.id;
+
+    // 2. Word-by-word match against project name tokens
+    const projTokens = projName.split(/\s+/).map(t => t.length >= 3 ? t : null).filter(Boolean);
+    for (const projTok of projTokens) {
+      const projTokNorm = normalizeWord(projTok);
+      if (projTokNorm.length < 3) continue;
+      for (const w of lcWordsNormalized) {
+        if (w.length < 3) continue;
+        if (w.includes(projTokNorm) || projTokNorm.includes(w)) return p.id;
+      }
+    }
+
+    // 3. Cross-language synonym match
+    for (const syns of PROJECT_SYNONYMS) {
+      const projInGroup = syns.some(s => projName.includes(s));
+      if (!projInGroup) continue;
+      const textInGroup = syns.some(s => {
+        if (lc.includes(s)) return true;
+        return lcWordsNormalized.some(w => w.includes(s) || s.includes(w));
+      });
+      if (textInGroup) return p.id;
+    }
+  }
+  return null;
+}
+
 // Brand keywords for credit card brand detection (used for both AI selection and UI chip filtering)
 const CARD_BRAND_KEYWORDS = {
   visa: ['visa', 'ויזה', 'виза'],
@@ -396,7 +456,7 @@ function detectCardBrand(text) {
 }
 
 // Умный парсинг транзакции через Gemini
-async function parseTransactionSmart(text, accounts = []) {
+async function parseTransactionSmart(text, accounts = [], projects = []) {
   const lang = i18n.getLanguage();
   const currency = curCode();
   const categories = Object.keys(CATEGORY_KEYWORDS).join(', ');
@@ -406,6 +466,12 @@ async function parseTransactionSmart(text, accounts = []) {
   console.log('[Smart] accounts in prompt:', activeAccounts.length, activeAccounts.map(a => `${a.id}=${a.name}(${a.type})`).join(' | '));
   const accountsSection = activeAccounts.length > 0
     ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map(a => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a SPECIFIC account name/brand ("Visa Hapoalim", "Mastercard", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, חשבון בנק, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → return both as null\n`
+    : '';
+
+  // Build projects section — only if user has any projects
+  const projectsList = (projects || []);
+  const projectsSection = projectsList.length > 0
+    ? `\nUSER PROJECTS (id → name):\n${projectsList.map(p => `  ${p.id} → "${p.name}"`).join('\n')}\n\nPROJECT MATCHING RULES (very tolerant):\n  - Match the project name even with prefixes/suffixes/declensions:\n      Hebrew: "לחתונה"/"בחתונה"/"מהחתונה"/"החתונה" all match project "חתונה"/"Wedding"/"Свадьба" (strip ל/ב/מ/ה prefixes).\n      Russian: "на свадьбу"/"для свадьбы"/"свадебный" → project "Свадьба"/"Wedding".\n      English: "for the wedding"/"wedding stuff" → project "Wedding"/"Свадьба"/"חתונה".\n  - Match SEMANTICALLY across languages: a Hebrew word can match a Russian/English project name and vice versa. E.g. "לחתונה" (HE) matches a project named "Свадьба" (RU) or "Wedding" (EN).\n  - Same for: שיפוץ/ремонт/renovation, טיול/поездка/trip, רכב/машина/car, מתנה/подарок/gift, תינוק/малыш/baby.\n  - If user mentioned the project (any form), return "projectId": "<that exact id from the list>".\n  - Otherwise return "projectId": null. DO NOT guess a project that wasn't mentioned.\n`
     : '';
 
   const prompt = `You are a financial transaction parser for an Israeli personal finance app. Parse the user's free-text into a transaction JSON.
@@ -495,9 +561,9 @@ WORD-NUMBER EXAMPLES:
   "ремонт пять тысяч" → {"amount":5000,"type":"expense","categoryId":"household","recipient":"","note":"ремонт пять тысяч"}
   "salary fifteen thousand" → {"amount":15000,"type":"income","categoryId":"salary_me","recipient":"","note":"salary fifteen thousand"}
 
-${accountsSection}
+${accountsSection}${projectsSection}
 OUTPUT FORMAT — respond with raw JSON only, no markdown fences, no explanation:
-{"amount": number, "type": "expense" | "income", "categoryId": "id from list above", "recipient": "store/payee name or empty string", "note": "<original input text exactly>", "accountId": null | "<id from USER ACCOUNTS>", "accountType": null | "credit" | "cash" | "bank" | "savings" | "investment"}
+{"amount": number, "type": "expense" | "income", "categoryId": "id from list above", "recipient": "store/payee name or empty string", "note": "<original input text exactly>", "accountId": null | "<id from USER ACCOUNTS>", "accountType": null | "credit" | "cash" | "bank" | "savings" | "investment", "projectId": null | "<id from USER PROJECTS>"}
 
 RULES:
 - Extract numeric amount from input. Handle digit forms (1,234 / 1.234 / 28.50 / 1500₪ / 180 שח / 200 nis) AND word forms (see WORD-FORM NUMBERS section above — voice input often returns "12 אלף" instead of "12000").
@@ -505,7 +571,8 @@ RULES:
 - Pick the BEST matching categoryId. If confidence is low (<70%) or nothing fits clearly, use "other" — DO NOT guess.
 - "recipient" = store/payee/brand name if mentioned, otherwise empty string. Capitalize known brands ("Shufersal","Paz","Ikea","Netflix","Castro","Uber","Bolt").
 - "note" = preserve user's original input verbatim, do not paraphrase.
-- "accountId" / "accountType" — see ACCOUNT MATCHING RULES above. Both null if user said nothing about payment.`;
+- "accountId" / "accountType" — see ACCOUNT MATCHING RULES above. Both null if user said nothing about payment.
+- "projectId" — see PROJECT MATCHING RULES above. null if user did not mention a project name.`;
 
   console.log('[Smart] input text:', JSON.stringify(text));
   const result = await callGemini(prompt);
@@ -562,6 +629,61 @@ RULES:
             }
             if (!parsed.account) parsed.account = brandMatches[0].id;
           }
+        }
+
+        // Validate projectId — only accept ids that actually exist
+        if (parsed.projectId && !projectsList.find(p => p.id === parsed.projectId)) {
+          parsed.projectId = null;
+        }
+        // Fallback: if AI didn't pick a project, try JS substring + cross-lang match
+        if (!parsed.projectId) {
+          const matched = matchProjectInText(text, projectsList);
+          console.log('[Smart] project fallback match:', matched, '| projects available:', projectsList.length, projectsList.map(p => p.name).join('|'));
+          if (matched) parsed.projectId = matched;
+        }
+        // Category auto-suggest from project history: if user mentioned a project but
+        // gave no category clue, pick the most common category from that project's
+        // existing transactions (only if 2+ tx use the same category).
+        if (parsed.projectId && parsed.categoryId === 'other') {
+          try {
+            const ds = require('./dataService').default;
+            const allTxs = await ds.getTransactions();
+            const projTxs = allTxs.filter(t => t.projectId === parsed.projectId && t.type === parsed.type);
+            if (projTxs.length >= 2) {
+              const catCounts = {};
+              projTxs.forEach(t => { catCounts[t.categoryId] = (catCounts[t.categoryId] || 0) + 1; });
+              const sorted = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+              if (sorted.length > 0 && sorted[0][1] >= 2 && sorted[0][0] !== 'other') {
+                parsed.categoryId = sorted[0][0];
+                console.log('[Smart] category auto-suggested from project history:', parsed.categoryId);
+              }
+            }
+          } catch (e) { /* noop */ }
+        }
+        // Project auto-suggest from category history: reverse — if AI determined a
+        // category but no project, see if this category typically belongs to a
+        // specific project (e.g. "household" → "Renovation"). Need 2+ matching
+        // historical txs to be confident.
+        if (!parsed.projectId && parsed.categoryId && parsed.categoryId !== 'other' && projectsList.length > 0) {
+          try {
+            const ds = require('./dataService').default;
+            const allTxs = await ds.getTransactions();
+            const sameCatTxs = allTxs.filter(t =>
+              t.categoryId === parsed.categoryId &&
+              t.type === parsed.type &&
+              t.projectId &&
+              projectsList.find(p => p.id === t.projectId) // project still exists
+            );
+            if (sameCatTxs.length >= 2) {
+              const projCounts = {};
+              sameCatTxs.forEach(t => { projCounts[t.projectId] = (projCounts[t.projectId] || 0) + 1; });
+              const sorted = Object.entries(projCounts).sort((a, b) => b[1] - a[1]);
+              if (sorted.length > 0 && sorted[0][1] >= 2) {
+                parsed.projectId = sorted[0][0];
+                console.log('[Smart] project auto-suggested from category history:', parsed.projectId);
+              }
+            }
+          } catch (e) { /* noop */ }
         }
 
         // Fallback: AI gave specific accountId, or only generic type
