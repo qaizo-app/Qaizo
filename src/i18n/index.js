@@ -1,5 +1,5 @@
 // src/i18n/index.js
-import { I18nManager, Platform } from 'react-native';
+import { I18nManager } from 'react-native';
 import ru from './ru';
 import he from './he';
 import en from './en';
@@ -68,23 +68,15 @@ const i18n = {
 
   // I18nManager.forceRTL persists across sessions and requires a full native
   // restart to change. JS reloads (Fast Refresh) reset currentLang but keep
-  // I18nManager.isRTL.
+  // I18nManager.isRTL. Two cases:
   //
-  // Behaviour split by platform:
-  //   - Android: when isRTL=true, the OS auto-mirrors flexDirection:'row'
-  //     so we MUST return 'row' (otherwise we'd double-flip back to LTR).
-  //   - iOS: native auto-flip is unreliable for our card/menu layouts —
-  //     icons stayed on the left of Hebrew rows in TestFlight builds.
-  //     Always return 'row-reverse' for RTL langs so the flip is manual
-  //     and predictable.
+  //   system=RTL  → always 'row': the OS already mirrors the layout,
+  //                 'row-reverse' would double-flip and produce LTR.
+  //   system=LTR  → 'row-reverse' only when lang is RTL (compensates for
+  //                 missing restart so Hebrew looks right during testing).
   row() {
-    const isRTLLang = currentLang === 'he' || currentLang === 'ar';
-    if (Platform.OS === 'ios') {
-      return isRTLLang ? 'row-reverse' : 'row';
-    }
-    // Android
     if (I18nManager.isRTL) return 'row';
-    return isRTLLang ? 'row-reverse' : 'row';
+    return (currentLang === 'he' || currentLang === 'ar') ? 'row-reverse' : 'row';
   },
   textAlign() { return (currentLang === 'he' || currentLang === 'ar') ? 'right' : 'left'; },
   backIcon() { return (currentLang === 'he' || currentLang === 'ar') ? 'arrow-right' : 'arrow-left'; },

@@ -563,7 +563,7 @@ const createStyles = () => StyleSheet.create({
 
   totalCard:{marginHorizontal:24,marginBottom:8,backgroundColor:colors.card,borderRadius:20,padding:20,borderWidth:1,borderColor:colors.greenSoft},
   totalLabel:{color:colors.textDim,fontSize:12,marginBottom:6,textAlign:i18n.textAlign(),alignSelf:'stretch'},
-  totalAmount:{fontSize:32,fontWeight:'800',textAlign:i18n.textAlign(),alignSelf:'stretch'},
+  totalAmount:{fontSize:32,fontWeight:'800',textAlign:i18n.textAlign()},
 
   hint:{color:colors.textMuted,fontSize:12,textAlign:'center',marginBottom:12,opacity:0.5},
 

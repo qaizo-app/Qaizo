@@ -167,7 +167,7 @@ const createSt = () => StyleSheet.create({
   freeTop: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 8 },
   freeLabel: { color: colors.text, fontSize: 14, fontWeight: '700', textAlign: i18n.textAlign() },
   freeDays: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
-  freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 8, writingDirection: 'ltr', textAlign: i18n.textAlign(), alignSelf: 'stretch' },
+  freeAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 8, writingDirection: 'ltr' },
   freeBar: { height: 6, backgroundColor: colors.bg2, borderRadius: 3, overflow: 'hidden', marginBottom: 10 },
   freeBarFill: { height: 6, borderRadius: 3 },
   freeDetails: { gap: 4 },

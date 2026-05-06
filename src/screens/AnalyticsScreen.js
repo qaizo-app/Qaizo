@@ -597,7 +597,7 @@ const createSt = () => StyleSheet.create({
   summaryLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
   summaryAmount: { fontSize: 20, fontWeight: '800' },
 
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 16 },
 
   // Badges
@@ -608,11 +608,11 @@ const createSt = () => StyleSheet.create({
   badgeLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'center' },
 
   // Score
-  scoreRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 16 },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   scoreCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.bg2, justifyContent: 'center', alignItems: 'center' },
   scoreNum: { fontSize: 24, fontWeight: '800' },
   scoreInfo: { flex: 1 },
-  scoreLabel: { fontSize: 20, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign() },
+  scoreLabel: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
   scoreBar: { height: 8, backgroundColor: colors.bg2, borderRadius: 4, overflow: 'hidden' },
   scoreBarFill: { height: 8, borderRadius: 4 },
 
