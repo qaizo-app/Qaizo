@@ -11,6 +11,7 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { tokenizeProduct, isSameProduct } from '../utils/productMatcher';
 
 // Only food-related categories count for shopping list
 const FOOD_CATS = ['food', 'grocery', 'restaurant', 'fastfood', 'delivery'];
@@ -30,6 +31,8 @@ export default function ShoppingListScreen() {
   const [newItemNote, setNewItemNote] = useState('');
   const [manualItems, setManualItems] = useState([]); // manually added items
   const [loaded, setLoaded] = useState(false);
+  const [mergeSource, setMergeSource] = useState(null); // item user wants to merge FROM
+  const [historyItem, setHistoryItem] = useState(null); // item shown in price-history modal
   const st = createSt();
 
   useFocusEffect(useCallback(() => {
@@ -59,8 +62,35 @@ export default function ShoppingListScreen() {
 
   const loadItems = async () => {
     const txs = await dataService.getTransactions();
+    const mergeOverridesRaw = await dataService.getProductMergeOverrides?.();
+    const mergeOverrides = mergeOverridesRaw || {};
 
-    const itemMap = {};
+    // Group similar product names via fuzzy matcher. Build a list of
+    // group entries; for each new line item, try to match it against any
+    // existing group with same store first (high confidence), then
+    // cross-store (stricter threshold).
+    const groups = []; // [{ canonicalName, names: Set, history, isFood, lastStore }]
+    const findGroupFor = (name, store) => {
+      // Manual merge override beats fuzzy logic
+      const trimmed = (name || '').trim();
+      const overrideTo = mergeOverrides[trimmed.toLowerCase()];
+      if (overrideTo) {
+        const direct = groups.find(g => g.canonicalName.toLowerCase() === overrideTo.toLowerCase());
+        if (direct) return direct;
+      }
+      // Try same-store match first
+      for (const g of groups) {
+        const lastStore = (g.lastStore || '').toLowerCase();
+        const sameStore = !!store && lastStore === String(store).toLowerCase();
+        if (sameStore && g.names.some(n => isSameProduct(n, name, { sameStore: true }))) return g;
+      }
+      // Try cross-store with stricter threshold
+      for (const g of groups) {
+        if (g.names.some(n => isSameProduct(n, name, { sameStore: false }))) return g;
+      }
+      return null;
+    };
+
     txs.forEach(tx => {
       if (!tx.receiptItems?.length) return;
       const store = tx.recipient || '';
@@ -69,16 +99,41 @@ export default function ShoppingListScreen() {
 
       tx.receiptItems.forEach(item => {
         if (!item.name || !item.price) return;
-        const key = item.name.trim().toLowerCase();
-        if (!itemMap[key]) {
-          itemMap[key] = { name: item.name.trim(), history: [], isFood };
+        const name = String(item.name).trim();
+        let group = findGroupFor(name, store);
+        if (!group) {
+          group = {
+            canonicalName: name,
+            names: [name],
+            history: [],
+            isFood,
+            lastStore: store,
+          };
+          groups.push(group);
+        } else {
+          if (!group.names.includes(name)) group.names.push(name);
         }
-        itemMap[key].history.push({
+        group.history.push({
           price: typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0,
           store, date,
         });
-        if (isFood) itemMap[key].isFood = true;
+        if (isFood) group.isFood = true;
+        // Use the most recent store for matching subsequent items
+        if (date >= ((group.lastStoreDate || '0000-00-00'))) {
+          group.lastStore = store;
+          group.lastStoreDate = date;
+        }
       });
+    });
+
+    const itemMap = {};
+    groups.forEach(g => {
+      itemMap[g.canonicalName.toLowerCase()] = {
+        name: g.canonicalName,
+        history: g.history,
+        isFood: g.isFood,
+        aliases: g.names,
+      };
     });
 
     const now = new Date();
@@ -117,8 +172,10 @@ export default function ShoppingListScreen() {
 
       return {
         name: item.name,
+        aliases: item.aliases || [item.name],
         lastPrice, avgPrice, minPrice, maxPrice, change,
         count: item.history.length,
+        history: sorted, // {price, store, date} desc
         lastStore: sorted[0]?.store || '',
         lastDate: sorted[0]?.date || '',
         daysSince, avgDaysBetween, needToBuy,
@@ -265,7 +322,9 @@ export default function ShoppingListScreen() {
 
           return (
             <TouchableOpacity key={idx} activeOpacity={0.8}
-              onPress={() => tab === 'list' ? toggleCheck(item.name) : toggleListItem(item.name)}>
+              onPress={() => tab === 'list' ? toggleCheck(item.name) : toggleListItem(item.name)}
+              onLongPress={() => setHistoryItem(item)}
+              delayLongPress={400}>
               <Card>
                 <View style={st.itemHeader}>
                   {/* Checkbox in list mode */}
@@ -402,6 +461,98 @@ export default function ShoppingListScreen() {
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Price history + actions modal (long-press a product) */}
+      <Modal visible={!!historyItem} transparent animationType="fade" onRequestClose={() => setHistoryItem(null)}>
+        <TouchableOpacity style={st.modalOverlay} activeOpacity={1} onPress={() => setHistoryItem(null)}>
+          <TouchableOpacity style={st.modalCard} activeOpacity={1} onPress={() => {}}>
+            {historyItem && (() => {
+              const hist = (historyItem.history || []).slice(0, 12); // newest first, cap to 12
+              const sortedAsc = [...hist].reverse();
+              const prices = sortedAsc.map(h => h.price);
+              const maxP = Math.max(...prices, 0.01);
+              const minP = Math.min(...prices);
+              return (
+                <>
+                  <Text style={st.modalTitle} numberOfLines={2}>{historyItem.name}</Text>
+                  {historyItem.aliases && historyItem.aliases.length > 1 && (
+                    <Text style={st.aliasesTxt}>{i18n.t('alsoSeenAs')}: {historyItem.aliases.filter(n => n !== historyItem.name).join(', ')}</Text>
+                  )}
+                  {/* Mini price chart */}
+                  {prices.length >= 2 && (
+                    <View style={st.priceChartWrap}>
+                      <View style={st.priceChartRow}>
+                        {sortedAsc.map((h, idx) => {
+                          const heightPct = maxP > minP ? ((h.price - minP) / (maxP - minP)) * 100 : 50;
+                          return (
+                            <View key={idx} style={st.priceChartCol}>
+                              <View style={[st.priceChartBar, { height: `${Math.max(8, heightPct)}%` }]} />
+                            </View>
+                          );
+                        })}
+                      </View>
+                      <View style={st.priceChartScale}>
+                        <Text style={st.priceChartScaleTxt}>{minP} {sym()}</Text>
+                        <Text style={st.priceChartScaleTxt}>{maxP} {sym()}</Text>
+                      </View>
+                    </View>
+                  )}
+                  {/* History rows */}
+                  <ScrollView style={{ maxHeight: 200 }}>
+                    {hist.map((h, idx) => (
+                      <View key={idx} style={st.histRow}>
+                        <Text style={st.histDate}>{h.date}</Text>
+                        <Text style={st.histStore} numberOfLines={1}>{h.store || '—'}</Text>
+                        <Text style={st.histPrice}>{h.price} {sym()}</Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  <View style={st.modalBtnRow}>
+                    <TouchableOpacity style={st.modalCancelBtn} onPress={() => { setMergeSource(historyItem); setHistoryItem(null); }}>
+                      <Feather name="git-merge" size={14} color={colors.textDim} />
+                      <Text style={st.modalCancelText}>  {i18n.t('mergeWith')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[st.modalBtn, { flex: 1 }]} onPress={() => setHistoryItem(null)}>
+                      <Feather name="check" size={18} color={colors.bg} />
+                      <Text style={st.modalBtnText}>{i18n.t('close')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              );
+            })()}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Merge picker modal */}
+      <Modal visible={!!mergeSource} transparent animationType="fade" onRequestClose={() => setMergeSource(null)}>
+        <TouchableOpacity style={st.modalOverlay} activeOpacity={1} onPress={() => setMergeSource(null)}>
+          <TouchableOpacity style={st.modalCard} activeOpacity={1} onPress={() => {}}>
+            <Text style={st.modalTitle}>{i18n.t('mergeProductTitle')}</Text>
+            <Text style={st.aliasesTxt}>{i18n.t('mergeFrom')}: {mergeSource?.name}</Text>
+            <ScrollView style={{ maxHeight: 320, marginTop: 8 }}>
+              {[...items, ...manualItems]
+                .filter(i => i.name !== mergeSource?.name)
+                .slice(0, 30)
+                .map((target, idx) => (
+                  <TouchableOpacity key={idx} style={st.mergeTargetRow}
+                    onPress={async () => {
+                      if (!mergeSource) return;
+                      await dataService.saveProductMergeOverride(mergeSource.name, target.name);
+                      setMergeSource(null);
+                      loadItems();
+                    }}>
+                    <Feather name="git-merge" size={14} color={colors.green} />
+                    <Text style={st.mergeTargetTxt} numberOfLines={1}>{target.name}</Text>
+                  </TouchableOpacity>
+                ))}
+            </ScrollView>
+            <TouchableOpacity style={[st.modalCancelBtn, { marginTop: 12 }]} onPress={() => setMergeSource(null)}>
+              <Text style={st.modalCancelText}>{i18n.t('cancel')}</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -458,6 +609,20 @@ const createSt = () => StyleSheet.create({
   modalBtn: { backgroundColor: colors.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
   modalBtnText: { color: colors.bg, fontSize: 16, fontWeight: '700' },
   modalBtnRow: { flexDirection: i18n.row(), gap: 10, marginTop: 8 },
-  modalCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
+  modalCancelBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
   modalCancelText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+
+  aliasesTxt: { color: colors.textDim, fontSize: 11, fontStyle: 'italic', marginBottom: 12, textAlign: i18n.textAlign() },
+  priceChartWrap: { backgroundColor: colors.bg2, borderRadius: 12, padding: 12, marginBottom: 12 },
+  priceChartRow: { flexDirection: 'row', alignItems: 'flex-end', height: 60, gap: 3 },
+  priceChartCol: { flex: 1, justifyContent: 'flex-end', height: '100%' },
+  priceChartBar: { width: '100%', backgroundColor: colors.green, borderTopLeftRadius: 3, borderTopRightRadius: 3 },
+  priceChartScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
+  priceChartScaleTxt: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
+  histRow: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.divider, gap: 8 },
+  histDate: { color: colors.textMuted, fontSize: 11, fontWeight: '600', minWidth: 80 },
+  histStore: { color: colors.textDim, fontSize: 12, flex: 1 },
+  histPrice: { color: colors.text, fontSize: 13, fontWeight: '700' },
+  mergeTargetRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  mergeTargetTxt: { color: colors.text, fontSize: 14, fontWeight: '500', flex: 1 },
 });

@@ -826,6 +826,29 @@ const dataService = {
     } catch (e) { /* noop */ }
   },
 
+  // Manual product-name overrides for ShoppingList grouping.
+  // Stored as { "lower-case alias name": "Canonical Display Name" }.
+  // When the matcher sees "lower-case alias name", it's treated as belonging
+  // to whichever group already has that canonical display name.
+  async getProductMergeOverrides() {
+    try {
+      const raw = await AsyncStorage.getItem('product_merge_overrides');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  },
+
+  async saveProductMergeOverride(aliasName, canonicalName) {
+    try {
+      const raw = await AsyncStorage.getItem('product_merge_overrides');
+      const map = raw ? JSON.parse(raw) : {};
+      const key = String(aliasName || '').trim().toLowerCase();
+      if (!key) return;
+      if (canonicalName) map[key] = String(canonicalName).trim();
+      else delete map[key];
+      await AsyncStorage.setItem('product_merge_overrides', JSON.stringify(map));
+    } catch (e) { /* noop */ }
+  },
+
   async getQuickTemplates() {
     const uid = getUid();
     if (uid) return getDocData('quickTemplates', []);
