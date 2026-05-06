@@ -22,7 +22,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.qaizo.app",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "usesAppleSignIn": true,
       "supportsTablet": false,
       "deploymentTarget": "16.0",

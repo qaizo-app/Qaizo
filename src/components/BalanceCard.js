@@ -66,8 +66,8 @@ export default function BalanceCard({ balance, totalIncome, totalExpense, now })
 }
 
 const createSt = () => StyleSheet.create({
-  balLabel: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign() },
-  balAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr' },
+  balLabel: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 8, textAlign: i18n.textAlign(), alignSelf: 'stretch' },
+  balAmount: { fontSize: 32, fontWeight: '800', letterSpacing: -1.5, marginBottom: 24, writingDirection: 'ltr', textAlign: i18n.textAlign(), alignSelf: 'stretch' },
   progressWrap: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginTop: 12 },
   progressTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.divider, overflow: 'hidden' },
   progressFill: { height: 5, borderRadius: 3 },

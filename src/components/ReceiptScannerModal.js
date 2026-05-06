@@ -11,6 +11,7 @@ import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import { catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
+import CategoryPickerModal from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -26,6 +27,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
   const [selAcc, setSelAcc] = useState('');
   const [accounts, setAccounts] = useState([]);
   const [splitByCategory, setSplitByCategory] = useState(true);
+  const [editingItemIdx, setEditingItemIdx] = useState(null);
   const [error, setError] = useState('');
   const st = createSt();
 
@@ -456,7 +458,10 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
                       const cfg = categoryConfig[item.category] || categoryConfig.other;
                       return (
                         <View key={idx} style={st.itemRow}>
-                          <Feather name={cfg.icon} size={11} color={cfg.color} style={{ marginEnd: 6 }} />
+                          <TouchableOpacity onPress={() => setEditingItemIdx(idx)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                            style={[st.itemCatChip, { backgroundColor: cfg.color + '20' }]}>
+                            <Feather name={cfg.icon} size={11} color={cfg.color} />
+                          </TouchableOpacity>
                           <Text style={st.itemName} numberOfLines={1}>{item.name}</Text>
                           <Text style={st.itemPrice}>{item.price} {sym()}</Text>
                         </View>
@@ -495,6 +500,17 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
     </SwipeModal>
     <DatePickerModal visible={showDatePicker} onClose={() => setShowDatePicker(false)}
       onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={i18n.getLanguage()} />
+    <CategoryPickerModal visible={editingItemIdx !== null}
+      onClose={() => setEditingItemIdx(null)}
+      onSelect={(catId) => {
+        if (editingItemIdx !== null && result?.items) {
+          const updatedItems = [...result.items];
+          updatedItems[editingItemIdx] = { ...updatedItems[editingItemIdx], category: catId };
+          setResult({ ...result, items: updatedItems });
+        }
+        setEditingItemIdx(null);
+      }}
+      type="expense" />
   </>
   );
 }
@@ -544,7 +560,8 @@ const createSt = () => StyleSheet.create({
   itemsSum: { color: colors.text, fontSize: 12, fontWeight: '700' },
   mismatchRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: colors.red + '15', borderRadius: 8, marginBottom: 8 },
   mismatchTxt: { color: colors.red, fontSize: 11, fontWeight: '600', flex: 1 },
-  itemRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 6 },
+  itemRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 6, gap: 6 },
+  itemCatChip: { width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
   itemName: { color: colors.text, fontSize: 12, flex: 1 },
   itemPrice: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   breakdownRow: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 6, marginBottom: 8 },
