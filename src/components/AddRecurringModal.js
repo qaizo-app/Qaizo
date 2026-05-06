@@ -393,7 +393,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
                     ? <Ionicons name={ci.icon.slice(4)} size={20} color={ci.color} />
                     : <Feather name={ci.icon} size={20} color={ci.color} />}
                 </View>
-                <Text style={st.catPickerText}>{getCatName(categoryId, catGroups, i18n.getLanguage())}</Text>
+                <View style={{ flex: 1 }}><Text style={st.catPickerText}>{getCatName(categoryId, catGroups, i18n.getLanguage())}</Text></View>
                 <Feather name="chevron-down" size={18} color={colors.textMuted} />
               </TouchableOpacity>); })()}
 

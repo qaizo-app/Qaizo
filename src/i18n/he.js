@@ -128,6 +128,8 @@ export default {
   investmentsByMonth: 'השקעות לפי חודש',
   investmentsByMonthEmpty: 'לא נמצאו תנועות שמשויכות להשקעות. השתמש בקטגוריה פנסיה/חיסכון/השתלמות או שייך לחשבון השקעות.',
   discussWithAI: 'שאל את ה-AI',
+  itemsTotalMismatch: 'סכום המוצרים שונה מהסה"כ ב-{pct}% — בדוק אם פריטים חסרים/שגויים',
+  splitByCategory: 'פצל לתנועות נפרדות לפי קטגוריה',
   saveAsTemplate: 'לשמור כקלט מהיר?',
   templateSuggestMessage: 'הוספת "{category}" {count} פעמים ב-30 הימים האחרונים. לשמור כקלט מהיר?',
   templateSaved: 'נשמר כקלט מהיר',

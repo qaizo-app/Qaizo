@@ -25,6 +25,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selAcc, setSelAcc] = useState('');
   const [accounts, setAccounts] = useState([]);
+  const [splitByCategory, setSplitByCategory] = useState(true);
   const [error, setError] = useState('');
   const st = createSt();
 
@@ -48,6 +49,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
     setDateStr('');
     setShowDatePicker(false);
     setSelAcc(accounts.length > 0 ? accounts[0].id : '');
+    setSplitByCategory(true);
     setError('');
   };
 
@@ -106,6 +108,38 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
         setCategoryId(scanResult.category || 'other');
         setRecipient(scanResult.store || '');
         setDateStr(scanResult.date || new Date().toISOString().slice(0, 10));
+
+        // Auto-pick the best matching account based on payment method detected
+        try {
+          const active = accounts.filter(a => a.isActive !== false);
+          let pickedId = null;
+          // 1. Brand-specific: e.g. "Visa Power" if AI saw a Visa card
+          if (scanResult.cardBrand && aiService.CARD_BRAND_KEYWORDS) {
+            const brandKws = aiService.CARD_BRAND_KEYWORDS[scanResult.cardBrand] || [];
+            const brandMatches = active.filter(a => brandKws.some(kw => (a.name || '').toLowerCase().includes(kw)));
+            if (brandMatches.length === 1) {
+              pickedId = brandMatches[0].id;
+            } else if (brandMatches.length > 1) {
+              const last4 = scanResult.last4;
+              if (last4) {
+                const byLast4 = brandMatches.find(a => (a.name || '').includes(last4));
+                if (byLast4) pickedId = byLast4.id;
+              }
+              if (!pickedId) {
+                pickedId = await dataService.getLastUsedAccountByType('credit');
+                if (!brandMatches.find(a => a.id === pickedId)) pickedId = brandMatches[0].id;
+              }
+            }
+          }
+          // 2. Type-based: cash / credit / bank
+          if (!pickedId && scanResult.accountType) {
+            const typeMatches = active.filter(a => a.type === scanResult.accountType);
+            if (typeMatches.length === 1) pickedId = typeMatches[0].id;
+            else if (typeMatches.length > 1) pickedId = await dataService.getLastUsedAccountByType(scanResult.accountType);
+          }
+          if (pickedId) setSelAcc(pickedId);
+        } catch (e) { /* keep default selection */ }
+
         setStep('result');
         analyticsEvents.logEvent('receipt_scanned', {
           success: true,
@@ -145,19 +179,65 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
 
     setStep('saving');
 
-    await dataService.addTransaction({
-      type: 'expense',
-      amount: num,
-      categoryId,
-      icon: (categoryConfig[categoryId] || categoryConfig.other).icon,
-      recipient,
-      note: result?.items?.length ? result.items.map(i => `${i.name}: ${i.price}`).join(', ') : '',
-      receiptItems: result?.items || [],
-      currency: sym(),
-      date: dateStr ? new Date(dateStr).toISOString() : new Date().toISOString(),
-      account: selAcc || null,
-      tags: [],
-    });
+    // Determine if we should split by category. Required: split toggle on,
+    // items present with category info, AND multiple distinct categories.
+    const itemsByCat = {};
+    if (result?.items?.length) {
+      result.items.forEach(it => {
+        const c = it.category || 'other';
+        itemsByCat[c] = (itemsByCat[c] || 0) + (Number(it.price) || 0);
+      });
+    }
+    const distinctCats = Object.keys(itemsByCat);
+    const willSplit = splitByCategory && distinctCats.length > 1;
+
+    if (willSplit) {
+      // Scale per-category sums to match the user-confirmed total (handles
+      // the case where AI's items sum != receipt total — e.g. discounts/tax).
+      const itemsSum = distinctCats.reduce((s, c) => s + itemsByCat[c], 0);
+      const scale = itemsSum > 0 ? num / itemsSum : 1;
+      const scaled = distinctCats.map(c => ({ categoryId: c, amount: Math.round(itemsByCat[c] * scale * 100) / 100 }));
+      // Adjust last row to absorb rounding so the splits sum to exact total
+      const sumScaled = scaled.reduce((s, r) => s + r.amount, 0);
+      if (scaled.length > 0) scaled[scaled.length - 1].amount = Math.round((scaled[scaled.length - 1].amount + (num - sumScaled)) * 100) / 100;
+
+      // Save one transaction per category. They share recipient, account, date,
+      // and a transferPairId-style group marker so they can be visually grouped
+      // in transaction list later.
+      const groupId = Date.now().toString();
+      for (const row of scaled) {
+        if (row.amount <= 0) continue;
+        const itemsInCat = (result?.items || []).filter(it => (it.category || 'other') === row.categoryId);
+        await dataService.addTransaction({
+          type: 'expense',
+          amount: row.amount,
+          categoryId: row.categoryId,
+          icon: (categoryConfig[row.categoryId] || categoryConfig.other).icon,
+          recipient,
+          note: itemsInCat.length ? itemsInCat.map(i => `${i.name}: ${i.price}`).join(', ') : '',
+          receiptItems: itemsInCat,
+          receiptGroupId: groupId,
+          currency: sym(),
+          date: dateStr ? new Date(dateStr).toISOString() : new Date().toISOString(),
+          account: selAcc || null,
+          tags: [],
+        });
+      }
+    } else {
+      await dataService.addTransaction({
+        type: 'expense',
+        amount: num,
+        categoryId,
+        icon: (categoryConfig[categoryId] || categoryConfig.other).icon,
+        recipient,
+        note: result?.items?.length ? result.items.map(i => `${i.name}: ${i.price}`).join(', ') : '',
+        receiptItems: result?.items || [],
+        currency: sym(),
+        date: dateStr ? new Date(dateStr).toISOString() : new Date().toISOString(),
+        account: selAcc || null,
+        tags: [],
+      });
+    }
 
     onSaved?.();
     handleClose();
@@ -272,17 +352,37 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
 
               {/* Account */}
               <Text style={st.label}>{i18n.t('account')}</Text>
+              {(result?.accountType || result?.cardBrand) && (
+                <View style={st.detectedRow}>
+                  <Feather name="zap" size={11} color={colors.green} />
+                  <Text style={st.detectedTxt}>
+                    {result.cardBrand ? `${result.cardBrand.toUpperCase()}${result.last4 ? ` **** ${result.last4}` : ''}` : (result.accountType || '').toUpperCase()}
+                  </Text>
+                </View>
+              )}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(a => ['cash', 'bank', 'credit'].includes(a.type)).map(acc => {
-                  const sel = selAcc === acc.id;
-                  return (
-                    <TouchableOpacity key={acc.id} style={[st.catChip, sel && { borderColor: colors.green, backgroundColor: colors.greenSoft }]}
-                      onPress={() => setSelAcc(acc.id)}>
-                      <Feather name="credit-card" size={14} color={sel ? colors.green : colors.textMuted} />
-                      <Text style={[st.catText, sel && { color: colors.green }]} numberOfLines={1}>{acc.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                {(() => {
+                  const payable = accounts.filter(a => ['cash', 'bank', 'credit'].includes(a.type));
+                  let choices = payable;
+                  if (result?.cardBrand && aiService.CARD_BRAND_KEYWORDS) {
+                    const brandKws = aiService.CARD_BRAND_KEYWORDS[result.cardBrand] || [];
+                    const brandMatches = payable.filter(a => brandKws.some(kw => (a.name || '').toLowerCase().includes(kw)));
+                    if (brandMatches.length > 0) choices = brandMatches;
+                  } else if (result?.accountType) {
+                    const typeMatches = payable.filter(a => a.type === result.accountType);
+                    if (typeMatches.length > 0) choices = typeMatches;
+                  }
+                  return choices.map(acc => {
+                    const sel = selAcc === acc.id;
+                    return (
+                      <TouchableOpacity key={acc.id} style={[st.catChip, sel && { borderColor: colors.green, backgroundColor: colors.greenSoft }]}
+                        onPress={() => setSelAcc(acc.id)}>
+                        <Feather name="credit-card" size={14} color={sel ? colors.green : colors.textMuted} />
+                        <Text style={[st.catText, sel && { color: colors.green }]} numberOfLines={1}>{acc.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  });
+                })()}
               </ScrollView>
 
               {/* Category */}
@@ -301,18 +401,70 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
                 })}
               </ScrollView>
 
-              {/* Items */}
-              {result?.items?.length > 0 && (
-                <View style={st.itemsCard}>
-                  <Text style={st.itemsTitle}>{i18n.t('items')}</Text>
-                  {result.items.map((item, idx) => (
-                    <View key={idx} style={st.itemRow}>
-                      <Text style={st.itemName} numberOfLines={1}>{item.name}</Text>
-                      <Text style={st.itemPrice}>{item.price} {sym()}</Text>
+              {/* Items + per-category breakdown + split toggle */}
+              {result?.items?.length > 0 && (() => {
+                const itemsSum = result.items.reduce((s, it) => s + (Number(it.price) || 0), 0);
+                const totalNum = Number(result.total) || 0;
+                const diff = totalNum > 0 ? Math.abs(itemsSum - totalNum) : 0;
+                const diffPct = totalNum > 0 ? (diff / totalNum) * 100 : 0;
+                const significantMismatch = totalNum > 0 && diffPct > 5;
+                // Build per-category breakdown
+                const catTotals = {};
+                result.items.forEach(it => {
+                  const c = it.category || 'other';
+                  catTotals[c] = (catTotals[c] || 0) + (Number(it.price) || 0);
+                });
+                const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+                const hasMultipleCategories = catEntries.length > 1;
+                return (
+                  <View style={st.itemsCard}>
+                    <View style={st.itemsHeader}>
+                      <Text style={st.itemsTitle}>{i18n.t('items')} ({result.items.length})</Text>
+                      <Text style={[st.itemsSum, significantMismatch && { color: colors.red }]}>
+                        {Math.round(itemsSum * 100) / 100} {sym()}
+                      </Text>
                     </View>
-                  ))}
-                </View>
-              )}
+                    {significantMismatch && (
+                      <View style={st.mismatchRow}>
+                        <Feather name="alert-circle" size={12} color={colors.red} />
+                        <Text style={st.mismatchTxt}>
+                          {(i18n.t('itemsTotalMismatch') || 'Items sum differs from total by {pct}%').replace('{pct}', Math.round(diffPct))}
+                        </Text>
+                      </View>
+                    )}
+                    {hasMultipleCategories && (
+                      <View style={st.breakdownRow}>
+                        {catEntries.map(([cat, amt]) => {
+                          const cfg = categoryConfig[cat] || categoryConfig.other;
+                          return (
+                            <View key={cat} style={[st.breakdownChip, { backgroundColor: cfg.color + '20' }]}>
+                              <Feather name={cfg.icon} size={10} color={cfg.color} />
+                              <Text style={[st.breakdownTxt, { color: cfg.color }]}>{i18n.t(cat)}: {Math.round(amt)}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
+                    {hasMultipleCategories && (
+                      <TouchableOpacity style={[st.splitToggle, splitByCategory && st.splitToggleActive]}
+                        activeOpacity={0.7} onPress={() => setSplitByCategory(!splitByCategory)}>
+                        <Feather name={splitByCategory ? 'check-square' : 'square'} size={14} color={splitByCategory ? colors.green : colors.textMuted} />
+                        <Text style={[st.splitToggleTxt, splitByCategory && { color: colors.green }]}>{i18n.t('splitByCategory')}</Text>
+                      </TouchableOpacity>
+                    )}
+                    {result.items.map((item, idx) => {
+                      const cfg = categoryConfig[item.category] || categoryConfig.other;
+                      return (
+                        <View key={idx} style={st.itemRow}>
+                          <Feather name={cfg.icon} size={11} color={cfg.color} style={{ marginEnd: 6 }} />
+                          <Text style={st.itemName} numberOfLines={1}>{item.name}</Text>
+                          <Text style={st.itemPrice}>{item.price} {sym()}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                );
+              })()}
 
             </View>
           )}
@@ -376,6 +528,8 @@ const createSt = () => StyleSheet.create({
   scanningText: { color: colors.textDim, fontSize: 14, marginTop: 12 },
 
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
+  detectedRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, marginBottom: 8, alignSelf: i18n.row() === 'row' ? 'flex-start' : 'flex-end', paddingHorizontal: 10, paddingVertical: 4, backgroundColor: colors.green + '15', borderRadius: 8 },
+  detectedTxt: { color: colors.green, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   amountRow: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 14, paddingHorizontal: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder },
   currency: { color: colors.green, fontSize: 24, fontWeight: '700', marginEnd: 8 },
   amountInput: { flex: 1, color: colors.text, fontSize: 24, fontWeight: '700', paddingVertical: 14 },
@@ -385,10 +539,20 @@ const createSt = () => StyleSheet.create({
   catText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
 
   itemsCard: { backgroundColor: colors.bg2, borderRadius: 14, padding: 12, marginBottom: 16 },
-  itemsTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', marginBottom: 8 },
-  itemRow: { flexDirection: i18n.row(), justifyContent: 'space-between', paddingVertical: 6 },
+  itemsHeader: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  itemsTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700' },
+  itemsSum: { color: colors.text, fontSize: 12, fontWeight: '700' },
+  mismatchRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: colors.red + '15', borderRadius: 8, marginBottom: 8 },
+  mismatchTxt: { color: colors.red, fontSize: 11, fontWeight: '600', flex: 1 },
+  itemRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 6 },
   itemName: { color: colors.text, fontSize: 12, flex: 1 },
   itemPrice: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
+  breakdownRow: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 6, marginBottom: 8 },
+  breakdownChip: { flexDirection: i18n.row(), alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  breakdownTxt: { fontSize: 11, fontWeight: '700' },
+  splitToggle: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8, marginBottom: 4, borderRadius: 8, backgroundColor: colors.bg },
+  splitToggleActive: { backgroundColor: colors.green + '15' },
+  splitToggleTxt: { color: colors.textDim, fontSize: 12, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() },
 
   btnRow: { flexDirection: i18n.row(), gap: 12, paddingVertical: 12 },
   cancelBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, backgroundColor: colors.bg2, alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },

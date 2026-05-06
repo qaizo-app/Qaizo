@@ -815,7 +815,16 @@ Extract:
 - store: business name, usually at the top. Return the name as written on the receipt.
 - date: look for date on receipt, return as YYYY-MM-DD. Common formats: DD/MM/YYYY, DD.MM.YYYY, MM/DD/YYYY, YYYY-MM-DD.
 - category: classify the business. Supermarket/grocery = "food". Restaurant/cafe = "restaurant". Gas station = "fuel". Pharmacy = "health". Use: food,restaurant,fuel,transport,health,phone,utilities,clothing,household,kids,entertainment,education,cosmetics,electronics,insurance,rent,other
-Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","category":"food"}` },
+- accountType: detect payment method. Use ONE of: "cash" | "credit" | "bank" | null.
+    Hebrew clues: "מזומן" → cash. "אשראי" / "כרטיס אשראי" / Visa/Mastercard/Amex/Isracard/Diners → credit. "העברה" / "חשבון" / wire → bank.
+    Russian clues: "наличные" → cash. "карта" / "Visa"/"Master"/"Amex" → credit.
+    English clues: "cash" → cash. "credit"/"Visa"/"Master"/"Amex" → credit. Wire/transfer → bank.
+    If unclear or not printed, return null.
+- cardBrand: if a credit card was used, identify the BRAND. Use ONE of: "visa" | "mastercard" | "amex" | "isracard" | "diners" | null.
+    Look for the literal brand name OR the last 4 digits' card range ("4xxx" → visa, "5xxx" → mastercard, "3xxx" → amex/diners, "9xxx" → Isracard).
+    Return null if cash, bank transfer, or brand is not visible.
+- last4: if a credit card was used and the LAST 4 DIGITS are visible (e.g. "Visa ****1234" or "**** **** **** 1234"), extract them as a string. Otherwise null.
+Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","category":"food","accountType":null,"cardBrand":null,"last4":null}` },
             ...imageParts,
           ],
         }],
@@ -919,27 +928,79 @@ async function scanReceiptItems(imageInput) {
       inlineData: { mimeType: detectMime(b64), data: b64 }
     }));
 
+    const multiHint = imageList.length > 1
+      ? `\nThese ${imageList.length} images are pages of the SAME receipt — combine items from all of them.`
+      : '';
+
+    const prompt = `You are an expert receipt reader. Extract EVERY purchased item from this receipt with its price.${multiHint}
+
+WHAT TO INCLUDE — line items the customer paid for:
+  - Product names exactly as printed (keep original language: Hebrew/Russian/English/Arabic — do NOT translate)
+  - Each separate line is a separate item, even if same product appears twice
+  - Quantity-priced items (e.g. "1.5 kg × 12.90 = 19.35") → use the LINE TOTAL (19.35), not the unit price
+  - Discounts that apply to a SPECIFIC line item should reduce that line's price (final paid price)
+
+WHAT TO SKIP — these are NOT items:
+  - Subtotal / Total / סה"כ / לתשלום / Итого / Всего
+  - Tax / VAT / МААМ / מע"מ / מעמ
+  - Change / עודף / сдача
+  - Store header, address, phone, cashier, receipt number, date
+  - Payment method lines (Visa/cash/credit/אשראי/מזומן)
+  - Loyalty card / Club discount summary lines (unless they are line-items)
+  - Round-up / round-down adjustments
+  - Empty separators / dashes
+
+PRICE RULES:
+  - Number only. No currency symbol.
+  - Decimal point can be "." or "," in original — always output as ".".
+  - Negative prices for refunds/returns are OK.
+  - If a line shows quantity × unit_price → output the line total, NOT the unit price.
+
+CATEGORY for each item (this is important — supermarket receipts mix categories):
+  Pick ONE per item from this list:
+    food         → groceries: dairy, meat, fish, bread, vegetables, fruit, snacks, beverages
+    restaurant   → prepared meals, ready-to-eat, hot food bar, deli sandwiches
+    household    → cleaning supplies, paper goods, kitchen utensils, batteries, light bulbs
+    cosmetics    → shampoo, soap, toothpaste, makeup, deodorant, hair care, skin care
+    health       → medicine, vitamins, bandages, first aid, dental floss
+    kids         → diapers, baby food, kids' toys, school supplies, baby formula
+    clothing     → clothes, shoes, socks (uncommon at supermarket)
+    electronics  → cables, headphones, chargers (uncommon at supermarket)
+    other        → unclear or doesn't fit any above
+
+EXAMPLES (Israeli supermarket receipt — note categories vary across items):
+  "חלב תנובה 3% 1L      6.90"        → {"name":"חלב תנובה 3% 1L","price":6.90,"category":"food"}
+  "לחם אחיד    7.50"                  → {"name":"לחם אחיד","price":7.50,"category":"food"}
+  "עגבניות  1.250 ק\"ג × 8.90  11.13" → {"name":"עגבניות","price":11.13,"category":"food"}
+  "שמפו הד אנד שולדרס   24.90"        → {"name":"שמפו הד אנד שולדרס","price":24.90,"category":"cosmetics"}
+  "אבקת כביסה אריאל     34.90"        → {"name":"אבקת כביסה אריאל","price":34.90,"category":"household"}
+  "חיתולים האגיס        59.90"        → {"name":"חיתולים האגיס","price":59.90,"category":"kids"}
+  "אקמול כפיות 100      28.50"        → {"name":"אקמול כפיות 100","price":28.50,"category":"health"}
+  "הנחה מועדון              -5.00"   → SKIP (club discount summary)
+  "סה\"כ                    187.45"  → SKIP (total)
+  "מע\"מ 17%                  27.20"  → SKIP (tax)
+
+OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
+[{"name":"item 1","price":12.90,"category":"food"},{"name":"item 2","price":3.50,"category":"cosmetics"}]`;
+
     const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [
-            { text: `List ALL purchased items from this receipt with their prices.
-The receipt may be wrinkled or slightly blurry — do your best to read each item.
-Each item: name = product name as printed on receipt (keep original language).
-Price = number only, no currency.
-Return ONLY JSON array: [{"name":"product name","price":12.90}]` },
-            ...imageParts,
-          ],
+          parts: [{ text: prompt }, ...imageParts],
         }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
+        generationConfig: { temperature: 0.05, maxOutputTokens: 4096 },
       }),
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      if (__DEV__) console.error('scanReceiptItems API error:', res.status);
+      return [];
+    }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (__DEV__) console.log('[scanReceiptItems] raw length:', text.length);
     let jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
 
     // Fix truncated array
@@ -952,10 +1013,31 @@ Return ONLY JSON array: [{"name":"product name","price":12.90}]` },
     try {
       parsed = JSON.parse(jsonStr);
     } catch (parseErr) {
-      if (__DEV__) console.error('scanReceiptItems JSON parse error:', parseErr, 'raw:', jsonStr.slice(0, 200));
-      return [];
+      // Last-resort: extract the [...] block
+      const m = jsonStr.match(/\[[\s\S]*\]/);
+      if (m) {
+        try { parsed = JSON.parse(m[0]); }
+        catch (e2) {
+          if (__DEV__) console.error('scanReceiptItems JSON parse error:', parseErr, 'raw:', jsonStr.slice(0, 200));
+          return [];
+        }
+      } else {
+        if (__DEV__) console.error('scanReceiptItems JSON parse error:', parseErr, 'raw:', jsonStr.slice(0, 200));
+        return [];
+      }
     }
-    return Array.isArray(parsed) ? parsed.filter(i => i.name && i.price) : [];
+    if (!Array.isArray(parsed)) return [];
+    // Filter and normalize. Category is optional — fall back to 'other'.
+    const VALID_CATS = ['food','restaurant','household','cosmetics','health','kids','clothing','electronics','other'];
+    const items = parsed
+      .filter(i => i && i.name && typeof i.price === 'number' && !isNaN(i.price))
+      .map(i => ({
+        name: String(i.name).trim(),
+        price: i.price,
+        category: VALID_CATS.includes(i.category) ? i.category : 'other',
+      }));
+    if (__DEV__) console.log('[scanReceiptItems] items:', items.length);
+    return items;
   } catch (e) {
     if (__DEV__) console.error('scanReceiptItems error:', e);
     return [];

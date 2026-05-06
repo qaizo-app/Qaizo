@@ -128,6 +128,8 @@ export default {
   investmentsByMonth: 'Investments by month',
   investmentsByMonthEmpty: 'No transactions detected as investments. Use category Pension/Savings/Education or post to an investment-type account.',
   discussWithAI: 'Discuss with AI',
+  itemsTotalMismatch: 'Items sum differs from total by {pct}% — check for missed/wrong items',
+  splitByCategory: 'Split into separate transactions by category',
   saveAsTemplate: 'Save as quick-add?',
   templateSuggestMessage: 'You\'ve added "{category}" {count} times in the last 30 days. Save as a quick-add template?',
   templateSaved: 'Quick-add template saved',
