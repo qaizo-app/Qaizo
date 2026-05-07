@@ -60,7 +60,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
 
   const pickImage = async (useCamera) => {
     try {
-      const options = { base64: true, quality: 0.4, allowsEditing: false, exif: false };
+      const options = { base64: true, quality: 0.85, allowsEditing: true, exif: false };
       let res;
       if (useCamera) {
         const perm = await ImagePicker.requestCameraPermissionsAsync();

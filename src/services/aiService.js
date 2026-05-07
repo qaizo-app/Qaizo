@@ -802,13 +802,10 @@ async function scanReceipt(imageInput, lang, _retryCount = 0) {
       ? `These ${imageList.length} images are parts of the SAME receipt. Combine all items and find the total from the last image.`
       : '';
 
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: `You are an expert receipt scanner. The receipt may be in ANY language (Hebrew, Russian, English, Arabic, etc.). The image may be slightly blurry, rotated, or have low contrast — do your best to extract data.
+    const requestBody = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: `You are an expert receipt scanner. The receipt may be in ANY language (Hebrew, Russian, English, Arabic, etc.). The image may be slightly blurry, rotated, or have low contrast — do your best to extract data.
 ${multiImageHint}
 Extract:
 - total: the TOTAL amount (number). Look for the LAST/LARGEST bold number, or words in any language: Total, סה"כ, סהכ, Итого, Всего, לתשלום, סך הכל, المجموع. If multiple totals, pick the final one.
@@ -825,12 +822,19 @@ Extract:
     Return null if cash, bank transfer, or brand is not visible.
 - last4: if a credit card was used and the LAST 4 DIGITS are visible (e.g. "Visa ****1234" or "**** **** **** 1234"), extract them as a string. Otherwise null.
 Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","category":"food","accountType":null,"cardBrand":null,"last4":null}` },
-            ...imageParts,
-          ],
-        }],
-        generationConfig: { temperature: 0.15, maxOutputTokens: 1024 },
-      }),
+          ...imageParts,
+        ],
+      }],
+      generationConfig: { temperature: 0.15, maxOutputTokens: 1024 },
     });
+
+    const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
+    let res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, fetchOpts);
+    // Fallback to gemini-flash-latest on transient overload (503) or rate limit (429)
+    if (!res.ok && (res.status >= 500 || res.status === 429)) {
+      if (__DEV__) console.warn('scanReceipt: primary', res.status, '— retrying on fallback model', GEMINI_MODEL_FALLBACK);
+      res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
+    }
 
     if (!res.ok) {
       const errText = await res.text();
@@ -983,16 +987,20 @@ EXAMPLES (Israeli supermarket receipt — note categories vary across items):
 OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
 [{"name":"item 1","price":12.90,"category":"food"},{"name":"item 2","price":3.50,"category":"cosmetics"}]`;
 
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }, ...imageParts],
-        }],
-        generationConfig: { temperature: 0.05, maxOutputTokens: 4096 },
-      }),
+    const requestBody = JSON.stringify({
+      contents: [{
+        parts: [{ text: prompt }, ...imageParts],
+      }],
+      generationConfig: { temperature: 0.05, maxOutputTokens: 8192 },
     });
+
+    const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
+    let res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, fetchOpts);
+    // Fallback to gemini-flash-latest on transient overload (503) or rate limit (429)
+    if (!res.ok && (res.status >= 500 || res.status === 429)) {
+      if (__DEV__) console.warn('scanReceiptItems: primary', res.status, '— retrying on fallback model', GEMINI_MODEL_FALLBACK);
+      res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
+    }
 
     if (!res.ok) {
       if (__DEV__) console.error('scanReceiptItems API error:', res.status);
