@@ -294,14 +294,31 @@ export default function AccountsScreen() {
           </View>
         </View>
 
-        {/* Total */}
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
-          <Amount value={totalBalance} sign style={styles.totalAmount} color={totalBalance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
-        </View>
+        {/* Empty state — no accounts yet */}
+        {accounts.length === 0 && (
+          <View style={styles.empty}>
+            <Feather name="credit-card" size={48} color={colors.textMuted} />
+            <Text style={styles.emptyText}>{i18n.t('noAccounts')}</Text>
+            <Text style={styles.emptyHint}>{i18n.t('accountsEmptyHint')}</Text>
+            <TouchableOpacity style={styles.emptyBtn} onPress={openAdd} activeOpacity={0.85}>
+              <Feather name="plus" size={16} color={colors.bg} />
+              <Text style={styles.emptyBtnText}>{i18n.t('addFirstAccount')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Total — hidden when no accounts */}
+        {accounts.length > 0 && (
+          <View style={styles.totalCard}>
+            <Text style={styles.totalLabel}>{i18n.t('totalAssets')}</Text>
+            <Amount value={totalBalance} sign style={styles.totalAmount} color={totalBalance >= 0 ? colors.green : colors.red} numberOfLines={1} adjustsFontSizeToFit />
+          </View>
+        )}
 
         {/* First-time tooltip replaces the static hint */}
-        <FirstTimeTooltip storageKey="accounts_long_press" text={i18n.t('accountHint')} icon="info" />
+        {accounts.length > 0 && (
+          <FirstTimeTooltip storageKey="accounts_long_press" text={i18n.t('accountHint')} icon="info" />
+        )}
 
         {/* Reorder mode — grouped by type so the order matches the normal view */}
         {reorderMode && grouped.map(({ typeId, accs }, gIdx) => {
@@ -566,6 +583,12 @@ const createStyles = () => StyleSheet.create({
   totalAmount:{fontSize:32,fontWeight:'800',textAlign:i18n.textAlign()},
 
   hint:{color:colors.textMuted,fontSize:12,textAlign:'center',marginBottom:12,opacity:0.5},
+
+  empty:{alignItems:'center',marginTop:80,gap:12,paddingHorizontal:32},
+  emptyText:{color:colors.text,fontSize:18,fontWeight:'700',marginTop:4},
+  emptyHint:{color:colors.textMuted,fontSize:13,fontWeight:'500',textAlign:'center',lineHeight:18},
+  emptyBtn:{flexDirection:'row',alignItems:'center',gap:8,backgroundColor:colors.green,paddingHorizontal:22,paddingVertical:12,borderRadius:14,marginTop:12},
+  emptyBtnText:{color:colors.bg,fontSize:14,fontWeight:'700'},
 
   groupHeader:{flexDirection:i18n.row(),alignItems:'center',paddingHorizontal:24,marginTop:20,marginBottom:8,gap:6},
   groupTitle:{color:colors.textDim,fontSize:12,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',textAlign:i18n.textAlign()},

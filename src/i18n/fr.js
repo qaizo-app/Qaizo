@@ -121,6 +121,8 @@ export default {
   newProject: 'Nouveau projet',
   projectName: 'Nom du projet',
   noProjects: 'Aucun projet pour l\'instant',
+  noAccounts: 'Aucun compte pour l\'instant',
+  noTxThisDay: 'Aucune transaction ce jour',
   projectTotal: 'Total du projet',
   selectProject: 'Sélectionner un projet',
   name: 'Nom',

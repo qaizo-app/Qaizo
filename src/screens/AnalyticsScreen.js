@@ -327,7 +327,10 @@ export default function AnalyticsScreen() {
             <Card>
               <Text style={st.sectionTitle}>{i18n.t('insights')}</Text>
               {insights.length === 0 ? (
-                <Text style={st.emptyText}>{i18n.t('noInsights')}</Text>
+                <View style={st.emptyBlock}>
+                  <Feather name="zap" size={32} color={colors.textMuted} />
+                  <Text style={st.emptyBlockText}>{i18n.t('noInsights')}</Text>
+                </View>
               ) : (
                 insights.map((ins, idx) => (
                   <View key={idx} style={[st.insightRow, idx < insights.length - 1 && st.insightBorder]}>
@@ -346,7 +349,12 @@ export default function AnalyticsScreen() {
         {tab === 'expenses' && (
           <>
             {pieData.length === 0 && incomePieData.length === 0 && (
-              <Card><Text style={st.emptyText}>{i18n.t('noInsights')}</Text></Card>
+              <Card>
+                <View style={st.emptyBlock}>
+                  <Feather name="pie-chart" size={32} color={colors.textMuted} />
+                  <Text style={st.emptyBlockText}>{i18n.t('noInsights')}</Text>
+                </View>
+              </Card>
             )}
 
             {/* Expense total */}
@@ -461,7 +469,12 @@ export default function AnalyticsScreen() {
             )}
 
             {incomePieData.length === 0 && (
-              <Card><Text style={st.emptyText}>{i18n.t('noInsights')}</Text></Card>
+              <Card>
+                <View style={st.emptyBlock}>
+                  <Feather name="trending-up" size={32} color={colors.textMuted} />
+                  <Text style={st.emptyBlockText}>{i18n.t('noInsights')}</Text>
+                </View>
+              </Card>
             )}
           </>
         )}
@@ -599,6 +612,8 @@ const createSt = () => StyleSheet.create({
 
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 16 },
+  emptyBlock: { alignItems: 'center', paddingVertical: 24, gap: 8 },
+  emptyBlockText: { color: colors.text, fontSize: 14, fontWeight: '600', marginTop: 6 },
 
   // Badges
   badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

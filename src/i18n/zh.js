@@ -121,6 +121,8 @@ export default {
   newProject: '新项目',
   projectName: '项目名称',
   noProjects: '暂无项目',
+  noAccounts: '暂无账户',
+  noTxThisDay: '当天无交易',
   projectTotal: '项目总计',
   selectProject: '选择项目',
   name: '名称',

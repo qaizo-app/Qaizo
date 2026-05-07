@@ -121,6 +121,8 @@ export default {
   newProject: 'नया प्रोजेक्ट',
   projectName: 'प्रोजेक्ट का नाम',
   noProjects: 'अभी तक कोई प्रोजेक्ट नहीं',
+  noAccounts: 'अभी तक कोई खाता नहीं',
+  noTxThisDay: 'इस दिन कोई लेन-देन नहीं',
   projectTotal: 'प्रोजेक्ट कुल',
   selectProject: 'प्रोजेक्ट चुनें',
   name: 'नाम',

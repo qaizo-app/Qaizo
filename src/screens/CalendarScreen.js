@@ -196,6 +196,15 @@ export default function CalendarScreen() {
           )}
         </Card>
 
+        {/* Selected day — empty state when no transactions */}
+        {selectedDate && selectedTxs.length === 0 && (
+          <Card style={{ marginTop: 12, alignItems: 'center', paddingVertical: 28 }}>
+            <Feather name="calendar" size={36} color={colors.textMuted} />
+            <Text style={st.dayEmptyText}>{i18n.t('noTxThisDay')}</Text>
+            <Text style={st.dayEmptyHint}>{i18n.t('noTxThisDayHint')}</Text>
+          </Card>
+        )}
+
         {/* Selected day transactions */}
         {selectedDate && selectedTxs.length > 0 && (
           <Card style={{ marginTop: 12 }}>
@@ -269,4 +278,6 @@ const createSt = () => StyleSheet.create({
   txRecipient: { color: colors.textMuted, fontSize: 12, marginTop: 2, textAlign: i18n.textAlign() },
   txAmount: { fontSize: 14, fontWeight: '700', writingDirection: 'ltr' },
   emptyTxt: { color: colors.textMuted, fontSize: 12, textAlign: 'center', paddingVertical: 16 },
+  dayEmptyText: { color: colors.text, fontSize: 15, fontWeight: '700', marginTop: 10 },
+  dayEmptyHint: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textAlign: 'center', marginTop: 4 },
 });
