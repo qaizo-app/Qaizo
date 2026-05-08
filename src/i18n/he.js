@@ -11,6 +11,8 @@ export default {
   rateFeedbackTitle: 'עזור לנו להשתפר',
   rateFeedbackSubtitle: 'מה הפריע? אנחנו קוראים כל הודעה.',
   rateFeedbackPlaceholder: 'ספר לנו עוד (לא חובה)',
+  rateFeedbackPlaceholderLow: 'תאר מה לא עבד — בלי זה לא נוכל לעזור (לפחות 10 תווים)',
+  rateEmailPlaceholder: 'אימייל למענה (לא חובה)',
   rateChipAi: 'ה-AI לא מבין אותי',
   rateChipSync: 'סנכרון / אובדן נתונים',
   rateChipMissing: 'חסר מטבע או בנק',

@@ -1,4 +1,6 @@
 // __tests__/feedbackService.test.js
+jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
+
 jest.mock('@react-native-async-storage/async-storage', () => {
   let store = {};
   return {

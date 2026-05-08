@@ -94,7 +94,7 @@ import feedbackService from './src/services/feedbackService';
 import notificationService from './src/services/notificationService';
 import securityService from './src/services/securityService';
 import PinScreen from './src/screens/PinScreen';
-import RateAppModal from './src/components/RateAppModal';
+import * as StoreReview from 'expo-store-review';
 import { colors } from './src/theme/colors';
 import { CURRENCIES, setCurrency } from './src/utils/currency';
 import { ToastProvider } from './src/components/ToastProvider';
@@ -134,7 +134,6 @@ function AppInner() {
   const [locked, setLocked] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [pendingNotif, setPendingNotif] = useState(null);
-  const [showRatePrompt, setShowRatePrompt] = useState(false);
 
   const navTheme = {
     ...DefaultTheme,
@@ -234,7 +233,7 @@ function AppInner() {
       } catch (e) {}
       // Apply analytics consent to the native SDK and log session start
       await analyticsEvents.syncNativeConsent();
-      analyticsEvents.logEvent('app_opened', { platform: 'android' });
+      analyticsEvents.logEvent('app_opened', { platform: Platform.OS });
 
       // Инициализация уведомлений — only if the user consented on the
       // onboarding screen. New installs haven't seen onboarding yet, so we
@@ -297,9 +296,11 @@ function AppInner() {
     };
   }, []);
 
-  // Trigger the rate prompt only when the user is past onboarding/auth/pin
-  // AND has logged enough transactions over enough days. A short delay keeps
-  // the modal from clobbering the first paint after login.
+  // Ask the native store-review API to show its own prompt when the user is
+  // past onboarding/auth/pin AND has logged enough transactions over enough
+  // days. We do NOT show our own UI: the OS decides if/when the prompt is
+  // shown (iOS limits to 3/year), and there's no star-filter routing — that's
+  // App Store Guideline 5.6.1 and Play policy.
   useEffect(() => {
     if (screen !== 'app' || locked || !ready) return;
     let cancelled = false;
@@ -307,7 +308,14 @@ function AppInner() {
       try {
         const txs = await dataService.getTransactions();
         const should = await feedbackService.shouldPrompt({ transactionCount: txs.length });
-        if (!cancelled && should) setShowRatePrompt(true);
+        if (cancelled || !should) return;
+        const available = await StoreReview.isAvailableAsync();
+        if (!available) return;
+        await StoreReview.requestReview();
+        // Mark so we don't keep asking on every cold start in this version —
+        // OS-level throttling already protects against spam, but this avoids
+        // the no-op overhead and keeps shouldPrompt honest.
+        await feedbackService.markSubmitted();
       } catch (e) {}
     }, 8000);
     return () => { cancelled = true; clearTimeout(timer); };
@@ -388,7 +396,6 @@ function AppInner() {
           pendingAction={pendingAction} onPendingActionHandled={() => setPendingAction(null)}
           pendingNotif={pendingNotif} onPendingNotifHandled={() => setPendingNotif(null)}
         />
-        <RateAppModal visible={showRatePrompt} onClose={() => setShowRatePrompt(false)} />
       </NavigationContainer>
     </GestureHandlerRootView>
     </SafeAreaProvider>

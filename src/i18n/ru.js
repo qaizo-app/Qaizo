@@ -11,6 +11,8 @@ export default {
   rateFeedbackTitle: 'Помогите нам улучшить',
   rateFeedbackSubtitle: 'Что помешало? Мы читаем каждое сообщение.',
   rateFeedbackPlaceholder: 'Расскажите подробнее (необязательно)',
+  rateFeedbackPlaceholderLow: 'Опишите что не так — без этого мы не сможем помочь (минимум 10 символов)',
+  rateEmailPlaceholder: 'Email для ответа (необязательно)',
   rateChipAi: 'ИИ не понимает меня',
   rateChipSync: 'Синхронизация / потеря данных',
   rateChipMissing: 'Нет нужной валюты или банка',

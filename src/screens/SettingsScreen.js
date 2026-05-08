@@ -6,14 +6,14 @@ try { Sentry = require('@sentry/react-native'); } catch (e) {}
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Linking, Modal, ScrollView, Share, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as StoreReview from 'expo-store-review';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import PinScreen from './PinScreen';
 import ExportModal from '../components/ExportModal';
 import ImportModal from '../components/ImportModal';
-import RateAppModal from '../components/RateAppModal';
 import i18n from '../i18n';
 import authService from '../services/authService';
 import dataService from '../services/dataService';
@@ -31,7 +31,6 @@ export default function SettingsScreen() {
   const [curSymbol, setCurSymbol] = useState(sym());
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showRate, setShowRate] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [monthlyExtra, setMonthlyExtra] = useState('');
@@ -462,8 +461,25 @@ export default function SettingsScreen() {
           </Card>
         )}
 
-        {/* Rate Qaizo */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={() => setShowRate(true)}>
+        {/* Rate Qaizo — uses the native store-review API. iOS shows the
+            SKStoreReviewController prompt (throttled by Apple); Android shows
+            the In-App Review card. No star-picker, no fork by rating. */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={async () => {
+          try {
+            const available = await StoreReview.isAvailableAsync();
+            if (available) {
+              await StoreReview.requestReview();
+              return;
+            }
+          } catch (e) {}
+          // Fallback when the native API can't show its prompt (e.g. dev build,
+          // or it has already been shown the max number of times this year):
+          // open the public store listing for the current platform.
+          const url = Platform.OS === 'ios'
+            ? 'https://apps.apple.com/app/id6764638553'
+            : 'https://play.google.com/store/apps/details?id=com.qaizo.app';
+          Linking.openURL(url).catch(() => {});
+        }}>
           <View style={styles.sectionLeft}>
             <Feather name="star" size={18} color={colors.yellow} />
             <Text style={styles.sectionText}>{i18n.t('rateApp')}</Text>
@@ -471,9 +487,11 @@ export default function SettingsScreen() {
           <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
-        {/* Share Qaizo */}
+        {/* Share Qaizo — share the platform-appropriate listing URL. */}
         <TouchableOpacity style={styles.sectionBtn} onPress={() => {
-          const url = 'https://play.google.com/store/apps/details?id=com.qaizo.app';
+          const url = Platform.OS === 'ios'
+            ? 'https://apps.apple.com/app/id6764638553'
+            : 'https://play.google.com/store/apps/details?id=com.qaizo.app';
           Share.share({ message: `${i18n.t('shareAppMessage')}\n${url}`, url }).catch(() => {});
         }}>
           <View style={styles.sectionLeft}>
@@ -539,7 +557,6 @@ export default function SettingsScreen() {
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
       <ImportModal visible={showImport} onClose={() => setShowImport(false)} onImported={() => toast.show(i18n.t('importDone'), 'success')} />
-      <RateAppModal visible={showRate} onClose={() => setShowRate(false)} />
 
       <ConfirmModal visible={showLangRestart}
         title={i18n.t('langChanged')} message={i18n.t('restartApp')}

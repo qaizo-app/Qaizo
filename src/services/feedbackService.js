@@ -1,16 +1,15 @@
 // src/services/feedbackService.js
-// Tracks the rate-app prompt state and submits user feedback to Formspree.
+// Tracks the in-app store-review prompt state and submits free-form feedback
+// to Formspree.
 //
-// The prompt should only show when the user has had enough time with the app
-// to form a real opinion — we gate on (a) transactions logged and (b) days
-// since install, and never prompt again once dismissed or submitted for the
-// current app version.
-//
-// Low ratings (1-3★) route to the in-app feedback form; high ratings (4-5★)
-// send the user to the Play Store. Formspree is the cheapest drop-off — it is
-// already configured for newsletter sign-ups on the website.
+// The store-review prompt is gated on (a) transactions logged and (b) days
+// since install, and never re-prompts once dismissed or marked submitted for
+// the current app version. The actual prompt is the OS-native one
+// (SKStoreReviewController on iOS, In-App Review on Android) — this module
+// only decides whether to invoke it.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import appJson from '../../app.json';
 
 const INSTALL_KEY = 'qaizo_install_date';
@@ -22,7 +21,9 @@ const MIN_DAYS = 14;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const appVersion = appJson?.expo?.version || '0.0.0';
-const buildNumber = appJson?.expo?.android?.versionCode || 0;
+const buildNumber = Platform.OS === 'ios'
+  ? (appJson?.expo?.ios?.buildNumber || 0)
+  : (appJson?.expo?.android?.versionCode || 0);
 const versionTag = `${appVersion}+${buildNumber}`;
 
 async function getState() {
@@ -81,15 +82,17 @@ async function markSubmitted() {
   await setState(st);
 }
 
-async function submitFeedback({ rating, chip, text, language, platform }) {
+async function submitFeedback({ rating, chip, text, language, platform, email, userId }) {
   const body = {
     rating: Number(rating) || 0,
     chip: chip || '',
     text: (text || '').slice(0, 2000),
     language: language || '',
-    platform: platform || 'android',
+    platform: platform || Platform.OS,
     version: versionTag,
-    _subject: `Qaizo feedback — ${rating || '?'}★`,
+    email: (email || '').trim().slice(0, 120),
+    userId: userId || '',
+    _subject: `Qaizo feedback — ${rating || '?'}★${email ? ` — reply to ${email}` : ''}`,
   };
   const res = await fetch(FEEDBACK_ENDPOINT, {
     method: 'POST',

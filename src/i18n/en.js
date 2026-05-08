@@ -11,6 +11,8 @@ export default {
   rateFeedbackTitle: 'Help us improve',
   rateFeedbackSubtitle: 'What got in your way? We read every note.',
   rateFeedbackPlaceholder: 'Tell us more (optional)',
+  rateFeedbackPlaceholderLow: 'Please describe what went wrong (required, ≥10 chars)',
+  rateEmailPlaceholder: 'Email so we can reply (optional)',
   rateChipAi: "AI doesn't understand me",
   rateChipSync: 'Sync / data loss',
   rateChipMissing: 'Missing currency or bank',
