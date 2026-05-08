@@ -1,7 +1,7 @@
 // src/screens/CalendarScreen.js
 // Calendar view — income/expense per day, tap day → transaction list
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { mergeTransferPairs } from '../utils/transactions';
 import { useCallback, useRef, useState } from 'react';
 import { Animated, PanResponder, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -22,6 +22,7 @@ const DAYS_HE = ['א','ב','ג','ד','ה','ו','ש'];
 const DAYS_EN = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 export default function CalendarScreen() {
+  const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
@@ -106,6 +107,9 @@ export default function CalendarScreen() {
     <View style={st.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={st.header}>
+          <TouchableOpacity style={st.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Feather name={i18n.backIcon()} size={22} color={colors.text} />
+          </TouchableOpacity>
           <Text style={st.title}>{i18n.t('calendarView')}</Text>
         </View>
 
@@ -240,8 +244,9 @@ export default function CalendarScreen() {
 
 const createSt = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign() },
+  header: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
+  title: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: i18n.textAlign(), flex: 1 },
 
   summaryRow: { flexDirection: i18n.row(), alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
