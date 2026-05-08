@@ -259,7 +259,7 @@ export default function AnalyticsScreen() {
               style={[st.periodBtn, periodIdx === idx && periodMode === 'range' && st.periodActive]}
               onPress={() => { setPeriodMode('range'); setPeriodIdx(idx); }} activeOpacity={0.7}>
               <Text style={[st.periodText, periodIdx === idx && periodMode === 'range' && st.periodTextActive]}>
-                {p.label}
+                {i18n.t('period' + p.key) || p.label}
               </Text>
             </TouchableOpacity>
           ))}
