@@ -424,10 +424,10 @@ export default function AccountsScreen() {
             </ScrollView>
 
             <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder={i18n.t('accountNamePlaceholder')} placeholderTextColor={colors.textMuted} />
+            <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={name} onChangeText={setName} placeholder={i18n.t('accountNamePlaceholder')} placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>{i18n.t('number')}</Text>
-            <TextInput style={styles.input} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
+            <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={accountNumber} onChangeText={setAccountNumber} placeholder="1234" placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>{i18n.t('currency')}</Text>
             <TouchableOpacity style={styles.currPickerBtn} onPress={() => setShowCurrencyPicker(true)} activeOpacity={0.7}>
@@ -525,7 +525,7 @@ export default function AccountsScreen() {
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>{type==='credit'?i18n.t('creditLimit'):i18n.t('overdraft')}</Text>
-                  <TextInput style={styles.input} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
+                  <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={overdraft} onChangeText={setOverdraft} keyboardType="numeric" placeholder="10000" placeholderTextColor={colors.textMuted} />
                 </View>
                 {type==='credit'&&(
                   <View style={{ flex: 1 }}>
@@ -630,8 +630,8 @@ const createStyles = () => StyleSheet.create({
   balCur:{fontSize:32,fontWeight:'700',marginEnd:8},
   balInput:{flex:1,color:colors.text,fontSize:32,fontWeight:'700',textAlign:i18n.textAlign()},
   toggleRow:{flexDirection:i18n.row(),justifyContent:'space-between',alignItems:'center',paddingVertical:16,marginBottom:8,borderTopWidth:1,borderTopColor:colors.divider},
-  toggleLabel:{color:colors.text,fontSize:14,fontWeight:'600'},
-  toggleSub:{color:colors.textMuted,fontSize:12,marginTop:2},
+  toggleLabel:{color:colors.text,fontSize:14,fontWeight:'600',textAlign:i18n.textAlign()},
+  toggleSub:{color:colors.textMuted,fontSize:12,marginTop:2,textAlign:i18n.textAlign()},
   btnRow:{flexDirection:i18n.row(),gap:10,marginTop:8},
   delBtn:{width:54,paddingVertical:16,borderRadius:14,backgroundColor:colors.redSoft,alignItems:'center',justifyContent:'center'},
   cancelBtn:{flex:1,paddingVertical:16,borderRadius:14,backgroundColor:colors.card,alignItems:'center',borderWidth:1,borderColor:colors.cardBorder},
