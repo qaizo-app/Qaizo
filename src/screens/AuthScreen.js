@@ -326,9 +326,9 @@ const createSt = () => StyleSheet.create({
   googleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderRadius: 14, paddingVertical: 16, borderWidth: 1, borderColor: colors.cardBorder, gap: 10, marginBottom: 8 },
   googleG: { fontSize: 20, fontWeight: '800', color: '#4285F4' },
   googleTxt: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  appleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', borderRadius: 14, paddingVertical: 16, gap: 10, marginBottom: 8 },
-  appleLogo: { fontSize: 20, color: '#fff', lineHeight: 24 },
-  appleTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  appleBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 14, paddingVertical: 16, gap: 10, marginBottom: 8 },
+  appleLogo: { fontSize: 20, color: '#000', lineHeight: 24 },
+  appleTxt: { color: '#000', fontSize: 14, fontWeight: '600' },
 
   skipBtn: { flexDirection: i18n.row(), justifyContent: 'center', marginTop: 20 },
   skipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textDecorationLine: 'underline' },
