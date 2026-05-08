@@ -90,7 +90,7 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
                 <Text style={[st.currency, { fontSize: amtFont(value, 20) }]}>{sym()}</Text>
                 <TextInput
                   ref={inputRef}
-                  style={[st.input, { fontSize: amtFont(value, 20) }]}
+                  style={[st.input, { fontSize: amtFont(value, 20), textAlign: i18n.textAlign() }]}
                   value={value}
                   onChangeText={setValue}
                   placeholder={i18n.t('budgetPlaceholder')}

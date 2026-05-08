@@ -339,17 +339,17 @@ export default function InvestmentsScreen() {
             </ScrollView>
 
             <Text style={styles.fieldLabel}>{i18n.t('name')}</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="..." placeholderTextColor={colors.textMuted} />
+            <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={name} onChangeText={setName} placeholder="..." placeholderTextColor={colors.textMuted} />
 
             {type !== 'stocks' && (
               <>
                 <Text style={styles.fieldLabel}>{i18n.t('balance')}</Text>
-                <TextInput style={styles.input} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
+                <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
               </>
             )}
 
             <Text style={styles.fieldLabel}>{i18n.t('monthlyContribution')}</Text>
-            <TextInput style={styles.input} value={monthly} onChangeText={setMonthly} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
+            <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={monthly} onChangeText={setMonthly} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
 
             {type === 'stocks' && (
               <View style={{ marginTop: 8 }}>
@@ -408,15 +408,15 @@ export default function InvestmentsScreen() {
                   );
                 })}
                 <View style={styles.addHoldingRow}>
-                  <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} value={newTicker}
+                  <TextInput style={[styles.input, { flex: 1, marginBottom: 0, textAlign: i18n.textAlign() }]} value={newTicker}
                     onChangeText={setNewTicker} placeholder={i18n.t('tickerPlaceholder')}
                     placeholderTextColor={colors.textMuted} autoCapitalize="characters" />
                 </View>
                 <View style={styles.addHoldingRow}>
-                  <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} value={newShares}
+                  <TextInput style={[styles.input, { flex: 1, marginBottom: 0, textAlign: i18n.textAlign() }]} value={newShares}
                     onChangeText={setNewShares} placeholder={i18n.t('shares')}
                     placeholderTextColor={colors.textMuted} keyboardType="numeric" />
-                  <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} value={newAvgCost}
+                  <TextInput style={[styles.input, { flex: 1, marginBottom: 0, textAlign: i18n.textAlign() }]} value={newAvgCost}
                     onChangeText={setNewAvgCost} placeholder={i18n.t('avgCost')}
                     placeholderTextColor={colors.textMuted} keyboardType="numeric" />
                   <TouchableOpacity style={[styles.addCoinBtn, (!newTicker || !parseFloat((newShares||'').replace(',','.'))) && { opacity: 0.4 }]}

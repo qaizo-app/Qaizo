@@ -107,7 +107,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
                 <Text style={[st.currency, { color: cfg.color, fontSize: amtFont(amount, 24) }]}>{sym()}</Text>
                 <TextInput
                   ref={inputRef}
-                  style={[st.input, { fontSize: amtFont(amount, 24) }]}
+                  style={[st.input, { fontSize: amtFont(amount, 24), textAlign: i18n.textAlign() }]}
                   value={amount}
                   onChangeText={setAmount}
                   keyboardType="decimal-pad"

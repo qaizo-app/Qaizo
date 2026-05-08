@@ -200,7 +200,7 @@ export default function TransactionsScreen({ route }) {
       <View style={styles.searchRow}>
         <Feather name="search" size={16} color={colors.textMuted} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { textAlign: i18n.textAlign() }]}
           value={search}
           onChangeText={setSearch}
           placeholder={i18n.t('searchPlaceholder')}
@@ -268,13 +268,13 @@ export default function TransactionsScreen({ route }) {
             <View style={styles.dateRow}>
               <View style={styles.dateField}>
                 <Text style={styles.filterLabel}>{i18n.t('amountFrom')}</Text>
-                <TextInput style={styles.dateInput} value={amountMin} onChangeText={setAmountMin}
+                <TextInput style={[styles.dateInput, { textAlign: i18n.textAlign() }]} value={amountMin} onChangeText={setAmountMin}
                   placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
               </View>
               <Feather name="minus" size={14} color={colors.textMuted} style={{ marginTop: 20 }} />
               <View style={styles.dateField}>
                 <Text style={styles.filterLabel}>{i18n.t('amountTo')}</Text>
-                <TextInput style={styles.dateInput} value={amountMax} onChangeText={setAmountMax}
+                <TextInput style={[styles.dateInput, { textAlign: i18n.textAlign() }]} value={amountMax} onChangeText={setAmountMax}
                   placeholder="∞" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
               </View>
             </View>

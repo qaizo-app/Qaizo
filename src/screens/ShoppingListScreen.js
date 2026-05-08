@@ -283,7 +283,7 @@ export default function ShoppingListScreen() {
         {/* Search */}
         <View style={st.searchRow}>
           <Feather name="search" size={16} color={colors.textMuted} />
-          <TextInput style={st.searchInput} value={search} onChangeText={setSearch}
+          <TextInput style={[st.searchInput, { textAlign: i18n.textAlign() }]} value={search} onChangeText={setSearch}
             placeholder={i18n.t('search')} placeholderTextColor={colors.textMuted} />
         </View>
 
@@ -401,7 +401,7 @@ export default function ShoppingListScreen() {
 
               <Text style={st.fieldLabel}>{i18n.t('itemName')}</Text>
               <TextInput
-                style={st.modalInput}
+                style={[st.modalInput, { textAlign: i18n.textAlign() }]}
                 value={newItemName}
                 onChangeText={setNewItemName}
                 placeholder={i18n.t('itemName')}
@@ -414,7 +414,7 @@ export default function ShoppingListScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={st.fieldLabel}>{i18n.t('price')} ({sym()})</Text>
                   <TextInput
-                    style={st.modalInput}
+                    style={[st.modalInput, { textAlign: i18n.textAlign() }]}
                     value={newItemPrice}
                     onChangeText={setNewItemPrice}
                     placeholder="0"
@@ -426,7 +426,7 @@ export default function ShoppingListScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={st.fieldLabel}>{i18n.t('quantity')}</Text>
                   <TextInput
-                    style={st.modalInput}
+                    style={[st.modalInput, { textAlign: i18n.textAlign() }]}
                     value={newItemQty}
                     onChangeText={setNewItemQty}
                     placeholder="1"
@@ -439,7 +439,7 @@ export default function ShoppingListScreen() {
 
               <Text style={st.fieldLabel}>{i18n.t('note')}</Text>
               <TextInput
-                style={st.modalInput}
+                style={[st.modalInput, { textAlign: i18n.textAlign() }]}
                 value={newItemNote}
                 onChangeText={setNewItemNote}
                 placeholder={i18n.t('optional')}

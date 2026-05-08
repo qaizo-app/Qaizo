@@ -145,7 +145,7 @@ export default function ConfirmRecurringModal({ visible, item, onClose, onConfir
             <Text style={st.label}>{i18n.t('amount')}</Text>
             <Text style={st.amtLine}>
               <TextInput
-                style={[st.amtIn, { fontSize: amtFont(amount, 28), color: typeColor }]}
+                style={[st.amtIn, { fontSize: amtFont(amount, 28), color: typeColor, textAlign: i18n.textAlign() }]}
                 value={amount}
                 onChangeText={setAmount}
                 placeholder="0"

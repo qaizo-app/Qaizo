@@ -441,7 +441,7 @@ export default function AccountsScreen() {
                 <Text style={styles.fieldLabel}>{i18n.t('balance')}</Text>
                 <View style={styles.balRow}>
                   <Text style={[styles.balCur,{color:tc}]}>{currency}</Text>
-                  <TextInput style={styles.balInput} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
+                  <TextInput style={[styles.balInput, { textAlign: i18n.textAlign() }]} value={balance} onChangeText={setBalance} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
                 </View>
               </>
             )}

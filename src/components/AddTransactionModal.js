@@ -214,7 +214,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             </View>
 
             <View style={st.amtRow}>
-              <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32) }]} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
+              <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32), textAlign: i18n.textAlign() }]} value={amount} onChangeText={setAmount} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
               <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
               <TouchableOpacity style={st.calcBtn} onPress={() => setShowCalc(true)}>
                 <MaterialCommunityIcons name="calculator-variant-outline" size={18} color={colors.textDim} />
@@ -251,7 +251,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                         <CatIcon icon={ci.icon} size={16} color={ci.color} />
                       </TouchableOpacity>
                       <TextInput
-                        style={[st.input, { flex: 1, marginBottom: 0 }]}
+                        style={[st.input, { flex: 1, marginBottom: 0, textAlign: i18n.textAlign() }]}
                         value={row.amount}
                         onChangeText={(val) => {
                           const updated = [...splitRows];
@@ -342,7 +342,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
 
               {type !== 'transfer' && (
                 <>
-                  <TextInput style={st.input} value={recipient}
+                  <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={recipient}
                     onChangeText={(t) => { setRecipient(t); setShowRecipients(t.length > 0); }}
                     onFocus={() => { if (recipient.length === 0 && knownRecipients.length > 0) setShowRecipients(true); }}
                     onBlur={() => setTimeout(() => setShowRecipients(false), 200)}
@@ -411,7 +411,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                     {/* Добавить новый тег */}
                     <View style={st.newTagWrap}>
                       <TextInput
-                        style={st.newTagInput}
+                        style={[st.newTagInput, { textAlign: i18n.textAlign() }]}
                         value={newTagText}
                         onChangeText={setNewTagText}
                         placeholder={i18n.t('newTag')}
@@ -440,7 +440,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                       </TouchableOpacity>
                     </View>
                   </View>
-                  <TextInput style={[st.input, { height: 60, textAlignVertical: 'top' }]} value={note} onChangeText={setNote}
+                  <TextInput style={[st.input, { height: 60, textAlignVertical: 'top', textAlign: i18n.textAlign() }]} value={note} onChangeText={setNote}
                     placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} multiline />
                 </>
               )}

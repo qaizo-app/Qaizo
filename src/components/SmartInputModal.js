@@ -274,7 +274,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
             {!hasVoice && <Feather name="edit-3" size={20} color={colors.green} style={{ marginStart: 16 }} />}
             <TextInput
               ref={inputRef}
-              style={st.input}
+              style={[st.input, { textAlign: i18n.textAlign() }]}
               value={text}
               onChangeText={handleTextChange}
               placeholder={isListening ? i18n.t('listening') : i18n.t('smartInputPlaceholder')}

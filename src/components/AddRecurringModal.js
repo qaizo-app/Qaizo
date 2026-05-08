@@ -258,7 +258,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
           {/* Сумма */}
           <View style={st.amtRow}>
-            <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32) }]} value={amount} onChangeText={setAmount}
+            <TextInput style={[st.amtIn, { fontSize: amtFont(amount, 32), textAlign: i18n.textAlign() }]} value={amount} onChangeText={setAmount}
               placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" />
             <Text style={[st.cur, { color: tc, fontSize: amtFont(amount, 32) }]}>{sym()}</Text>
           </View>
@@ -398,7 +398,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               </TouchableOpacity>); })()}
 
               {/* Получатель */}
-              <TextInput style={st.input} value={recipient} onChangeText={setRecipient}
+              <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={recipient} onChangeText={setRecipient}
                 placeholder={i18n.t('payee')} placeholderTextColor={colors.textMuted} />
             </>
           )}
@@ -415,7 +415,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
           </TouchableOpacity>
 
           {/* Заметка */}
-          <TextInput style={st.input} value={note} onChangeText={setNote}
+          <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={note} onChangeText={setNote}
             placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} />
 
           {/* Теги */}

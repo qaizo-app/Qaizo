@@ -739,7 +739,7 @@ export default function DashboardScreen() {
         <TouchableOpacity style={st.fabOverlay} activeOpacity={1} onPress={() => setShowAddTemplate(false)}>
           <TouchableOpacity style={st.quickSelectSheet} activeOpacity={1}>
             <Text style={st.quickSelectTitle}>{i18n.t('addTemplate')}</Text>
-            <TextInput style={st.templateInput} value={newTemplateName} onChangeText={setNewTemplateName}
+            <TextInput style={[st.templateInput, { textAlign: i18n.textAlign() }]} value={newTemplateName} onChangeText={setNewTemplateName}
               placeholder={i18n.t('templateName')} placeholderTextColor={colors.textMuted} />
             <Text style={st.templateLabel}>{i18n.t('category')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>

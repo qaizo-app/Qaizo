@@ -205,12 +205,12 @@ export default function ProjectsScreen() {
             )}
 
             <Text style={[st.label, !editProject && { marginTop: 20 }]}>{i18n.t('projectName')}</Text>
-            <TextInput style={st.input} value={name} onChangeText={setName}
+            <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={name} onChangeText={setName}
               placeholder={i18n.t('projectName')} placeholderTextColor={colors.textMuted}
               autoFocus />
 
             <Text style={st.label}>{i18n.t('budget')} ({i18n.t('optional')})</Text>
-            <TextInput style={st.input} value={budget} onChangeText={setBudget}
+            <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={budget} onChangeText={setBudget}
               placeholder={`0 ${sym()}`} placeholderTextColor={colors.textMuted}
               keyboardType="decimal-pad" />
 

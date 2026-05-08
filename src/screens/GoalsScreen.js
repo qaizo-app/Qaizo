@@ -197,18 +197,18 @@ export default function GoalsScreen() {
         <View style={{ flex: 1 }}>
           <ScrollView style={st.form} showsVerticalScrollIndicator={false}>
             <Text style={st.label}>{i18n.t('goalName')}</Text>
-            <TextInput style={st.input} value={name} onChangeText={setName}
+            <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={name} onChangeText={setName}
               placeholder={i18n.t('goalName')} placeholderTextColor={colors.textMuted} autoFocus />
 
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text style={st.label}>{i18n.t('targetAmount')}</Text>
-                <TextInput style={st.input} value={targetAmount} onChangeText={setTargetAmount}
+                <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={targetAmount} onChangeText={setTargetAmount}
                   keyboardType="numeric" placeholder="50000" placeholderTextColor={colors.textMuted} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={st.label}>{i18n.t('initialAmount')}</Text>
-                <TextInput style={st.input} value={initialAmount} onChangeText={setInitialAmount}
+                <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={initialAmount} onChangeText={setInitialAmount}
                   keyboardType="numeric" placeholder="0" placeholderTextColor={colors.textMuted} />
               </View>
             </View>
@@ -243,9 +243,9 @@ export default function GoalsScreen() {
         {showDeposit && (
           <View>
             <Text style={st.modalTitle}>{i18n.t('deposit')} — {showDeposit.name}</Text>
-            <TextInput style={st.input} value={depositAmount} onChangeText={setDepositAmount}
+            <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={depositAmount} onChangeText={setDepositAmount}
               keyboardType="numeric" placeholder={i18n.t('depositAmount')} placeholderTextColor={colors.textMuted} autoFocus />
-            <TextInput style={st.input} value={depositNote} onChangeText={setDepositNote}
+            <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={depositNote} onChangeText={setDepositNote}
               placeholder={i18n.t('note')} placeholderTextColor={colors.textMuted} />
             <View style={st.btnRow}>
               <TouchableOpacity style={st.cancelBtn} onPress={() => setShowDeposit(null)}>
