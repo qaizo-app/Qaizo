@@ -244,17 +244,21 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
             transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) }],
           }]}>
             {ADD_MENU.map((item, idx) => (
-              <IconRow
-                key={item.key}
-                icon={item.icon}
-                iconColor={item.color}
-                iconBg={item.color + '20'}
-                text={i18n.t(item.key)}
-                textStyle={styles.menuText}
-                right={item.comingSoon ? <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text> : null}
-                onPress={() => handleMenuPress(item.key)}
-                style={styles.menuItem}
-              />
+              // Custom row instead of IconRow: in RTL we want text hugging the icon,
+              // not stretched to fill the row. Plain row with intrinsic widths and gap.
+              <TouchableOpacity key={item.key}
+                style={[styles.menuItem, { flexDirection: i18n.row(), alignItems: 'center', gap: 12 }]}
+                onPress={() => handleMenuPress(item.key)} activeOpacity={0.7}>
+                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: item.color + '20', justifyContent: 'center', alignItems: 'center' }}>
+                  <Feather name={item.icon} size={18} color={item.color} />
+                </View>
+                <Text style={styles.menuText}>{i18n.t(item.key)}</Text>
+                {item.comingSoon && (
+                  <View style={{ marginStart: 'auto' }}>
+                    <Text style={styles.comingSoonBadge}>{i18n.t('comingSoon')}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             ))}
           </Animated.View>
         </Animated.View>
