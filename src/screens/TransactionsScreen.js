@@ -2,7 +2,7 @@
 // Поиск по имени, сумме, категории, получателю, заметке, тегам
 // Фильтры: тип, дата, категория, счёт, диапазон сумм
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { mergeTransferPairs } from '../utils/transactions';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -22,6 +22,7 @@ import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
 
 export default function TransactionsScreen({ route }) {
+  const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [activeFilters, setActiveFilters] = useState(['income', 'expense', 'transfer']);
@@ -182,6 +183,10 @@ export default function TransactionsScreen({ route }) {
       <View style={styles.header}>
         <Text style={styles.title}>{i18n.t('transactions')}</Text>
         <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.searchBtn}
+            onPress={() => navigation.navigate('Dashboard', { screen: 'Calendar' })}>
+            <Feather name="calendar" size={18} color={colors.textDim} />
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.searchBtn, showFilters && styles.filterBtnActive]} onPress={() => setShowFilters(!showFilters)}>
             <Feather name="sliders" size={18} color={showFilters ? colors.teal : colors.textDim} />
             {activeFilterCount > 0 && (
