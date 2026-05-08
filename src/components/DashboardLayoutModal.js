@@ -116,7 +116,7 @@ const createSt = () => StyleSheet.create({
   row: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, padding: 12, marginBottom: 6, borderWidth: 1, borderColor: colors.cardBorder },
   rowDim: { opacity: 0.5 },
   toggle: { marginEnd: 10 },
-  label: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
+  label: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign(), marginStart: 4 },
   labelDim: { color: colors.textMuted },
   moveBtn: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
 
