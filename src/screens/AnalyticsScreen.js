@@ -610,7 +610,7 @@ const createSt = () => StyleSheet.create({
   summaryLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
   summaryAmount: { fontSize: 20, fontWeight: '800' },
 
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 14, textAlign: i18n.textAlign() },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 16 },
   emptyBlock: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   emptyBlockText: { color: colors.text, fontSize: 14, fontWeight: '600', marginTop: 6 },
