@@ -38,7 +38,7 @@ import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import * as Localization from 'expo-localization';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useRef, useState } from 'react';
-import { AppState, I18nManager, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppState, I18nManager, Platform, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 
 // Disable system font scaling globally — prevents layout breaks on large accessibility fonts
 Text.defaultProps = Text.defaultProps || {};
@@ -46,16 +46,28 @@ Text.defaultProps.allowFontScaling = false;
 TextInput.defaultProps = TextInput.defaultProps || {};
 TextInput.defaultProps.allowFontScaling = false;
 
-// Global RTL patch: I18nManager flips textAlign ('right' becomes 'left')
-// So we REMOVE explicit textAlign:'right' and let the system handle alignment
+// RTL patch for textAlign — both platforms auto-flip 'right'↔'left' under isRTL,
+// but their handling of bidi for unset/auto is different:
+//   • Android: stripping textAlign:'right' lets the platform default render Hebrew right.
+//   • iOS:    'auto' falls back to 'left' for Hebrew, so we pre-swap 'right'↔'left'
+//             so iOS native auto-flip lands on the visual direction we actually want.
 const _originalCreate = StyleSheet.create;
 StyleSheet.create = function(styles) {
-  if (I18nManager.isRTL) {
-    const patched = {};
-    let changed = false;
-    for (const key in styles) {
-      const s = styles[key];
-      if (s && s.textAlign === 'right') {
+  if (!I18nManager.isRTL) return _originalCreate(styles);
+
+  const isIOS = Platform.OS === 'ios';
+  const patched = {};
+  let changed = false;
+  for (const key in styles) {
+    const s = styles[key];
+    if (!s) { patched[key] = s; continue; }
+    if (isIOS) {
+      if (s.textAlign === 'right') { patched[key] = { ...s, textAlign: 'left' }; changed = true; }
+      else if (s.textAlign === 'left') { patched[key] = { ...s, textAlign: 'right' }; changed = true; }
+      else { patched[key] = s; }
+    } else {
+      // Android: strip explicit 'right' so default bidi handling kicks in
+      if (s.textAlign === 'right') {
         const { textAlign, ...rest } = s;
         patched[key] = rest;
         changed = true;
@@ -63,9 +75,8 @@ StyleSheet.create = function(styles) {
         patched[key] = s;
       }
     }
-    return _originalCreate(changed ? patched : styles);
   }
-  return _originalCreate(styles);
+  return _originalCreate(changed ? patched : styles);
 };
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';

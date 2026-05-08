@@ -162,6 +162,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
+        initialRouteName="Dashboard"
         screenOptions={({ route }) => {
           const cfg = tabConfig[route.name];
           return {

@@ -452,38 +452,39 @@ export default function DashboardScreen() {
 
   return (
     <View style={st.container}>
+      {/* Sticky header — stays fixed when content scrolls below */}
+      <View style={st.header}>
+        <TouchableOpacity style={{ flexShrink: 1, minWidth: 0 }} onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }} activeOpacity={0.7}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={st.logo}>Q<Animated.Text style={{ color: colors.green, opacity: showAiHint ? aiGlow.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) : 1 }}>ai</Animated.Text>zo</Text>
+          </View>
+          <Text style={st.subtitle}>{dateStr}</Text>
+        </TouchableOpacity>
+        <View style={{ flexDirection: i18n.row(), gap: 8, flexShrink: 0 }}>
+        <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
+          <Feather name="sliders" size={18} color={colors.textDim} />
+        </TouchableOpacity>
+        <TouchableOpacity style={st.profileBtn} onPress={() => setShowNotifModal(true)}>
+          <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
+            <Feather name="bell" size={20} color={notifications.length > 0 ? colors.green : colors.textDim} />
+          </Animated.View>
+          {notifications.length > 0 && (
+            <View style={st.bellBadge}>
+              <Text style={st.bellBadgeText}>{notifications.length > 9 ? '9+' : notifications.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
+          <Feather name="menu" size={20} color={colors.textDim} />
+        </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.green} />}
         contentContainerStyle={{ paddingBottom: 120 }}>
-
-        <View style={st.header}>
-          <TouchableOpacity style={{ flexShrink: 1, minWidth: 0 }} onPress={() => { setShowAiHint(false); navigation.navigate('AIChat'); }} activeOpacity={0.7}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={st.logo}>Q<Animated.Text style={{ color: colors.green, opacity: showAiHint ? aiGlow.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) : 1 }}>ai</Animated.Text>zo</Text>
-            </View>
-            <Text style={st.subtitle}>{dateStr}</Text>
-          </TouchableOpacity>
-          <View style={{ flexDirection: i18n.row(), gap: 8, flexShrink: 0 }}>
-          <TouchableOpacity style={st.profileBtn} onPress={() => setShowLayoutModal(true)}>
-            <Feather name="sliders" size={18} color={colors.textDim} />
-          </TouchableOpacity>
-          <TouchableOpacity style={st.profileBtn} onPress={() => setShowNotifModal(true)}>
-            <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
-              <Feather name="bell" size={20} color={notifications.length > 0 ? colors.green : colors.textDim} />
-            </Animated.View>
-            {notifications.length > 0 && (
-              <View style={st.bellBadge}>
-                <Text style={st.bellBadgeText}>{notifications.length > 9 ? '9+' : notifications.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={st.profileBtn} onPress={() => navigation.navigate('Settings')}>
-            <Feather name="menu" size={20} color={colors.textDim} />
-          </TouchableOpacity>
-          </View>
-        </View>
 
         {showAiHint && (
           <TouchableOpacity style={st.aiHintBanner} activeOpacity={0.8}
