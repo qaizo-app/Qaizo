@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="index,follow" />
+<title>מדיניות פרטיות — Spoolio</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111;
+    --card: #161616;
+    --border: #262626;
+    --text: #f5f5f5;
+    --dim: #a1a1aa;
+    --muted: #737373;
+    --accent: #a78bfa;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Heebo", "Assistant", Inter, sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+    padding: 32px 20px 80px;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 32px; }
+  .brand { color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 32px; margin: 8px 0 6px; }
+  h2 { font-size: 20px; margin: 32px 0 8px; color: var(--text); }
+  h3 { font-size: 16px; margin: 20px 0 6px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  p, li { color: var(--dim); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-inline-start: 18px; }
+  li { margin-bottom: 4px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .lang-switch { font-size: 12px; color: var(--muted); margin-bottom: 16px; letter-spacing: 0.5px; }
+  .lang-switch a { color: var(--dim); margin: 0 6px; }
+  .lang-switch a.active { color: var(--accent); font-weight: 700; }
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: start;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th { color: var(--text); font-weight: 600; }
+  td { color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+  <div class="lang-switch">
+    <a href="./privacy.html">EN</a> ·
+    <a href="./privacy.ru.html">RU</a> ·
+    <a href="./privacy.he.html" class="active">HE</a>
+  </div>
+  <header>
+    <div class="brand">Spoolio</div>
+    <h1>מדיניות פרטיות</h1>
+    <p class="meta">עודכן: 9 במאי 2026</p>
+  </header>
+
+  <p>
+    Spoolio הוא יישומון למעקב סלילי פילמנט למדפסות תלת-ממד, שפותח ומופעל
+    על ידי Qaizo Studio (״אנחנו״, ״שלנו״). מסמך זה מסביר איזה מידע אנחנו
+    אוספים בעת שימוש באפליקציית Spoolio, איך אנחנו משתמשים בו, ואיך
+    אפשר להסיר אותו.
+  </p>
+
+  <h2>תקציר</h2>
+  <ul>
+    <li>אנחנו אוספים את המינימום הדרוש להפעלת האפליקציה: כתובת אימייל לכניסה ונתוני סלילים שאתה מזין בעצמך.</li>
+    <li>נתוני הסלילים שלך נשמרים ב־Google Firebase (Firestore + Cloud Storage), ונגישים רק לחשבון שלך.</li>
+    <li>איננו מוכרים, משכירים או חולקים את הנתונים שלך עם רשתות פרסום.</li>
+    <li>אפשר למחוק את החשבון וכל הנתונים שלך מתוך האפליקציה בכל רגע.</li>
+  </ul>
+
+  <h2>מה אנחנו אוספים</h2>
+  <table>
+    <thead><tr><th>נתונים</th><th>למה</th><th>היכן</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>כתובת אימייל</td>
+        <td>זיהוי החשבון שלך, כדי שהסלילים יסתנכרנו בין מכשירים.</td>
+        <td>Firebase Authentication</td>
+      </tr>
+      <tr>
+        <td>שם תצוגה (רק בכניסה דרך Google / Apple)</td>
+        <td>ברכת פתיחה מותאמת במסך הראשי.</td>
+        <td>Firebase Authentication</td>
+      </tr>
+      <tr>
+        <td>נתוני סליל: יצרן, חומר, משקל, טמפרטורות, צבע, תמונה, הערות</td>
+        <td>מעקב אחר מלאי הפילמנט — הפונקציה המרכזית של האפליקציה.</td>
+        <td>Firestore (אוסף נפרד לכל משתמש)</td>
+      </tr>
+      <tr>
+        <td>תמונות סלילים</td>
+        <td>זיהוי חזותי של כל סליל. אתה מחליט אם לצלם או להעלות.</td>
+        <td>Firebase Cloud Storage (פרטי לכל משתמש)</td>
+      </tr>
+      <tr>
+        <td>העדפת שפה ומצב תצוגה</td>
+        <td>זכירת ההגדרות בין הפעלות.</td>
+        <td>אחסון מקומי במכשיר (AsyncStorage)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>מה אנחנו <em>לא</em> אוספים</h2>
+  <ul>
+    <li>נתוני מיקום.</li>
+    <li>אנשי קשר במכשיר.</li>
+    <li>מזהי פרסום.</li>
+    <li>SDK של אנליטיקה צד שלישי (אין Google Analytics, Facebook SDK וכדומה).</li>
+    <li>אין מעקב ברקע — האפליקציה פעילה רק כשהיא פתוחה.</li>
+  </ul>
+
+  <h2>איך אנחנו משתמשים בנתונים</h2>
+  <p>אך ורק כדי לספק את פונקציות האפליקציה:</p>
+  <ul>
+    <li>אימות זהות, כדי שהנתונים יסתנכרנו רק לחשבון שלך.</li>
+    <li>שמירה ושליפה של הסלילים שאתה מזין.</li>
+    <li>הצגת תמונות שצירפת לסלילים.</li>
+    <li>שליחת מיילי איפוס סיסמה כשתבקש.</li>
+  </ul>
+
+  <h2>תמונות ומצלמה</h2>
+  <p>
+    האפליקציה משתמשת במצלמה ובגלריית התמונות של המכשיר רק כשאתה לוחץ על
+    כפתור הוספת תמונת סליל או סריקת מדבקה. תמונות שאתה מצלם לא יוצאות
+    מהמכשיר עד שאתה שומר את הסליל — בנקודה זו התמונה מועלית לאזור הפרטי
+    שלך ב־Firebase Storage, נגיש רק לך. סריקת המדבקה משתמשת ב־OCR
+    מקומי במכשיר (Google ML Kit) ואינה מעלה את תמונת המדבקה לשום מקום;
+    היא נמחקת לאחר מילוי הטופס.
+  </p>
+
+  <h2>צדדים שלישיים</h2>
+  <p>
+    Spoolio מסתמך על Google Firebase (Authentication, Firestore, Cloud
+    Storage), Google Sign-In ו־Apple Sign-In לצורך תפקודו. ספקי המשנה
+    הללו מטפלים בנתוניך מטעמנו:
+  </p>
+  <ul>
+    <li>
+      Google Firebase —
+      <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">הודעת פרטיות</a>
+    </li>
+    <li>
+      Google Sign-In —
+      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">הודעת פרטיות</a>
+    </li>
+    <li>
+      Apple Sign-In —
+      <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">הודעת פרטיות</a>
+    </li>
+  </ul>
+  <p>איננו חולקים את הנתונים שלך עם אף גורם נוסף.</p>
+
+  <h2>למשך כמה זמן הנתונים נשמרים</h2>
+  <p>
+    הנתונים שלך נשמרים כל עוד החשבון קיים. כשאתה מוחק את החשבון מתוך
+    האפליקציה (הגדרות → חשבון → מחיקת חשבון), אנחנו מסירים את כל
+    הסלילים, היסטוריית השימוש, התמונות ורישום ההזדהות. הפעולה אינה
+    הפיכה.
+  </p>
+
+  <h2>הזכויות שלך</h2>
+  <ul>
+    <li><strong>גישה</strong> — כל הנתונים שלך גלויים בתוך האפליקציה.</li>
+    <li><strong>תיקון</strong> — אפשר לערוך כל סליל ממסך הפרטים שלו.</li>
+    <li><strong>מחיקה</strong> — הגדרות → חשבון → מחיקת חשבון מסירה כל מה שיש לנו עליך.</li>
+    <li><strong>ניידות נתונים</strong> — שלח מייל אל <a href="mailto:support@qaizo.app">support@qaizo.app</a> אם דרוש ייצוא.</li>
+  </ul>
+
+  <h2>ילדים</h2>
+  <p>
+    Spoolio מיועד לבני 13 ומעלה. איננו אוספים ביודעין נתונים מילדים
+    מתחת לגיל 13. אם נדמה לך שילד יצר חשבון, פנה אל
+    <a href="mailto:support@qaizo.app">support@qaizo.app</a> ונמחק
+    אותו.
+  </p>
+
+  <h2>אבטחה</h2>
+  <p>
+    הנתונים נשלחים בהצפנת HTTPS / TLS. כללי האבטחה של Firestore מבטיחים
+    שרק החשבון המאומת שלך יכול לקרוא או לערוך את נתוני הסלילים שלך. אין
+    לנו גישה ישירה לסיסמה שלך — Firebase Authentication שומר אותה
+    בפורמט hash מומלח.
+  </p>
+
+  <h2>שינויים במדיניות</h2>
+  <p>
+    אם נעדכן את המדיניות באופן שמשפיע על מה שאנחנו אוספים או איך אנחנו
+    משתמשים בו, נשנה את התאריך ״עודכן״ למעלה. שינויים מהותיים יוצגו
+    באפליקציה בהפעלה הבאה.
+  </p>
+
+  <h2>יצירת קשר</h2>
+  <p>
+    שאלות בנוגע למדיניות זו או לנתונים שלך:
+    <a href="mailto:support@qaizo.app">support@qaizo.app</a>
+  </p>
+
+  <footer>
+    Spoolio · מיוצר על ידי Qaizo Studio · <a href="./terms.he.html">תנאי שימוש</a>
+  </footer>
+</main>
+</body>
+</html>

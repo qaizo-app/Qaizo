@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="index,follow" />
+<title>Privacy Policy — Spoolio</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111;
+    --card: #161616;
+    --border: #262626;
+    --text: #f5f5f5;
+    --dim: #a1a1aa;
+    --muted: #737373;
+    --accent: #a78bfa;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
+    padding: 32px 20px 80px;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 32px; }
+  .brand { color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 32px; margin: 8px 0 6px; }
+  h2 { font-size: 20px; margin: 32px 0 8px; color: var(--text); }
+  h3 { font-size: 16px; margin: 20px 0 6px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  p, li { color: var(--dim); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 18px; }
+  li { margin-bottom: 4px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th { color: var(--text); font-weight: 600; }
+  td { color: var(--dim); }
+  .lang-switch { font-size: 12px; color: var(--muted); margin-bottom: 16px; letter-spacing: 0.5px; }
+  .lang-switch a { color: var(--dim); margin: 0 6px; }
+  .lang-switch a.active { color: var(--accent); font-weight: 700; }
+  .lang-switch a:first-child { margin-left: 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="lang-switch">
+    <a href="./privacy.html" class="active">EN</a> ·
+    <a href="./privacy.ru.html">RU</a> ·
+    <a href="./privacy.he.html">HE</a>
+  </div>
+  <header>
+    <div class="brand">Spoolio</div>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: May 9, 2026</p>
+  </header>
+
+  <p>
+    Spoolio is a 3D-printer filament tracker built and operated by Qaizo Studio
+    ("we", "our", "us"). This policy explains what we collect when you use the
+    Spoolio mobile app, how we use it, and how you can remove it.
+  </p>
+
+  <h2>Summary</h2>
+  <ul>
+    <li>We collect the minimum needed to run the app: your sign-in email and the spool data you choose to enter.</li>
+    <li>Your spool data is stored in Google Firebase (Firestore + Cloud Storage), accessible only to your account.</li>
+    <li>We do not sell, rent, or share your data with advertisers.</li>
+    <li>You can delete your account and all your data from inside the app at any time.</li>
+  </ul>
+
+  <h2>What we collect</h2>
+  <table>
+    <thead><tr><th>Data</th><th>Why</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Email address</td>
+        <td>Identify your account so your spools sync across devices.</td>
+        <td>Firebase Authentication</td>
+      </tr>
+      <tr>
+        <td>Display name (Google / Apple Sign-In only)</td>
+        <td>Personalize the greeting on the home screen.</td>
+        <td>Firebase Authentication</td>
+      </tr>
+      <tr>
+        <td>Spool data: brand, material, weight, temperatures, color, photo, notes</td>
+        <td>Track your filament inventory — the core function of the app.</td>
+        <td>Firestore (per-user collection)</td>
+      </tr>
+      <tr>
+        <td>Spool photos</td>
+        <td>Visual identification of each spool. You choose to take or upload them.</td>
+        <td>Firebase Cloud Storage (per-user)</td>
+      </tr>
+      <tr>
+        <td>Language preference, view-mode preference</td>
+        <td>Remember your settings between launches.</td>
+        <td>Local device storage (AsyncStorage)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What we do <em>not</em> collect</h2>
+  <ul>
+    <li>No location data.</li>
+    <li>No device contacts.</li>
+    <li>No advertising identifiers.</li>
+    <li>No third-party analytics SDKs (no Google Analytics, no Facebook SDK, etc.).</li>
+    <li>No background tracking — the app only acts when you open it.</li>
+  </ul>
+
+  <h2>How we use it</h2>
+  <p>Strictly to provide the app's features:</p>
+  <ul>
+    <li>Authenticate you, so your data syncs only to your account.</li>
+    <li>Store and retrieve the spools you enter.</li>
+    <li>Display photos you attach to spools.</li>
+    <li>Send password-reset emails when you ask for them.</li>
+  </ul>
+
+  <h2>Photos and camera</h2>
+  <p>
+    The app uses your device camera and photo library only when you tap the
+    camera button to add a spool photo or scan a label. Photos you take never
+    leave your device unless you save the spool — at which point the photo is
+    uploaded to your private Firebase Storage area, accessible only by you.
+    The label-scan feature uses on-device OCR (Google ML Kit) and does not
+    upload the label photo anywhere; it is discarded after the form is filled.
+  </p>
+
+  <h2>Third parties</h2>
+  <p>
+    Spoolio relies on Google Firebase (Authentication, Firestore, Cloud Storage)
+    and Google Sign-In / Apple Sign-In to provide its features. These
+    sub-processors handle your data on our behalf:
+  </p>
+  <ul>
+    <li>
+      Google Firebase —
+      <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">privacy notice</a>
+    </li>
+    <li>
+      Google Sign-In —
+      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacy notice</a>
+    </li>
+    <li>
+      Apple Sign-In —
+      <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">privacy notice</a>
+    </li>
+  </ul>
+  <p>We do not share your data with anyone else.</p>
+
+  <h2>How long we keep it</h2>
+  <p>
+    Your data is kept as long as your account exists. When you delete the
+    account from inside the app (Settings → Account → Delete account) we remove
+    all your spools, usage history, photos, and authentication record. This is
+    irreversible.
+  </p>
+
+  <h2>Your rights</h2>
+  <ul>
+    <li><strong>Access</strong> — you can see all your data inside the app.</li>
+    <li><strong>Correction</strong> — edit any spool from its detail screen.</li>
+    <li><strong>Deletion</strong> — Settings → Account → Delete account removes everything we hold about you.</li>
+    <li><strong>Portability</strong> — email <a href="mailto:support@qaizo.app">support@qaizo.app</a> if you need an export of your data.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>
+    Spoolio is intended for users aged 13 and older. We do not knowingly
+    collect data from children under 13. If you believe a child has created an
+    account, contact <a href="mailto:support@qaizo.app">support@qaizo.app</a>
+    and we'll delete it.
+  </p>
+
+  <h2>Security</h2>
+  <p>
+    Data in transit is encrypted via HTTPS / TLS. Firestore security rules
+    enforce that only your own authenticated account can read or write your
+    spool data. We do not have direct access to your password — Firebase
+    Authentication stores it as a salted hash.
+  </p>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If we update this policy in a way that affects what we collect or how we
+    use it, we'll change the "Last updated" date at the top. Substantive
+    changes will also be communicated in-app on the next launch.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about this policy or your data:
+    <a href="mailto:support@qaizo.app">support@qaizo.app</a>
+  </p>
+
+  <footer>
+    Spoolio · Made by Qaizo Studio · <a href="./terms.html">Terms of Service</a>
+  </footer>
+</main>
+</body>
+</html>
