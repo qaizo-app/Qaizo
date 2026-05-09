@@ -153,9 +153,9 @@
 
   <h2>Third parties</h2>
   <p>
-    Spoolio relies on Google Firebase (Authentication, Firestore, Cloud Storage)
-    and Google Sign-In / Apple Sign-In to provide its features. These
-    sub-processors handle your data on our behalf:
+    Spoolio relies on Google Firebase (Authentication, Firestore, Cloud Storage),
+    Google Sign-In, Apple Sign-In, and Sentry (crash reporting) to provide its
+    features. These sub-processors handle your data on our behalf:
   </p>
   <ul>
     <li>
@@ -169,6 +169,13 @@
     <li>
       Apple Sign-In —
       <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">privacy notice</a>
+    </li>
+    <li>
+      Sentry — crash reports only. When Spoolio crashes, we send Sentry a
+      stack trace, the app version, the device model, the OS version, and a
+      breadcrumb trail of the actions leading up to the crash. We do not
+      send your spool data, your photos, or your email address.
+      <a href="https://sentry.io/privacy/" target="_blank" rel="noopener">privacy notice</a>
     </li>
   </ul>
   <p>We do not share your data with anyone else.</p>

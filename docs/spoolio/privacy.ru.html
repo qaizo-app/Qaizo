@@ -156,8 +156,8 @@
   <h2>Третьи стороны</h2>
   <p>
     Spoolio полагается на Google Firebase (Authentication, Firestore, Cloud
-    Storage), Google Sign-In и Apple Sign-In. Эти субподрядчики
-    обрабатывают ваши данные от нашего имени:
+    Storage), Google Sign-In, Apple Sign-In и Sentry (отчёты о крашах).
+    Эти субподрядчики обрабатывают ваши данные от нашего имени:
   </p>
   <ul>
     <li>
@@ -171,6 +171,13 @@
     <li>
       Apple Sign-In —
       <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">политика конфиденциальности</a>
+    </li>
+    <li>
+      Sentry — только отчёты о крашах. Когда Spoolio падает, мы
+      отправляем в Sentry стек-трейс, версию приложения, модель устройства,
+      версию ОС и цепочку действий до краша. Мы не отправляем данные ваших
+      катушек, фотографии или email.
+      <a href="https://sentry.io/privacy/" target="_blank" rel="noopener">политика конфиденциальности</a>
     </li>
   </ul>
   <p>Никому другому ваши данные мы не передаём.</p>
