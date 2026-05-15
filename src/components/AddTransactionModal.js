@@ -291,7 +291,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             )}
 
             <View>
-              {!hasPre && type !== 'transfer' && (
+              {(!hasPre || editTransaction) && type !== 'transfer' && (
                 <>
                   <Text style={st.label}>{accLabel}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
