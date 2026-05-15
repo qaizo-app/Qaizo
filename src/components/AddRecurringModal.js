@@ -355,7 +355,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
               {/* Куда */}
               <Text style={st.label}>{i18n.t('to')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type) && acc.id !== selAcc).map(acc => {
+                {accounts.filter(acc => ['cash', 'bank', 'credit', 'investment', 'crypto', 'asset'].includes(acc.type) && acc.id !== selAcc).map(acc => {
                   const sl = toAcc === acc.id;
                   return (
                     <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: colors.blue, backgroundColor: colors.blueSoft }]}
