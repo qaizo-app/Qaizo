@@ -1248,20 +1248,6 @@
   </div>
 </section>
 
-<!-- Newsletter -->
-<section id="newsletter" class="newsletter">
-  <div class="container">
-    <div class="section-eyebrow" data-i18n="news_eyebrow">Stay in the loop</div>
-    <h2 class="section-title" style="margin: 0 auto 20px;" data-i18n="news_title">Be first to know.</h2>
-    <p class="section-sub" style="margin: 0 auto;" data-i18n="news_desc">Get notified about new features and updates. No spam, ever.</p>
-    <form class="newsletter-form" id="newsletter-form" action="https://formspree.io/f/xvzdkknz" method="POST">
-      <input type="email" name="email" required class="newsletter-input" placeholder="you@example.com">
-      <button type="submit" class="btn" data-i18n="news_btn">Notify me &rarr;</button>
-    </form>
-    <p class="newsletter-success" id="newsletter-success" data-i18n="news_success">Thanks! We&rsquo;ll keep you posted.</p>
-  </div>
-</section>
-
 <!-- Final CTA -->
 <section>
   <div class="container">
@@ -1297,7 +1283,6 @@
       </div>
       <div class="footer-col">
         <h4 data-i18n="f_follow">Stay updated</h4>
-        <a href="#newsletter" data-i18n="f_newsletter">Newsletter</a>
         <a href="https://tiktok.com/@qaizo">TikTok</a>
         <a href="https://instagram.com/qaizo">Instagram</a>
         <a href="https://play.google.com/store/apps/details?id=com.qaizo.app">Google Play</a>
@@ -1615,25 +1600,6 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
     const lang = btn.textContent.trim().toLowerCase();
     setLang(lang, btn);
   });
-});
-
-// Newsletter form
-document.getElementById('newsletter-form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const btn = form.querySelector('button[type="submit"]');
-  btn.disabled = true;
-  try {
-    const res = await fetch('https://formspree.io/f/xvzdkknz', {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      body: new FormData(form)
-    });
-    if (res.ok) {
-      form.style.display = 'none';
-      document.getElementById('newsletter-success').style.display = 'block';
-    } else { btn.disabled = false; }
-  } catch (_) { btn.disabled = false; }
 });
 
 // Auto-detect lang from URL

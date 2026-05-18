@@ -242,11 +242,6 @@
         .faq-item.open .faq-a { max-height:300px; padding:0 1.5rem 1.25rem; }
 
         /* Newsletter */
-        .news-section { text-align:center; padding:5rem 2rem; }
-        .news-form { display:flex; gap:0.6rem; max-width:460px; margin:1.5rem auto 0; flex-wrap:wrap; justify-content:center; }
-        .news-input { flex:1; min-width:200px; padding:0.85rem 1.2rem; background:var(--card); border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:inherit; font-size:0.95rem; outline:none; transition:all 0.25s; }
-        .news-input:focus { border-color:rgba(52,211,153,0.4); }
-        .news-input::placeholder { color:var(--text3); }
 
         /* CTA */
         .cta-section { text-align:center; padding:8rem 2rem; }
@@ -427,19 +422,6 @@
     </div>
 </section>
 
-<section class="news-section" id="newsletter">
-    <div class="container reveal">
-        <span class="s-label" data-i18n="nwl">Stay in the loop</span>
-        <h2 data-i18n="nwt">Be first to know.</h2>
-        <p class="s-desc" style="margin:0 auto;text-align:center;" data-i18n="nwd">Get notified the moment Qaizo opens for public download. No spam, ever.</p>
-        <form class="news-form" id="news-form" action="https://formspree.io/f/xvzdkknz" method="POST">
-            <input type="email" name="email" required class="news-input" id="news-email" placeholder="you@example.com" data-i18n-ph="nwp">
-            <button type="submit" class="btn-p"><span data-i18n="nwb">Notify me</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-        </form>
-        <p id="news-success" style="display:none;color:#22c55e;font-weight:600;margin-top:1rem;" data-i18n="nws">Thanks! We'll notify you.</p>
-    </div>
-</section>
-
 <section class="cta-section" id="download">
     <div class="container reveal">
         <span class="s-label" data-i18n="dl">Download</span>
@@ -457,7 +439,6 @@
     <div class="f-links">
         <a href="#features" data-i18n="ff">Features</a>
         <a href="#faq" data-i18n="faql">FAQ</a>
-        <a href="#newsletter" data-i18n="nwl">Stay in the loop</a>
         <a href="help/">Help</a>
         <a href="privacy-policy.html" data-i18n="fp">Privacy Policy</a>
         <a href="terms.html" data-i18n="ftr">Terms of Service</a>
@@ -476,23 +457,6 @@ function toggleFaq(btn) {
     const item = btn.parentElement;
     item.classList.toggle('open');
 }
-document.getElementById('news-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    try {
-        const res = await fetch('https://formspree.io/f/xvzdkknz', {
-            method: 'POST',
-            headers: { 'Accept': 'application/json' },
-            body: new FormData(form)
-        });
-        if (res.ok) {
-            form.style.display = 'none';
-            document.getElementById('news-success').style.display = 'block';
-        } else { btn.disabled = false; }
-    } catch (_) { btn.disabled = false; }
-});
 function setLang(l,btn) {
     document.documentElement.dir = l==='he'?'rtl':'ltr';
     document.documentElement.lang = l;
