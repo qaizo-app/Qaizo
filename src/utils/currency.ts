@@ -1,10 +1,18 @@
-// src/utils/currency.js
-// Глобальный символ валюты — загружается из settings при старте
+// src/utils/currency.ts
+// Global currency symbol — loaded from settings at app start.
+
+export interface CurrencyDef {
+  symbol: string;
+  code: string;
+  name: string;
+}
+
+type TransactionTypeForSign = 'income' | 'expense' | string | undefined;
 
 let _symbol = '₪';
 let _code = 'ILS';
 
-const CURRENCIES = [
+export const CURRENCIES: readonly CurrencyDef[] = [
   { symbol: '₪', code: 'ILS', name: 'Israeli Shekel' },
   { symbol: '$', code: 'USD', name: 'US Dollar' },
   { symbol: '€', code: 'EUR', name: 'Euro' },
@@ -38,9 +46,9 @@ const CURRENCIES = [
 ];
 
 // Kept for backwards compatibility; live rates come from exchangeRateService.
-// These values are only used as a static sanity fallback in environments where
-// the service has not been initialised (e.g. some unit tests).
-const RATES_TO_ILS = {
+// Only used as a static sanity fallback when the service has not been
+// initialised (e.g. some unit tests).
+export const RATES_TO_ILS: Readonly<Record<string, number>> = {
   ILS: 1,
   USD: 3.65,
   EUR: 4.05,
@@ -48,8 +56,8 @@ const RATES_TO_ILS = {
   CZK: 0.16,
 };
 
-// Auto-detect currency from system locale (language + region)
-export function detectCurrency() {
+// Auto-detect currency from system locale (language + region).
+export function detectCurrency(): CurrencyDef | null {
   try {
     const { getLocales } = require('expo-localization');
     const locales = getLocales();
@@ -59,7 +67,7 @@ export function detectCurrency() {
     const lang = (languageCode || '').toLowerCase();
 
     // By region first (most accurate)
-    const regionMap = {
+    const regionMap: Record<string, string> = {
       US: 'USD', CA: 'CAD', GB: 'GBP', AU: 'AUD', NZ: 'NZD',
       IL: 'ILS', RU: 'RUB', UA: 'UAH', JP: 'JPY', CN: 'CNY',
       KR: 'KRW', IN: 'INR', BR: 'BRL', TR: 'TRY', PL: 'PLN',
@@ -78,8 +86,8 @@ export function detectCurrency() {
       if (cur) return cur;
     }
 
-    // Fallback by language (less accurate but better than nothing)
-    const langMap = {
+    // Fallback by language (less accurate but better than nothing).
+    const langMap: Record<string, string> = {
       he: 'ILS', iw: 'ILS', ru: 'RUB', uk: 'UAH', ja: 'JPY',
       zh: 'CNY', ko: 'KRW', hi: 'INR', pt: 'BRL', tr: 'TRY',
       pl: 'PLN', cs: 'CZK', sv: 'SEK', da: 'DKK', hu: 'HUF',
@@ -97,42 +105,42 @@ export function detectCurrency() {
   return null;
 }
 
-export function setCurrency(symbol, code) {
+export function setCurrency(symbol: string, code?: string): void {
   _symbol = symbol;
   _code = code || CURRENCIES.find(c => c.symbol === symbol)?.code || 'ILS';
 }
 
-export function sym() {
+export function sym(): string {
   return _symbol;
 }
 
-export function code() {
+export function code(): string {
   return _code;
 }
 
-export function fmtNum(amount) {
+export function fmtNum(amount: number): string {
   return Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function fmt(amount) {
+export function fmt(amount: number): string {
   return `${fmtNum(amount)} ${_symbol}`;
 }
 
-export function fmtSigned(amount, type) {
+export function fmtSigned(amount: number, type: TransactionTypeForSign): string {
   const sign = type === 'income' ? '+' : type === 'expense' ? '-' : '';
   return `${sign}${fmtNum(amount)} ${_symbol}`;
 }
 
-// Конвертация между валютами — использует live rates через exchangeRateService.
-// Fallback к статическим RATES_TO_ILS только если код неизвестен сервису.
-function liveGetRate(fromCode, toCode) {
+// Conversion between currencies — uses live rates via exchangeRateService.
+// Falls back to static RATES_TO_ILS only when codes aren't known to the service.
+function liveGetRate(fromCode: string, toCode: string): number {
   try {
-    // Lazy require to avoid circular import issues at module init time
+    // Lazy require to avoid circular import issues at module init time.
     const fx = require('../services/exchangeRateService').default;
     const rate = fx.getRate(fromCode, toCode);
     if (rate && rate !== 1) return rate;
     if (fromCode === toCode) return 1;
-    // Service does not know both codes → static fallback
+    // Service does not know both codes → static fallback.
     const fromRate = RATES_TO_ILS[fromCode];
     const toRate = RATES_TO_ILS[toCode];
     if (fromRate && toRate) return fromRate / toRate;
@@ -145,14 +153,12 @@ function liveGetRate(fromCode, toCode) {
   }
 }
 
-export function convert(amount, fromCode, toCode) {
+export function convert(amount: number, fromCode: string, toCode: string): number {
   if (!amount || fromCode === toCode) return amount || 0;
   const rate = liveGetRate(fromCode, toCode);
   return Math.round(amount * rate * 100) / 100;
 }
 
-export function getRate(fromCode, toCode) {
+export function getRate(fromCode: string, toCode: string): number {
   return liveGetRate(fromCode, toCode);
 }
-
-export { CURRENCIES, RATES_TO_ILS };
