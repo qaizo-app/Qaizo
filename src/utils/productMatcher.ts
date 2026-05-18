@@ -1,4 +1,4 @@
-// src/utils/productMatcher.js
+// src/utils/productMatcher.ts
 // Group receipt-line items that name the same physical product despite
 // being written slightly differently across stores or scans.
 //
@@ -12,26 +12,41 @@
 // Threshold tuning is conservative: better to leave two listings separate
 // than merge milk + cream by accident. Users can manually merge via UI.
 
+export interface TokenizedProduct {
+  tokens: string[];
+  canonical: string;
+  brand: string | null;
+  size: string | null;
+}
+
+export interface CatalogItem {
+  name: string;
+  lastStore?: string;
+  [key: string]: unknown;
+}
+
+export interface MatchOptions {
+  sameStore?: boolean;
+}
+
+interface UnitSynonym {
+  tokens: string[];
+  canon: string;
+}
+
 // Common Hebrew/English/Russian unit synonyms — collapsed to a single token.
-const UNIT_SYNONYMS = [
-  // Liter
+const UNIT_SYNONYMS: UnitSynonym[] = [
   { tokens: ['l', 'liter', 'litre', 'ליטר', 'литр', 'литра'], canon: 'l' },
-  // Milliliter
   { tokens: ['ml', 'mll', 'מ"ל', 'מל', 'мл'], canon: 'ml' },
-  // Kilogram
   { tokens: ['kg', 'kilogram', 'ק"ג', 'קג', 'кг'], canon: 'kg' },
-  // Gram
   { tokens: ['g', 'gr', 'gram', 'גרם', 'г', 'гр'], canon: 'g' },
-  // Percent
-  { tokens: ['%', 'percent', 'אחוז', 'אחוזים', '%', 'процент', 'процентов'], canon: '%' },
-  // Pack/Pkg
+  { tokens: ['%', 'percent', 'אחוז', 'אחוזים', 'процент', 'процентов'], canon: '%' },
   { tokens: ['pkg', 'pack', 'אריזה', 'упак'], canon: 'pkg' },
-  // Pieces
   { tokens: ['pcs', 'pc', 'יחידות', 'יח', 'шт'], canon: 'pcs' },
 ];
 
 // Stop words that don't help identify a product — common across many lines.
-const STOP_WORDS = new Set([
+const STOP_WORDS = new Set<string>([
   // Hebrew
   'של', 'את', 'עם', 'ל', 'ב', 'ה', 'מ', 'כ',
   // Russian
@@ -41,7 +56,7 @@ const STOP_WORDS = new Set([
 ]);
 
 // Common brand names — when we see one, treat it as a strong identifier.
-const KNOWN_BRANDS = [
+const KNOWN_BRANDS: readonly string[] = [
   // Israeli dairy/food
   'תנובה', 'טרה', 'יטבתה', 'שטראוס', 'אסם', 'אחלה', 'יוטבתה',
   'tnuva', 'tara', 'strauss', 'osem',
@@ -51,19 +66,19 @@ const KNOWN_BRANDS = [
   'שופרסל', 'רמי לוי', 'יוחננוף',
 ];
 
-function expandSynonym(token) {
+function expandSynonym(token: string): string {
   for (const syn of UNIT_SYNONYMS) {
     if (syn.tokens.includes(token)) return syn.canon;
   }
   return token;
 }
 
-function isNumeric(s) {
+function isNumeric(s: string): boolean {
   return /^[\d.,]+$/.test(s);
 }
 
 // Strip Hebrew prefixes (ל, ב, מ, כ, ה, ש) for matching purposes only.
-function stripHebrewPrefix(token) {
+function stripHebrewPrefix(token: string): string {
   if (!token) return token;
   // Only strip if the remaining token still has 2+ chars (avoid eating
   // single-letter words). Match the Hebrew letter-prefix pattern from
@@ -75,51 +90,48 @@ function stripHebrewPrefix(token) {
 /**
  * Normalize a raw product name into a sorted list of canonical tokens.
  */
-export function tokenizeProduct(name) {
+export function tokenizeProduct(name: string | null | undefined): TokenizedProduct {
   if (!name) return { tokens: [], canonical: '', brand: null, size: null };
   const lower = String(name).toLowerCase().trim();
-  // Replace common decoration with spaces
+  // Replace common decoration with spaces.
   const cleaned = lower
     .replace(/[(){}[\]"'`*\-–—]/g, ' ')
     .replace(/[.,;:!?]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  // Split into tokens, expand synonyms, strip stop words and Hebrew prefixes
+  // Split into tokens, expand synonyms, strip stop words and Hebrew prefixes.
   const rawTokens = cleaned.split(/\s+/).filter(Boolean);
-  const tokens = [];
-  let brand = null;
-  let size = null;
+  const tokens: string[] = [];
+  let brand: string | null = null;
+  let size: string | null = null;
   for (const raw of rawTokens) {
     let t = expandSynonym(raw);
     t = stripHebrewPrefix(t);
     if (!t) continue;
     if (STOP_WORDS.has(t)) continue;
-    // Detect brand
     if (!brand && KNOWN_BRANDS.includes(t)) brand = t;
-    // Detect size like "1l", "500ml", "3%", "250g"
+    // Detect size like "1l", "500ml", "3%", "250g".
     if (/^\d/.test(t)) {
-      // Pure number — try to merge with next unit token in a later pass
-      tokens.push(t);
+      tokens.push(t); // pure number — merged with the next unit in pass 2.
     } else {
       tokens.push(t);
     }
   }
-  // Second pass: merge "1" + "l" → "1l"; "500" + "ml" → "500ml"
-  const merged = [];
+  // Second pass: merge "1" + "l" → "1l"; "500" + "ml" → "500ml".
+  const merged: string[] = [];
   for (let i = 0; i < tokens.length; i++) {
     const cur = tokens[i];
     const next = tokens[i + 1];
     if (isNumeric(cur) && next && ['l', 'ml', 'kg', 'g', '%', 'pkg', 'pcs'].includes(next)) {
       const combo = `${cur}${next}`.replace(/,/g, '.');
       merged.push(combo);
-      // Detect size
       if (!size && /^[\d.]+(l|ml|kg|g|%)$/.test(combo)) size = combo;
       i++; // skip next
     } else {
       merged.push(cur);
     }
   }
-  // Collect a stable canonical representation: sorted unique tokens
+  // Stable canonical representation: sorted unique tokens.
   const unique = [...new Set(merged)];
   unique.sort();
   return {
@@ -133,7 +145,7 @@ export function tokenizeProduct(name) {
 /**
  * Token-set Jaccard similarity (0..1) — symmetric.
  */
-export function jaccard(tokensA, tokensB) {
+export function jaccard(tokensA: string[] | null | undefined, tokensB: string[] | null | undefined): number {
   if (!tokensA?.length || !tokensB?.length) return 0;
   const a = new Set(tokensA);
   const b = new Set(tokensB);
@@ -149,18 +161,18 @@ export function jaccard(tokensA, tokensB) {
  *  - Different sizes (any) → strong no.
  *  - Otherwise rely on Jaccard threshold (sameStore=0.6, crossStore=0.75).
  */
-export function isSameProduct(a, b, opts = {}) {
+export function isSameProduct(a: string, b: string, opts: MatchOptions = {}): boolean {
   const sameStore = !!opts.sameStore;
   const ta = tokenizeProduct(a);
   const tb = tokenizeProduct(b);
 
-  // Hard veto: explicit different sizes mean different products
+  // Hard veto: explicit different sizes mean different products.
   if (ta.size && tb.size && ta.size !== tb.size) return false;
 
-  // Hard veto: explicit different brands mean different products
+  // Hard veto: explicit different brands mean different products.
   if (ta.brand && tb.brand && ta.brand !== tb.brand) return false;
 
-  // Strong yes: same brand + same size and any shared token
+  // Strong yes: same brand + same size and 2+ shared tokens.
   if (ta.brand && tb.brand && ta.brand === tb.brand && ta.size && tb.size && ta.size === tb.size) {
     const shared = ta.tokens.filter(t => tb.tokens.includes(t)).length;
     if (shared >= 2) return true;
@@ -176,9 +188,13 @@ export function isSameProduct(a, b, opts = {}) {
  * matched item or null. `catalogItems` is an array of objects with at least
  * a `name` property (and optional `lastStore` to enable same-store matching).
  */
-export function findMatch(candidateName, candidateStore, catalogItems) {
+export function findMatch<T extends CatalogItem>(
+  candidateName: string,
+  candidateStore: string | null | undefined,
+  catalogItems: T[] | null | undefined
+): T | null {
   if (!candidateName || !catalogItems?.length) return null;
-  let best = null;
+  let best: T | null = null;
   let bestScore = 0;
   const ta = tokenizeProduct(candidateName);
   for (const item of catalogItems) {

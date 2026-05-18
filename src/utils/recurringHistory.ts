@@ -1,4 +1,4 @@
-// src/utils/recurringHistory.js
+// src/utils/recurringHistory.ts
 // Matches transactions back to the recurring item that created them, and
 // rolls up summary stats for the detail/overview views.
 //
@@ -10,7 +10,25 @@
 // The summary intentionally ignores transaction sign: total is an absolute
 // sum, since a recurring is naturally all-same-direction.
 
-function matchHistory(rec, transactions) {
+import type { Recurring, Transaction } from '../types';
+
+export interface HistorySummary {
+  count: number;
+  total: number;
+  avg: number;
+  first: Date | null;
+  last: Date | null;
+}
+
+// Loose Recurring shape accepted by matchHistory — some legacy data may not
+// have all canonical fields, so we mirror Recurring's optional surface.
+type RecurringLike = Partial<Recurring> & { isTransfer?: boolean };
+
+function tsOf(t: Transaction): number {
+  return new Date(t.date || t.createdAt || 0).getTime();
+}
+
+export function matchHistory(rec: RecurringLike | null | undefined, transactions: Transaction[] | null | undefined): Transaction[] {
   if (!rec || !Array.isArray(transactions)) return [];
 
   if (rec.isTransfer && rec.toAccount) {
@@ -19,14 +37,14 @@ function matchHistory(rec, transactions) {
     // drift in case the user tweaked the value at confirm time.
     return transactions
       .filter(t => t.isTransfer && t.type === 'expense' && t.account === rec.account)
-      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+      .sort((a, b) => tsOf(b) - tsOf(a));
   }
 
   const byRecipient = rec.recipient
     ? transactions.filter(t => t.recipient === rec.recipient && !t.isTransfer)
     : [];
   if (byRecipient.length > 0) {
-    return byRecipient.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+    return byRecipient.sort((a, b) => tsOf(b) - tsOf(a));
   }
 
   return transactions
@@ -34,18 +52,18 @@ function matchHistory(rec, transactions) {
       && t.categoryId === rec.categoryId
       && Math.abs((t.amount || 0) - (rec.amount || 0)) < 0.01
     )
-    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+    .sort((a, b) => tsOf(b) - tsOf(a));
 }
 
-function summarizeHistory(list) {
-  const items = Array.isArray(list) ? list : [];
+export function summarizeHistory(list: Transaction[] | null | undefined): HistorySummary {
+  const items: Transaction[] = Array.isArray(list) ? list : [];
   const count = items.length;
   const total = items.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
   const avg = count > 0 ? total / count : 0;
 
   // Timestamps span the history — useful for "since X" labels.
-  let first = null;
-  let last = null;
+  let first: Date | null = null;
+  let last: Date | null = null;
   for (const t of items) {
     const iso = t.date || t.createdAt;
     if (!iso) continue;
@@ -57,5 +75,7 @@ function summarizeHistory(list) {
   return { count, total, avg, first, last };
 }
 
-module.exports = { matchHistory, summarizeHistory };
-module.exports.default = { matchHistory, summarizeHistory };
+// Tests + CommonJS callers also reference the default export shape, so keep
+// the dual surface (named exports + default object).
+const api = { matchHistory, summarizeHistory };
+export default api;
