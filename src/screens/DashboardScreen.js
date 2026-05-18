@@ -228,6 +228,11 @@ export default function DashboardScreen() {
 
   const [templateSuggestion, setTemplateSuggestion] = useState(null);
 
+  // Live refresh whenever any transaction/account is added/updated/deleted —
+  // covers the "+" modal opened from the tab bar that wouldn't trigger
+  // useFocusEffect on Dashboard.
+  useEffect(() => dataService.onChange(() => loadData()), []);
+
   useFocusEffect(useCallback(() => {
     loadData();
     // Retry after Firestore cold start

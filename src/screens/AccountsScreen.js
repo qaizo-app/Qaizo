@@ -2,7 +2,7 @@
 // Плитки 2-3 в ряд, цветные по типу, группировка, свайп-модалка
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Amount from '../components/Amount';
 import ConfirmModal from '../components/ConfirmModal';
@@ -92,6 +92,10 @@ export default function AccountsScreen() {
     setPrices(next);
   };
   useFocusEffect(useCallback(() => { loadData(); }, []));
+  // Refresh balances the moment any transaction/account changes — covers the
+  // case where the "+" modal sits on top of this screen and useFocusEffect
+  // would not re-fire on close.
+  useEffect(() => dataService.onChange(() => loadData()), []);
 
   const handleRefresh = async () => {
     setRefreshing(true);

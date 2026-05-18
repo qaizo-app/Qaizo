@@ -4,7 +4,7 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { mergeTransferPairs } from '../utils/transactions';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -55,6 +55,9 @@ export default function TransactionsScreen({ route }) {
     setAccounts(accs.filter(a => a.isActive !== false));
     setProjects(projs);
   };
+
+  // Live refresh on any transaction/account change (modals on top don't fire focus).
+  useEffect(() => dataService.onChange(() => loadData()), []);
 
   useFocusEffect(useCallback(() => {
     loadData();

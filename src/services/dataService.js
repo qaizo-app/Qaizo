@@ -156,8 +156,23 @@ async function updateAccountBalance(accountId, amount, type) {
   }
 }
 
+// ─── Change broadcaster ──────────────────────────────────
+// Screens subscribe so they refresh balances/lists right after a write,
+// without depending on focus events that don't fire when a modal closes
+// over an already-focused screen (e.g. the "+" add-tx modal opened from
+// AppNavigator).
+const _changeListeners = new Set();
+function onChange(fn) {
+  _changeListeners.add(fn);
+  return () => _changeListeners.delete(fn);
+}
+function emitChange() {
+  _changeListeners.forEach(fn => { try { fn(); } catch (e) {} });
+}
+
 // ─────────────────────────────────────────────────────────
 const dataService = {
+  onChange,
 
   // ─── TRANSACTIONS ────────────────────────────────────────
   async getTransactions() {
@@ -198,6 +213,7 @@ const dataService = {
           if (s) AsyncStorage.setItem('pending_template_suggestion', JSON.stringify(s)).catch(() => {});
         }).catch(() => {});
       }
+      emitChange();
       return newTx;
     } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
   },
@@ -248,6 +264,7 @@ const dataService = {
         }
         await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(filtered));
       }
+      emitChange();
       return true;
     } catch (e) { if (__DEV__) console.error('deleteTransaction:', e); return false; }
   },
@@ -278,6 +295,7 @@ const dataService = {
         const newTx = { ...oldTx, ...changes };
         if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       }
+      emitChange();
       return true;
     } catch (e) { if (__DEV__) console.error('updateTransaction:', e); return false; }
   },
@@ -345,12 +363,14 @@ const dataService = {
         const id = generateId();
         const { id: _, ...rest } = account;
         await firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() });
+        emitChange();
         return { ...account, id };
       } else {
         const accounts = await this.getAccounts();
         const newAcc = { ...account, id: generateId() };
         accounts.push(newAcc);
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts));
+        emitChange();
         return newAcc;
       }
     } catch (e) { return null; }
@@ -365,6 +385,7 @@ const dataService = {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.map(a => a.id === id ? { ...a, ...changes } : a)));
       }
+      emitChange();
       return true;
     } catch (e) { return false; }
   },
@@ -378,6 +399,7 @@ const dataService = {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.filter(a => a.id !== id)));
       }
+      emitChange();
       return true;
     } catch (e) { return false; }
   },

@@ -2,7 +2,7 @@
 // Баланс исправлен, + не показывает выбор счёта, свайп работает
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -102,6 +102,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
+  useEffect(() => dataService.onChange(() => loadData()), []);
 
   const handleDelete = async () => {
     if (deleteTarget) { await dataService.deleteTransaction(deleteTarget.id); setDeleteTarget(null); await loadData(); }
