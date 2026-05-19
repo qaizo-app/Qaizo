@@ -1,4 +1,4 @@
-// src/services/feedbackService.js
+// src/services/feedbackService.ts
 // Tracks the in-app store-review prompt state and submits free-form feedback
 // to Formspree.
 //
@@ -20,28 +20,45 @@ const MIN_TX = 10;
 const MIN_DAYS = 14;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+interface RateState {
+  dismissedVersion?: string;
+  submittedVersion?: string;
+  lastDismissedAt?: string;
+  lastSubmittedAt?: string;
+}
+
+export interface SubmitFeedbackInput {
+  rating: number | string;
+  chip?: string;
+  text?: string;
+  language?: string;
+  platform?: string;
+  email?: string;
+  userId?: string;
+}
+
 const appVersion = appJson?.expo?.version || '0.0.0';
 const buildNumber = Platform.OS === 'ios'
-  ? (appJson?.expo?.ios?.buildNumber || 0)
-  : (appJson?.expo?.android?.versionCode || 0);
+  ? ((appJson?.expo as { ios?: { buildNumber?: number | string } })?.ios?.buildNumber || 0)
+  : ((appJson?.expo as { android?: { versionCode?: number } })?.android?.versionCode || 0);
 const versionTag = `${appVersion}+${buildNumber}`;
 
-async function getState() {
+async function getState(): Promise<RateState> {
   try {
     const raw = await AsyncStorage.getItem(STATE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    return raw ? (JSON.parse(raw) as RateState) : {};
   } catch (e) {
     return {};
   }
 }
 
-async function setState(next) {
+async function setState(next: RateState): Promise<void> {
   try {
     await AsyncStorage.setItem(STATE_KEY, JSON.stringify(next));
   } catch (e) {}
 }
 
-async function ensureInstallDate() {
+async function ensureInstallDate(): Promise<string> {
   let v = await AsyncStorage.getItem(INSTALL_KEY);
   if (!v) {
     v = new Date().toISOString();
@@ -50,13 +67,13 @@ async function ensureInstallDate() {
   return v;
 }
 
-async function getDaysSinceInstall() {
+async function getDaysSinceInstall(): Promise<number> {
   const iso = await ensureInstallDate();
   const ms = Date.now() - new Date(iso).getTime();
   return Math.floor(ms / MS_PER_DAY);
 }
 
-async function shouldPrompt({ transactionCount = 0 } = {}) {
+async function shouldPrompt({ transactionCount = 0 }: { transactionCount?: number } = {}): Promise<boolean> {
   // Stamp install date even if gates fail — the first call establishes
   // the "days since install" anchor for future checks.
   const days = await getDaysSinceInstall();
@@ -68,21 +85,21 @@ async function shouldPrompt({ transactionCount = 0 } = {}) {
   return true;
 }
 
-async function markDismissed() {
+async function markDismissed(): Promise<void> {
   const st = await getState();
   st.dismissedVersion = versionTag;
   st.lastDismissedAt = new Date().toISOString();
   await setState(st);
 }
 
-async function markSubmitted() {
+async function markSubmitted(): Promise<void> {
   const st = await getState();
   st.submittedVersion = versionTag;
   st.lastSubmittedAt = new Date().toISOString();
   await setState(st);
 }
 
-async function submitFeedback({ rating, chip, text, language, platform, email, userId }) {
+async function submitFeedback({ rating, chip, text, language, platform, email, userId }: SubmitFeedbackInput): Promise<boolean> {
   const body = {
     rating: Number(rating) || 0,
     chip: chip || '',
@@ -104,7 +121,7 @@ async function submitFeedback({ rating, chip, text, language, platform, email, u
   return true;
 }
 
-function __reset() {
+function __reset(): void {
   // Test-only helper to reset the module-level state bag.
 }
 

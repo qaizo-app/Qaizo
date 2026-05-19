@@ -1,4 +1,4 @@
-// src/services/exchangeRateService.js
+// src/services/exchangeRateService.ts
 // Live fiat exchange rates via open.er-api.com (free, no API key).
 // In-memory rates + AsyncStorage persistence. refresh() runs in background;
 // getRate()/convert() stay synchronous for existing call sites.
@@ -8,10 +8,12 @@ const CACHE_KEY = 'qaizo_fx_rates';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const BASE = 'USD';
 
+type RateMap = Record<string, number>;
+
 // Safe starting rates (used when nothing is cached yet — prevents 0 conversions
 // on first install before network responds). Values relative to USD (USD = 1).
 // Intentionally approximate — live data overwrites within seconds of app start.
-const FALLBACK_RATES_USD = {
+export const FALLBACK_RATES_USD: RateMap = {
   USD: 1,
   EUR: 0.92,
   GBP: 0.79,
@@ -45,10 +47,10 @@ const FALLBACK_RATES_USD = {
   JOD: 0.71,
 };
 
-let _rates = { ...FALLBACK_RATES_USD };
+let _rates: RateMap = { ...FALLBACK_RATES_USD };
 let _fetchedAt = 0;
 
-function setRates(rates, fetchedAt) {
+function setRates(rates: RateMap | undefined | null, fetchedAt: number): void {
   if (rates && typeof rates === 'object') {
     _rates = { ...FALLBACK_RATES_USD, ...rates };
     _fetchedAt = fetchedAt || Date.now();
@@ -56,7 +58,7 @@ function setRates(rates, fetchedAt) {
 }
 
 // Load persisted rates synchronously-ish at app start.
-async function loadPersisted() {
+async function loadPersisted(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem(CACHE_KEY);
     if (!raw) return false;
@@ -66,17 +68,17 @@ async function loadPersisted() {
   } catch (e) { return false; }
 }
 
-async function savePersisted(rates, fetchedAt) {
+async function savePersisted(rates: RateMap, fetchedAt: number): Promise<void> {
   try { await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({ rates, fetchedAt })); } catch (e) {}
 }
 
 // Fetch fresh rates. Returns true on success.
-async function refresh(force = false) {
+async function refresh(force = false): Promise<boolean> {
   if (!force && _fetchedAt && Date.now() - _fetchedAt < CACHE_TTL_MS) return true;
   try {
     const res = await fetch(`https://open.er-api.com/v6/latest/${BASE}`);
     if (!res.ok) throw new Error(`status ${res.status}`);
-    const json = await res.json();
+    const json: { result?: string; rates?: RateMap } = await res.json();
     if (json?.result !== 'success' || !json?.rates) throw new Error('invalid response');
     setRates(json.rates, Date.now());
     await savePersisted(_rates, _fetchedAt);
@@ -87,14 +89,14 @@ async function refresh(force = false) {
 }
 
 // Hydrate state from disk, then kick off a background refresh.
-async function init() {
+async function init(): Promise<void> {
   await loadPersisted();
   // Non-blocking refresh — results available for subsequent conversions.
   refresh().catch(() => {});
 }
 
 // rate(from, to) = how many `to` in 1 `from`. All math goes via USD.
-function getRate(fromCode, toCode) {
+function getRate(fromCode: string, toCode: string): number {
   if (!fromCode || !toCode || fromCode === toCode) return 1;
   const fromUsd = _rates[fromCode];
   const toUsd = _rates[toCode];
@@ -103,16 +105,15 @@ function getRate(fromCode, toCode) {
   return toUsd / fromUsd;
 }
 
-function convert(amount, fromCode, toCode) {
+function convert(amount: number, fromCode: string, toCode: string): number {
   if (!amount || fromCode === toCode) return amount || 0;
   const rate = getRate(fromCode, toCode);
   return Math.round(amount * rate * 100) / 100;
 }
 
 // Test-only helpers
-function __setRatesForTest(rates) { setRates(rates, Date.now()); }
-function __reset() { _rates = { ...FALLBACK_RATES_USD }; _fetchedAt = 0; }
-function __getFetchedAt() { return _fetchedAt; }
+function __setRatesForTest(rates: RateMap): void { setRates(rates, Date.now()); }
+function __reset(): void { _rates = { ...FALLBACK_RATES_USD }; _fetchedAt = 0; }
+function __getFetchedAt(): number { return _fetchedAt; }
 
 export default { init, refresh, getRate, convert, __setRatesForTest, __reset, __getFetchedAt };
-export { FALLBACK_RATES_USD };
