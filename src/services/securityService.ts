@@ -1,11 +1,22 @@
-// src/services/securityService.js
-// PIN-код + биометрическая аутентификация (fingerprint / face)
+// src/services/securityService.ts
+// PIN code + biometric authentication (fingerprint / face).
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 
-// Lazy import — avoid crash if native module not linked
-let LocalAuthentication = null;
-try { LocalAuthentication = require('expo-local-authentication'); } catch (e) {}
+// Minimal surface of expo-local-authentication that we touch.
+interface LocalAuth {
+  hasHardwareAsync: () => Promise<boolean>;
+  isEnrolledAsync: () => Promise<boolean>;
+  authenticateAsync: (opts: {
+    promptMessage?: string;
+    cancelLabel?: string;
+    disableDeviceFallback?: boolean;
+  }) => Promise<{ success: boolean }>;
+}
+
+// Lazy import — avoid crash if native module not linked.
+let LocalAuthentication: LocalAuth | null = null;
+try { LocalAuthentication = require('expo-local-authentication') as LocalAuth; } catch (e) {}
 
 const KEYS = {
   PIN_HASH: 'qaizo_pin_hash',
@@ -22,36 +33,36 @@ let _lastActiveAt = 0;
 
 const securityService = {
   // --- PIN ---
-  async hashPin(pin) {
+  async hashPin(pin: string): Promise<string> {
     return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, pin + '_qaizo_salt');
   },
 
-  async setPin(pin) {
+  async setPin(pin: string): Promise<void> {
     const hash = await this.hashPin(pin);
     await AsyncStorage.setItem(KEYS.PIN_HASH, hash);
     await AsyncStorage.setItem(KEYS.PIN_ENABLED, 'true');
   },
 
-  async removePin() {
+  async removePin(): Promise<void> {
     await AsyncStorage.removeItem(KEYS.PIN_HASH);
     await AsyncStorage.setItem(KEYS.PIN_ENABLED, 'false');
     await AsyncStorage.setItem(KEYS.BIOMETRIC_ENABLED, 'false');
   },
 
-  async verifyPin(pin) {
+  async verifyPin(pin: string): Promise<boolean> {
     const stored = await AsyncStorage.getItem(KEYS.PIN_HASH);
     if (!stored) return false;
     const hash = await this.hashPin(pin);
     return hash === stored;
   },
 
-  async isPinEnabled() {
+  async isPinEnabled(): Promise<boolean> {
     const val = await AsyncStorage.getItem(KEYS.PIN_ENABLED);
     return val === 'true';
   },
 
   // --- Biometric ---
-  async isBiometricAvailable() {
+  async isBiometricAvailable(): Promise<boolean> {
     try {
       if (!LocalAuthentication) return false;
       const compatible = await LocalAuthentication.hasHardwareAsync();
@@ -61,18 +72,18 @@ const securityService = {
     } catch (e) { return false; }
   },
 
-  async isBiometricEnabled() {
+  async isBiometricEnabled(): Promise<boolean> {
     const available = await this.isBiometricAvailable();
     if (!available) return false;
     const val = await AsyncStorage.getItem(KEYS.BIOMETRIC_ENABLED);
     return val === 'true';
   },
 
-  async setBiometricEnabled(enabled) {
+  async setBiometricEnabled(enabled: boolean): Promise<void> {
     await AsyncStorage.setItem(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false');
   },
 
-  async authenticateWithBiometric(promptMessage) {
+  async authenticateWithBiometric(promptMessage?: string): Promise<boolean> {
     try {
       if (!LocalAuthentication) return false;
       const available = await this.isBiometricAvailable();
@@ -86,7 +97,7 @@ const securityService = {
     } catch (e) { return false; }
   },
 
-  async isLockEnabled() {
+  async isLockEnabled(): Promise<boolean> {
     return await this.isPinEnabled();
   },
 
@@ -94,15 +105,15 @@ const securityService = {
   // Called right after a successful PIN/biometric unlock, and whenever the
   // app is about to go to the background so the timer measures from the
   // last moment the user was actively using it.
-  markActive() {
+  markActive(): void {
     _lastActiveAt = Date.now();
   },
 
-  clearActive() {
+  clearActive(): void {
     _lastActiveAt = 0;
   },
 
-  isWithinUnlockGrace() {
+  isWithinUnlockGrace(): boolean {
     return _lastActiveAt > 0 && (Date.now() - _lastActiveAt) < UNLOCK_GRACE_MS;
   },
 
