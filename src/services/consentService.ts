@@ -1,4 +1,4 @@
-// src/services/consentService.js
+// src/services/consentService.ts
 // Tracks user consent for daily-reminder notifications and anonymous crash
 // reporting (Sentry). Values are persisted in AsyncStorage by OnboardingScreen
 // and read back from App.js on startup.
@@ -16,7 +16,7 @@ let _reminderConsent = true;
 let _crashReportsConsent = true;
 let _analyticsConsent = true;
 
-async function load() {
+async function load(): Promise<void> {
   try {
     const [rem, crash, ana] = await Promise.all([
       AsyncStorage.getItem(REMINDER_KEY),
@@ -29,24 +29,24 @@ async function load() {
   } catch (e) {}
 }
 
-async function setReminderConsent(value) {
+async function setReminderConsent(value: boolean): Promise<void> {
   _reminderConsent = !!value;
   try { await AsyncStorage.setItem(REMINDER_KEY, String(!!value)); } catch (e) {}
 }
 
-async function setCrashReportsConsent(value) {
+async function setCrashReportsConsent(value: boolean): Promise<void> {
   _crashReportsConsent = !!value;
   try { await AsyncStorage.setItem(CRASH_KEY, String(!!value)); } catch (e) {}
 }
 
-async function setAnalyticsConsent(value) {
+async function setAnalyticsConsent(value: boolean): Promise<void> {
   _analyticsConsent = !!value;
   try { await AsyncStorage.setItem(ANALYTICS_KEY, String(!!value)); } catch (e) {}
 }
 
-function getReminderConsent() { return _reminderConsent; }
-function getCrashReportsConsent() { return _crashReportsConsent; }
-function getAnalyticsConsent() { return _analyticsConsent; }
+function getReminderConsent(): boolean { return _reminderConsent; }
+function getCrashReportsConsent(): boolean { return _crashReportsConsent; }
+function getAnalyticsConsent(): boolean { return _analyticsConsent; }
 
 export default {
   load,
