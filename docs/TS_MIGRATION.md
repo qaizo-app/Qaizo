@@ -46,7 +46,7 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 | analyticsService | ✅ ts | 7 |
 | authService | ✅ ts | 8 |
 | exportService | ✅ ts | 8 |
-| importService | ⬜ js | — |
+| importService | ✅ ts | 9 |
 | dataService | ⬜ js | last (central, ~1044 loc) |
 | aiService | ⬜ js | last (largest, ~1321 loc) |
 
@@ -54,7 +54,7 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 1. ~~**Step 6 (isolated, small):** streakService, cryptoService~~ ✅
 2. ~~**Step 7:** notificationService, analyticsService~~ ✅
 3. ~~**Step 8:** authService, exportService~~ ✅
-4. **Step 9:** importService
+4. ~~**Step 9:** importService~~ ✅
 5. **Step 10 (do last, highest blast radius):** dataService, then aiService
 
 ## Notes / gotchas
@@ -75,3 +75,16 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
   `catch (e: any)` to preserve behavior (step 8).
 - Optional native modules loaded via `require()` in try/catch (GoogleSignin,
   appleAuth) stay typed `any` — they're absent in Expo Go.
+- importService rows are NOT full `Transaction` — they use a local `ParsedRow`
+  type (no id, account resolved later, plus `_rawCategory`/`_accountName`/
+  `_accountType` scratch fields). Keep that distinction when touching imports.
+- For string→value lookup tables (CATEGORY_MAP, walletCategoryMap, header maps),
+  annotate `Record<string, T>` so dynamic `obj[key]` indexing type-checks.
+
+## When you reach step 10 (dataService / aiService)
+These are the central modules every other service depends on. Because they were
+`.js`, all their call sites currently see `any`. Once typed, expect new errors
+to surface in the already-migrated services (callbacks that were silently `any`).
+Budget for that. Recommended: type `dataService`'s public methods to return the
+domain types from `src/types`, migrate, then run a full `tsc` and fix fallout
+service-by-service. Do dataService BEFORE aiService.
