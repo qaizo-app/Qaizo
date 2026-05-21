@@ -10,6 +10,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import authService from './authService';
+import type {
+  Account,
+  Goal,
+  GoalDeposit,
+  Investment,
+  Project,
+  QuickTemplate,
+  Recurring,
+  Settings,
+  StreakData,
+  Transaction,
+} from '../types';
 
 // ─── Ключи для AsyncStorage (гостевой режим) ─────────────
 const KEYS = {
@@ -28,7 +40,7 @@ const KEYS = {
   SHOPPING_LIST: 'qaizo_shopping_list',
 };
 
-const DEFAULT_ACCOUNTS = [
+const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'cash_ils', name: 'Cash ₪', type: 'cash', icon: 'wallet-outline', balance: 0, currency: '₪', isActive: true },
 ];
 
@@ -66,7 +78,7 @@ const DEFAULT_CATEGORIES = {
   ],
 };
 
-const DEFAULT_SETTINGS = { language: 'ru', currency: '₪', theme: 'dark', weekStart: 'sunday' };
+const DEFAULT_SETTINGS: Settings = { language: 'ru', currency: '₪', weekStart: 'sunday' };
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -186,17 +198,17 @@ const dataService = {
   onChange,
 
   // ─── TRANSACTIONS ────────────────────────────────────────
-  async getTransactions() {
+  async getTransactions(): Promise<Transaction[]> {
     const uid = getUid();
-    if (uid) return getColDocs('transactions');
+    if (uid) return getColDocs('transactions') as Promise<Transaction[]>;
     try {
       const data = await AsyncStorage.getItem(KEYS.TRANSACTIONS);
-      const txs = data ? JSON.parse(data) : [];
+      const txs: Transaction[] = data ? JSON.parse(data) : [];
       return txs;
     } catch (e) { if (__DEV__) console.error('getTransactions error:', e); return []; }
   },
 
-  async addTransaction(transaction: any) {
+  async addTransaction(transaction: Partial<Transaction>): Promise<Transaction | null> {
     const uid = getUid();
     const newTx: any = { ...transaction, createdAt: new Date().toISOString() };
     try {
@@ -229,7 +241,7 @@ const dataService = {
     } catch (e) { if (__DEV__) console.error('addTransaction:', e); return null; }
   },
 
-  async deleteTransaction(id: string) {
+  async deleteTransaction(id: string): Promise<boolean> {
     const uid = getUid();
     try {
       if (uid) {
@@ -280,7 +292,7 @@ const dataService = {
     } catch (e) { if (__DEV__) console.error('deleteTransaction:', e); return false; }
   },
 
-  async updateTransaction(id: string, changes: any) {
+  async updateTransaction(id: string, changes: Partial<Transaction>): Promise<boolean> {
     const uid = getUid();
     try {
       if (uid) {
@@ -312,7 +324,7 @@ const dataService = {
   },
 
   // ─── ACCOUNTS ────────────────────────────────────────────
-  async getAccounts(): Promise<any[]> {
+  async getAccounts(): Promise<Account[]> {
     const uid = getUid();
     if (uid) {
       try {
@@ -336,7 +348,7 @@ const dataService = {
 
   // Smart Input helper: find the most recently used account of a given type
   // (e.g. user said "paid with credit" but has 3 credit cards).
-  async getLastUsedAccountByType(type: string) {
+  async getLastUsedAccountByType(type: string): Promise<string | null> {
     const [txs, accs] = await Promise.all([this.getTransactions(), this.getAccounts()]);
     const typeAccountIds = new Set<string>(accs.filter((a: any) => a.type === type && a.isActive !== false).map((a: any) => a.id));
     if (typeAccountIds.size === 0) return null;
@@ -348,7 +360,7 @@ const dataService = {
     return [...typeAccountIds][0]; // fallback to first of type
   },
 
-  async saveAccounts(accounts: any[]) {
+  async saveAccounts(accounts: Account[]): Promise<boolean> {
     const uid = getUid();
     if (uid) {
       try {
@@ -367,7 +379,7 @@ const dataService = {
     try { await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts)); return true; } catch (e) { return false; }
   },
 
-  async addAccount(account: any) {
+  async addAccount(account: Partial<Account>): Promise<Account | null> {
     const uid = getUid();
     try {
       if (uid) {
@@ -375,10 +387,10 @@ const dataService = {
         const { id: _id, ...rest } = account;
         await firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() });
         emitChange();
-        return { ...account, id };
+        return { ...account, id } as Account;
       } else {
         const accounts = await this.getAccounts();
-        const newAcc = { ...account, id: generateId() };
+        const newAcc = { ...account, id: generateId() } as Account;
         accounts.push(newAcc);
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts));
         emitChange();
@@ -387,7 +399,7 @@ const dataService = {
     } catch (e) { return null; }
   },
 
-  async updateAccount(id: string, changes: any) {
+  async updateAccount(id: string, changes: Partial<Account>): Promise<boolean> {
     const uid = getUid();
     try {
       if (uid) {
@@ -401,7 +413,7 @@ const dataService = {
     } catch (e) { return false; }
   },
 
-  async deleteAccount(id: string) {
+  async deleteAccount(id: string): Promise<boolean> {
     const uid = getUid();
     try {
       if (uid) {
@@ -416,13 +428,13 @@ const dataService = {
   },
 
   // ─── INVESTMENTS ─────────────────────────────────────────
-  async getInvestments(): Promise<any[]> {
+  async getInvestments(): Promise<Investment[]> {
     const uid = getUid();
     if (uid) return getColDocs('investments');
     try { const data = await AsyncStorage.getItem(KEYS.INVESTMENTS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
   },
 
-  async saveInvestments(investments: any[]) {
+  async saveInvestments(investments: Investment[]): Promise<boolean> {
     const uid = getUid();
     if (uid) {
       try {
@@ -458,13 +470,13 @@ const dataService = {
     try { const data = await AsyncStorage.getItem(KEYS.BUDGETS); return data ? JSON.parse(data) : {}; } catch (e) { return {}; }
   },
 
-  async saveBudgets(budgets: Record<string, number>) {
+  async saveBudgets(budgets: Record<string, number>): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('budgets', budgets);
     try { await AsyncStorage.setItem(KEYS.BUDGETS, JSON.stringify(budgets)); return true; } catch (e) { return false; }
   },
 
-  async setBudget(categoryId: string, limit: number) {
+  async setBudget(categoryId: string, limit: number): Promise<boolean> {
     try {
       const budgets = await this.getBudgets();
       if (limit > 0) budgets[categoryId] = limit;
@@ -479,27 +491,27 @@ const dataService = {
   },
 
   // ─── PROJECTS ────────────────────────────────────────────
-  async getProjects(): Promise<any[]> {
+  async getProjects(): Promise<Project[]> {
     const uid = getUid();
     if (uid) return getDocData('projects', []);
     try { const data = await AsyncStorage.getItem(KEYS.PROJECTS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
   },
 
-  async saveProjects(projects: any[]) {
+  async saveProjects(projects: Project[]): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('projects', projects);
     try { await AsyncStorage.setItem(KEYS.PROJECTS, JSON.stringify(projects)); return true; } catch (e) { return false; }
   },
 
-  async addProject(project: any) {
+  async addProject(project: Partial<Project>): Promise<Project> {
     const projects = await this.getProjects();
-    const newProject = { ...project, id: generateId(), createdAt: new Date().toISOString() };
+    const newProject = { ...project, id: generateId(), createdAt: new Date().toISOString() } as Project;
     projects.push(newProject);
     await this.saveProjects(projects);
     return newProject;
   },
 
-  async updateProject(id: string, changes: any) {
+  async updateProject(id: string, changes: Partial<Project>): Promise<Project[]> {
     const projects = await this.getProjects();
     const idx = projects.findIndex((p: any) => p.id === id);
     if (idx >= 0) {
@@ -509,33 +521,33 @@ const dataService = {
     return projects;
   },
 
-  async deleteProject(id: string) {
+  async deleteProject(id: string): Promise<void> {
     const projects = await this.getProjects();
     await this.saveProjects(projects.filter((p: any) => p.id !== id));
   },
 
   // ─── GOALS (מטרות חיסכון) ─────────────────────────────────
-  async getGoals(): Promise<any[]> {
+  async getGoals(): Promise<Goal[]> {
     const uid = getUid();
     if (uid) return getDocData('goals', []);
     try { const data = await AsyncStorage.getItem(KEYS.GOALS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
   },
 
-  async saveGoals(goals: any[]) {
+  async saveGoals(goals: Goal[]): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('goals', goals);
     try { await AsyncStorage.setItem(KEYS.GOALS, JSON.stringify(goals)); return true; } catch (e) { return false; }
   },
 
-  async addGoal(goal: any) {
+  async addGoal(goal: Partial<Goal>): Promise<Goal> {
     const goals = await this.getGoals();
-    const newGoal = { ...goal, id: generateId(), createdAt: new Date().toISOString(), deposits: [] };
+    const newGoal = { ...goal, id: generateId(), createdAt: new Date().toISOString(), deposits: [] } as Goal;
     goals.push(newGoal);
     await this.saveGoals(goals);
     return newGoal;
   },
 
-  async updateGoal(id: string, changes: any) {
+  async updateGoal(id: string, changes: Partial<Goal>): Promise<Goal[]> {
     const goals = await this.getGoals();
     const idx = goals.findIndex((g: any) => g.id === id);
     if (idx >= 0) {
@@ -545,12 +557,12 @@ const dataService = {
     return goals;
   },
 
-  async deleteGoal(id: string) {
+  async deleteGoal(id: string): Promise<void> {
     const goals = await this.getGoals();
     await this.saveGoals(goals.filter((g: any) => g.id !== id));
   },
 
-  async addGoalDeposit(goalId: string, amount: number, note?: string) {
+  async addGoalDeposit(goalId: string, amount: number, note?: string): Promise<GoalDeposit | null> {
     const goals = await this.getGoals();
     const idx = goals.findIndex((g: any) => g.id === goalId);
     if (idx >= 0) {
@@ -563,7 +575,7 @@ const dataService = {
   },
 
   // ─── RECURRING PAYMENTS ──────────────────────────────────
-  async getRecurring(): Promise<any[]> {
+  async getRecurring(): Promise<Recurring[]> {
     const uid = getUid();
     if (uid) {
       try {
@@ -575,7 +587,7 @@ const dataService = {
     try { const data = await AsyncStorage.getItem(KEYS.RECURRING); return data ? JSON.parse(data) : []; } catch (e) { return []; }
   },
 
-  async saveRecurring(items: any[]) {
+  async saveRecurring(items: Recurring[]): Promise<boolean> {
     const uid = getUid();
     if (uid) {
       try {
@@ -591,7 +603,7 @@ const dataService = {
     try { await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items)); return true; } catch (e) { return false; }
   },
 
-  async addRecurring(item: any) {
+  async addRecurring(item: Partial<Recurring>): Promise<Recurring | null> {
     const uid = getUid();
     const newItem: any = { ...item, completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
     try {
@@ -608,7 +620,7 @@ const dataService = {
     } catch (e) { return null; }
   },
 
-  async updateRecurring(id: string, changes: any) {
+  async updateRecurring(id: string, changes: Partial<Recurring>): Promise<boolean> {
     const uid = getUid();
     try {
       if (uid) {
@@ -621,7 +633,7 @@ const dataService = {
     } catch (e) { return false; }
   },
 
-  async deleteRecurring(id: string) {
+  async deleteRecurring(id: string): Promise<boolean> {
     const uid = getUid();
     try {
       if (uid) {
@@ -634,7 +646,7 @@ const dataService = {
     } catch (e) { return false; }
   },
 
-  async confirmRecurring(id: string, overrides: any = {}) {
+  async confirmRecurring(id: string, overrides: { amount?: number; account?: string; toAccount?: string; date?: string } = {}): Promise<boolean> {
     try {
       const uid = getUid();
       let rec: any;
@@ -712,7 +724,7 @@ const dataService = {
   // Designed to be called once at app startup. Returns count of confirmed.
   // Loops until no more due items exist (handles the case where multiple
   // intervals were missed while the app was closed).
-  async autoExecuteRecurring() {
+  async autoExecuteRecurring(): Promise<number> {
     try {
       const todayStr = new Date().toISOString().slice(0, 10);
       let confirmed = 0;
@@ -742,7 +754,7 @@ const dataService = {
     }
   },
 
-  async skipRecurring(id: string, overrides: any = {}) {
+  async skipRecurring(id: string, overrides: { nextDate?: string } = {}): Promise<boolean> {
     try {
       const uid = getUid();
       let rec: any;
@@ -783,13 +795,13 @@ const dataService = {
     try { const data = await AsyncStorage.getItem(KEYS.TAGS); return data ? JSON.parse(data) : []; } catch (e) { return []; }
   },
 
-  async saveTags(tags: string[]) {
+  async saveTags(tags: string[]): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('tags', tags);
     try { await AsyncStorage.setItem(KEYS.TAGS, JSON.stringify(tags)); return true; } catch (e) { return false; }
   },
 
-  async addTag(tag: string) {
+  async addTag(tag: string): Promise<boolean> {
     try {
       const tags = await this.getTags();
       if (!tags.includes(tag)) {
@@ -800,7 +812,7 @@ const dataService = {
     } catch (e) { return false; }
   },
 
-  async deleteTag(tag: string) {
+  async deleteTag(tag: string): Promise<boolean> {
     try {
       const tags = await this.getTags();
       await this.saveTags(tags.filter((t: string) => t !== tag));
@@ -882,13 +894,13 @@ const dataService = {
     } catch (e) { /* noop */ }
   },
 
-  async getQuickTemplates(): Promise<any[]> {
+  async getQuickTemplates(): Promise<QuickTemplate[]> {
     const uid = getUid();
     if (uid) return getDocData('quickTemplates', []);
     try { const data = await AsyncStorage.getItem(KEYS.QUICK_TEMPLATES); return data ? JSON.parse(data) : []; } catch (e) { return []; }
   },
 
-  async saveQuickTemplates(templates: any[]) {
+  async saveQuickTemplates(templates: QuickTemplate[]): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('quickTemplates', templates);
     try { await AsyncStorage.setItem(KEYS.QUICK_TEMPLATES, JSON.stringify(templates)); return true; } catch (e) { return false; }
@@ -911,27 +923,27 @@ const dataService = {
   },
 
   // ─── STREAKS ──────────────────────────────────────────────
-  async getStreaks(): Promise<any> {
+  async getStreaks(): Promise<StreakData> {
     const uid = getUid();
     const defaults = { currentStreak: 0, longestStreak: 0, lastActiveDate: null, underBudgetStreak: 0, longestUnderBudget: 0, milestones: [] };
     if (uid) return getDocData('streaks', defaults);
     try { const data = await AsyncStorage.getItem(KEYS.STREAKS); return data ? JSON.parse(data) : defaults; } catch (e) { return defaults; }
   },
 
-  async saveStreaks(streaks: any) {
+  async saveStreaks(streaks: StreakData): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('streaks', streaks);
     try { await AsyncStorage.setItem(KEYS.STREAKS, JSON.stringify(streaks)); return true; } catch (e) { return false; }
   },
 
   // ─── SETTINGS ────────────────────────────────────────────
-  async getSettings(): Promise<any> {
+  async getSettings(): Promise<Settings> {
     const uid = getUid();
     if (uid) return getDocData('settings', DEFAULT_SETTINGS);
     try { const data = await AsyncStorage.getItem(KEYS.SETTINGS); return data ? JSON.parse(data) : DEFAULT_SETTINGS; } catch (e) { return DEFAULT_SETTINGS; }
   },
 
-  async saveSettings(settings: any) {
+  async saveSettings(settings: Partial<Settings>): Promise<boolean> {
     const uid = getUid();
     if (uid) return setDocData('settings', settings);
     try { await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings)); return true; } catch (e) { return false; }

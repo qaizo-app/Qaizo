@@ -84,11 +84,16 @@ export interface Recurring {
   icon?: string;
   recipient?: string;
   note?: string;
-  interval: RecurringInterval;
-  nextDate: string;             // 'YYYY-MM-DD'
+  interval?: RecurringInterval;
+  intervalMonths?: number;       // legacy/runtime: months between executions
+  nextDate: string;              // 'YYYY-MM-DD'
   endDate?: string | null;
+  endType?: 'never' | 'count' | 'date';
+  totalCount?: number;           // when endType='count' — max executions
+  completedCount?: number;       // how many times confirmRecurring has fired
   isActive: boolean;
   autoConfirm?: boolean;        // skip the per-execution prompt
+  isTransfer?: boolean;          // set when type='transfer'
   notify?: boolean;             // schedule local reminders (default true)
   contractEndDate?: string | null;  // optional contract expiry → 30-day reminder
   projectId?: string | null;

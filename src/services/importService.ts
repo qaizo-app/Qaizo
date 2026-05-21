@@ -793,7 +793,10 @@ async function importTransactions(transactions: ParsedRow[], options: ImportOpti
   const BATCH_SIZE = 50;
   for (let i = 0; i < toImport.length; i += BATCH_SIZE) {
     const batch = toImport.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(batch.map(tx => dataService.addTransaction(tx)));
+    const results = await Promise.all(batch.map(tx => dataService.addTransaction({
+      ...tx,
+      account: tx.account ?? undefined,
+    } as any)));
     imported += results.filter(r => r).length;
     failed += results.filter(r => !r).length;
   }
