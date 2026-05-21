@@ -175,8 +175,8 @@ const notificationService = {
       const diff = lastWeek - thisWeek;
       const cur = sym();
       const body = diff > 0
-        ? i18n.t('weeklySummaryGood').replace('{amount}', Math.round(thisWeek)).replace('{saved}', Math.round(diff)).replace(/\{currency\}/g, cur)
-        : i18n.t('weeklySummaryBad').replace('{amount}', Math.round(thisWeek)).replace('{extra}', Math.round(Math.abs(diff))).replace(/\{currency\}/g, cur);
+        ? i18n.t('weeklySummaryGood').replace('{amount}', String(Math.round(thisWeek))).replace('{saved}', String(Math.round(diff))).replace(/\{currency\}/g, cur)
+        : i18n.t('weeklySummaryBad').replace('{amount}', String(Math.round(thisWeek))).replace('{extra}', String(Math.round(Math.abs(diff)))).replace(/\{currency\}/g, cur);
 
       await Notifications.scheduleNotificationAsync({
         content: {

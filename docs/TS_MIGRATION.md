@@ -58,8 +58,20 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 | src/theme/ThemeContext.tsx | ✅ tsx | exports `ThemeMode` ('system'\|'light'\|'dark'\|'amoled'), typed context |
 | src/config/firebase.ts | ✅ ts | trivial rename |
 
+### i18n — ✅ migrated (step 13)
+| File | Status | Notes |
+|---|---|---|
+| src/i18n/index.ts | ✅ ts | typed `t(key: string): string`, `LanguageCode` union, typed listeners |
+| src/i18n/<lang>.ts × 11 | ✅ ts | dictionaries (treated as `Record<string, string>` in index) |
+
+Step 13 also dedup'd 74 dead duplicate keys across the language packs
+(JS last-wins meant they were unreachable). See commit `fix(i18n): remove 74 dead duplicate keys`.
+
+Side-effect after typing `t()`: TS caught 9 `.replace('{key}', someNumber)`
+call sites in aiService and notificationService where JS silently coerced
+the number to string. Wrapped each with `String(...)`.
+
 ### Still .js (not yet migrated)
-- `src/i18n/index.js` + 12 language packs (`en.js`, `ru.js`, `he.js`, …)
 - `src/navigation/AppNavigator.js`
 - `src/screens/*.js` (~30 files)
 - `src/components/*.js` (~35 files)

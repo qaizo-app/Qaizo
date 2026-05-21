@@ -1,4 +1,4 @@
-// src/i18n/index.js
+// src/i18n/index.ts
 import { I18nManager } from 'react-native';
 import ru from './ru';
 import he from './he';
@@ -12,17 +12,38 @@ import zh from './zh';
 import hi from './hi';
 import ja from './ja';
 
-const languages = { ru, he, en, es, fr, de, pt, ar, zh, hi, ja };
+export type LanguageCode = 'ru' | 'he' | 'en' | 'es' | 'fr' | 'de' | 'pt' | 'ar' | 'zh' | 'hi' | 'ja';
 
-let currentLang = 'ru';
-const listeners = new Set();
+// Language packs are plain string dictionaries. `t()` falls back to en
+// then to the raw key, so dynamic keys (e.g. categoryId) are intentionally
+// accepted — that's why the value type is loose Record<string, string>.
+type Dictionary = Record<string, string>;
+
+const languages: Record<LanguageCode, Dictionary> = {
+  ru: ru as Dictionary,
+  he: he as Dictionary,
+  en: en as Dictionary,
+  es: es as Dictionary,
+  fr: fr as Dictionary,
+  de: de as Dictionary,
+  pt: pt as Dictionary,
+  ar: ar as Dictionary,
+  zh: zh as Dictionary,
+  hi: hi as Dictionary,
+  ja: ja as Dictionary,
+};
+
+let currentLang: LanguageCode = 'ru';
+
+type LanguageChangeListener = (lang: LanguageCode, rtlChanged: boolean) => void;
+const listeners = new Set<LanguageChangeListener>();
 
 const i18n = {
-  t(key) {
+  t(key: string): string {
     return languages[currentLang]?.[key] || languages.en?.[key] || key;
   },
 
-  setLanguage(lang) {
+  setLanguage(lang: LanguageCode): boolean {
     if (languages[lang]) {
       const needsRTL = lang === 'he' || lang === 'ar';
       const rtlChanged = I18nManager.isRTL !== needsRTL;
@@ -37,16 +58,16 @@ const i18n = {
     return false;
   },
 
-  onLanguageChange(fn) {
+  onLanguageChange(fn: LanguageChangeListener): () => void {
     listeners.add(fn);
-    return () => listeners.delete(fn);
+    return () => { listeners.delete(fn); };
   },
 
-  getLanguage() {
+  getLanguage(): LanguageCode {
     return currentLang;
   },
 
-  getAvailableLanguages() {
+  getAvailableLanguages(): Array<{ code: LanguageCode; label: string; name: string }> {
     return [
       { code: 'en', label: 'EN', name: 'English' },
       { code: 'ru', label: 'RU', name: 'Русский' },
@@ -62,7 +83,7 @@ const i18n = {
     ];
   },
 
-  isRTL() {
+  isRTL(): boolean {
     return currentLang === 'he' || currentLang === 'ar';
   },
 
@@ -74,14 +95,14 @@ const i18n = {
   //                 'row-reverse' would double-flip and produce LTR.
   //   system=LTR  → 'row-reverse' only when lang is RTL (compensates for
   //                 missing restart so Hebrew looks right during testing).
-  row() {
+  row(): 'row' | 'row-reverse' {
     if (I18nManager.isRTL) return 'row';
     return (currentLang === 'he' || currentLang === 'ar') ? 'row-reverse' : 'row';
   },
-  textAlign() { return (currentLang === 'he' || currentLang === 'ar') ? 'right' : 'left'; },
-  backIcon() { return (currentLang === 'he' || currentLang === 'ar') ? 'arrow-right' : 'arrow-left'; },
-  chevronLeft() { return (currentLang === 'he' || currentLang === 'ar') ? 'chevron-right' : 'chevron-left'; },
-  chevronRight() { return (currentLang === 'he' || currentLang === 'ar') ? 'chevron-left' : 'chevron-right'; },
+  textAlign(): 'right' | 'left' { return (currentLang === 'he' || currentLang === 'ar') ? 'right' : 'left'; },
+  backIcon(): string { return (currentLang === 'he' || currentLang === 'ar') ? 'arrow-right' : 'arrow-left'; },
+  chevronLeft(): string { return (currentLang === 'he' || currentLang === 'ar') ? 'chevron-right' : 'chevron-left'; },
+  chevronRight(): string { return (currentLang === 'he' || currentLang === 'ar') ? 'chevron-left' : 'chevron-right'; },
 };
 
 export default i18n;

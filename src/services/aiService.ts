@@ -268,7 +268,7 @@ function generateInsights(transactions: any[], budgets: any, accounts: any[], re
       type: savingsRate >= 20 ? 'positive' : savingsRate >= 0 ? 'warning' : 'negative',
       icon: savingsRate >= 20 ? 'trending-up' : savingsRate >= 0 ? 'alert-circle' : 'trending-down',
       title: i18n.t('aiSavingsRate'),
-      text: i18n.t('aiSavingsRateText').replace('{rate}', savingsRate).replace('{amount}', fmt(Math.abs(balance))),
+      text: i18n.t('aiSavingsRateText').replace('{rate}', String(savingsRate)).replace('{amount}', fmt(Math.abs(balance))),
     });
   }
 
@@ -283,7 +283,7 @@ function generateInsights(transactions: any[], budgets: any, accounts: any[], re
         title: i18n.t('aiCategorySpike'),
         text: i18n.t('aiCategorySpikeText')
           .replace('{cat}', catName(cat))
-          .replace('{pct}', pct)
+          .replace('{pct}', String(pct))
           .replace('{amount}', fmt(amount))
           .replace('{lastAmount}', fmt(lastAmount)),
       });
@@ -307,7 +307,7 @@ function generateInsights(transactions: any[], budgets: any, accounts: any[], re
         icon: 'alert-triangle',
         title: i18n.t('aiBudgetWarning'),
         text: i18n.t('aiBudgetWarningText')
-          .replace('{cat}', catName(cat)).replace('{pct}', pct).replace('{days}', daysInMonth - dayOfMonth),
+          .replace('{cat}', catName(cat)).replace('{pct}', String(pct)).replace('{days}', String(daysInMonth - dayOfMonth)),
       });
     }
   });
@@ -336,7 +336,7 @@ function generateInsights(transactions: any[], budgets: any, accounts: any[], re
         icon: 'tv',
         title: i18n.t('aiSubscriptions'),
         text: i18n.t('aiSubscriptionsText')
-          .replace('{count}', subscriptions.length)
+          .replace('{count}', String(subscriptions.length))
           .replace('{amount}', fmt(total)),
       });
     }
