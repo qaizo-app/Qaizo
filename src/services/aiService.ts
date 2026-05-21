@@ -1,13 +1,17 @@
-// src/services/aiService.js
+// src/services/aiService.ts
 // AI-движок: Gemini API + локальный фоллбэк для парсинга, налогов, прогнозов
 import i18n from '../i18n';
 import { catName } from '../utils/categoryName';
 import { fmt, sym, code as curCode } from '../utils/currency';
 
+interface GeminiResponse {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+}
+
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const GEMINI_MODEL_PRIMARY = 'gemini-2.5-flash';
 const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
-const geminiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 const GEMINI_URL = geminiUrl(GEMINI_MODEL_PRIMARY);
 
 // ─── МААМ и налоговые ставки (Израиль) ──────────────────
@@ -44,7 +48,7 @@ const CATEGORY_KEYWORDS = {
 };
 
 // ─── Парсинг текста ─────────────────────────────────────
-function parseTransaction(text) {
+function parseTransaction(text: any) {
   if (!text || !text.trim()) return null;
 
   const input = text.trim().toLowerCase();
@@ -92,7 +96,7 @@ function parseTransaction(text) {
   return { amount, type, categoryId, recipient, note: text.trim() };
 }
 
-function extractPayee(input) {
+function extractPayee(input: string) {
   // Известные магазины/бренды
   const knownPayees = [
     'рами леви', 'רמי לוי', 'rami levy',
@@ -116,7 +120,7 @@ function extractPayee(input) {
 }
 
 // ─── Налоговый резерв (для самозанятых) ─────────────────
-function calculateTaxReserve(grossIncome) {
+function calculateTaxReserve(grossIncome: number) {
   const maam = Math.round(grossIncome * MAAM_RATE / (1 + MAAM_RATE)); // МААМ уже включён
   const incomeTax = Math.round(grossIncome * ESTIMATED_INCOME_TAX);
   const bituach = Math.round(grossIncome * BITUACH_LEUMI);
@@ -127,16 +131,16 @@ function calculateTaxReserve(grossIncome) {
 }
 
 // ─── Прогноз кассового разрыва ──────────────────────────
-function predictCashFlow(accounts, recurring, transactions) {
+function predictCashFlow(accounts: any[], recurring: any[], transactions: any[]) {
   const now = new Date();
-  const currentBalance = accounts.reduce((s, a) => s + (a.balance || 0), 0);
+  const currentBalance = accounts.reduce((s: number, a: any) => s + (a.balance || 0), 0);
 
   // Предстоящие обязательные платежи в этом месяце
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const upcoming = [];
+  const upcoming: any[] = [];
   let totalUpcoming = 0;
 
-  recurring.filter(r => r.isActive && r.nextDate).forEach(r => {
+  recurring.filter((r: any) => r.isActive && r.nextDate).forEach((r: any) => {
     const next = new Date(r.nextDate);
     if (next.getMonth() === now.getMonth() && next.getFullYear() === now.getFullYear() && next.getDate() > now.getDate()) {
       upcoming.push({ name: r.recipient || r.categoryId, amount: r.amount, date: next.getDate(), type: r.type });
@@ -152,25 +156,25 @@ function predictCashFlow(accounts, recurring, transactions) {
     totalUpcoming,
     projectedBalance,
     isAtRisk,
-    upcoming: upcoming.sort((a, b) => a.date - b.date),
+    upcoming: upcoming.sort((a: any, b: any) => a.date - b.date),
   };
 }
 
 // ─── Динамический дневной бюджет ────────────────────────
-function calculateDailyBudget(transactions, budgets) {
+function calculateDailyBudget(transactions: any[], budgets: any) {
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const dayOfMonth = now.getDate();
   const daysLeft = daysInMonth - dayOfMonth;
   if (daysLeft <= 0) return null;
 
-  const thisMonth = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+  const thisMonth = transactions.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+  const expense = thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
   const remaining = income - expense;
 
   if (remaining <= 0 || income <= 0) return null;
@@ -182,8 +186,8 @@ function calculateDailyBudget(transactions, budgets) {
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = yesterday.toISOString().split('T')[0];
   const yesterdayExpense = thisMonth
-    .filter(t => t.type === 'expense' && !t.isTransfer && (t.date || t.createdAt || '').startsWith(yStr))
-    .reduce((s, t) => s + t.amount, 0);
+    .filter((t: any) => t.type === 'expense' && !t.isTransfer && (t.date || t.createdAt || '').startsWith(yStr))
+    .reduce((s: number, t: any) => s + t.amount, 0);
 
   const prevDailyBudget = daysLeft > 0 ? Math.round((remaining + yesterdayExpense) / (daysLeft + 1)) : dailyBudget;
   const savedYesterday = prevDailyBudget - yesterdayExpense;
@@ -192,33 +196,33 @@ function calculateDailyBudget(transactions, budgets) {
 }
 
 // ─── Генерация инсайтов ─────────────────────────────────
-function generateInsights(transactions, budgets, accounts, recurring) {
+function generateInsights(transactions: any[], budgets: any, accounts: any[], recurring: any[]) {
   const now = new Date();
-  const insights = [];
+  const insights: any[] = [];
 
-  const thisMonth = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+  const thisMonth = transactions.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
-  const lastMonth = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+  const lastMonth = transactions.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
     const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+  const expense = thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
   const balance = income - expense;
   const savingsRate = income > 0 ? Math.round((balance / income) * 100) : 0;
 
   // Категории этого месяца
-  const catTotals = {};
-  thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
+  const catTotals: Record<string, number> = {};
+  thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).forEach((t: any) => {
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
   // Категории прошлого месяца
-  const lastCatTotals = {};
-  lastMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
+  const lastCatTotals: Record<string, number> = {};
+  lastMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).forEach((t: any) => {
     lastCatTotals[t.categoryId] = (lastCatTotals[t.categoryId] || 0) + t.amount;
   });
 
@@ -255,7 +259,7 @@ function generateInsights(transactions, budgets, accounts, recurring) {
   });
 
   // 3. Бюджеты под угрозой
-  Object.entries(budgets).forEach(([cat, limit]) => {
+  Object.entries(budgets as Record<string, number>).forEach(([cat, limit]) => {
     const spent = catTotals[cat] || 0;
     const pct = Math.round((spent / limit) * 100);
     if (pct >= 100) {
@@ -291,9 +295,9 @@ function generateInsights(transactions, budgets, accounts, recurring) {
   }
 
   // 5. Повторяющиеся подписки (entertainment)
-  const subscriptions = recurring.filter(r => r.isActive && r.categoryId === 'entertainment');
+  const subscriptions = recurring.filter((r: any) => r.isActive && r.categoryId === 'entertainment');
   if (subscriptions.length > 0) {
-    const total = subscriptions.reduce((s, r) => s + r.amount, 0);
+    const total = subscriptions.reduce((s: number, r: any) => s + r.amount, 0);
     if (total > 50) {
       insights.push({
         type: 'info',
@@ -322,10 +326,10 @@ function generateInsights(transactions, budgets, accounts, recurring) {
 // ─── Gemini API ─────────────────────────────────────────
 // Last AI failure reason — exposed so screens can show a specific message
 // ("rate limit" / "no api key" / "network") instead of a generic fallback.
-let _lastAIError = null;
+let _lastAIError: any = null;
 function getLastAIError() { return _lastAIError; }
 
-async function callGeminiOnce(model, prompt, { maxTokens, temperature }) {
+async function callGeminiOnce(model: string, prompt: string, { maxTokens, temperature }: { maxTokens: number; temperature: number }) {
   const res = await fetch(`${geminiUrl(model)}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -337,13 +341,13 @@ async function callGeminiOnce(model, prompt, { maxTokens, temperature }) {
   return res;
 }
 
-async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) {
+async function callGemini(prompt: string, { maxTokens = 1024, temperature = 0.3 }: { maxTokens?: number; temperature?: number } = {}) {
   if (!GEMINI_API_KEY) {
     _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
     if (__DEV__) console.warn('[ai] no GEMINI_API_KEY set');
     return null;
   }
-  const tryModel = async (model) => {
+  const tryModel = async (model: string): Promise<any> => {
     try {
       const res = await callGeminiOnce(model, prompt, { maxTokens, temperature });
       if (!res.ok) {
@@ -355,11 +359,11 @@ async function callGemini(prompt, { maxTokens = 1024, temperature = 0.3 } = {}) 
         if (__DEV__) console.warn('[ai] gemini', model, 'error', res.status, errText.slice(0, 300));
         return { ok: false, code, status: res.status, message: errText.slice(0, 300) };
       }
-      const data = await res.json();
+      const data = await res.json() as GeminiResponse;
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
       if (!text) return { ok: false, code: 'empty_response', message: 'Gemini returned no text' };
       return { ok: true, text };
-    } catch (e) {
+    } catch (e: any) {
       if (__DEV__) console.warn('[ai] gemini', model, 'fetch failed', e);
       return { ok: false, code: 'network', message: String(e?.message || e) };
     }
@@ -394,7 +398,7 @@ const PROJECT_SYNONYMS = [
 ];
 
 // Strip Hebrew prefixes (ל, ב, מ, כ, ה) and lowercase
-function normalizeWord(s) {
+function normalizeWord(s: string): string {
   if (!s) return '';
   let n = s.toLowerCase().trim();
   // Strip common Hebrew preposition/article prefixes
@@ -402,7 +406,7 @@ function normalizeWord(s) {
   return n;
 }
 
-function matchProjectInText(text, projectsList) {
+function matchProjectInText(text: string, projectsList: any[]) {
   if (!projectsList || projectsList.length === 0 || !text) return null;
   const lc = text.toLowerCase();
   const lcWords = lc.split(/[\s,.;:!?()\-—–"'`]+/).filter(Boolean);
@@ -416,7 +420,7 @@ function matchProjectInText(text, projectsList) {
     if (lc.includes(projName)) return p.id;
 
     // 2. Word-by-word match against project name tokens
-    const projTokens = projName.split(/\s+/).map(t => t.length >= 3 ? t : null).filter(Boolean);
+    const projTokens = projName.split(/\s+/).map((t: string) => t.length >= 3 ? t : null).filter(Boolean) as string[];
     for (const projTok of projTokens) {
       const projTokNorm = normalizeWord(projTok);
       if (projTokNorm.length < 3) continue;
@@ -428,11 +432,11 @@ function matchProjectInText(text, projectsList) {
 
     // 3. Cross-language synonym match
     for (const syns of PROJECT_SYNONYMS) {
-      const projInGroup = syns.some(s => projName.includes(s));
+      const projInGroup = syns.some((s: string) => projName.includes(s));
       if (!projInGroup) continue;
-      const textInGroup = syns.some(s => {
+      const textInGroup = syns.some((s: string) => {
         if (lc.includes(s)) return true;
-        return lcWordsNormalized.some(w => w.includes(s) || s.includes(w));
+        return lcWordsNormalized.some((w: string) => w.includes(s) || s.includes(w));
       });
       if (textInGroup) return p.id;
     }
@@ -441,37 +445,37 @@ function matchProjectInText(text, projectsList) {
 }
 
 // Brand keywords for credit card brand detection (used for both AI selection and UI chip filtering)
-const CARD_BRAND_KEYWORDS = {
+const CARD_BRAND_KEYWORDS: Record<string, string[]> = {
   visa: ['visa', 'ויזה', 'виза'],
   mastercard: ['mastercard', 'master card', 'מאסטרקארד', 'מסטרקארד', 'мастеркард', 'мастер кард'],
   amex: ['amex', 'american express', 'אמקס', 'американ экспресс'],
 };
 
-function detectCardBrand(text) {
+function detectCardBrand(text: string) {
   const lc = (text || '').toLowerCase();
   for (const [brand, kws] of Object.entries(CARD_BRAND_KEYWORDS)) {
-    if (kws.some(kw => lc.includes(kw))) return brand;
+    if (kws.some((kw: string) => lc.includes(kw))) return brand;
   }
   return null;
 }
 
 // Умный парсинг транзакции через Gemini
-async function parseTransactionSmart(text, accounts = [], projects = []) {
+async function parseTransactionSmart(text: string, accounts: any[] = [], projects: any[] = []) {
   const lang = i18n.getLanguage();
   const currency = curCode();
   const categories = Object.keys(CATEGORY_KEYWORDS).join(', ');
 
   // Build accounts section for prompt (only active accounts)
-  const activeAccounts = (accounts || []).filter(a => a.isActive !== false);
-  console.log('[Smart] accounts in prompt:', activeAccounts.length, activeAccounts.map(a => `${a.id}=${a.name}(${a.type})`).join(' | '));
+  const activeAccounts = (accounts || []).filter((a: any) => a.isActive !== false);
+  console.log('[Smart] accounts in prompt:', activeAccounts.length, activeAccounts.map((a: any) => `${a.id}=${a.name}(${a.type})`).join(' | '));
   const accountsSection = activeAccounts.length > 0
-    ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map(a => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a SPECIFIC account name/brand ("Visa Hapoalim", "Mastercard", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, חשבון בנק, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → return both as null\n`
+    ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map((a: any) => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a SPECIFIC account name/brand ("Visa Hapoalim", "Mastercard", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, חשבון בנק, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → return both as null\n`
     : '';
 
   // Build projects section — only if user has any projects
-  const projectsList = (projects || []);
+  const projectsList: any[] = (projects || []);
   const projectsSection = projectsList.length > 0
-    ? `\nUSER PROJECTS (id → name):\n${projectsList.map(p => `  ${p.id} → "${p.name}"`).join('\n')}\n\nPROJECT MATCHING RULES (very tolerant):\n  - Match the project name even with prefixes/suffixes/declensions:\n      Hebrew: "לחתונה"/"בחתונה"/"מהחתונה"/"החתונה" all match project "חתונה"/"Wedding"/"Свадьба" (strip ל/ב/מ/ה prefixes).\n      Russian: "на свадьбу"/"для свадьбы"/"свадебный" → project "Свадьба"/"Wedding".\n      English: "for the wedding"/"wedding stuff" → project "Wedding"/"Свадьба"/"חתונה".\n  - Match SEMANTICALLY across languages: a Hebrew word can match a Russian/English project name and vice versa. E.g. "לחתונה" (HE) matches a project named "Свадьба" (RU) or "Wedding" (EN).\n  - Same for: שיפוץ/ремонт/renovation, טיול/поездка/trip, רכב/машина/car, מתנה/подарок/gift, תינוק/малыш/baby.\n  - If user mentioned the project (any form), return "projectId": "<that exact id from the list>".\n  - Otherwise return "projectId": null. DO NOT guess a project that wasn't mentioned.\n`
+    ? `\nUSER PROJECTS (id → name):\n${projectsList.map((p: any) => `  ${p.id} → "${p.name}"`).join('\n')}\n\nPROJECT MATCHING RULES (very tolerant):\n  - Match the project name even with prefixes/suffixes/declensions:\n      Hebrew: "לחתונה"/"בחתונה"/"מהחתונה"/"החתונה" all match project "חתונה"/"Wedding"/"Свадьба" (strip ל/ב/מ/ה prefixes).\n      Russian: "на свадьбу"/"для свадьбы"/"свадебный" → project "Свадьба"/"Wedding".\n      English: "for the wedding"/"wedding stuff" → project "Wedding"/"Свадьба"/"חתונה".\n  - Match SEMANTICALLY across languages: a Hebrew word can match a Russian/English project name and vice versa. E.g. "לחתונה" (HE) matches a project named "Свадьба" (RU) or "Wedding" (EN).\n  - Same for: שיפוץ/ремонт/renovation, טיול/поездка/trip, רכב/машина/car, מתנה/подарок/gift, תינוק/малыш/baby.\n  - If user mentioned the project (any form), return "projectId": "<that exact id from the list>".\n  - Otherwise return "projectId": null. DO NOT guess a project that wasn't mentioned.\n`
     : '';
 
   const prompt = `You are a financial transaction parser for an Israeli personal finance app. Parse the user's free-text into a transaction JSON.
@@ -589,9 +593,9 @@ RULES:
       const match = result.match(/\{[\s\S]*\}/);
       if (match) {
         try { parsed = JSON.parse(match[0]); }
-        catch (e2) { console.log('[Smart] FAIL: regex JSON extract also failed:', e2.message); }
+        catch (e2: any) { console.log('[Smart] FAIL: regex JSON extract also failed:', e2.message); }
       } else {
-        console.log('[Smart] FAIL: no JSON found in AI response:', e.message);
+        console.log('[Smart] FAIL: no JSON found in AI response:', (e as any).message);
       }
     }
   } else {
@@ -609,36 +613,36 @@ RULES:
         }
         // Smart account selection
         parsed.account = null;
-        const activeAccs = (accounts || []).filter(a => a.isActive !== false);
+        const activeAccs = (accounts || []).filter((a: any) => a.isActive !== false);
 
         // Brand-based selection has priority (e.g. user said "Visa" but has 3 Visa cards)
         const detectedBrand = detectCardBrand(text);
         if (detectedBrand) {
           parsed.detectedBrand = detectedBrand;
           const brandKws = CARD_BRAND_KEYWORDS[detectedBrand];
-          const brandMatches = activeAccs.filter(a => brandKws.some(kw => (a.name || '').toLowerCase().includes(kw)));
+          const brandMatches = activeAccs.filter((a: any) => brandKws.some((kw: string) => (a.name || '').toLowerCase().includes(kw)));
           if (brandMatches.length === 1) {
             parsed.account = brandMatches[0].id;
           } else if (brandMatches.length > 1) {
             const dataService = require('./dataService').default;
             const allTxs = await dataService.getTransactions();
-            const brandIds = new Set(brandMatches.map(a => a.id));
-            const sorted = [...allTxs].sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+            const brandIds = new Set(brandMatches.map((a: any) => a.id));
+            const sorted = [...allTxs].sort((a: any, b: any) => new Date(b.date || b.createdAt || 0).getTime() - new Date(a.date || a.createdAt || 0).getTime());
             for (const tx of sorted) {
-              if (tx.account && brandIds.has(tx.account)) { parsed.account = tx.account; break; }
+              if ((tx as any).account && brandIds.has((tx as any).account)) { parsed.account = (tx as any).account; break; }
             }
             if (!parsed.account) parsed.account = brandMatches[0].id;
           }
         }
 
         // Validate projectId — only accept ids that actually exist
-        if (parsed.projectId && !projectsList.find(p => p.id === parsed.projectId)) {
+        if (parsed.projectId && !projectsList.find((p: any) => p.id === parsed.projectId)) {
           parsed.projectId = null;
         }
         // Fallback: if AI didn't pick a project, try JS substring + cross-lang match
         if (!parsed.projectId) {
           const matched = matchProjectInText(text, projectsList);
-          console.log('[Smart] project fallback match:', matched, '| projects available:', projectsList.length, projectsList.map(p => p.name).join('|'));
+          console.log('[Smart] project fallback match:', matched, '| projects available:', projectsList.length, projectsList.map((p: any) => p.name).join('|'));
           if (matched) parsed.projectId = matched;
         }
         // Category auto-suggest from project history: if user mentioned a project but
@@ -648,10 +652,10 @@ RULES:
           try {
             const ds = require('./dataService').default;
             const allTxs = await ds.getTransactions();
-            const projTxs = allTxs.filter(t => t.projectId === parsed.projectId && t.type === parsed.type);
+            const projTxs = allTxs.filter((t: any) => t.projectId === parsed.projectId && t.type === parsed.type);
             if (projTxs.length >= 2) {
-              const catCounts = {};
-              projTxs.forEach(t => { catCounts[t.categoryId] = (catCounts[t.categoryId] || 0) + 1; });
+              const catCounts: Record<string, number> = {};
+              projTxs.forEach((t: any) => { catCounts[t.categoryId] = (catCounts[t.categoryId] || 0) + 1; });
               const sorted = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
               if (sorted.length > 0 && sorted[0][1] >= 2 && sorted[0][0] !== 'other') {
                 parsed.categoryId = sorted[0][0];
@@ -668,15 +672,15 @@ RULES:
           try {
             const ds = require('./dataService').default;
             const allTxs = await ds.getTransactions();
-            const sameCatTxs = allTxs.filter(t =>
+            const sameCatTxs = allTxs.filter((t: any) =>
               t.categoryId === parsed.categoryId &&
               t.type === parsed.type &&
               t.projectId &&
-              projectsList.find(p => p.id === t.projectId) // project still exists
+              projectsList.find((p: any) => p.id === t.projectId) // project still exists
             );
             if (sameCatTxs.length >= 2) {
-              const projCounts = {};
-              sameCatTxs.forEach(t => { projCounts[t.projectId] = (projCounts[t.projectId] || 0) + 1; });
+              const projCounts: Record<string, number> = {};
+              sameCatTxs.forEach((t: any) => { projCounts[t.projectId] = (projCounts[t.projectId] || 0) + 1; });
               const sorted = Object.entries(projCounts).sort((a, b) => b[1] - a[1]);
               if (sorted.length > 0 && sorted[0][1] >= 2) {
                 parsed.projectId = sorted[0][0];
@@ -688,10 +692,10 @@ RULES:
 
         // Fallback: AI gave specific accountId, or only generic type
         if (!parsed.account) {
-          if (parsed.accountId && activeAccs.find(a => a.id === parsed.accountId)) {
+          if (parsed.accountId && activeAccs.find((a: any) => a.id === parsed.accountId)) {
             parsed.account = parsed.accountId;
           } else if (parsed.accountType) {
-            const matching = activeAccs.filter(a => a.type === parsed.accountType);
+            const matching = activeAccs.filter((a: any) => a.type === parsed.accountType);
             if (matching.length === 1) {
               parsed.account = matching[0].id;
             } else if (matching.length > 1) {
@@ -704,7 +708,7 @@ RULES:
         return parsed;
       }
       console.log('[Smart] FAIL: parsed missing required fields, falling back to local parser');
-    } catch (e) {
+    } catch (e: any) {
       console.log('[Smart] FAIL: error processing parsed result:', e.message);
     }
   }
@@ -716,18 +720,18 @@ RULES:
 }
 
 // Персональные советы от Gemini
-async function getPersonalAdvice(transactions, budgets, lang) {
+async function getPersonalAdvice(transactions: any[], budgets: any, lang: string) {
   const now = new Date();
-  const thisMonth = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+  const thisMonth = transactions.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+  const expense = thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
 
-  const catTotals = {};
-  thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
+  const catTotals: Record<string, number> = {};
+  thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).forEach((t: any) => {
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
 
@@ -737,11 +741,11 @@ async function getPersonalAdvice(transactions, budgets, lang) {
     .map(([cat, amount]) => `${cat}: ${amount}`)
     .join(', ');
 
-  const budgetInfo = Object.entries(budgets)
+  const budgetInfo = Object.entries(budgets as Record<string, number>)
     .map(([cat, limit]) => `${cat}: spent ${catTotals[cat] || 0}/${limit}`)
     .join(', ');
 
-  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+  const langMap: Record<string, string> = { ru: 'Russian', he: 'Hebrew', en: 'English' };
 
   const prompt = `You are a smart financial advisor for an Israeli user. Analyze their data and give 2-3 short, specific, actionable tips.
 
@@ -764,7 +768,7 @@ No markdown, no explanation, only the JSON array.`;
       const jsonStr = result.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
       const tips = JSON.parse(jsonStr);
       if (Array.isArray(tips) && tips.length > 0) {
-        return tips.map(t => ({
+        return tips.map((t: any) => ({
           ...t,
           icon: t.type === 'positive' ? 'star' : t.type === 'warning' ? 'alert-circle' : 'info',
         }));
@@ -775,16 +779,16 @@ No markdown, no explanation, only the JSON array.`;
 }
 
 // ─── Receipt Scanner ────────────────────────────────────
-async function scanReceipt(imageInput, lang, _retryCount = 0) {
+async function scanReceipt(imageInput: any, lang: string, _retryCount = 0): Promise<any> {
   if (!GEMINI_API_KEY) {
     if (__DEV__) console.error('scanReceipt: no API key');
     return null;
   }
   try {
     // Support single string or array of base64 strings
-    const imageList = Array.isArray(imageInput) ? imageInput : [imageInput];
+    const imageList: string[] = Array.isArray(imageInput) ? imageInput : [imageInput];
 
-    const detectMime = (b64) => {
+    const detectMime = (b64: string) => {
       if (b64.startsWith('/9j/')) return 'image/jpeg';
       if (b64.startsWith('iVBOR')) return 'image/png';
       if (b64.startsWith('JVBER')) return 'application/pdf';
@@ -842,7 +846,7 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
       return null;
     }
 
-    const data = await res.json();
+    const data = await res.json() as GeminiResponse;
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (__DEV__) console.log('scanReceipt response:', text);
 
@@ -870,7 +874,7 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
       }
     }
 
-    let parsed;
+    let parsed: any;
     try {
       parsed = JSON.parse(jsonStr);
     } catch (parseErr) {
@@ -918,11 +922,11 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
 }
 
 // ─── Receipt Items (separate request for long receipts) ──
-async function scanReceiptItems(imageInput) {
+async function scanReceiptItems(imageInput: any): Promise<any[]> {
   if (!GEMINI_API_KEY) return [];
   try {
-    const imageList = Array.isArray(imageInput) ? imageInput : [imageInput];
-    const detectMime = (b64) => {
+    const imageList: string[] = Array.isArray(imageInput) ? imageInput : [imageInput];
+    const detectMime = (b64: string) => {
       if (b64.startsWith('/9j/')) return 'image/jpeg';
       if (b64.startsWith('iVBOR')) return 'image/png';
       if (b64.startsWith('JVBER')) return 'application/pdf';
@@ -1006,7 +1010,7 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
       if (__DEV__) console.error('scanReceiptItems API error:', res.status);
       return [];
     }
-    const data = await res.json();
+    const data = await res.json() as GeminiResponse;
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (__DEV__) console.log('[scanReceiptItems] raw length:', text.length);
     let jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
@@ -1017,7 +1021,7 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
       if (lastBrace > 0) jsonStr = jsonStr.substring(0, lastBrace + 1) + ']';
     }
 
-    let parsed;
+    let parsed: any;
     try {
       parsed = JSON.parse(jsonStr);
     } catch (parseErr) {
@@ -1038,8 +1042,8 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
     // Filter and normalize. Category is optional — fall back to 'other'.
     const VALID_CATS = ['food','restaurant','household','cosmetics','health','kids','clothing','electronics','other'];
     const items = parsed
-      .filter(i => i && i.name && typeof i.price === 'number' && !isNaN(i.price))
-      .map(i => ({
+      .filter((i: any) => i && i.name && typeof i.price === 'number' && !isNaN(i.price))
+      .map((i: any) => ({
         name: String(i.name).trim(),
         price: i.price,
         category: VALID_CATS.includes(i.category) ? i.category : 'other',
@@ -1054,8 +1058,8 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
 
 // ─── AI Chat ────────────────────────────────────────────
 // ─── Интерпретация запроса для графика ──────────────────
-async function interpretChartQuery(question, transactions, lang) {
-  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+async function interpretChartQuery(question: string, transactions: any[], lang: string) {
+  const langMap: Record<string, string> = { ru: 'Russian', he: 'Hebrew', en: 'English' };
 
   const prompt = `You are a financial data query interpreter. Analyze the user's question and determine if they want to SEE/VISUALIZE data (chart needed) or just get a text answer.
 
@@ -1091,14 +1095,14 @@ Rules:
 }
 
 // ─── Подготовка данных для графика ──────────────────────
-function buildChartData(chartParams, transactions) {
+function buildChartData(chartParams: any, transactions: any[]) {
   const { chartType, days, filter } = chartParams;
   const now = new Date();
   const start = new Date(now);
   start.setDate(start.getDate() - days);
 
-  const filtered = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+  const filtered = transactions.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
     return d >= start && d <= now;
   });
 
@@ -1106,8 +1110,8 @@ function buildChartData(chartParams, transactions) {
     // Category breakdown — exclude inter-account transfers, they shouldn't
     // appear as a "spending" category.
     const typeFilter = filter === 'income' ? 'income' : 'expense';
-    const catTotals = {};
-    filtered.filter(t => t.type === typeFilter && !t.isTransfer).forEach(t => {
+    const catTotals: Record<string, number> = {};
+    filtered.filter((t: any) => t.type === typeFilter && !t.isTransfer).forEach((t: any) => {
       catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
     });
     return {
@@ -1121,16 +1125,16 @@ function buildChartData(chartParams, transactions) {
 
   if (chartType === 'cashflow') {
     // Daily income vs expense
-    const data = [];
+    const data: Array<{ day: number; date: string; income: number; expense: number }> = [];
     for (let i = 0; i <= days; i++) {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
-      const dayTxs = filtered.filter(tx => {
-        const td = new Date(tx.date || tx.createdAt);
+      const dayTxs = filtered.filter((tx: any) => {
+        const td = new Date(tx.date || tx.createdAt || '');
         return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate();
       });
-      const income = dayTxs.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-      const expense = dayTxs.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+      const income = dayTxs.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+      const expense = dayTxs.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
       data.push({ day: d.getDate(), date: `${d.getMonth() + 1}/${d.getDate()}`, income, expense });
     }
     return { type: 'cashflow', data, totalIncome: data.reduce((s, d) => s + d.income, 0), totalExpense: data.reduce((s, d) => s + d.expense, 0) };
@@ -1138,37 +1142,37 @@ function buildChartData(chartParams, transactions) {
 
   // Default: bar chart (daily amounts) — exclude inter-account transfers
   const typeFilter = filter === 'income' ? 'income' : 'expense';
-  const data = [];
+  const data: Array<{ day: number; date: string; amount: number }> = [];
   for (let i = 0; i <= days; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const dayTotal = filtered.filter(tx => {
-      const td = new Date(tx.date || tx.createdAt);
+    const dayTotal = filtered.filter((tx: any) => {
+      const td = new Date(tx.date || tx.createdAt || '');
       return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate() && tx.type === typeFilter && !tx.isTransfer;
-    }).reduce((s, t) => s + t.amount, 0);
+    }).reduce((s: number, t: any) => s + t.amount, 0);
     data.push({ day: d.getDate(), date: `${d.getMonth() + 1}/${d.getDate()}`, amount: dayTotal });
   }
-  const total = data.reduce((s, d) => s + d.amount, 0);
+  const total = data.reduce((s: number, d) => s + d.amount, 0);
   return { type: 'bar', data, total, avg: days > 0 ? total / days : 0 };
 }
 
-async function chatWithAI(question, transactions, budgets, lang) {
+async function chatWithAI(question: string, transactions: any[], budgets: any, lang: string) {
   const now = new Date();
-  const last90 = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
-    return (now - d) < 90 * 24 * 60 * 60 * 1000;
+  const last90 = transactions.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
+    return (now.getTime() - d.getTime()) < 90 * 24 * 60 * 60 * 1000;
   });
 
-  const thisMonth = last90.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+  const thisMonth = last90.filter((t: any) => {
+    const d = new Date(t.date || t.createdAt || '');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const income = thisMonth.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-  const expense = thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
+  const income = thisMonth.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+  const expense = thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
 
-  const catTotals = {};
-  last90.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
+  const catTotals: Record<string, number> = {};
+  last90.filter((t: any) => t.type === 'expense' && !t.isTransfer).forEach((t: any) => {
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
 
@@ -1178,11 +1182,11 @@ async function chatWithAI(question, transactions, budgets, lang) {
     .map(([cat, amount]) => `${cat}: ${Math.round(amount)} ${curCode()}`)
     .join(', ');
 
-  const monthlyIncomes = {};
-  const monthlyExpenses = {};
-  last90.forEach(t => {
+  const monthlyIncomes: Record<string, number> = {};
+  const monthlyExpenses: Record<string, number> = {};
+  last90.forEach((t: any) => {
     if (t.isTransfer) return; // transfers between accounts aren't real income/expense
-    const d = new Date(t.date || t.createdAt);
+    const d = new Date(t.date || t.createdAt || '');
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     if (t.type === 'income') monthlyIncomes[key] = (monthlyIncomes[key] || 0) + t.amount;
     else monthlyExpenses[key] = (monthlyExpenses[key] || 0) + t.amount;
@@ -1193,13 +1197,13 @@ async function chatWithAI(question, transactions, budgets, lang) {
     .map(k => `${k}: income ${Math.round(monthlyIncomes[k] || 0)}, expense ${Math.round(monthlyExpenses[k] || 0)}`)
     .join('; ');
 
-  const budgetInfo = Object.entries(budgets || {})
+  const budgetInfo = Object.entries((budgets || {}) as Record<string, number>)
     .map(([cat, limit]) => `${cat}: spent ${Math.round(catTotals[cat] || 0)} of ${limit}`)
     .join(', ');
 
   // Top payees
-  const payeeTotals = {};
-  last90.filter(t => t.type === 'expense' && !t.isTransfer && t.recipient).forEach(t => {
+  const payeeTotals: Record<string, number> = {};
+  last90.filter((t: any) => t.type === 'expense' && !t.isTransfer && t.recipient).forEach((t: any) => {
     payeeTotals[t.recipient] = (payeeTotals[t.recipient] || 0) + t.amount;
   });
   const topPayees = Object.entries(payeeTotals)
@@ -1209,8 +1213,8 @@ async function chatWithAI(question, transactions, budgets, lang) {
     .join(', ');
 
   // This month categories
-  const thisMonthCats = {};
-  thisMonth.filter(t => t.type === 'expense' && !t.isTransfer).forEach(t => {
+  const thisMonthCats: Record<string, number> = {};
+  thisMonth.filter((t: any) => t.type === 'expense' && !t.isTransfer).forEach((t: any) => {
     thisMonthCats[t.categoryId] = (thisMonthCats[t.categoryId] || 0) + t.amount;
   });
   const thisMonthTopCats = Object.entries(thisMonthCats)
@@ -1221,12 +1225,12 @@ async function chatWithAI(question, transactions, budgets, lang) {
 
   // Today's transactions
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const todayTxs = transactions.filter(t => (t.date || t.createdAt || '').slice(0, 10) === todayStr);
-  const todayExpense = todayTxs.filter(t => t.type === 'expense' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-  const todayIncome = todayTxs.filter(t => t.type === 'income' && !t.isTransfer).reduce((s, t) => s + t.amount, 0);
-  const todayDetail = todayTxs.map(t => `${t.type === 'income' && !t.isTransfer ? '+' : '-'}${Math.round(t.amount)} ${t.categoryId}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
+  const todayTxs = transactions.filter((t: any) => (t.date || t.createdAt || '').slice(0, 10) === todayStr);
+  const todayExpense = todayTxs.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+  const todayIncome = todayTxs.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
+  const todayDetail = todayTxs.map((t: any) => `${t.type === 'income' && !t.isTransfer ? '+' : '-'}${Math.round(t.amount)} ${t.categoryId}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
 
-  const langMap = { ru: 'Russian', he: 'Hebrew', en: 'English' };
+  const langMap: Record<string, string> = { ru: 'Russian', he: 'Hebrew', en: 'English' };
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
 
   const prompt = `You are Qaizo AI — a personal finance advisor. Answer the user's question using ONLY their real data below. Always include specific numbers.
@@ -1276,7 +1280,7 @@ RULES:
 }
 
 // ─── Перевод названия категории на все языки ────────────
-async function translateCategoryName(name, sourceLang) {
+async function translateCategoryName(name: string, sourceLang: string) {
   const fallback = { ru: name, en: name, he: name };
   if (!name || !GEMINI_API_KEY) return fallback;
   try {
