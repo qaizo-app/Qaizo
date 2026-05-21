@@ -1,12 +1,39 @@
-// src/services/importService.js
+// src/services/importService.ts
 // Import transactions from CSV/TSV/Excel files
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import dataService from './dataService';
 import { sym } from '../utils/currency';
+import type { Account } from '../types';
+
+type ImportType = 'income' | 'expense';
+type ImportFormat = 'wallet' | 'qaizo' | 'bank' | 'generic';
+
+// A parsed import row — looser than Transaction (no id, account resolved later;
+// carries the _-prefixed scratch fields used during account/category resolution).
+interface ParsedRow {
+  date: string;
+  type: ImportType;
+  amount: number;
+  categoryId: string;
+  recipient: string;
+  note: string;
+  tags: string[];
+  currency: string;
+  account?: string | null;
+  createdAt?: string;
+  _rawCategory?: string | null;
+  _accountName?: string | null;
+  _accountType?: string;
+}
+
+interface ImportOptions {
+  accountMap?: Record<string, { id?: string; create?: { name?: string; type?: string; currency?: string; icon?: string }; skip?: boolean }>;
+  categoryMap?: Record<string, string>;
+}
 
 // Known category mappings (multilingual)
-const CATEGORY_MAP = {
+const CATEGORY_MAP: Record<string, string> = {
   // English
   'food': 'food', 'grocery': 'food', 'supermarket': 'food',
   'restaurant': 'restaurant', 'cafe': 'restaurant', 'coffee': 'restaurant',
@@ -63,15 +90,15 @@ const CATEGORY_MAP = {
   'משכורת': 'salary_me', 'הכנסה': 'other_income',
 };
 
-function resolveCategory(name) {
+function resolveCategory(name?: string | null): string {
   if (!name) return 'other';
   const lower = name.toLowerCase().trim();
   return CATEGORY_MAP[lower] || 'other';
 }
 
-function detectDelimiter(line) {
+function detectDelimiter(line: string): string {
   // Count occurrences outside quotes
-  let counts = { ';': 0, ',': 0, '\t': 0 };
+  const counts: Record<string, number> = { ';': 0, ',': 0, '\t': 0 };
   let inQuotes = false;
   for (const ch of line) {
     if (ch === '"') inQuotes = !inQuotes;
@@ -83,12 +110,12 @@ function detectDelimiter(line) {
   return ',';
 }
 
-let _delimiter = null;
+let _delimiter: string | null = null;
 
-function parseCSVLine(line) {
+function parseCSVLine(line: string): string[] {
   if (!_delimiter) _delimiter = detectDelimiter(line);
   const delim = _delimiter;
-  const result = [];
+  const result: string[] = [];
   let current = '';
   let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
@@ -107,7 +134,7 @@ function parseCSVLine(line) {
   return result;
 }
 
-function detectFormat(headers) {
+function detectFormat(headers: string[]): ImportFormat {
   const h = headers.map(s => s.toLowerCase().replace(/["\uFEFF]/g, '').trim());
 
   // Wallet/Bluecoins format: account;category;currency;amount;...;type;payment_type;...
@@ -128,7 +155,7 @@ function detectFormat(headers) {
   return 'generic';
 }
 
-function parseDate(val) {
+function parseDate(val?: string | null): string {
   if (!val) return new Date().toISOString();
   const v = val.trim();
 
@@ -161,7 +188,7 @@ function parseDate(val) {
   return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }
 
-function parseAmount(val) {
+function parseAmount(val?: string | number | null): number {
   if (!val) return 0;
   let s = String(val).replace(/[₪$€£\s]/g, '').replace(/[()]/g, '');
   // Handle comma as decimal separator: "231,80" → "231.80"
@@ -176,8 +203,8 @@ function parseAmount(val) {
   return Math.abs(parseFloat(s) || 0);
 }
 
-function parseQaizoRow(cols, headerMap) {
-  const get = (key) => cols[headerMap[key]] || '';
+function parseQaizoRow(cols: string[], headerMap: Record<string, number>): ParsedRow | null {
+  const get = (key: string) => cols[headerMap[key]] || '';
   const amount = parseAmount(get('amount'));
   if (amount === 0) return null;
 
@@ -199,12 +226,12 @@ function parseQaizoRow(cols, headerMap) {
   };
 }
 
-function parseBankRow(cols, headerMap) {
-  const get = (key) => cols[headerMap[key]] || '';
+function parseBankRow(cols: string[], headerMap: Record<string, number>): ParsedRow | null {
+  const get = (key: string) => cols[headerMap[key]] || '';
 
   // Try amount column first — negative = expense, positive = income
   let amount = 0;
-  let type = 'expense';
+  let type: ImportType = 'expense';
   const rawAmount = get('amount') || get('sum') || '';
 
   if (rawAmount) {
@@ -247,8 +274,8 @@ function parseBankRow(cols, headerMap) {
   };
 }
 
-function parseWalletRow(cols, headerMap) {
-  const get = (key) => cols[headerMap[key]] || '';
+function parseWalletRow(cols: string[], headerMap: Record<string, number>): ParsedRow | null {
+  const get = (key: string) => cols[headerMap[key]] || '';
   const amount = parseAmount(get('amount'));
   if (amount === 0) return null;
 
@@ -267,7 +294,7 @@ function parseWalletRow(cols, headerMap) {
   const isIncome = rawType.includes('доход') || rawType.includes('income') || rawType.includes('הכנסה');
 
   // Category mapping from wallet apps
-  const walletCategoryMap = {
+  const walletCategoryMap: Record<string, string> = {
     'еда': 'food', 'еда и напитки': 'food', 'фрукты и овощи': 'food',
     'алкогольные напитки': 'food', 'безалкогольные напитки': 'food',
     'ресторан, фастфуд': 'restaurant', 'ресторан': 'restaurant',
@@ -334,7 +361,7 @@ function parseWalletRow(cols, headerMap) {
   // Keyword-based fallback for unmapped categories
   if (!categoryId || categoryId === 'other') {
     const cat = (customCat || rawCat);
-    const kwMap = [
+    const kwMap: [RegExp, string][] = [
       [/еда|продукт|напит|алкогол|фрукт|овощ/, 'food'],
       [/рестора|фастфуд|кафе/, 'restaurant'],
       [/одежд|обувь/, 'clothing'],
@@ -407,7 +434,7 @@ function parseWalletRow(cols, headerMap) {
   };
 }
 
-function parseGenericRow(cols) {
+function parseGenericRow(cols: string[]): ParsedRow | null {
   // Best effort: find date-like and number columns
   let date = new Date().toISOString();
   let amount = 0;
@@ -428,14 +455,14 @@ function parseGenericRow(cols) {
 }
 
 // ─── Parse with custom column mapping ─────────────────────
-function parseWithMapping(lines, mapping) {
-  const parsed = [];
-  const errors = [];
+function parseWithMapping(lines: string[], mapping: Record<string, number>) {
+  const parsed: ParsedRow[] = [];
+  const errors: number[] = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
     if (cols.length < 2) continue;
 
-    const get = (field) => mapping[field] !== undefined && mapping[field] !== -1 ? (cols[mapping[field]] || '') : '';
+    const get = (field: string) => mapping[field] !== undefined && mapping[field] !== -1 ? (cols[mapping[field]] || '') : '';
     const amount = parseAmount(get('amount'));
     if (amount === 0) { errors.push(i + 1); continue; }
 
@@ -489,8 +516,8 @@ async function pickAndParseFile() {
   const format = detectFormat(headers);
 
   // Build header map (lowercase key → index)
-  const headerMap = {};
-  headers.forEach((h, i) => {
+  const headerMap: Record<string, number> = {};
+  headers.forEach((h: string, i: number) => {
     const key = h.toLowerCase().replace(/["\uFEFF]/g, '').trim();
     headerMap[key] = i;
     // Common aliases
@@ -513,8 +540,8 @@ async function pickAndParseFile() {
   });
 
   // Parse rows
-  const parsed = [];
-  const errors = [];
+  const parsed: ParsedRow[] = [];
+  const errors: number[] = [];
   let skippedTransfers = 0, skippedZero = 0, skippedShort = 0;
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
@@ -522,7 +549,7 @@ async function pickAndParseFile() {
 
     // For wallet format, pre-check transfer to count separately
     if (format === 'wallet') {
-      const get = (key) => cols[headerMap[key]] || '';
+      const get = (key: string) => cols[headerMap[key]] || '';
       const rt = get('type').toLowerCase();
       const tc = get('transfer').toLowerCase();
       const cat = get('category');
@@ -550,14 +577,14 @@ async function pickAndParseFile() {
     else { skippedZero++; errors.push(i + 1); }
   }
   // Log category and account stats
-  const catCounts = {};
-  const acctCounts = {};
+  const catCounts: Record<string, number> = {};
+  const acctCounts: Record<string, number> = {};
   for (const tx of parsed) {
     catCounts[tx.categoryId] = (catCounts[tx.categoryId] || 0) + 1;
     if (tx._accountName) acctCounts[tx._accountName] = (acctCounts[tx._accountName] || 0) + 1;
   }
   // Collect raw category values that mapped to 'other'
-  const rawOtherCats = {};
+  const rawOtherCats: Record<string, number> = {};
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
     if (cols.length < 2) continue;
@@ -568,13 +595,13 @@ async function pickAndParseFile() {
   }
 
   // Sample rows for preview
-  const sampleRows = [];
+  const sampleRows: string[][] = [];
   for (let i = 1; i <= Math.min(3, lines.length - 1); i++) {
     sampleRows.push(parseCSVLine(lines[i]));
   }
 
   // Auto-detected mapping for manual adjustment
-  const autoMapping = {};
+  const autoMapping: Record<string, number> = {};
   ['date', 'amount', 'type', 'category', 'payee', 'note'].forEach(field => {
     autoMapping[field] = headerMap[field] !== undefined ? headerMap[field] : -1;
   });
@@ -591,18 +618,20 @@ async function pickAndParseFile() {
     sampleRows,
     autoMapping,
   };
-  } catch (e) {
+  } catch (e: any) {
     if (__DEV__) console.error('Import parse error:', e);
     return { success: false, error: e.message || 'parse_error' };
   }
 }
 
 // ─── Fuzzy name matching ─────────────────────────────────
-function normalizeName(s) {
+function normalizeName(s?: string | null): string {
   return (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-function fuzzyMatchAccount(name, existingAccounts) {
+type AccountMatch = { id: string | null; confidence: 'high' | 'medium' | 'low' | null };
+
+function fuzzyMatchAccount(name: string, existingAccounts: Account[]): AccountMatch {
   const n = normalizeName(name);
   if (!n) return { id: null, confidence: null };
   const exact = existingAccounts.find(a => normalizeName(a.name) === n);
@@ -626,9 +655,9 @@ function fuzzyMatchAccount(name, existingAccounts) {
 
 // Return unique accounts and "other"-fallback categories for user review.
 // existingAccounts: loaded via dataService.getAccounts()
-function analyzeImportData(transactions, existingAccounts) {
-  const accMap = new Map(); // name → { count, suggestedType }
-  const catMap = new Map(); // rawCategory → { count, samples: [] }
+function analyzeImportData(transactions: ParsedRow[], existingAccounts: Account[]) {
+  const accMap = new Map<string, { count: number; suggestedType: string }>(); // name → { count, suggestedType }
+  const catMap = new Map<string, { count: number; samples: string[] }>(); // rawCategory → { count, samples: [] }
   for (const tx of transactions) {
     if (tx._accountName) {
       const key = tx._accountName;
@@ -658,7 +687,7 @@ function analyzeImportData(transactions, existingAccounts) {
 
 // options.accountMap: { [rawName]: { id } | { create: { name, type, currency, icon } } | { skip: true } }
 // options.categoryMap: { [rawCategoryName]: categoryId }
-async function importTransactions(transactions, options = {}) {
+async function importTransactions(transactions: ParsedRow[], options: ImportOptions = {}) {
   const { accountMap: userAccountMap = {}, categoryMap: userCategoryMap = {} } = options;
   let imported = 0;
   let failed = 0;
@@ -667,7 +696,7 @@ async function importTransactions(transactions, options = {}) {
 
   // Build duplicate detection set from existing transactions
   const existingTxs = await dataService.getTransactions();
-  const existingKeys = new Set();
+  const existingKeys = new Set<string>();
   for (const tx of existingTxs) {
     const date = (tx.date || tx.createdAt || '').slice(0, 10);
     const key = `${date}|${tx.amount}|${tx.categoryId}|${tx.type}`;
@@ -676,14 +705,14 @@ async function importTransactions(transactions, options = {}) {
 
   // Resolve account names to IDs
   const accounts = await dataService.getAccounts();
-  const accountIdByName = {}; // lower-name → id
-  accounts.forEach(a => { accountIdByName[a.name.toLowerCase()] = a.id; });
+  const accountIdByName: Record<string, string> = {}; // lower-name → id
+  accounts.forEach((a: Account) => { accountIdByName[a.name.toLowerCase()] = a.id; });
 
   // Decide account for each rawName: userMap → existing name match → auto-create
   // nameResolve[lower] = { id } | { skip: true }
-  const nameResolve = {};
-  const autoCreateByName = new Map(); // lower → { name, type }
-  const userCreateSpecs = [];
+  const nameResolve: Record<string, { id?: string | null; skip?: boolean }> = {};
+  const autoCreateByName = new Map<string, { name: string; type: string }>(); // lower → { name, type }
+  const userCreateSpecs: { lower: string; spec: NonNullable<NonNullable<ImportOptions['accountMap']>[string]['create']> }[] = [];
 
   for (const tx of transactions) {
     const raw = tx._accountName;
@@ -712,7 +741,7 @@ async function importTransactions(transactions, options = {}) {
   }
 
   // Create accounts (user-specified + auto)
-  const newAccounts = [];
+  const newAccounts: any[] = [];
   const globalCurrency = sym();
   for (const { lower, spec } of userCreateSpecs) {
     const type = spec.type || 'bank';
@@ -734,7 +763,7 @@ async function importTransactions(transactions, options = {}) {
   }
 
   // Prepare all transactions first
-  const toImport = [];
+  const toImport: ParsedRow[] = [];
   for (const tx of transactions) {
     // Apply user category remap by raw name
     if (tx._rawCategory && userCategoryMap[tx._rawCategory]) {

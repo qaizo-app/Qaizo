@@ -1,4 +1,4 @@
-// src/services/exportService.js
+// src/services/exportService.ts
 // Экспорт транзакций в CSV, XLS (TSV), PDF с фильтром по датам
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Print from 'expo-print';
@@ -8,31 +8,34 @@ import i18n from '../i18n';
 import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
 import dataService from './dataService';
+import type { Transaction, Account, TransactionType } from '../types';
 
-function formatDate(dateStr) {
+type AccMap = Record<string, string>;
+
+function formatDate(dateStr?: string | null): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function escapeCSV(val) {
+function escapeCSV(val: unknown): string {
   const s = String(val ?? '');
   if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
 
-async function getExportData(dateFrom, dateTo) {
+async function getExportData(dateFrom?: string, dateTo?: string) {
   const [transactions, accounts] = await Promise.all([
     dataService.getTransactions(),
     dataService.getAccounts(),
   ]);
-  const accMap = {};
-  accounts.forEach(a => { accMap[a.id] = a.name; });
+  const accMap: AccMap = {};
+  accounts.forEach((a: Account) => { accMap[a.id] = a.name; });
 
   // Фильтр по датам
-  let filtered = transactions;
+  let filtered: Transaction[] = transactions;
   if (dateFrom || dateTo) {
-    filtered = transactions.filter(tx => {
+    filtered = transactions.filter((tx: Transaction) => {
       const d = formatDate(tx.date || tx.createdAt);
       if (dateFrom && d < dateFrom) return false;
       if (dateTo && d > dateTo) return false;
@@ -43,7 +46,7 @@ async function getExportData(dateFrom, dateTo) {
   return { transactions: filtered, accMap };
 }
 
-function buildRows(transactions, accMap) {
+function buildRows(transactions: Transaction[], accMap: AccMap) {
   return transactions.map(tx => ({
     date: formatDate(tx.date || tx.createdAt),
     type: tx.type,
@@ -61,7 +64,7 @@ const HEADERS = () => [
   i18n.t('account'), i18n.t('payee'), i18n.t('note'), i18n.t('tags') || 'Tags',
 ];
 
-async function shareFile(path, mimeType) {
+async function shareFile(path: string, mimeType: string) {
   const available = await Sharing.isAvailableAsync();
   if (!available) {
     Alert.alert('', 'Sharing is not available on this device');
@@ -71,7 +74,7 @@ async function shareFile(path, mimeType) {
 }
 
 // ─── CSV ──────────────────────────────────────────────────
-async function exportCSV(dateFrom, dateTo) {
+async function exportCSV(dateFrom?: string, dateTo?: string) {
   const { transactions, accMap } = await getExportData(dateFrom, dateTo);
   if (transactions.length === 0) throw new Error('NO_DATA');
   const rows = buildRows(transactions, accMap);
@@ -90,7 +93,7 @@ async function exportCSV(dateFrom, dateTo) {
 }
 
 // ─── XLS (TSV) ────────────────────────────────────────────
-async function exportXLS(dateFrom, dateTo) {
+async function exportXLS(dateFrom?: string, dateTo?: string) {
   const { transactions, accMap } = await getExportData(dateFrom, dateTo);
   if (transactions.length === 0) throw new Error('NO_DATA');
   const rows = buildRows(transactions, accMap);
@@ -108,18 +111,22 @@ async function exportXLS(dateFrom, dateTo) {
 }
 
 // ─── HTML helpers for PDF ─────────────────────────────────
-function escapeHtml(s) {
+function escapeHtml(s: unknown): string {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function fmtMoney(n) {
+function fmtMoney(n: number): string {
   const abs = Math.abs(n || 0);
   return `${sym()}${abs.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
+interface CategoryTotal { id: string; amount: number; label: string; }
+interface AccountTotal { name: string; income: number; expense: number; count: number; }
+interface DailyTotal { date: string; income: number; expense: number; }
+
 // Group transactions by categoryId and return sorted totals with labels.
-function buildCategoryBreakdown(transactions, type) {
-  const totals = {};
+function buildCategoryBreakdown(transactions: Transaction[], type: TransactionType): CategoryTotal[] {
+  const totals: Record<string, { amount: number; label: string }> = {};
   transactions.filter(t => t.type === type).forEach(t => {
     const key = t.categoryId || 'other';
     if (!totals[key]) totals[key] = { amount: 0, label: catName(t.categoryId, t.categoryName) || t.categoryId };
@@ -129,8 +136,8 @@ function buildCategoryBreakdown(transactions, type) {
 }
 
 // Group by account for account breakdown table.
-function buildAccountBreakdown(transactions, accMap) {
-  const totals = {};
+function buildAccountBreakdown(transactions: Transaction[], accMap: AccMap): AccountTotal[] {
+  const totals: Record<string, AccountTotal> = {};
   transactions.forEach(t => {
     const name = accMap[t.account] || '—';
     if (!totals[name]) totals[name] = { name, income: 0, expense: 0, count: 0 };
@@ -142,8 +149,8 @@ function buildAccountBreakdown(transactions, accMap) {
 }
 
 // Daily totals across the period: returns [{date:'YYYY-MM-DD', income, expense}].
-function buildDailySeries(transactions) {
-  const totals = {};
+function buildDailySeries(transactions: Transaction[]): DailyTotal[] {
+  const totals: Record<string, DailyTotal> = {};
   transactions.forEach(t => {
     const d = formatDate(t.date || t.createdAt);
     if (!totals[d]) totals[d] = { date: d, income: 0, expense: 0 };
@@ -154,7 +161,7 @@ function buildDailySeries(transactions) {
 }
 
 // ─── PDF ──────────────────────────────────────────────────
-async function exportPDF(dateFrom, dateTo) {
+async function exportPDF(dateFrom?: string, dateTo?: string) {
   const { transactions, accMap } = await getExportData(dateFrom, dateTo);
   if (transactions.length === 0) throw new Error('NO_DATA');
   const rows = buildRows(transactions, accMap);
@@ -185,16 +192,16 @@ async function exportPDF(dateFrom, dateTo) {
   const days = daily.length || 1;
   const avgPerDay = days > 0 ? (totalExpense / days) : 0;
 
-  const rtlFlip = (s) => isRTL ? s.split('').reverse().join('') : s;
+  const rtlFlip = (s: string) => isRTL ? s.split('').reverse().join('') : s;
 
-  const catBar = (amount, max, color) => `
+  const catBar = (amount: number, max: number, color: string) => `
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="flex:1;background:#f1f5f9;height:6px;border-radius:3px;overflow:hidden;">
         <div style="width:${Math.max(1, Math.round((amount / max) * 100))}%;height:100%;background:${color};"></div>
       </div>
     </div>`;
 
-  const catRow = (c, max, color) => `
+  const catRow = (c: CategoryTotal, max: number, color: string) => `
     <tr>
       <td style="width:30%;">${escapeHtml(c.label)}</td>
       <td style="width:45%;">${catBar(c.amount, max, color)}</td>

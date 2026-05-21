@@ -89,6 +89,8 @@ export interface Recurring {
   endDate?: string | null;
   isActive: boolean;
   autoConfirm?: boolean;        // skip the per-execution prompt
+  notify?: boolean;             // schedule local reminders (default true)
+  contractEndDate?: string | null;  // optional contract expiry → 30-day reminder
   projectId?: string | null;
   tags?: string[];
   createdAt?: string;
@@ -191,4 +193,23 @@ export interface ShoppingItem {
   note?: string;
   checked?: boolean;
   createdAt?: string;
+}
+
+// ─── Streaks ─────────────────────────────────────────────
+// Gamification: consecutive days of logging finances + consecutive days kept
+// under the daily budget. Persisted by dataService.saveStreaks / getStreaks.
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string | null;
+  underBudgetStreak: number;
+  longestUnderBudget: number;
+  milestones: number[];
+}
+
+// ─── Crypto prices ───────────────────────────────────────
+export interface CryptoPrice {
+  price: number;
+  change24h: number;
+  stale?: boolean;        // served from disk cache (offline / rate-limited)
 }

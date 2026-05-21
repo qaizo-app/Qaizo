@@ -1,13 +1,14 @@
-// src/services/cryptoService.js
+// src/services/cryptoService.ts
 // Live crypto prices via CoinGecko (free, no API key). In-memory cache 60s +
 // AsyncStorage fallback for offline mode.
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { CryptoPrice } from '../types';
 
 const CACHE_KEY = 'qaizo_crypto_price_cache';
 const CACHE_TTL_MS = 60 * 1000;
 
 // Top coins: symbol (uppercase) → CoinGecko id
-const SYMBOL_TO_ID = {
+const SYMBOL_TO_ID: Record<string, string> = {
   BTC: 'bitcoin',
   ETH: 'ethereum',
   USDT: 'tether',
@@ -53,36 +54,41 @@ const SUPPORTED_VS = new Set([
 ]);
 
 // In-memory cache: { [key]: { ts, data } }  where key = `${ids}|${vs}`
-const memCache = new Map();
+type PriceMap = Record<string, CryptoPrice>;
+const memCache = new Map<string, { ts: number; data: PriceMap }>();
 
-function getSupportedSymbols() {
+function getSupportedSymbols(): string[] {
   return Object.keys(SYMBOL_TO_ID);
 }
 
-function symbolToId(symbol) {
+function symbolToId(symbol: string): string | null {
   return SYMBOL_TO_ID[(symbol || '').toUpperCase()] || null;
 }
 
-async function loadDiskCache() {
+async function loadDiskCache(): Promise<Record<string, any>> {
   try {
     const raw = await AsyncStorage.getItem(CACHE_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch (e) { return {}; }
 }
 
-async function saveDiskCache(cache) {
+async function saveDiskCache(cache: Record<string, any>): Promise<void> {
   try { await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
 }
 
 // Fetch prices for a list of symbols in a single vs currency.
 // Returns { [symbol]: { price, change24h } }. Always returns entries for valid symbols,
 // falling back to disk cache when network fails. Pass force=true to bypass cache.
-async function fetchPrices(symbols, vsCurrencyCode, force = false) {
+async function fetchPrices(
+  symbols: string[],
+  vsCurrencyCode?: string,
+  force = false
+): Promise<PriceMap> {
   const vs = (vsCurrencyCode || 'USD').toLowerCase();
   const vsSafe = SUPPORTED_VS.has(vs) ? vs : 'usd';
 
-  const ids = [];
-  const idToSymbol = {};
+  const ids: string[] = [];
+  const idToSymbol: Record<string, string> = {};
   for (const s of symbols || []) {
     const id = symbolToId(s);
     if (!id || idToSymbol[id]) continue;
@@ -101,7 +107,7 @@ async function fetchPrices(symbols, vsCurrencyCode, force = false) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const json = await res.json();
-    const out = {};
+    const out: PriceMap = {};
     for (const id of ids) {
       const row = json[id];
       if (!row) continue;
@@ -122,7 +128,7 @@ async function fetchPrices(symbols, vsCurrencyCode, force = false) {
   } catch (e) {
     // Offline / rate-limited → fallback to disk cache
     const disk = await loadDiskCache();
-    const out = {};
+    const out: PriceMap = {};
     for (const id of ids) {
       const sym = idToSymbol[id];
       const row = disk[`${sym}|${vsSafe}`];
@@ -134,15 +140,18 @@ async function fetchPrices(symbols, vsCurrencyCode, force = false) {
 
 // Compute total value of holdings in target currency.
 // holdings: [{ symbol, amount }], prices: { [symbol]: { price } }
-function holdingsValue(holdings, prices) {
+function holdingsValue(
+  holdings: { symbol?: string; amount?: string | number }[],
+  prices: PriceMap
+): number {
   if (!Array.isArray(holdings)) return 0;
   return holdings.reduce((sum, h) => {
     const p = prices?.[(h.symbol || '').toUpperCase()]?.price || 0;
-    return sum + (parseFloat(h.amount) || 0) * p;
+    return sum + (parseFloat(String(h.amount)) || 0) * p;
   }, 0);
 }
 
-function clearCache() {
+function clearCache(): void {
   memCache.clear();
 }
 
