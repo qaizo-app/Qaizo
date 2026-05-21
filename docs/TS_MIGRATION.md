@@ -29,7 +29,7 @@ shape/typo bugs at compile time instead of in production. Main wins:
 ### Utils — ✅ all migrated
 currency, categoryCache, categoryName, productMatcher, recurringHistory, transactions
 
-### Services
+### Services — ✅ all migrated
 | Service | Status | Step |
 |---|---|---|
 | logger | ✅ ts | 3 |
@@ -47,15 +47,36 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 | authService | ✅ ts | 8 |
 | exportService | ✅ ts | 8 |
 | importService | ✅ ts | 9 |
-| dataService | ⬜ js | last (central, ~1044 loc) |
-| aiService | ⬜ js | last (largest, ~1321 loc) |
+| dataService | ✅ ts | 10a/b (typed public API) |
+| aiService | ✅ ts | 11a/b (typed public API) |
+
+### Theme + config — ✅ migrated (step 12)
+| File | Status | Notes |
+|---|---|---|
+| src/theme/colors.ts | ✅ ts | exports `ResolvedTheme` ('dark'\|'light'\|'amoled') |
+| src/theme/commonStyles.ts | ✅ ts | style factories take `StyleOverrides?` |
+| src/theme/ThemeContext.tsx | ✅ tsx | exports `ThemeMode` ('system'\|'light'\|'dark'\|'amoled'), typed context |
+| src/config/firebase.ts | ✅ ts | trivial rename |
+
+### Still .js (not yet migrated)
+- `src/i18n/index.js` + 12 language packs (`en.js`, `ru.js`, `he.js`, …)
+- `src/navigation/AppNavigator.js`
+- `src/screens/*.js` (~30 files)
+- `src/components/*.js` (~35 files)
+- Root: `App.js`, `index.js`, `jest.setup.js`
+
+These are higher blast radius (RTL/iOS sensitive) — needs a real Expo run to verify after migration.
 
 ## Suggested order for remaining work
 1. ~~**Step 6 (isolated, small):** streakService, cryptoService~~ ✅
 2. ~~**Step 7:** notificationService, analyticsService~~ ✅
 3. ~~**Step 8:** authService, exportService~~ ✅
 4. ~~**Step 9:** importService~~ ✅
-5. **Step 10 (do last, highest blast radius):** dataService, then aiService
+5. ~~**Step 10:** dataService (+ tighten API)~~ ✅
+6. ~~**Step 11:** aiService (+ tighten API)~~ ✅
+7. ~~**Step 12:** theme + config~~ ✅
+8. **Step 13 (optional):** i18n/index.ts + language packs — type the `t()` function and translation key set
+9. **Step 14 (high blast radius, needs real Expo run):** screens/components/navigation
 
 ## Notes / gotchas
 - `npm install` is required in fresh web containers before tests run (deps are

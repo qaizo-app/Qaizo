@@ -102,19 +102,21 @@ const lightColors = {
   overlay: 'rgba(0, 0, 0, 0.40)',
 };
 
+export type ResolvedTheme = 'dark' | 'light' | 'amoled';
+
 // Мутируемый объект — все экраны импортируют его
 export const colors = { ...darkColors };
 
 // Текущая тема
-let _currentTheme = 'dark';
+let _currentTheme: ResolvedTheme = 'dark';
 
-export function applyTheme(mode) {
+export function applyTheme(mode: ResolvedTheme): void {
   _currentTheme = mode;
   const palette = mode === 'light' ? lightColors : mode === 'amoled' ? amoledColors : darkColors;
   Object.assign(colors, palette);
 }
 
-export function getCurrentTheme() {
+export function getCurrentTheme(): ResolvedTheme {
   return _currentTheme;
 }
 
