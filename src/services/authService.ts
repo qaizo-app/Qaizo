@@ -1,9 +1,9 @@
-// src/services/authService.js
+// src/services/authService.ts
 // Авторизация через Firebase Auth (native SDK)
-import auth from '@react-native-firebase/auth';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import analyticsEvents from './analyticsEvents';
 
-let GoogleSignin = null;
+let GoogleSignin: any = null;
 try {
   GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
   GoogleSignin.configure({
@@ -13,7 +13,7 @@ try {
   // Native module not available (Expo Go) — Google Sign-In disabled
 }
 
-let appleAuth = null;
+let appleAuth: any = null;
 try {
   appleAuth = require('@invertase/react-native-apple-authentication').default;
 } catch (e) {
@@ -33,12 +33,12 @@ const authService = {
   },
 
   // Слушатель состояния авторизации
-  onAuthChanged(callback) {
+  onAuthChanged(callback: (user: FirebaseAuthTypes.User | null) => void) {
     return auth().onAuthStateChanged(callback);
   },
 
   // Регистрация
-  async register(email, password, displayName) {
+  async register(email: string, password: string, displayName?: string) {
     try {
       const cred = await auth().createUserWithEmailAndPassword(email, password);
       if (displayName) {
@@ -51,18 +51,18 @@ const authService = {
       try { await cred.user.sendEmailVerification(); } catch (e) {}
       analyticsEvents.logEvent('user_registered', { method: 'email' });
       return { success: true, user: cred.user };
-    } catch (e) {
+    } catch (e: any) {
       return { success: false, error: getErrorMessage(e.code) };
     }
   },
 
   // Вход
-  async login(email, password) {
+  async login(email: string, password: string) {
     try {
       const cred = await auth().signInWithEmailAndPassword(email, password);
       analyticsEvents.logEvent('user_logged_in', { method: 'email' });
       return { success: true, user: cred.user };
-    } catch (e) {
+    } catch (e: any) {
       return { success: false, error: getErrorMessage(e.code) };
     }
   },
@@ -72,7 +72,7 @@ const authService = {
     try {
       await auth().signOut();
       return { success: true };
-    } catch (e) {
+    } catch (e: any) {
       return { success: false, error: e.message };
     }
   },
@@ -91,7 +91,7 @@ const authService = {
       const cred = await auth().signInWithCredential(credential);
       analyticsEvents.logEvent(cred.additionalUserInfo?.isNewUser ? 'user_registered' : 'user_logged_in', { method: 'google' });
       return { success: true, user: cred.user };
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === 'SIGN_IN_CANCELLED') {
         return { success: false, error: 'Google sign-in cancelled' };
       }
@@ -113,7 +113,7 @@ const authService = {
       const cred = await auth().signInWithCredential(credential);
       analyticsEvents.logEvent(cred.additionalUserInfo?.isNewUser ? 'user_registered' : 'user_logged_in', { method: 'apple' });
       return { success: true, user: cred.user };
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === appleAuth?.Error?.CANCELED) {
         return { success: false, error: 'Apple sign-in cancelled' };
       }
@@ -129,28 +129,28 @@ const authService = {
         await user.delete();
       }
       return { success: true };
-    } catch (e) {
+    } catch (e: any) {
       return { success: false, error: e.code === 'auth/requires-recent-login' ? 'reauth' : e.message };
     }
   },
 
   // Сброс пароля
-  async resetPassword(email) {
+  async resetPassword(email: string) {
     try {
       let lang = 'en';
       try { const i18n = require('../i18n').default; lang = i18n.getLanguage(); } catch (e) {}
       auth().languageCode = lang;
       await auth().sendPasswordResetEmail(email);
       return { success: true };
-    } catch (e) {
+    } catch (e: any) {
       return { success: false, error: getErrorMessage(e.code) };
     }
   },
 };
 
 // Человекочитаемые ошибки
-function getErrorMessage(code) {
-  const messages = {
+function getErrorMessage(code: string): string {
+  const messages: Record<string, Record<string, string>> = {
     'auth/email-already-in-use': { ru: 'Этот email уже зарегистрирован', he: 'אימייל זה כבר רשום', en: 'Email already registered' },
     'auth/invalid-email': { ru: 'Неверный формат email', he: 'פורמט אימייל שגוי', en: 'Invalid email format' },
     'auth/weak-password': { ru: 'Пароль слишком короткий (мин. 6 символов)', he: 'סיסמה קצרה מדי (מינ. 6 תווים)', en: 'Password too short (min 6 chars)' },

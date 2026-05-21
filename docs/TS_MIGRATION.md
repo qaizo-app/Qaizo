@@ -44,8 +44,8 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 | cryptoService | ✅ ts | 6 |
 | notificationService | ✅ ts | 7 |
 | analyticsService | ✅ ts | 7 |
-| authService | ⬜ js | — |
-| exportService | ⬜ js | — |
+| authService | ✅ ts | 8 |
+| exportService | ✅ ts | 8 |
 | importService | ⬜ js | — |
 | dataService | ⬜ js | last (central, ~1044 loc) |
 | aiService | ⬜ js | last (largest, ~1321 loc) |
@@ -53,7 +53,7 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 ## Suggested order for remaining work
 1. ~~**Step 6 (isolated, small):** streakService, cryptoService~~ ✅
 2. ~~**Step 7:** notificationService, analyticsService~~ ✅
-3. **Step 8:** authService, exportService
+3. ~~**Step 8:** authService, exportService~~ ✅
 4. **Step 9:** importService
 5. **Step 10 (do last, highest blast radius):** dataService, then aiService
 
@@ -70,3 +70,8 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 - `new Date(a) - new Date(b)` fails `strict` — use `.getTime()` on both sides.
 - `t.date || t.createdAt` is `string | undefined` (createdAt is optional) —
   add `|| ''` when passing to `new Date()` / string-typed helpers.
+- Under `strict`, `catch (e)` makes `e` `unknown`. Where the code reads
+  `e.code` / `e.message` (e.g. authService Firebase errors), annotate
+  `catch (e: any)` to preserve behavior (step 8).
+- Optional native modules loaded via `require()` in try/catch (GoogleSignin,
+  appleAuth) stay typed `any` — they're absent in Expo Go.
