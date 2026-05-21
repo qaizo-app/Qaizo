@@ -88,3 +88,7 @@ to surface in the already-migrated services (callbacks that were silently `any`)
 Budget for that. Recommended: type `dataService`'s public methods to return the
 domain types from `src/types`, migrate, then run a full `tsc` and fix fallout
 service-by-service. Do dataService BEFORE aiService.
+
+**→ Full step-10 plan + verification checklist: see `TS_MIGRATION_STEP10.md`.**
+Run that step on the PC (VSCode) where the Expo app can be launched — a module
+this central needs a real app run, not just `tsc` + jest.
