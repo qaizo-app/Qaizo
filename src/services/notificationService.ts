@@ -1,4 +1,4 @@
-// src/services/notificationService.js
+// src/services/notificationService.ts
 // Локальные уведомления (без remote push — не поддерживается в Expo Go SDK 53+)
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -7,13 +7,18 @@ import i18n from '../i18n';
 import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
 import dataService from './dataService';
+import type { Recurring, Transaction, Project } from '../types';
 
 const PROJECT_BUDGET_NOTIFIED_KEY = 'project_budget_notified_thresholds';
 
-// Настройка отображения уведомлений когда приложение открыто
+// Настройка отображения уведомлений когда приложение открыто.
+// shouldShowBanner / shouldShowList replace the deprecated shouldShowAlert
+// in expo-notifications (SDK 53) — same visible behavior.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
+  handleNotification: async (): Promise<Notifications.NotificationBehavior> => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -36,7 +41,7 @@ const notificationService = {
       await Notifications.cancelAllScheduledNotificationsAsync();
 
       const recurring = await dataService.getRecurring();
-      const active = recurring.filter(r => r.isActive && r.nextDate && r.notify !== false);
+      const active = recurring.filter((r: Recurring) => r.isActive && r.nextDate && r.notify !== false);
 
       for (const rec of active) {
         const nextDate = new Date(rec.nextDate + 'T09:00:00');
@@ -58,7 +63,7 @@ const notificationService = {
               data: { recurringId: rec.id },
             },
             trigger: {
-              type: 'timeInterval',
+              type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
               seconds: secondsUntil,
               channelId: 'payments',
             },
@@ -79,7 +84,7 @@ const notificationService = {
               data: { recurringId: rec.id },
             },
             trigger: {
-              type: 'timeInterval',
+              type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
               seconds: secondsUntil,
               channelId: 'payments',
             },
@@ -101,7 +106,7 @@ const notificationService = {
                 data: { recurringId: rec.id, type: 'contract_end' },
               },
               trigger: {
-                type: 'timeInterval',
+                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
                 seconds: secondsUntil,
                 channelId: 'payments',
               },
@@ -133,7 +138,7 @@ const notificationService = {
           categoryIdentifier: 'quick_add',
         },
         trigger: {
-          type: 'daily',
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour: 20,
           minute: 0,
           channelId: 'payments',
@@ -157,15 +162,15 @@ const notificationService = {
       const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
       const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
-      const thisWeek = txs.filter(t => {
-        const d = new Date(t.date || t.createdAt);
+      const thisWeek = txs.filter((t: Transaction) => {
+        const d = new Date(t.date || t.createdAt || '');
         return t.type === 'expense' && d >= weekAgo;
-      }).reduce((s, t) => s + t.amount, 0);
+      }).reduce((s: number, t: Transaction) => s + t.amount, 0);
 
-      const lastWeek = txs.filter(t => {
-        const d = new Date(t.date || t.createdAt);
+      const lastWeek = txs.filter((t: Transaction) => {
+        const d = new Date(t.date || t.createdAt || '');
         return t.type === 'expense' && d >= twoWeeksAgo && d < weekAgo;
-      }).reduce((s, t) => s + t.amount, 0);
+      }).reduce((s: number, t: Transaction) => s + t.amount, 0);
 
       const diff = lastWeek - thisWeek;
       const cur = sym();
@@ -181,7 +186,7 @@ const notificationService = {
           categoryIdentifier: 'quick_add',
         },
         trigger: {
-          type: 'weekly',
+          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
           weekday: 1, // Sunday
           hour: 10,
           minute: 0,
@@ -196,23 +201,23 @@ const notificationService = {
   // Project budget threshold — fire immediate notification when total crosses 80% or 100%
   // for the first time. Uses AsyncStorage to remember last notified threshold per project
   // so we don't spam the user on every transaction once over budget.
-  async notifyProjectBudgetThreshold(projectId) {
+  async notifyProjectBudgetThreshold(projectId: string) {
     try {
       if (!projectId) return;
       const projects = await dataService.getProjects();
-      const project = projects.find(p => p.id === projectId);
+      const project = projects.find((p: Project) => p.id === projectId);
       if (!project || !project.budget || project.budget <= 0) return;
 
       const txs = await dataService.getTransactions();
-      const projectTxs = txs.filter(t => t.projectId === projectId);
-      const total = projectTxs.reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : -t.amount), 0);
+      const projectTxs = txs.filter((t: Transaction) => t.projectId === projectId);
+      const total = projectTxs.reduce((sum: number, t: Transaction) => sum + (t.type === 'expense' ? t.amount : -t.amount), 0);
       const pct = (total / project.budget) * 100;
 
       const stateRaw = await AsyncStorage.getItem(PROJECT_BUDGET_NOTIFIED_KEY);
       const state = stateRaw ? JSON.parse(stateRaw) : {};
       const lastNotified = state[projectId] || 0;
 
-      let crossedThreshold = null;
+      let crossedThreshold: number | null = null;
       if (pct >= 100 && lastNotified < 100) crossedThreshold = 100;
       else if (pct >= 80 && lastNotified < 80) crossedThreshold = 80;
 

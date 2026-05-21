@@ -1,29 +1,49 @@
-// src/services/analyticsService.js
+// src/services/analyticsService.ts
 // אנליטיקה — התראות חכמות, מגמות, ציון פיננסי
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
+import type { Transaction, Recurring, Goal } from '../types';
+
+// Budgets here are a categoryId → monthly-limit map (not the Budget[] shape).
+type Budgets = Record<string, number>;
+
+export interface Insight {
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'positive';
+  icon: string;
+  color: string;
+  titleKey: string;
+  params: Record<string, string | number>;
+  amount?: number;
+  avgAmount?: number;
+}
 
 const analyticsService = {
 
   // === התראות חכמות ===
 
-  generateInsights(transactions, recurring, budgets, goals) {
-    const insights = [];
+  generateInsights(
+    transactions: Transaction[],
+    recurring: Recurring[],
+    budgets: Budgets,
+    goals: Goal[]
+  ): Insight[] {
+    const insights: Insight[] = [];
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
 
     // Current month transactions
     const curMonthTxs = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
     });
 
     // Previous months for comparison
-    const getMonthTxs = (monthsAgo) => {
+    const getMonthTxs = (monthsAgo: number) => {
       const m = new Date(thisYear, thisMonth - monthsAgo, 1);
       return transactions.filter(t => {
-        const d = new Date(t.date || t.createdAt);
+        const d = new Date(t.date || t.createdAt || '');
         return d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear();
       });
     };
@@ -33,12 +53,12 @@ const analyticsService = {
     const prev3 = getMonthTxs(3);
 
     // --- 1. חריגה בקטגוריה ---
-    const curCatTotals = {};
+    const curCatTotals: Record<string, number> = {};
     curMonthTxs.filter(t => t.type === 'expense').forEach(t => {
       curCatTotals[t.categoryId] = (curCatTotals[t.categoryId] || 0) + t.amount;
     });
 
-    const avg3mCat = {};
+    const avg3mCat: Record<string, number> = {};
     [prev1, prev2, prev3].forEach(monthTxs => {
       monthTxs.filter(t => t.type === 'expense').forEach(t => {
         avg3mCat[t.categoryId] = (avg3mCat[t.categoryId] || 0) + t.amount / 3;
@@ -147,16 +167,16 @@ const analyticsService = {
   },
 
   // === Top 5 מוטבים ===
-  getTopPayees(transactions, months = 1) {
+  getTopPayees(transactions: Transaction[], months = 1) {
     const now = new Date();
     const txs = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       const monthDiff = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth();
       return t.type === 'expense' && monthDiff < months && t.recipient;
     });
 
-    const totals = {};
-    txs.forEach(t => { totals[t.recipient] = (totals[t.recipient] || 0) + t.amount; });
+    const totals: Record<string, number> = {};
+    txs.forEach(t => { totals[t.recipient as string] = (totals[t.recipient as string] || 0) + t.amount; });
     return Object.entries(totals)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
@@ -164,14 +184,14 @@ const analyticsService = {
   },
 
   // === מגמת הוצאות לפי קטגוריה (6 חודשים) ===
-  getCategoryTrend(transactions, categoryId) {
+  getCategoryTrend(transactions: Transaction[], categoryId: string) {
     const now = new Date();
-    const data = [];
+    const data: { month: number; year: number; total: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const total = transactions
         .filter(t => {
-          const d = new Date(t.date || t.createdAt);
+          const d = new Date(t.date || t.createdAt || '');
           return t.type === 'expense' && t.categoryId === categoryId &&
             d.getMonth() === m.getMonth() && d.getFullYear() === m.getFullYear();
         })
@@ -182,23 +202,23 @@ const analyticsService = {
   },
 
   // === השוואת חודשים ===
-  getMonthComparison(transactions) {
+  getMonthComparison(transactions: Transaction[]) {
     const now = new Date();
     const curMonth = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
     const prevMonth = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       const pm = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
       const py = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
       return d.getMonth() === pm && d.getFullYear() === py;
     });
 
-    const catCompare = {};
+    const catCompare: Record<string, { cur: number; prev: number }> = {};
     [...curMonth, ...prevMonth].filter(t => t.type === 'expense').forEach(t => {
       if (!catCompare[t.categoryId]) catCompare[t.categoryId] = { cur: 0, prev: 0 };
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       if (d.getMonth() === now.getMonth()) catCompare[t.categoryId].cur += t.amount;
       else catCompare[t.categoryId].prev += t.amount;
     });
@@ -214,16 +234,16 @@ const analyticsService = {
   },
 
   // === יום הכי יקר בשבוע ===
-  getExpenseByDayOfWeek(transactions, months = 3) {
+  getExpenseByDayOfWeek(transactions: Transaction[], months = 3) {
     const now = new Date();
     const days = [0, 0, 0, 0, 0, 0, 0]; // Sun-Sat
     const counts = [0, 0, 0, 0, 0, 0, 0];
     transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       const monthDiff = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth();
       return t.type === 'expense' && monthDiff < months;
     }).forEach(t => {
-      const dow = new Date(t.date || t.createdAt).getDay();
+      const dow = new Date(t.date || t.createdAt || '').getDay();
       days[dow] += t.amount;
       counts[dow]++;
     });
@@ -231,22 +251,22 @@ const analyticsService = {
   },
 
   // === Balance history (line chart data) ===
-  getBalanceHistory(transactions, periodDays = 30) {
+  getBalanceHistory(transactions: Transaction[], periodDays = 30) {
     const now = new Date();
     const start = new Date(now);
     start.setDate(start.getDate() - periodDays);
 
     // Sort all txs by date
     const sorted = [...transactions]
-      .filter(t => new Date(t.date || t.createdAt) <= now)
-      .sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt));
+      .filter(t => new Date(t.date || t.createdAt || '') <= now)
+      .sort((a, b) => new Date(a.date || a.createdAt || '').getTime() - new Date(b.date || b.createdAt || '').getTime());
 
     // Calculate running balance from beginning
     let runningBalance = 0;
-    const balanceByDate = {};
+    const balanceByDate: Record<string, number> = {};
 
     sorted.forEach(tx => {
-      const d = new Date(tx.date || tx.createdAt);
+      const d = new Date(tx.date || tx.createdAt || '');
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       if (tx.type === 'income') runningBalance += tx.amount;
       else if (tx.type === 'expense') runningBalance -= tx.amount;
@@ -255,7 +275,7 @@ const analyticsService = {
     });
 
     // Fill in the period days
-    const points = [];
+    const points: { date: string; day: number; balance: number }[] = [];
     let lastBalance = 0;
 
     // Find balance at start of period
@@ -282,7 +302,7 @@ const analyticsService = {
   // account's current balance. The running balance is computed backwards from
   // the present so the last point equals currentBalance even when we do not
   // have the full transaction history.
-  getAccountBalanceHistory(transactions, accountId, currentBalance = 0, periodDays = 30) {
+  getAccountBalanceHistory(transactions: Transaction[], accountId: string, currentBalance = 0, periodDays = 30) {
     const now = new Date();
     const start = new Date(now);
     start.setDate(start.getDate() - periodDays);
@@ -290,13 +310,13 @@ const analyticsService = {
 
     // Transactions for this account up to today
     const accountTxs = transactions
-      .filter(t => t.account === accountId && new Date(t.date || t.createdAt) <= now)
-      .sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt));
+      .filter(t => t.account === accountId && new Date(t.date || t.createdAt || '') <= now)
+      .sort((a, b) => new Date(a.date || a.createdAt || '').getTime() - new Date(b.date || b.createdAt || '').getTime());
 
     // Accumulate deltas per day, only signed amounts affecting balance.
-    const deltaByDate = {};
+    const deltaByDate: Record<string, number> = {};
     accountTxs.forEach(tx => {
-      const d = new Date(tx.date || tx.createdAt);
+      const d = new Date(tx.date || tx.createdAt || '');
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       let delta = 0;
       if (tx.type === 'income') delta = tx.amount;
@@ -307,7 +327,7 @@ const analyticsService = {
 
     // Walk day-by-day from today backwards, maintaining running balance.
     // Today closes at currentBalance. Previous day balance = today - delta applied today.
-    const keysDesc = [];
+    const keysDesc: { key: string; day: number }[] = [];
     const cursor = new Date(now);
     for (let i = 0; i <= periodDays; i++) {
       const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
@@ -316,7 +336,7 @@ const analyticsService = {
     }
 
     let bal = currentBalance;
-    const pointsDesc = [];
+    const pointsDesc: { date: string; day: number; balance: number }[] = [];
     for (let i = 0; i < keysDesc.length; i++) {
       const { key, day } = keysDesc[i];
       pointsDesc.push({ date: key, day, balance: bal });
@@ -327,19 +347,19 @@ const analyticsService = {
   },
 
   // === Cash Flow (daily income vs expense) ===
-  getCashFlow(transactions, periodDays = 30) {
+  getCashFlow(transactions: Transaction[], periodDays = 30) {
     const now = new Date();
     const start = new Date(now);
     start.setDate(start.getDate() - periodDays);
 
-    const data = [];
+    const data: { date: string; day: number; income: number; expense: number; net: number }[] = [];
     for (let i = 0; i <= periodDays; i++) {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
       const dayTxs = transactions.filter(tx => {
-        const td = new Date(tx.date || tx.createdAt);
+        const td = new Date(tx.date || tx.createdAt || '');
         return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate();
       });
 
@@ -352,20 +372,20 @@ const analyticsService = {
   },
 
   // === Quick Stats ===
-  getQuickStats(transactions, periodDays = 30) {
+  getQuickStats(transactions: Transaction[], periodDays = 30) {
     const now = new Date();
     const start = new Date(now);
     start.setDate(start.getDate() - periodDays);
 
     const periodTxs = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return d >= start && d <= now;
     });
 
     const prevStart = new Date(start);
     prevStart.setDate(prevStart.getDate() - periodDays);
     const prevTxs = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return d >= prevStart && d < start;
     });
 
@@ -377,7 +397,7 @@ const analyticsService = {
     const prevExpense = prevTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
     const activeDays = new Set(periodTxs.map(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
     })).size;
 
@@ -396,23 +416,23 @@ const analyticsService = {
   },
 
   // === Filter transactions by period ===
-  filterByPeriod(transactions, periodDays) {
+  filterByPeriod(transactions: Transaction[], periodDays: number) {
     const now = new Date();
     const start = new Date(now);
     start.setDate(start.getDate() - periodDays);
     return transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return d >= start && d <= now;
     });
   },
 
   // === ציון פיננסי (0-100) ===
-  getFinancialScore(transactions, budgets, goals) {
+  getFinancialScore(transactions: Transaction[], budgets: Budgets, goals: Goal[]) {
     const now = new Date();
     let score = 50; // Start at 50
 
     const curMonth = transactions.filter(t => {
-      const d = new Date(t.date || t.createdAt);
+      const d = new Date(t.date || t.createdAt || '');
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
 
@@ -430,7 +450,7 @@ const analyticsService = {
 
     // Budget adherence (+/- 15 points)
     if (Object.keys(budgets).length > 0) {
-      const catTotals = {};
+      const catTotals: Record<string, number> = {};
       curMonth.filter(t => t.type === 'expense').forEach(t => {
         catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
       });
@@ -465,7 +485,7 @@ const analyticsService = {
 };
 
 // Helper
-function t(key) {
+function t(key: string): string {
   const translated = i18n.t(key);
   return translated !== key ? translated : key;
 }

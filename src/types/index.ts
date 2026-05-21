@@ -89,6 +89,8 @@ export interface Recurring {
   endDate?: string | null;
   isActive: boolean;
   autoConfirm?: boolean;        // skip the per-execution prompt
+  notify?: boolean;             // schedule local reminders (default true)
+  contractEndDate?: string | null;  // optional contract expiry → 30-day reminder
   projectId?: string | null;
   tags?: string[];
   createdAt?: string;

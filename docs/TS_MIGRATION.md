@@ -42,8 +42,8 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 | feedbackService | ✅ ts | 5 |
 | streakService | ✅ ts | 6 |
 | cryptoService | ✅ ts | 6 |
-| notificationService | ⬜ js | — |
-| analyticsService | ⬜ js | — |
+| notificationService | ✅ ts | 7 |
+| analyticsService | ✅ ts | 7 |
 | authService | ⬜ js | — |
 | exportService | ⬜ js | — |
 | importService | ⬜ js | — |
@@ -51,8 +51,8 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 | aiService | ⬜ js | last (largest, ~1321 loc) |
 
 ## Suggested order for remaining work
-1. **Step 6 (isolated, small):** streakService, cryptoService
-2. **Step 7:** notificationService, analyticsService
+1. ~~**Step 6 (isolated, small):** streakService, cryptoService~~ ✅
+2. ~~**Step 7:** notificationService, analyticsService~~ ✅
 3. **Step 8:** authService, exportService
 4. **Step 9:** importService
 5. **Step 10 (do last, highest blast radius):** dataService, then aiService
@@ -61,3 +61,12 @@ currency, categoryCache, categoryName, productMatcher, recurringHistory, transac
 - `npm install` is required in fresh web containers before tests run (deps are
   not committed). Run tests via `node_modules/.bin/jest` or `npm test` — NOT
   `npx jest`, which may resolve a global jest missing `babel-preset-expo`.
+- New domain types added so far: `StreakData`, `CryptoPrice` (step 6);
+  `Insight` exported from analyticsService, and `Recurring.notify` /
+  `Recurring.contractEndDate` added (step 7).
+- expo-notifications triggers must use `Notifications.SchedulableTriggerInputTypes.*`
+  enum (not raw strings) under `strict`. The jest mock in `jest.setup.js` now
+  defines that enum — keep it in sync if you touch notification triggers.
+- `new Date(a) - new Date(b)` fails `strict` — use `.getTime()` on both sides.
+- `t.date || t.createdAt` is `string | undefined` (createdAt is optional) —
+  add `|| ''` when passing to `new Date()` / string-typed helpers.
