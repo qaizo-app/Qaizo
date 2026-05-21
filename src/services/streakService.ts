@@ -1,27 +1,28 @@
-// src/services/streakService.js
+// src/services/streakService.ts
 // Расчёт стриков — последовательных дней ведения финансов
 import dataService from './dataService';
+import type { Transaction, StreakData } from '../types';
 
 const MILESTONES = [3, 7, 14, 30, 60, 100, 365];
 
-function getLocalDate(dateStr) {
+function getLocalDate(dateStr: string): string {
   const d = new Date(dateStr);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function todayStr() {
+function todayStr(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function prevDay(dateStr) {
+function prevDay(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() - 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // Считаем стрик из набора дат
-function calcStreak(activeDays) {
+function calcStreak(activeDays: Set<string>): number {
   const today = todayStr();
   let day = today;
   let streak = 0;
@@ -47,10 +48,10 @@ function calcStreak(activeDays) {
 }
 
 // Расчёт under-budget стрика
-function calcUnderBudgetStreak(transactions) {
+function calcUnderBudgetStreak(transactions: Transaction[]): number {
   const now = new Date();
   const thisMonth = transactions.filter(t => {
-    const d = new Date(t.date || t.createdAt);
+    const d = new Date(t.date || t.createdAt || "");
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
@@ -65,9 +66,9 @@ function calcUnderBudgetStreak(transactions) {
   if (dailyBudget <= 0) return 0;
 
   // Группируем расходы по дням
-  const dayExpenses = {};
+  const dayExpenses: Record<string, number> = {};
   thisMonth.filter(t => t.type === 'expense').forEach(t => {
-    const day = getLocalDate(t.date || t.createdAt);
+    const day = getLocalDate(t.date || t.createdAt || "");
     dayExpenses[day] = (dayExpenses[day] || 0) + t.amount;
   });
 
@@ -89,14 +90,16 @@ function calcUnderBudgetStreak(transactions) {
 }
 
 // Главная функция — обновить стрики
-async function updateStreaks(transactions) {
+async function updateStreaks(
+  transactions: Transaction[]
+): Promise<{ streakData: StreakData; newMilestone: number | null }> {
   try {
     const old = await dataService.getStreaks();
 
     // Собираем уникальные дни с транзакциями
-    const activeDays = new Set();
+    const activeDays = new Set<string>();
     transactions.forEach(tx => {
-      const day = getLocalDate(tx.date || tx.createdAt);
+      const day = getLocalDate(tx.date || tx.createdAt || "");
       activeDays.add(day);
     });
 
@@ -108,8 +111,8 @@ async function updateStreaks(transactions) {
     const longestUnderBudget = Math.max(underBudgetStreak, old.longestUnderBudget || 0);
 
     // Проверяем новые милестоуны
-    const oldMilestones = old.milestones || [];
-    let newMilestone = null;
+    const oldMilestones: number[] = old.milestones || [];
+    let newMilestone: number | null = null;
     const milestones = [...oldMilestones];
 
     for (const m of MILESTONES) {
@@ -119,7 +122,7 @@ async function updateStreaks(transactions) {
       }
     }
 
-    const streakData = {
+    const streakData: StreakData = {
       currentStreak,
       longestStreak,
       lastActiveDate,
@@ -147,7 +150,7 @@ async function updateStreaks(transactions) {
 }
 
 // Проверка: стрик в опасности? (после 20:00, сегодня нет транзакций)
-function isStreakAtRisk(streakData) {
+function isStreakAtRisk(streakData: StreakData | null | undefined): boolean {
   if (!streakData || streakData.currentStreak === 0) return false;
   const hour = new Date().getHours();
   return hour >= 20 && streakData.lastActiveDate !== todayStr();
