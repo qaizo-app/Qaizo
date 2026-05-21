@@ -8,6 +8,38 @@ interface GeminiResponse {
   candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
 }
 
+// Public return-type shapes — kept narrow so callers can rely on them.
+// Heterogeneous Gemini-shaped methods (parseTransactionSmart, scanReceipt, …)
+// remain loosely typed because the model's JSON varies by prompt.
+export interface ParsedTransaction {
+  amount: number;
+  type: 'income' | 'expense';
+  categoryId: string;
+  recipient: string;
+  note: string;
+}
+
+export interface TaxReserveResult {
+  grossIncome: number;
+  maam: number;
+  incomeTax: number;
+  bituach: number;
+  totalReserve: number;
+  netIncome: number;
+}
+
+export interface AIError {
+  code: string;
+  status?: number;
+  message?: string;
+}
+
+export interface TranslatedCategoryName {
+  ru: string;
+  en: string;
+  he: string;
+}
+
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const GEMINI_MODEL_PRIMARY = 'gemini-2.5-flash';
 const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
@@ -48,7 +80,7 @@ const CATEGORY_KEYWORDS = {
 };
 
 // ─── Парсинг текста ─────────────────────────────────────
-function parseTransaction(text: any) {
+function parseTransaction(text: any): ParsedTransaction | null {
   if (!text || !text.trim()) return null;
 
   const input = text.trim().toLowerCase();
@@ -66,7 +98,7 @@ function parseTransaction(text: any) {
   // Определяем тип: доход или расход
   const incomeWords = ['зарплата', 'доход', 'получил', 'поступил', 'поступление', 'начислено', 'заработал', 'возврат', 'подработ', 'выиграл', 'выигрыш', 'перевод от', 'перевели', 'вернули', 'кэшбэк', 'бонус', 'приз', 'гонорар', 'фриланс', 'халтур', 'чаевые', 'прибыль', 'дивиденд', 'משכורת', 'הכנסה', 'קיבלתי', 'הרווחתי', 'זיכוי', 'בונוס', 'טיפ', 'נכנס', 'הופקד', 'התקבל', 'זוכה', 'salary', 'income', 'received', 'incoming', 'deposit', 'earned', 'refund', 'cashback', 'bonus', 'won', 'prize', 'tip', 'freelance', 'profit', 'dividend', 'payout'];
   const isIncome = incomeWords.some(w => input.includes(w));
-  const type = isIncome ? 'income' : 'expense';
+  const type: 'income' | 'expense' = isIncome ? 'income' : 'expense';
 
   // Определяем категорию
   let categoryId = isIncome ? 'other_income' : 'other';
@@ -87,7 +119,7 @@ function parseTransaction(text: any) {
 
   // Если категория — доходная, ставим тип income
   if (['salary_me', 'salary_spouse', 'rental_income', 'other_income', 'handyman'].includes(categoryId)) {
-    return { amount, type: 'income', categoryId, recipient: extractPayee(input), note: text.trim() };
+    return { amount, type: 'income' as const, categoryId, recipient: extractPayee(input), note: text.trim() };
   }
 
   // Извлекаем получателя/магазин
@@ -120,7 +152,7 @@ function extractPayee(input: string) {
 }
 
 // ─── Налоговый резерв (для самозанятых) ─────────────────
-function calculateTaxReserve(grossIncome: number) {
+function calculateTaxReserve(grossIncome: number): TaxReserveResult {
   const maam = Math.round(grossIncome * MAAM_RATE / (1 + MAAM_RATE)); // МААМ уже включён
   const incomeTax = Math.round(grossIncome * ESTIMATED_INCOME_TAX);
   const bituach = Math.round(grossIncome * BITUACH_LEUMI);
@@ -326,8 +358,8 @@ function generateInsights(transactions: any[], budgets: any, accounts: any[], re
 // ─── Gemini API ─────────────────────────────────────────
 // Last AI failure reason — exposed so screens can show a specific message
 // ("rate limit" / "no api key" / "network") instead of a generic fallback.
-let _lastAIError: any = null;
-function getLastAIError() { return _lastAIError; }
+let _lastAIError: AIError | null = null;
+function getLastAIError(): AIError | null { return _lastAIError; }
 
 async function callGeminiOnce(model: string, prompt: string, { maxTokens, temperature }: { maxTokens: number; temperature: number }) {
   const res = await fetch(`${geminiUrl(model)}?key=${GEMINI_API_KEY}`, {
@@ -341,7 +373,7 @@ async function callGeminiOnce(model: string, prompt: string, { maxTokens, temper
   return res;
 }
 
-async function callGemini(prompt: string, { maxTokens = 1024, temperature = 0.3 }: { maxTokens?: number; temperature?: number } = {}) {
+async function callGemini(prompt: string, { maxTokens = 1024, temperature = 0.3 }: { maxTokens?: number; temperature?: number } = {}): Promise<string | null> {
   if (!GEMINI_API_KEY) {
     _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
     if (__DEV__) console.warn('[ai] no GEMINI_API_KEY set');
@@ -451,7 +483,7 @@ const CARD_BRAND_KEYWORDS: Record<string, string[]> = {
   amex: ['amex', 'american express', 'אמקס', 'американ экспресс'],
 };
 
-function detectCardBrand(text: string) {
+function detectCardBrand(text: string): string | null {
   const lc = (text || '').toLowerCase();
   for (const [brand, kws] of Object.entries(CARD_BRAND_KEYWORDS)) {
     if (kws.some((kw: string) => lc.includes(kw))) return brand;
@@ -1280,8 +1312,8 @@ RULES:
 }
 
 // ─── Перевод названия категории на все языки ────────────
-async function translateCategoryName(name: string, sourceLang: string) {
-  const fallback = { ru: name, en: name, he: name };
+async function translateCategoryName(name: string, sourceLang: string): Promise<TranslatedCategoryName> {
+  const fallback: TranslatedCategoryName = { ru: name, en: name, he: name };
   if (!name || !GEMINI_API_KEY) return fallback;
   try {
     const prompt = `Translate this expense category name to Russian, English, and Hebrew.
