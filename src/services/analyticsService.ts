@@ -1,6 +1,7 @@
 // src/services/analyticsService.ts
 // אנליטיקה — התראות חכמות, מגמות, ציון פיננסי
 import i18n from '../i18n';
+import { catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
 import type { Transaction, Recurring, Goal } from '../types';
 
@@ -75,7 +76,7 @@ const analyticsService = {
           icon: 'trending-up',
           color: '#fb7185',
           titleKey: 'insightCategorySpike',
-          params: { category: t(cat), pct },
+          params: { category: catName(cat), pct },
           amount: amount,
           avgAmount: avg,
         });
@@ -115,7 +116,7 @@ const analyticsService = {
           icon: 'alert-circle',
           color: '#60a5fa',
           titleKey: 'insightUnusualTx',
-          params: { amount: tx.amount, category: t(tx.categoryId) },
+          params: { amount: tx.amount, category: catName(tx.categoryId, tx.categoryName) },
         });
       });
 
