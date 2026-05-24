@@ -18,7 +18,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'dark',
-  themeMode: 'system',
+  themeMode: 'dark',
   setThemeMode: () => {},
   themeKey: 0,
 });
@@ -36,14 +36,16 @@ export function isDarkTheme(theme: ResolvedTheme | string): boolean {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
+  // Default to dark (the app's dark-first design) when the user hasn't picked
+  // a mode. Choosing "system" follows the device; choosing light/amoled sticks.
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
   const [themeKey, setThemeKey] = useState(0);
   const [ready, setReady] = useState(false);
 
   // Загрузить сохранённый режим
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then(saved => {
-      const mode = (saved as ThemeMode) || 'system';
+      const mode = (saved as ThemeMode) || 'dark';
       setThemeModeState(mode);
       applyTheme(resolveTheme(mode));
       setReady(true);
