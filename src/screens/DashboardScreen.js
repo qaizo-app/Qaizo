@@ -218,19 +218,11 @@ export default function DashboardScreen() {
 
     setMonthlyExtra(settings.monthlyExtra || 0);
 
-    // Auto-confirm recurring payments that are due
-    const todayStr = new Date().toISOString().slice(0, 10);
-    let recUpdated = false;
-    for (const r of rec) {
-      if (r.isActive && r.autoConfirm && r.nextDate && r.nextDate <= todayStr) {
-        await dataService.confirmRecurring(r.id);
-        recUpdated = true;
-      }
-    }
-    if (recUpdated) {
-      txs = await dataService.getTransactions();
-      rec = await dataService.getRecurring();
-    }
+    // NOTE: auto-confirming due recurring payments happens once at startup via
+    // dataService.autoExecuteRecurring() (App.js). Doing it here too caused
+    // double execution — loadData runs on every focus/change/retry, and a run
+    // reading `rec` with a not-yet-advanced nextDate would confirm an item the
+    // startup pass already confirmed. The Dashboard now only displays.
 
     setTransactions(txs);
     setBudgets(bdg);
