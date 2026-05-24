@@ -446,6 +446,7 @@ export default {
   takePhoto: 'Сфотографировать',
   fromGallery: 'Из галереи',
   scanningReceipt: 'Анализирую чек...',
+  scanReceiptAction: 'Сканировать',
   scanFailed: 'Не удалось прочитать чек. Попробуйте более чёткое фото.',
   cameraPermission: 'Нужен доступ к камере',
   items: 'Позиции',

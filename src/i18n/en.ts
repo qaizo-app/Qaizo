@@ -439,6 +439,7 @@ export default {
   takePhoto: 'Take Photo',
   fromGallery: 'From Gallery',
   scanningReceipt: 'Analyzing receipt...',
+  scanReceiptAction: 'Scan',
   scanFailed: 'Could not read receipt. Try a clearer photo.',
   cameraPermission: 'Camera permission required',
   items: 'Items',

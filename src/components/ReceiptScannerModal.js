@@ -295,7 +295,7 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
               {images.length > 0 && (
                 <TouchableOpacity style={st.scanBtn} onPress={scanImages}>
                   <Feather name="search" size={18} color={colors.bg} />
-                  <Text style={st.scanBtnText}>{i18n.t('scanningReceipt').replace('...', '')} ({images.length})</Text>
+                  <Text style={st.scanBtnText}>{i18n.t('scanReceiptAction')} ({images.length})</Text>
                 </TouchableOpacity>
               )}
             </View>

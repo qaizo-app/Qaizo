@@ -439,6 +439,7 @@ export default {
   takePhoto: 'צלם תמונה',
   fromGallery: 'מהגלריה',
   scanningReceipt: 'מנתח קבלה...',
+  scanReceiptAction: 'סרוק קבלה',
   scanFailed: 'לא הצלחתי לקרוא את הקבלה. נסה תמונה ברורה יותר.',
   cameraPermission: 'נדרשת הרשאת מצלמה',
   items: 'פריטים',
