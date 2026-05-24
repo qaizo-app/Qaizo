@@ -39,6 +39,13 @@ import { sym } from '../utils/currency';
 
 const SW = Dimensions.get('window').width;
 
+// Reject a promise if it doesn't settle in `ms` — prevents a hung Firestore
+// read from leaving the Dashboard stuck on the loading spinner forever.
+const withTimeout = (p, ms, label) => Promise.race([
+  p,
+  new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout: ${label} (${ms}ms)`)), ms)),
+]);
+
 export default function DashboardScreen() {
   const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
@@ -46,6 +53,7 @@ export default function DashboardScreen() {
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null); // diagnostic: shows on screen if loadData fails
   const [refreshing, setRefreshing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [budgetModal, setBudgetModal] = useState(null);
@@ -107,26 +115,34 @@ export default function DashboardScreen() {
   const st = createSt();
 
   const loadData = async () => {
-    const uid = require('../services/authService').default.getUid();
-    if (!uid) return;
-
-    // Warm the category cache before the upcoming-payments render so old
-    // recurring rows (missing categoryName/iconColor) can still resolve
-    // their custom-category name and icon.
+    const _t0 = Date.now();
+    const _log = (m) => { if (__DEV__) console.log(`[Dashboard.loadData] ${m} (+${Date.now() - _t0}ms)`); };
+    setLoadError(null);
     try {
-      const { ensureCachedGroups } = require('../utils/categoryCache');
-      await ensureCachedGroups();
-    } catch (e) {}
+      const uid = require('../services/authService').default.getUid();
+      _log(`uid=${uid ? 'present' : 'null'}`);
+      if (!uid) return;
 
-    let [txs, bdg, rec, settings, accs, tpls, gls] = await Promise.all([
-      dataService.getTransactions(),
-      dataService.getBudgets(),
-      dataService.getRecurring(),
-      dataService.getSettings(),
-      dataService.getAccounts(),
-      dataService.getQuickTemplates(),
-      dataService.getGoals(),
-    ]);
+      // Warm the category cache before the upcoming-payments render so old
+      // recurring rows (missing categoryName/iconColor) can still resolve
+      // their custom-category name and icon.
+      _log('ensureCachedGroups…');
+      try {
+        const { ensureCachedGroups } = require('../utils/categoryCache');
+        await withTimeout(ensureCachedGroups(), 8000, 'ensureCachedGroups');
+      } catch (e) { if (__DEV__) console.warn('[Dashboard.loadData] ensureCachedGroups:', e?.message || e); }
+      _log('ensureCachedGroups done — fetching collections…');
+
+      let [txs, bdg, rec, settings, accs, tpls, gls] = await withTimeout(Promise.all([
+        dataService.getTransactions(),
+        dataService.getBudgets(),
+        dataService.getRecurring(),
+        dataService.getSettings(),
+        dataService.getAccounts(),
+        dataService.getQuickTemplates(),
+        dataService.getGoals(),
+      ]), 12000, 'getAllCollections');
+      _log(`collections done: ${txs.length} tx, ${accs.length} acc, ${rec.length} rec`);
     setGoals(gls);
     if (settings.weekStart) setWeekStart(settings.weekStart);
     let layout;
@@ -145,7 +161,9 @@ export default function DashboardScreen() {
       const d = tx.date || tx.createdAt;
       return d ? d.substring(0, 7) : null;
     }).filter(Boolean));
-    const streakResult = await streakService.updateStreaks(txs);
+    _log('updateStreaks…');
+    const streakResult = await withTimeout(streakService.updateStreaks(txs), 8000, 'updateStreaks');
+    _log('updateStreaks done');
 
     const revealConditions = {
       streak: streakResult.streakData?.currentStreak >= 3,
@@ -223,7 +241,16 @@ export default function DashboardScreen() {
     // Обновляем стрики (уже посчитано выше)
     setStreakData(streakResult.streakData);
     if (streakResult.newMilestone) setNewMilestone(streakResult.newMilestone);
-    if (txs.length > 0 || accs.length > 0) setLoading(false);
+    _log('state set — done');
+    } catch (e) {
+      if (__DEV__) console.error('[Dashboard.loadData] FAILED:', e?.message || e, e);
+      setLoadError(`${e?.message || e}`);
+      try { require('@sentry/react-native').captureException(e); } catch (_) {}
+    } finally {
+      // Always clear the spinner — a thrown OR hung load must never leave the
+      // Dashboard stuck on the loading screen forever.
+      setLoading(false);
+    }
   };
 
   const [templateSuggestion, setTemplateSuggestion] = useState(null);
@@ -445,12 +472,26 @@ export default function DashboardScreen() {
     .filter(r => new Date(r.nextDate) <= in30)
     .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate));
 
-  if (loading) {
+  if (loading || loadError) {
     return (
-      <View style={[st.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[st.container, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }]}>
         <Image source={require('../../assets/images/icon.png')} style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 16 }} />
-        <ActivityIndicator size="small" color={colors.green} style={{ marginBottom: 8 }} />
-        <Text style={{ color: colors.textMuted, fontSize: 14 }}>{i18n.t('loading')}</Text>
+        {loadError ? (
+          <>
+            <Feather name="alert-triangle" size={24} color={colors.red} style={{ marginBottom: 8 }} />
+            <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 4 }}>loadData error</Text>
+            <Text selectable style={{ color: colors.textMuted, fontSize: 12, textAlign: 'center', marginBottom: 16 }}>{loadError}</Text>
+            <TouchableOpacity onPress={() => { setLoadError(null); setLoading(true); loadData(); }}
+              style={{ paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.green, borderRadius: 12 }}>
+              <Text style={{ color: colors.bg, fontWeight: '700' }}>{i18n.t('retry') || 'Retry'}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <ActivityIndicator size="small" color={colors.green} style={{ marginBottom: 8 }} />
+            <Text style={{ color: colors.textMuted, fontSize: 14 }}>{i18n.t('loading')}</Text>
+          </>
+        )}
       </View>
     );
   }
