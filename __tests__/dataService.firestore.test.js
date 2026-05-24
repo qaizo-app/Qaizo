@@ -37,7 +37,10 @@ jest.mock('@react-native-firebase/firestore', () => {
           }
         }
         return {
-          exists: data !== undefined,
+          // RN Firebase v24: exists is a METHOD, not a boolean property.
+          // Mirroring that here exercises the real production code path
+          // (a boolean property would mask the snapExists bug).
+          exists: () => data !== undefined,
           data: () => data,
           id: path.split('/').pop(),
         };

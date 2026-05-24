@@ -107,11 +107,23 @@ function userCol(colName: string): any {
   return firestore().collection('users').doc(uid as string).collection(colName);
 }
 
+// RN Firebase v24 exposes DocumentSnapshot.exists() as a METHOD; older SDKs and
+// the jest mock use a boolean property. Reading `.exists` without calling it on
+// v24 yields a (truthy) function reference, which silently breaks every
+// existence check. Support both shapes.
+function snapExists(snap: any): boolean {
+  return typeof snap?.exists === 'function' ? snap.exists() : !!snap?.exists;
+}
+
 // ─── Single-document read/write (settings, budgets, categories, tags) ────
 async function getDocData(colName: string, defaultVal: any): Promise<any> {
   try {
     const snap = await userDoc(colName + '/data').get();
-    return (snap as any).exists ? (snap.data() as any)?.value : defaultVal;
+    // Guard the value too: an existing doc with a missing/undefined `value`
+    // must still fall back to defaultVal, never return undefined (callers do
+    // `.length` etc. on the result).
+    const value = snapExists(snap) ? (snap.data() as any)?.value : undefined;
+    return value !== undefined && value !== null ? value : defaultVal;
   } catch (e) {
     if (__DEV__) console.error(`Firestore getDocData(${colName}):`, e);
     return defaultVal;
@@ -152,7 +164,7 @@ async function updateAccountBalance(accountId: string, amount: number, type: str
     if (uid) {
       const ref = firestore().collection('users').doc(uid).collection('accounts').doc(accountId);
       const snap = await ref.get();
-      if ((snap as any).exists) {
+      if (snapExists(snap)) {
         const data = snap.data() as any;
         let bal: number = (data?.balance) || 0;
         if (type === 'income') bal += amount;
@@ -247,7 +259,7 @@ const dataService = {
       if (uid) {
         const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
         const snap = await ref.get();
-        const tx: any = (snap as any).exists ? { ...snap.data(), id } : null;
+        const tx: any = snapExists(snap) ? { ...snap.data(), id } : null;
         await ref.delete();
         if (tx && tx.account) {
           const reverseType = tx.type === 'income' ? 'expense' : 'income';
@@ -298,7 +310,7 @@ const dataService = {
       if (uid) {
         const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
         const snap = await ref.get();
-        const oldTx: any = (snap as any).exists ? { ...snap.data(), id } : null;
+        const oldTx: any = snapExists(snap) ? { ...snap.data(), id } : null;
         await ref.update(changes);
         // Recompute balances
         if (oldTx && oldTx.account) {
@@ -652,7 +664,7 @@ const dataService = {
       let rec: any;
       if (uid) {
         const snap = await firestore().collection('users').doc(uid).collection('recurring').doc(id).get();
-        rec = (snap as any).exists ? { ...snap.data(), id } : null;
+        rec = snapExists(snap) ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
         rec = items.find((r: any) => r.id === id);
@@ -760,7 +772,7 @@ const dataService = {
       let rec: any;
       if (uid) {
         const snap = await firestore().collection('users').doc(uid).collection('recurring').doc(id).get();
-        rec = (snap as any).exists ? { ...snap.data(), id } : null;
+        rec = snapExists(snap) ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
         rec = items.find((r: any) => r.id === id);
