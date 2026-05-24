@@ -39,9 +39,16 @@ export async function ensureCachedGroups(): Promise<CategoryGroup[]> {
   if (_cachedGroups) return _cachedGroups;
   if (!_loading) {
     _loading = dataService.getCategories().then((saved: unknown) => {
-      if (Array.isArray(saved) && saved.length > 0) _cachedGroups = saved as CategoryGroup[];
+      if (Array.isArray(saved) && saved.length > 0) {
+        _cachedGroups = saved as CategoryGroup[];
+      } else {
+        // No real data yet — e.g. called before auth resolved, so getCategories
+        // read empty guest storage. Don't lock the cache to an empty result;
+        // clear _loading so a later call (post-login) re-fetches and populates.
+        _loading = null;
+      }
       return _cachedGroups || [];
-    }).catch(() => []);
+    }).catch(() => { _loading = null; return []; });
   }
   return _loading;
 }

@@ -194,6 +194,15 @@ function AppInner() {
             // Залогинен + email подтверждён
             if (onboardingDone !== 'true') await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
             try { await dataService.migrateToFirestore(); } catch (e) {}
+            // Warm the category cache now that we're authenticated. The earlier
+            // (pre-auth) warm read empty guest storage; re-fetch with the real
+            // uid so the first screen render resolves custom category names/icons
+            // instead of showing raw ids.
+            try {
+              const { invalidateCachedGroups, ensureCachedGroups } = require('./src/utils/categoryCache');
+              invalidateCachedGroups();
+              await ensureCachedGroups();
+            } catch (e) {}
             if (wizardDone !== 'true') setScreen('wizard');
             else setScreen('app');
           } else if (u && !u.emailVerified) {
