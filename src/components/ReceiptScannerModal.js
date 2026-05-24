@@ -147,13 +147,15 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
           items_extracted: itemsResult?.length || 0,
         });
       } else {
-        setError(i18n.t('scanFailed'));
+        const aiErr = aiService.getLastAIError?.();
+        const detail = aiErr ? ` [${aiErr.code}${aiErr.status ? ' ' + aiErr.status : ''}${aiErr.message ? ': ' + aiErr.message : ''}]` : '';
+        setError(i18n.t('scanFailed') + detail);
         setStep('pick');
-        analyticsEvents.logEvent('receipt_scanned', { success: false, images: images.length });
+        analyticsEvents.logEvent('receipt_scanned', { success: false, images: images.length, reason: aiErr?.code });
       }
     } catch (e) {
       if (__DEV__) console.error('Receipt scan error:', e);
-      setError(i18n.t('scanFailed'));
+      setError(i18n.t('scanFailed') + ` [${String(e?.message || e)}]`);
       setStep('pick');
       analyticsEvents.logEvent('receipt_scanned', { success: false, error: true });
     }

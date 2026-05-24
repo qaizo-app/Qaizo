@@ -814,6 +814,7 @@ No markdown, no explanation, only the JSON array.`;
 async function scanReceipt(imageInput: any, lang: string, _retryCount = 0): Promise<any> {
   if (!GEMINI_API_KEY) {
     if (__DEV__) console.error('scanReceipt: no API key');
+    _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
     return null;
   }
   try {
@@ -828,11 +829,12 @@ async function scanReceipt(imageInput: any, lang: string, _retryCount = 0): Prom
       return 'image/jpeg';
     };
 
-    const imageParts = imageList.map(b64 => ({
-      inlineData: { mimeType: detectMime(b64), data: b64 }
+    const mimes = imageList.map(detectMime);
+    const imageParts = imageList.map((b64, i) => ({
+      inlineData: { mimeType: mimes[i], data: b64 }
     }));
 
-    if (__DEV__) console.log('scanReceipt:', imageList.length, 'images, sizes:', imageList.map(b => b.length), 'attempt:', _retryCount + 1);
+    if (__DEV__) console.log('scanReceipt:', imageList.length, 'images, mimes:', mimes, 'b64 prefixes:', imageList.map(b => (b || '').slice(0, 8)), 'attempt:', _retryCount + 1);
 
     const multiImageHint = imageList.length > 1
       ? `These ${imageList.length} images are parts of the SAME receipt. Combine all items and find the total from the last image.`
@@ -873,8 +875,13 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
     }
 
     if (!res.ok) {
-      const errText = await res.text();
+      const errText = await res.text().catch(() => '');
       if (__DEV__) console.error('scanReceipt API error:', res.status, errText);
+      _lastAIError = {
+        code: res.status === 429 ? 'rate_limit' : res.status === 401 || res.status === 403 ? 'auth' : res.status >= 500 ? 'server' : 'http_error',
+        status: res.status,
+        message: `${errText.slice(0, 200)} [mimes: ${mimes.join(',')}]`,
+      };
       return null;
     }
 
@@ -937,11 +944,13 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
         await new Promise(r => setTimeout(r, 1000));
         return scanReceipt(imageInput, lang, _retryCount + 1);
       }
+      _lastAIError = { code: 'empty_response', message: 'No total or store recognized on the receipt' };
       return null;
     }
 
+    _lastAIError = null;
     return parsed;
-  } catch (e) {
+  } catch (e: any) {
     if (__DEV__) console.error('scanReceipt error:', e);
     // Retry once on failure
     if (_retryCount < 1) {
@@ -949,6 +958,7 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
       await new Promise(r => setTimeout(r, 1000));
       return scanReceipt(imageInput, lang, _retryCount + 1);
     }
+    _lastAIError = { code: 'network', message: String(e?.message || e) };
     return null;
   }
 }
