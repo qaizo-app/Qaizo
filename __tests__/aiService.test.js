@@ -182,7 +182,7 @@ describe('predictCashFlow', () => {
 
   test('counts only future recurring expenses this month', () => {
     const now = new Date();
-    const futureDay = Math.min(now.getDate() + 2, 27); // safe for short months
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); const futureDay = Math.min(now.getDate() + 2, lastDay); if (futureDay <= now.getDate()) return; // skip when no future day left this month
     const future = new Date(now.getFullYear(), now.getMonth(), futureDay);
     const past = new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 2));
     const recurring = [
@@ -196,7 +196,7 @@ describe('predictCashFlow', () => {
 
   test('isAtRisk when projectedBalance < 0', () => {
     const now = new Date();
-    const futureDay = Math.min(now.getDate() + 2, 27);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); const futureDay = Math.min(now.getDate() + 2, lastDay); if (futureDay <= now.getDate()) return; // skip when no future day left this month
     const future = new Date(now.getFullYear(), now.getMonth(), futureDay);
     const recurring = [
       { isActive: true, nextDate: future.toISOString().split('T')[0], type: 'expense', amount: 2000, categoryId: 'rent' },
