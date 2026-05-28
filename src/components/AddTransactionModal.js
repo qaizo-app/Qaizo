@@ -8,8 +8,10 @@ import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import AccountPickerModal from './AccountPickerModal';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS, CatIcon } from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
+import RowText from './RowText';
 import CalculatorModal from './CalculatorModal';
 import SwipeModal from './SwipeModal';
 
@@ -31,6 +33,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showCal, setShowCal] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
+  const [accPicker, setAccPicker] = useState(null); // 'from' | 'to' | null
   const [toAcc, setToAcc] = useState('');
   const [showMore, setShowMore] = useState(false);
   const [userTags, setUserTags] = useState([]);
@@ -291,40 +294,46 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             )}
 
             <View>
-              {(!hasPre || editTransaction) && type !== 'transfer' && (
-                <>
-                  <Text style={st.label}>{accLabel}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                    {accounts.filter(acc => type === 'income' ? ['cash', 'bank', 'investment', 'crypto', 'asset'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type)).map((acc, idx) => { const sl = selAcc === acc.id; return (
-                      <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]} onPress={() => setSelAcc(acc.id)}>
-                        <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
-                        <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                        {idx < 3 && <View style={[st.dot, { backgroundColor: tc }]} />}
-                      </TouchableOpacity>); })}
-                  </ScrollView>
-                </>
-              )}
+              {(!hasPre || editTransaction) && type !== 'transfer' && (() => {
+                const sel = accounts.find(a => a.id === selAcc);
+                return (
+                  <>
+                    <Text style={st.label}>{accLabel}</Text>
+                    <TouchableOpacity style={st.pickBtn} onPress={() => setAccPicker('from')} activeOpacity={0.7}>
+                      <MaterialCommunityIcons name={getAI(sel?.type)} size={16} color={sel ? tc : colors.textMuted} />
+                      <RowText style={[st.pickBtnTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>
+                        {sel?.name || '—'}
+                      </RowText>
+                      <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </>
+                );
+              })()}
 
-              {type === 'transfer' && (
-                <>
-                  <Text style={st.label}>{i18n.t('from')}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                    {accounts.map(acc => { const sl = selAcc === acc.id; return (
-                      <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]} onPress={() => setSelAcc(acc.id)}>
-                        <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
-                        <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                      </TouchableOpacity>); })}
-                  </ScrollView>
-                  <Text style={st.label}>{i18n.t('to')}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                    {accounts.filter(a => a.id !== selAcc).map(acc => { const sl = toAcc === acc.id; return (
-                      <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: colors.blue, backgroundColor: colors.blueSoft }]} onPress={() => setToAcc(acc.id)}>
-                        <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? colors.blue : colors.textMuted} />
-                        <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                      </TouchableOpacity>); })}
-                  </ScrollView>
-                </>
-              )}
+              {type === 'transfer' && (() => {
+                const selF = accounts.find(a => a.id === selAcc);
+                const selT = accounts.find(a => a.id === toAcc);
+                return (
+                  <>
+                    <Text style={st.label}>{i18n.t('from')}</Text>
+                    <TouchableOpacity style={st.pickBtn} onPress={() => setAccPicker('from')} activeOpacity={0.7}>
+                      <MaterialCommunityIcons name={getAI(selF?.type)} size={16} color={selF ? tc : colors.textMuted} />
+                      <RowText style={[st.pickBtnTxt, !selF && { color: colors.textMuted }]} numberOfLines={1}>
+                        {selF?.name || '—'}
+                      </RowText>
+                      <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                    <Text style={st.label}>{i18n.t('to')}</Text>
+                    <TouchableOpacity style={st.pickBtn} onPress={() => setAccPicker('to')} activeOpacity={0.7}>
+                      <MaterialCommunityIcons name={getAI(selT?.type)} size={16} color={selT ? colors.blue : colors.textMuted} />
+                      <RowText style={[st.pickBtnTxt, !selT && { color: colors.textMuted }]} numberOfLines={1}>
+                        {selT?.name || '—'}
+                      </RowText>
+                      <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </>
+                );
+              })()}
 
               {type !== 'transfer' && !splitMode && (
                 <>
@@ -449,6 +458,28 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           </ScrollView>
         )}
       </SwipeModal>
+      <AccountPickerModal
+        visible={accPicker === 'from'}
+        onClose={() => setAccPicker(null)}
+        accounts={
+          type === 'transfer'
+            ? accounts
+            : accounts.filter(a => type === 'income'
+                ? ['cash', 'bank', 'investment', 'crypto', 'asset'].includes(a.type)
+                : ['cash', 'bank', 'credit'].includes(a.type))
+        }
+        selectedId={selAcc}
+        onSelect={setSelAcc}
+        title={i18n.t(type === 'transfer' ? 'from' : 'account')}
+      />
+      <AccountPickerModal
+        visible={accPicker === 'to'}
+        onClose={() => setAccPicker(null)}
+        accounts={accounts.filter(a => a.id !== selAcc)}
+        selectedId={toAcc}
+        onSelect={setToAcc}
+        title={i18n.t('to')}
+      />
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
       <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)}
         onSelect={(catId, latestGroups) => { setCategoryId(catId); if (latestGroups) setCatGroups(latestGroups); }}
@@ -490,6 +521,8 @@ const createSt = () => StyleSheet.create({
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 12, fontWeight: '500', marginStart: 6 },
   dot: { width: 5, height: 5, borderRadius: 3, marginStart: 6, opacity: 0.6 },
+  pickBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
+  pickBtnTxt: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
   catPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 },
   catPickerIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   catPickerText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
