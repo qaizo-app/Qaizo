@@ -30,7 +30,7 @@ import RecurringDetailModal from '../components/RecurringDetailModal';
 import StreakCard from '../components/StreakCard';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
-import { catName } from '../utils/categoryName';
+import { catColor, catName } from '../utils/categoryName';
 import streakService from '../services/streakService';
 import { useToast } from '../components/ToastProvider';
 import notificationService from '../services/notificationService';
@@ -343,7 +343,7 @@ export default function DashboardScreen() {
       .map(([cat, amount]) => ({
         name: _catNameMap[cat] || catName(cat),
         amount,
-        color: categoryConfig[cat]?.color || '#64748b',
+        color: catColor(cat),
         legendFontColor: colors.textDim,
         legendFontSize: 11,
       }));
