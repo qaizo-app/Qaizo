@@ -1,5 +1,6 @@
 // src/screens/AccountsScreen.js
 // Плитки 2-3 в ряд, цветные по типу, группировка, свайп-модалка
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
@@ -25,6 +26,12 @@ const ACCOUNT_TYPES = [
   { id:'bank' },{ id:'credit' },{ id:'cash' },{ id:'mortgage' },
   { id:'loan' },{ id:'investment' },{ id:'debt' },{ id:'crypto' },{ id:'asset' },
 ];
+
+// Groups collapsed by default for a new user — daily-use types (cash/bank/
+// credit) stay open; long-tail accounts (investments, assets, loans, inactive)
+// start folded to reduce scroll. User toggles persist in AsyncStorage.
+const DEFAULT_COLLAPSED = ['investment', 'crypto', 'asset', 'loan', 'mortgage', 'debt', 'inactive'];
+const COLLAPSED_KEY = 'qaizo_accounts_collapsed_groups';
 const CURRENCY_SYMBOLS = CURRENCIES.map(c => c.symbol);
 const typeLabel = (id) => i18n.t(id);
 
@@ -48,6 +55,8 @@ export default function AccountsScreen() {
   const [isActive, setIsActive] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [reorderMode, setReorderMode] = useState(false);
+  // Set of group ids (account types + 'inactive') currently collapsed.
+  const [collapsedGroups, setCollapsedGroups] = useState(() => new Set(DEFAULT_COLLAPSED));
   const [recurring, setRecurring] = useState([]);
   const [holdings, setHoldings] = useState([]); // editable list for current modal
   const [newCoin, setNewCoin] = useState('');
@@ -96,6 +105,26 @@ export default function AccountsScreen() {
   // case where the "+" modal sits on top of this screen and useFocusEffect
   // would not re-fire on close.
   useEffect(() => dataService.onChange(() => loadData()), []);
+
+  // Restore the user's collapsed/expanded group choices from storage.
+  useEffect(() => {
+    AsyncStorage.getItem(COLLAPSED_KEY).then(raw => {
+      if (!raw) return;
+      try {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) setCollapsedGroups(new Set(arr));
+      } catch (_) { /* ignore corrupt value */ }
+    }).catch(() => {});
+  }, []);
+
+  const toggleGroup = (id) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      AsyncStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next])).catch(() => {});
+      return next;
+    });
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -370,42 +399,52 @@ export default function AccountsScreen() {
         {/* Groups */}
         {!reorderMode && grouped.map(({ typeId, accs, sum }) => {
           const cfg = accountTypeConfig[typeId] || accountTypeConfig.bank;
+          const isCollapsed = collapsedGroups.has(typeId);
           return (
             <View key={typeId}>
-              <View style={styles.groupHeader}>
+              <TouchableOpacity style={styles.groupHeader} onPress={() => toggleGroup(typeId)} activeOpacity={0.7}>
                 <MaterialCommunityIcons name={cfg.icon} size={14} color={cfg.color} style={{ }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)}</Text>
+                  <Text style={[styles.groupTitle, { color: cfg.color }]}>{typeLabel(typeId)} · {accs.length}</Text>
                 </View>
                 <Amount value={sum} sign style={styles.groupSum} color={sum >= 0 ? colors.textDim : colors.red} />
-              </View>
-              <View style={styles.tilesRow}>
-                {accs.map(renderTile)}
-              </View>
+                <Feather name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={16} color={colors.textMuted} style={{ marginStart: 6 }} />
+              </TouchableOpacity>
+              {!isCollapsed && (
+                <View style={styles.tilesRow}>
+                  {accs.map(renderTile)}
+                </View>
+              )}
             </View>
           );
         })}
 
         {/* Inactive */}
-        {!reorderMode && inactive.length > 0 && (
-          <View>
-            <View style={styles.groupHeader}>
-              <Feather name="archive" size={14} color={colors.textMuted} style={{ }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.groupTitle}>{i18n.t('inactive')}</Text>
-              </View>
+        {!reorderMode && inactive.length > 0 && (() => {
+          const isCollapsed = collapsedGroups.has('inactive');
+          return (
+            <View>
+              <TouchableOpacity style={styles.groupHeader} onPress={() => toggleGroup('inactive')} activeOpacity={0.7}>
+                <Feather name="archive" size={14} color={colors.textMuted} style={{ }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.groupTitle}>{i18n.t('inactive')} · {inactive.length}</Text>
+                </View>
+                <Feather name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={16} color={colors.textMuted} style={{ marginStart: 6 }} />
+              </TouchableOpacity>
+              {!isCollapsed && (
+                <View style={styles.tilesRow}>
+                  {inactive.map(acc => (
+                    <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
+                      onLongPress={() => openEdit(acc)}>
+                      <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
+                      <Amount value={acc.balance||0} sign style={[styles.tileBalance, { color: colors.textMuted }]} currency={acc.currency} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
-            <View style={styles.tilesRow}>
-              {inactive.map(acc => (
-                <TouchableOpacity key={acc.id} style={[styles.tile, { opacity: 0.35 }, { borderLeftColor: colors.textMuted, borderLeftWidth: 3 }]}
-                  onLongPress={() => openEdit(acc)}>
-                  <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
-                  <Amount value={acc.balance||0} sign style={[styles.tileBalance, { color: colors.textMuted }]} currency={acc.currency} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
+          );
+        })()}
       </ScrollView>
 
       {/* Edit/Add */}
