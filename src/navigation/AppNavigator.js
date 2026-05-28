@@ -15,6 +15,7 @@ import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
+import { useCurrentAccountId } from '../components/currentAccount';
 import RecurringDetailModal from '../components/RecurringDetailModal';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -91,6 +92,10 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
   const tabBarHeight = 60 + Math.max(insets.bottom, 16);
   const styles = createStyles();
   const toast = useToast();
+
+  // The account the user is currently inside (set by AccountHistoryScreen on
+  // focus). When non-null, the global "+" pre-selects it in AddTransactionModal.
+  const currentAccountId = useCurrentAccountId();
 
   // Add menu state
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -392,7 +397,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
       )}
 
       {/* Global Modals */}
-      <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} initialType={addInitialType} />
+      <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} initialType={addInitialType} preselectedAccount={currentAccountId} />
       <SmartInputModal visible={showSmartInput} onClose={() => setShowSmartInput(false)} onSaved={() => setShowSmartInput(false)} />
       <AddRecurringModal visible={showRecurring} onClose={() => setShowRecurring(false)} onSave={() => setShowRecurring(false)} />
       <ReceiptScannerModal visible={showReceipt} onClose={() => setShowReceipt(false)} onSave={() => setShowReceipt(false)} />

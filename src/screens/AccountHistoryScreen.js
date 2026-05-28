@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
+import { setCurrentAccountId } from '../components/currentAccount';
 import BalanceLineChart from '../components/BalanceLineChart';
 import ConfirmModal from '../components/ConfirmModal';
 import ConfirmRecurringModal from '../components/ConfirmRecurringModal';
@@ -103,6 +104,13 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
   useEffect(() => dataService.onChange(() => loadData()), []);
+
+  // Publish this account as the "current" context while focused, so the
+  // global "+" (in AppNavigator) opens AddTransactionModal with it pre-selected.
+  useFocusEffect(useCallback(() => {
+    setCurrentAccountId(account.id);
+    return () => setCurrentAccountId(null);
+  }, [account.id]));
 
   const handleDelete = async () => {
     if (deleteTarget) { await dataService.deleteTransaction(deleteTarget.id); setDeleteTarget(null); await loadData(); }
