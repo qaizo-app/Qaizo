@@ -51,7 +51,6 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [showRecipients, setShowRecipients] = useState(false);
   const isEdit = !!editTransaction;
   const lang = i18n.getLanguage();
-  const hasPre = !!preselectedAccount;
   const st = createSt();
 
   useEffect(() => {
@@ -294,7 +293,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             )}
 
             <View>
-              {(!hasPre || editTransaction) && type !== 'transfer' && (() => {
+              {type !== 'transfer' && (() => {
                 const sel = accounts.find(a => a.id === selAcc);
                 return (
                   <>
@@ -461,13 +460,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       <AccountPickerModal
         visible={accPicker === 'from'}
         onClose={() => setAccPicker(null)}
-        accounts={
-          type === 'transfer'
-            ? accounts
-            : accounts.filter(a => type === 'income'
-                ? ['cash', 'bank', 'investment', 'crypto', 'asset'].includes(a.type)
-                : ['cash', 'bank', 'credit'].includes(a.type))
-        }
+        accounts={accounts}
         selectedId={selAcc}
         onSelect={setSelAcc}
         title={i18n.t(type === 'transfer' ? 'from' : 'account')}
