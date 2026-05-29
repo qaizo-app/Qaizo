@@ -3,6 +3,7 @@
 import i18n from '../i18n';
 import { catName } from '../utils/categoryName';
 import { fmt, sym, code as curCode } from '../utils/currency';
+import type { ExtractedTx } from '../utils/statementReconcile';
 
 interface GeminiResponse {
   candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
@@ -1098,6 +1099,127 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
   }
 }
 
+// ─── Statement scanner (bank / credit-card statements) ────────────────────
+async function scanStatement(imageInput: any, accountCurrency?: string): Promise<ExtractedTx[]> {
+  if (!GEMINI_API_KEY) {
+    if (__DEV__) console.error('scanStatement: no API key');
+    _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
+    return [];
+  }
+  try {
+    const imageList: string[] = Array.isArray(imageInput) ? imageInput : [imageInput];
+
+    const detectMime = (b64: string) => {
+      if (b64.startsWith('/9j/')) return 'image/jpeg';
+      if (b64.startsWith('iVBOR')) return 'image/png';
+      if (b64.startsWith('JVBER')) return 'application/pdf';
+      if (b64.startsWith('UklGR')) return 'image/webp';
+      return 'image/jpeg';
+    };
+
+    const mimes = imageList.map(detectMime);
+    const imageParts = imageList.map((b64, i) => ({
+      inlineData: { mimeType: mimes[i], data: b64 },
+    }));
+
+    if (__DEV__) console.log('scanStatement:', imageList.length, 'images, mimes:', mimes);
+
+    const currencyHint = accountCurrency ? `Account currency: ${accountCurrency}.` : '';
+
+    const prompt = `You are reading a credit-card or bank account statement image.
+${currencyHint}
+Extract EVERY individual transaction line as a JSON ARRAY (no prose, no markdown):
+[{
+  "date": "YYYY-MM-DD",
+  "amount": <signed number, negative = charge/debit, positive = refund/credit/income>,
+  "payee": "<original merchant text, do NOT translate>",
+  "notes": "<optional: installment X/Y, foreign amount with currency, standing-order tag>",
+  "confidence": "high" | "medium" | "low"
+}]
+
+EXTRACT FROM:
+- Domestic transaction list (any list of dated rows with amounts)
+- Foreign-purchase section — use the converted local-currency amount, NOT the foreign one
+
+DO NOT EXTRACT:
+- Running balance lines ("יתרה ליום", "balance after", "remaining balance")
+- Total / sum / subtotal lines ("סך הכל", "סך עסקאות", "סך חיובים", "Total", "Subtotal", "סה\\"כ")
+- Section or column headers / titles printed in distinct rows above the lists
+- Payment-source breakdown sections ("פירוט תשלומים לפי מקור חיוב", account routing summaries)
+- Card / account numbers, addresses, phone numbers, customer name
+- Marketing or promotional content, advertisements, page footers
+- QR codes, barcodes
+
+SPECIAL CASES:
+- INSTALLMENTS ("תשלום X מתוך Y", "X/Y", monthly installment): amount = per-installment value as printed (NOT the total). Put "תשלום X/Y" or equivalent in notes.
+- REPEATED LINES with identical payee+date+amount: each line is a SEPARATE transaction. Do NOT deduplicate.
+- FOREIGN purchases: use the converted ${accountCurrency || 'local'}-currency amount. Put the foreign amount with its currency in notes (e.g. "$23.90 USD").
+- Standing-order markers ("הוראת קבע", "standing order"): copy the marker to notes.
+
+Date: normalise any format (DD/MM/YYYY, YYYY-MM-DD, "Dublin 28/02/26") to YYYY-MM-DD. If only DD/MM is shown, assume the current year.
+Payee: keep the original language and characters. No translation, no transliteration.
+Confidence: "low" when the text is unclear / partially obscured / ambiguous; "high" otherwise. Default to "high" if unsure.
+
+Return ONLY the JSON array. No surrounding text, no markdown fences.`;
+
+    const requestBody = JSON.stringify({
+      contents: [{ parts: [{ text: prompt }, ...imageParts] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
+    });
+
+    const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
+    let res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, fetchOpts);
+    if (!res.ok && (res.status >= 500 || res.status === 429)) {
+      if (__DEV__) console.warn('scanStatement: primary', res.status, '— retrying on fallback model');
+      res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
+    }
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      if (__DEV__) console.error('scanStatement API error:', res.status, errText);
+      _lastAIError = {
+        code: res.status === 429 ? 'rate_limit' : res.status === 401 || res.status === 403 ? 'auth' : res.status >= 500 ? 'server' : 'http_error',
+        status: res.status,
+        message: errText.slice(0, 200),
+      };
+      return [];
+    }
+
+    const data = await res.json() as GeminiResponse;
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (__DEV__) console.log('scanStatement raw text length:', text.length);
+
+    // Strip markdown fences and isolate the JSON array.
+    let jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    const start = jsonStr.indexOf('[');
+    const end = jsonStr.lastIndexOf(']');
+    if (start >= 0 && end > start) jsonStr = jsonStr.slice(start, end + 1);
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (e) {
+      if (__DEV__) console.error('scanStatement JSON parse failed:', e);
+      _lastAIError = { code: 'empty_response', message: 'Could not parse statement JSON' };
+      return [];
+    }
+
+    if (!Array.isArray(parsed)) {
+      _lastAIError = { code: 'empty_response', message: 'Response was not an array' };
+      return [];
+    }
+
+    _lastAIError = null;
+    return parsed.filter((row: any) =>
+      row && typeof row.amount === 'number' && typeof row.date === 'string' && typeof row.payee === 'string'
+    ) as ExtractedTx[];
+  } catch (e: any) {
+    if (__DEV__) console.error('scanStatement error:', e);
+    _lastAIError = { code: 'network', message: String(e?.message || e) };
+    return [];
+  }
+}
+
 // ─── AI Chat ────────────────────────────────────────────
 // ─── Интерпретация запроса для графика ──────────────────
 async function interpretChartQuery(question: string, transactions: any[], lang: string) {
@@ -1358,6 +1480,7 @@ export default {
   buildChartData,
   scanReceipt,
   scanReceiptItems,
+  scanStatement,
   translateCategoryName,
   callGemini,
   getLastAIError,
