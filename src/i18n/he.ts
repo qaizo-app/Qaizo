@@ -462,6 +462,7 @@ export default {
   statementDoneFailed: 'נכשלו: {count}',
   statementDoneClose: 'סיום',
   statementUndo: 'בטל',
+  statementVerifyHint: 'בדוק כל שורה לפני שמירה — בתמונות מסובבות הסורק עלול להחליף שם לסכום. הקש על העיפרון כדי לערוך.',
   statementSourceHistory: 'מההיסטוריה',
   statementSourceRecurring: 'תשלום קבוע',
   statementSourceAi: 'AI',

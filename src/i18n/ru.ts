@@ -469,6 +469,7 @@ export default {
   statementDoneFailed: 'Не удалось: {count}',
   statementDoneClose: 'Готово',
   statementUndo: 'Отменить',
+  statementVerifyHint: 'Проверь каждую строку перед сохранением — на повёрнутых фото сканер может перепутать имя и сумму. Карандаш справа открывает редактор.',
   statementSourceHistory: 'из истории',
   statementSourceRecurring: 'плановый',
   statementSourceAi: 'AI',

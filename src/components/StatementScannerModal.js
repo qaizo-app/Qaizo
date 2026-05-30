@@ -350,6 +350,13 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
 
             return (
               <View>
+                {/* OCR-quality warning: Vision can misalign names with amounts on
+                    rotated / skewed photos. Always shown so users don't trust the
+                    extraction blindly and end up with corrupted data. */}
+                <View style={st.warnCard}>
+                  <Feather name="alert-triangle" size={14} color={colors.yellow} />
+                  <RowText style={st.warnTxt}>{i18n.t('statementVerifyHint')}</RowText>
+                </View>
                 <StatementReviewSection
                   title={i18n.t('statementSectionNew')}
                   count={news.length}
@@ -598,6 +605,8 @@ const createSt = () => StyleSheet.create({
   exactDate: { color: colors.textMuted, fontSize: 11, minWidth: 64 },
   exactPayee: { color: colors.textDim, fontSize: 12, textAlign: i18n.textAlign() },
   exactAmount: { fontSize: 12, color: colors.textDim },
+  warnCard: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.yellow + '15', borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: colors.yellow + '40' },
+  warnTxt: { color: colors.text, fontSize: 12, fontWeight: '600', textAlign: i18n.textAlign(), flex: 1 },
   doneRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 4, opacity: 0.7 },
   doneTxt: { color: colors.green, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), flex: 1 },
   doneSkipTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), textDecorationLine: 'line-through', flex: 1 },

@@ -1137,6 +1137,13 @@ Extract EVERY individual transaction line as a JSON ARRAY (no prose, no markdown
   "confidence": "high" | "medium" | "low"
 }]
 
+ORIENTATION & LAYOUT — READ THIS FIRST:
+- The image may be rotated 90°, 180° or 270°. Mentally rotate it so the table text reads naturally before you start.
+- Each transaction is ONE horizontal row. The date, payee text and amount belong to the SAME row — they share a visual baseline.
+- For multi-column tables: pick a row, then read date+payee+amount across that single row. Never pair a payee from row N with an amount from row N±1.
+- If a row is hard to align (rotated photo, faint print, smudge), set confidence: "low" rather than guessing. We can fix low-confidence rows by hand; a wrong-amount/wrong-name pairing silently corrupts the user's data.
+- Use the printed amount that sits on the SAME row as the payee. If a foreign-purchase row prints both the foreign amount AND the local-currency charged amount, take the local-currency one and put the foreign amount in notes.
+
 EXTRACT FROM:
 - Domestic transaction list (any list of dated rows with amounts)
 - Foreign-purchase section — use the converted local-currency amount, NOT the foreign one
@@ -1158,7 +1165,7 @@ SPECIAL CASES:
 
 Date: normalise any format (DD/MM/YYYY, YYYY-MM-DD, "Dublin 28/02/26") to YYYY-MM-DD. If only DD/MM is shown, assume the current year.
 Payee: keep the original language and characters. No translation, no transliteration.
-Confidence: "low" when the text is unclear / partially obscured / ambiguous; "high" otherwise. Default to "high" if unsure.
+Confidence: "low" when the text is unclear / partially obscured / ambiguous / hard to align to a row; "high" otherwise. Default to "medium" when the row alignment is reasonable but the photo is rotated or skewed.
 
 Return ONLY the JSON array. No surrounding text, no markdown fences.`;
 

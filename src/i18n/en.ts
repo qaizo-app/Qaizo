@@ -462,6 +462,7 @@ export default {
   statementDoneFailed: '{count} failed',
   statementDoneClose: 'Done',
   statementUndo: 'Undo',
+  statementVerifyHint: 'Check each row before saving — the scanner can misalign names with amounts on rotated photos. Tap the pencil to fix.',
   statementSourceHistory: 'from history',
   statementSourceRecurring: 'recurring',
   statementSourceAi: 'AI',
