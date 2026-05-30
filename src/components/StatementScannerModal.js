@@ -13,6 +13,7 @@ import { catColor, catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
 import { reconcile } from '../utils/statementReconcile';
 import { categorize } from '../utils/statementCategorize';
+import AddTransactionModal from './AddTransactionModal';
 import Amount from './Amount';
 import CategoryPickerModal from './CategoryPickerModal';
 import RowText from './RowText';
@@ -28,6 +29,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
   const [rowState, setRowState] = useState({});        // id → { checked, decision, categoryId, date, amount }
   const [error, setError] = useState('');
   const [editCatIdx, setEditCatIdx] = useState(null);  // index of result whose category is being edited
+  const [editorIdx, setEditorIdx] = useState(null);    // index of result open in the full AddTransactionModal
 
   const st = createSt();
 
@@ -130,6 +132,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
     let n = 0;
     results.forEach((r, i) => {
       const s = rowState[i] || {};
+      if (s.editorSaved) return;                                 // already saved through the editor
       if (r.kind === 'new' && s.checked) n++;
       if (r.kind === 'similar' && s.decision === 'new') n++;
       if (r.kind === 'recurring' && s.decision != null) n++;     // either confirm or separate counts
@@ -143,6 +146,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
       const s = rowState[i] || {};
+      if (s.editorSaved) continue;                              // already saved through the editor
       try {
         if (r.kind === 'new' && s.checked) {
           const cfg = categoryConfig[s.categoryId] || {};
@@ -278,11 +282,21 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                 >
                   {news.map(({ r, i }) => {
                     const s = rowState[i] || {};
+                    if (s.editorSaved) return (
+                      <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><Text style={st.doneTxt}>{r.extracted.payee}</Text></View>
+                    );
                     const cat = s.categoryId || 'other';
                     const c = categoryConfig[cat] || {};
                     const guessSource = catGuess[i]?.source;
                     return (
-                      <TouchableOpacity key={i} style={st.newRow} onPress={() => toggleRow(i)} activeOpacity={0.7}>
+                      <TouchableOpacity
+                        key={i}
+                        style={st.newRow}
+                        onPress={() => toggleRow(i)}
+                        onLongPress={() => setEditorIdx(i)}        // long-press → open full editor (lets user change type to 'transfer' etc.)
+                        delayLongPress={350}
+                        activeOpacity={0.7}
+                      >
                         <Feather name={s.checked ? 'check-square' : 'square'} size={18} color={s.checked ? colors.green : colors.textMuted} />
                         <TouchableOpacity style={[st.catChip, { backgroundColor: (c.color || catColor(cat)) + '20' }]} onPress={() => setEditCatIdx(i)}>
                           <Feather name={c.icon || 'tag'} size={12} color={c.color || catColor(cat)} />
@@ -305,6 +319,10 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                   defaultOpen={true}
                 >
                   {similars.map(({ r, i }) => {
+                    const s = rowState[i] || {};
+                    if (s.editorSaved) return (
+                      <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><Text style={st.doneTxt}>{r.extracted.payee}</Text></View>
+                    );
                     if (r.kind === 'recurring') {
                       return (
                         <StatementSimilarCard
@@ -312,8 +330,8 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                           extracted={r.extracted}
                           candidate={r.recurring}
                           isRecurring
-                          onSame={() => setRecurringDecision(i, 'separate')}    // user says "treat as separate (skip recurring)"; default 'separate' just adds it
-                          onNew={() => setRecurringDecision(i, 'confirm')}      // user says "confirm as the recurring template"
+                          onSame={() => setEditorIdx(i)}                        // "Separate" — open editor so user can adjust before adding
+                          onNew={() => setRecurringDecision(i, 'confirm')}      // "Confirm" — direct confirmRecurring (uses extracted amount/date as override)
                         />
                       );
                     }
@@ -325,8 +343,8 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                         extracted={r.extracted}
                         candidate={candidate}
                         isRecurring={false}
-                        onSame={() => setSimilarDecision(i, 'same')}
-                        onNew={() => setSimilarDecision(i, 'new')}
+                        onSame={() => setSimilarDecision(i, 'same')}             // "Skip" — direct skip
+                        onNew={() => setEditorIdx(i)}                            // "Add" — open editor so user can adjust (incl. type=transfer) before adding
                       />
                     );
                   })}
@@ -380,6 +398,34 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       type={results[editCatIdx]?.extracted.amount < 0 ? 'expense' : 'income'}
       onSelect={(id) => { setRowField(editCatIdx, 'categoryId', id); setEditCatIdx(null); }}
     />
+
+    {/* Full transaction editor — opened from a doubtful row so the user can change ANY field, including type=transfer */}
+    {editorIdx != null && results[editorIdx] && (() => {
+      const ex = results[editorIdx].extracted;
+      const guess = catGuess[editorIdx];
+      const prefill = {
+        amount: String(Math.abs(ex.amount || 0)),
+        recipient: ex.payee || '',
+        date: ex.date,
+        type: (ex.amount || 0) < 0 ? 'expense' : 'income',
+        note: ex.notes || '',
+        categoryId: guess?.categoryId,
+        showMore: true,
+      };
+      return (
+        <AddTransactionModal
+          visible={true}
+          onClose={() => setEditorIdx(null)}
+          onSave={() => {
+            const idx = editorIdx;
+            setRowState(s => ({ ...s, [idx]: { ...(s[idx] || {}), editorSaved: true, checked: false, decision: null } }));
+            setEditorIdx(null);
+          }}
+          preselectedAccount={accountId}
+          prefill={prefill}
+        />
+      );
+    })()}
     </>
   );
 }
@@ -409,5 +455,7 @@ const createSt = () => StyleSheet.create({
   exactDate: { color: colors.textMuted, fontSize: 11, minWidth: 64 },
   exactPayee: { color: colors.textDim, fontSize: 12, textAlign: i18n.textAlign() },
   exactAmount: { fontSize: 12, color: colors.textDim },
+  doneRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 4, opacity: 0.7 },
+  doneTxt: { color: colors.green, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
   footer: { paddingVertical: 12 },
 });

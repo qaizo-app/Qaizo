@@ -18,7 +18,7 @@ import SwipeModal from './SwipeModal';
 const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income'];
 const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income','transfer'].includes(k));
 
-export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount, initialType }) {
+export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount, initialType, prefill }) {
   const [type, setType] = useState(initialType || 'expense');
 
   useEffect(() => {
@@ -66,6 +66,16 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         const today = new Date();
         setDateStr(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
         if (preselectedAccount) setSelAcc(preselectedAccount);
+        // Apply prefill (e.g. opened from statement-import for one row).
+        if (prefill) {
+          if (prefill.amount != null) setAmount(String(prefill.amount));
+          if (prefill.recipient) setRecipient(prefill.recipient);
+          if (prefill.note) setNote(prefill.note);
+          if (prefill.type) setType(prefill.type);
+          if (prefill.categoryId) setCategoryId(prefill.categoryId);
+          if (prefill.date) setDateStr(prefill.date);
+          if (prefill.showMore) setShowMore(true);
+        }
       }
       dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
       dataService.getCategories().then(saved => { if (saved && saved.length > 0) setCatGroups(saved); });
