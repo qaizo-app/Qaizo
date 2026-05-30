@@ -1,0 +1,410 @@
+// src/components/StatementScannerModal.js
+// Multi-step modal: pick image(s) → analyzing → review (3 sections) → saving.
+// Account is implicit (passed via props from AccountHistoryScreen).
+import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import i18n from '../i18n';
+import aiService from '../services/aiService';
+import dataService from '../services/dataService';
+import { categoryConfig, colors } from '../theme/colors';
+import { catColor, catName } from '../utils/categoryName';
+import { sym } from '../utils/currency';
+import { reconcile } from '../utils/statementReconcile';
+import { categorize } from '../utils/statementCategorize';
+import Amount from './Amount';
+import CategoryPickerModal from './CategoryPickerModal';
+import RowText from './RowText';
+import StatementReviewSection from './StatementReviewSection';
+import StatementSimilarCard from './StatementSimilarCard';
+import SwipeModal from './SwipeModal';
+
+export default function StatementScannerModal({ visible, onClose, accountId, accountCurrency, onSaved }) {
+  const [step, setStep] = useState('pick');           // 'pick' | 'analyzing' | 'review' | 'saving'
+  const [images, setImages] = useState([]);            // [{ uri, base64 }]
+  const [results, setResults] = useState([]);          // ReconcileResult[]
+  const [catGuess, setCatGuess] = useState({});        // id → CategoryGuess (for 'new' results)
+  const [rowState, setRowState] = useState({});        // id → { checked, decision, categoryId, date, amount }
+  const [error, setError] = useState('');
+  const [editCatIdx, setEditCatIdx] = useState(null);  // index of result whose category is being edited
+
+  const st = createSt();
+
+  // Reset on each open
+  useEffect(() => {
+    if (visible) {
+      setStep('pick');
+      setImages([]);
+      setResults([]);
+      setCatGuess({});
+      setRowState({});
+      setError('');
+    }
+  }, [visible]);
+
+  const pickImage = async (useCamera) => {
+    try {
+      const options = { base64: true, quality: 0.85, allowsEditing: false, exif: false };
+      const res = useCamera
+        ? await (async () => {
+            const perm = await ImagePicker.requestCameraPermissionsAsync();
+            if (!perm.granted) { setError(i18n.t('cameraPermission')); return null; }
+            return ImagePicker.launchCameraAsync(options);
+          })()
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (!res || res.canceled || !res.assets?.[0]?.base64) return;
+      setImages(prev => [...prev, { uri: res.assets[0].uri, base64: res.assets[0].base64 }]);
+      setError('');
+    } catch (e) {
+      if (__DEV__) console.error('statement pickImage:', e);
+      setError(i18n.t('scanFailed'));
+    }
+  };
+
+  const analyze = async () => {
+    if (images.length === 0) return;
+    setStep('analyzing');
+    setError('');
+    try {
+      const base64List = images.map(i => i.base64);
+      const extracted = await aiService.scanStatement(base64List, accountCurrency);
+      if (!extracted || extracted.length === 0) {
+        setError(i18n.t('statementNoneFound'));
+        setStep('pick');
+        return;
+      }
+
+      // Load existing (this account, last 60 days) + recurring (this account, active) + history (all accounts, 6 months)
+      const cutoffExist = new Date(); cutoffExist.setDate(cutoffExist.getDate() - 60);
+      const cutoffHist  = new Date(); cutoffHist.setMonth(cutoffHist.getMonth() - 6);
+      const [allTx, allRec] = await Promise.all([dataService.getTransactions(), dataService.getRecurring()]);
+      const existing = allTx.filter(t => t.account === accountId && (t.date || '').slice(0, 10) >= cutoffExist.toISOString().slice(0, 10));
+      const recurring = allRec.filter(r => r.account === accountId && r.isActive);
+      const history = allTx.filter(t => (t.date || '').slice(0, 10) >= cutoffHist.toISOString().slice(0, 10));
+
+      const reconciled = reconcile(extracted, existing, recurring);
+
+      // For 'new' kind — guess a category up-front so the user can review it
+      const guesses = {};
+      const initial = {};
+      reconciled.forEach((r, i) => {
+        if (r.kind === 'new') {
+          const g = categorize(r.extracted.payee, history, allRec);
+          guesses[i] = g;
+          initial[i] = {
+            checked: r.extracted.confidence !== 'low',
+            categoryId: g.categoryId,
+            date: r.extracted.date,
+            amount: r.extracted.amount,
+          };
+        } else if (r.kind === 'similar') {
+          initial[i] = { decision: null }; // user must choose: 'same' | 'new'
+        } else if (r.kind === 'recurring') {
+          initial[i] = { checked: true, decision: null }; // 'confirm' | 'separate'
+        }
+        // 'exact' rows have no checkbox state — they appear collapsed in the Already section.
+      });
+      setCatGuess(guesses);
+      setRowState(initial);
+      setResults(reconciled);
+      setStep('review');
+    } catch (e) {
+      if (__DEV__) console.error('statement analyze:', e);
+      setError(i18n.t('statementParseFailed'));
+      setStep('pick');
+    }
+  };
+
+  const toggleRow = (i) => setRowState(s => ({ ...s, [i]: { ...s[i], checked: !s[i]?.checked } }));
+  const setRowField = (i, field, value) => setRowState(s => ({ ...s, [i]: { ...s[i], [field]: value } }));
+
+  const setSimilarDecision = (i, decision) => setRowState(s => ({ ...s, [i]: { ...s[i], decision, checked: decision === 'new' } }));
+  const setRecurringDecision = (i, decision) => setRowState(s => ({ ...s, [i]: { ...s[i], decision, checked: true } }));
+
+  // Counter — how many will actually be added when "Save" is pressed
+  const saveCount = useMemo(() => {
+    let n = 0;
+    results.forEach((r, i) => {
+      const s = rowState[i] || {};
+      if (r.kind === 'new' && s.checked) n++;
+      if (r.kind === 'similar' && s.decision === 'new') n++;
+      if (r.kind === 'recurring' && s.decision != null) n++;     // either confirm or separate counts
+    });
+    return n;
+  }, [results, rowState]);
+
+  const save = async () => {
+    setStep('saving');
+    let ok = 0, fail = 0;
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      const s = rowState[i] || {};
+      try {
+        if (r.kind === 'new' && s.checked) {
+          const cfg = categoryConfig[s.categoryId] || {};
+          const isCharge = r.extracted.amount < 0;
+          await dataService.addTransaction({
+            type: isCharge ? 'expense' : 'income',
+            amount: Math.abs(s.amount ?? r.extracted.amount),
+            categoryId: s.categoryId,
+            categoryName: catName(s.categoryId),
+            icon: cfg.icon,
+            recipient: r.extracted.payee,
+            note: r.extracted.notes || '',
+            currency: accountCurrency || sym(),
+            date: new Date(s.date || r.extracted.date).toISOString(),
+            account: accountId,
+            tags: [],
+          });
+          ok++;
+        } else if (r.kind === 'similar' && s.decision === 'new') {
+          // No category guess for similar matches; fall back to 'other'
+          await dataService.addTransaction({
+            type: r.extracted.amount < 0 ? 'expense' : 'income',
+            amount: Math.abs(r.extracted.amount),
+            categoryId: 'other',
+            recipient: r.extracted.payee,
+            note: r.extracted.notes || '',
+            currency: accountCurrency || sym(),
+            date: new Date(r.extracted.date).toISOString(),
+            account: accountId,
+            tags: [],
+          });
+          ok++;
+        } else if (r.kind === 'recurring' && s.decision === 'confirm') {
+          await dataService.confirmRecurring(r.recurring.id, {
+            amount: Math.abs(r.extracted.amount),
+            date: new Date(r.extracted.date).toISOString(),
+          });
+          ok++;
+        } else if (r.kind === 'recurring' && s.decision === 'separate') {
+          await dataService.addTransaction({
+            type: r.extracted.amount < 0 ? 'expense' : 'income',
+            amount: Math.abs(r.extracted.amount),
+            categoryId: 'other',
+            recipient: r.extracted.payee,
+            note: r.extracted.notes || '',
+            currency: accountCurrency || sym(),
+            date: new Date(r.extracted.date).toISOString(),
+            account: accountId,
+            tags: [],
+          });
+          ok++;
+        }
+      } catch (e) {
+        if (__DEV__) console.error('statement save row failed:', e);
+        fail++;
+      }
+    }
+    onSaved && onSaved({ added: ok, failed: fail });
+    onClose && onClose();
+  };
+
+  // ---------------------------------------------------------------- Render
+  return (
+    <>
+    <SwipeModal visible={visible} onClose={onClose}>
+      {({ close }) => (
+        <View style={{ flex: 1 }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={st.title}>{i18n.t('importStatementTitle')}</Text>
+
+          {error ? (
+            <View style={st.errCard}>
+              <Feather name="alert-circle" size={16} color={colors.red} />
+              <RowText style={st.errTxt}>{error}</RowText>
+            </View>
+          ) : null}
+
+          {/* PICK */}
+          {step === 'pick' && (
+            <View>
+              {images.length > 0 && (
+                <View style={st.thumbRow}>
+                  {images.map((img, i) => (
+                    <View key={i} style={st.thumbWrap}>
+                      <Image source={{ uri: img.uri }} style={st.thumb} resizeMode="cover" />
+                      <TouchableOpacity style={st.thumbX} onPress={() => setImages(p => p.filter((_, j) => j !== i))}>
+                        <Feather name="x" size={12} color={colors.bg} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+              <View style={st.pickRow}>
+                <TouchableOpacity style={st.pickBtn} onPress={() => pickImage(true)} activeOpacity={0.7}>
+                  <Feather name="camera" size={24} color={colors.green} />
+                  <Text style={st.pickBtnTxt}>{i18n.t('takePhoto')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={st.pickBtn} onPress={() => pickImage(false)} activeOpacity={0.7}>
+                  <Feather name="image" size={24} color={colors.blue} />
+                  <Text style={st.pickBtnTxt}>{i18n.t('fromGallery')}</Text>
+                </TouchableOpacity>
+              </View>
+              {images.length > 0 && (
+                <TouchableOpacity style={st.actionBtn} onPress={analyze} activeOpacity={0.7}>
+                  <Feather name="search" size={16} color={colors.bg} />
+                  <Text style={st.actionBtnTxt}>{i18n.t('scanReceiptAction')} ({images.length})</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* ANALYZING */}
+          {step === 'analyzing' && (
+            <View style={st.center}>
+              <ActivityIndicator size="large" color={colors.green} />
+              <Text style={st.centerTxt}>{i18n.t('analyzingStatement')}</Text>
+            </View>
+          )}
+
+          {/* REVIEW */}
+          {step === 'review' && (() => {
+            const news     = results.map((r, i) => ({ r, i })).filter(x => x.r.kind === 'new');
+            const similars = results.map((r, i) => ({ r, i })).filter(x => x.r.kind === 'similar' || x.r.kind === 'recurring');
+            const exacts   = results.map((r, i) => ({ r, i })).filter(x => x.r.kind === 'exact');
+
+            return (
+              <View>
+                <StatementReviewSection
+                  title={i18n.t('statementSectionNew')}
+                  count={news.length}
+                  accent={colors.green}
+                  defaultOpen={true}
+                >
+                  {news.map(({ r, i }) => {
+                    const s = rowState[i] || {};
+                    const cat = s.categoryId || 'other';
+                    const c = categoryConfig[cat] || {};
+                    const guessSource = catGuess[i]?.source;
+                    return (
+                      <TouchableOpacity key={i} style={st.newRow} onPress={() => toggleRow(i)} activeOpacity={0.7}>
+                        <Feather name={s.checked ? 'check-square' : 'square'} size={18} color={s.checked ? colors.green : colors.textMuted} />
+                        <TouchableOpacity style={[st.catChip, { backgroundColor: (c.color || catColor(cat)) + '20' }]} onPress={() => setEditCatIdx(i)}>
+                          <Feather name={c.icon || 'tag'} size={12} color={c.color || catColor(cat)} />
+                          <Text style={[st.catChipTxt, { color: c.color || catColor(cat) }]} numberOfLines={1}>{catName(cat)}</Text>
+                        </TouchableOpacity>
+                        <RowText style={st.newPayee} numberOfLines={1}>
+                          {r.extracted.payee}
+                          {guessSource ? <Text style={st.srcHint}>  · {i18n.t('statementSource' + guessSource.charAt(0).toUpperCase() + guessSource.slice(1))}</Text> : null}
+                        </RowText>
+                        <Amount value={r.extracted.amount} sign style={st.newAmount} />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </StatementReviewSection>
+
+                <StatementReviewSection
+                  title={i18n.t('statementSectionSimilar')}
+                  count={similars.length}
+                  accent={colors.yellow}
+                  defaultOpen={true}
+                >
+                  {similars.map(({ r, i }) => {
+                    if (r.kind === 'recurring') {
+                      return (
+                        <StatementSimilarCard
+                          key={i}
+                          extracted={r.extracted}
+                          candidate={r.recurring}
+                          isRecurring
+                          onSame={() => setRecurringDecision(i, 'separate')}    // user says "treat as separate (skip recurring)"; default 'separate' just adds it
+                          onNew={() => setRecurringDecision(i, 'confirm')}      // user says "confirm as the recurring template"
+                        />
+                      );
+                    }
+                    // 'similar'
+                    const candidate = r.candidates[0]; // show first candidate; if multiple, future polish can iterate
+                    return (
+                      <StatementSimilarCard
+                        key={i}
+                        extracted={r.extracted}
+                        candidate={candidate}
+                        isRecurring={false}
+                        onSame={() => setSimilarDecision(i, 'same')}
+                        onNew={() => setSimilarDecision(i, 'new')}
+                      />
+                    );
+                  })}
+                </StatementReviewSection>
+
+                <StatementReviewSection
+                  title={i18n.t('statementSectionAlreadyIn')}
+                  count={exacts.length}
+                  accent={colors.textMuted}
+                  defaultOpen={false}
+                >
+                  {exacts.map(({ r, i }) => (
+                    <View key={i} style={st.exactRow}>
+                      <Text style={st.exactDate}>{r.extracted.date}</Text>
+                      <RowText style={st.exactPayee} numberOfLines={1}>{r.extracted.payee}</RowText>
+                      <Amount value={r.extracted.amount} sign style={st.exactAmount} />
+                    </View>
+                  ))}
+                </StatementReviewSection>
+              </View>
+            );
+          })()}
+
+          {step === 'saving' && (
+            <View style={st.center}><ActivityIndicator size="large" color={colors.green} /></View>
+          )}
+        </ScrollView>
+
+        {/* Footer Save button (only in review) */}
+        {step === 'review' && (
+          <View style={st.footer}>
+            <TouchableOpacity
+              style={[st.actionBtn, saveCount === 0 && { opacity: 0.4 }]}
+              onPress={save}
+              disabled={saveCount === 0}
+              activeOpacity={0.7}
+            >
+              <Feather name="check" size={16} color={colors.bg} />
+              <Text style={st.actionBtnTxt}>{i18n.t('statementSaveBtn').replace('{count}', String(saveCount))}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        </View>
+      )}
+    </SwipeModal>
+
+    {/* Category picker for editing a "new" row's category */}
+    <CategoryPickerModal
+      visible={editCatIdx != null}
+      onClose={() => setEditCatIdx(null)}
+      type={results[editCatIdx]?.extracted.amount < 0 ? 'expense' : 'income'}
+      onSelect={(id) => { setRowField(editCatIdx, 'categoryId', id); setEditCatIdx(null); }}
+    />
+    </>
+  );
+}
+
+const createSt = () => StyleSheet.create({
+  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 16, textAlign: i18n.textAlign() },
+  errCard: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.redSoft, borderRadius: 10, padding: 10, marginBottom: 14, borderWidth: 1, borderColor: colors.red + '30' },
+  errTxt: { color: colors.red, fontSize: 12, fontWeight: '600' },
+  pickRow: { flexDirection: i18n.row(), gap: 12, marginBottom: 14 },
+  pickBtn: { flex: 1, alignItems: 'center', paddingVertical: 20, borderRadius: 14, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
+  pickBtnTxt: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  thumbRow: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
+  thumbWrap: { position: 'relative' },
+  thumb: { width: 70, height: 90, borderRadius: 10, backgroundColor: colors.bg2 },
+  thumbX: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.red, justifyContent: 'center', alignItems: 'center' },
+  actionBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, borderRadius: 14, paddingVertical: 14, marginTop: 8 },
+  actionBtnTxt: { color: colors.bg, fontSize: 15, fontWeight: '700' },
+  center: { alignItems: 'center', paddingVertical: 32, gap: 12 },
+  centerTxt: { color: colors.textDim, fontSize: 13 },
+  newRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 4 },
+  catChip: { flexDirection: i18n.row(), alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, maxWidth: 110 },
+  catChipTxt: { fontSize: 11, fontWeight: '700' },
+  newPayee: { color: colors.text, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
+  srcHint: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
+  newAmount: { fontSize: 13, fontWeight: '700' },
+  exactRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 6, paddingHorizontal: 4, opacity: 0.6 },
+  exactDate: { color: colors.textMuted, fontSize: 11, minWidth: 64 },
+  exactPayee: { color: colors.textDim, fontSize: 12, textAlign: i18n.textAlign() },
+  exactAmount: { fontSize: 12, color: colors.textDim },
+  footer: { paddingVertical: 12 },
+});
