@@ -461,6 +461,7 @@ export default {
   statementDoneAdded: '{count} added',
   statementDoneFailed: '{count} failed',
   statementDoneClose: 'Done',
+  statementUndo: 'Undo',
   statementSourceHistory: 'from history',
   statementSourceRecurring: 'recurring',
   statementSourceAi: 'AI',

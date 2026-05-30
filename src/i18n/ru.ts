@@ -468,6 +468,7 @@ export default {
   statementDoneAdded: 'Добавлено: {count}',
   statementDoneFailed: 'Не удалось: {count}',
   statementDoneClose: 'Готово',
+  statementUndo: 'Отменить',
   statementSourceHistory: 'из истории',
   statementSourceRecurring: 'плановый',
   statementSourceAi: 'AI',

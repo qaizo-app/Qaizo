@@ -359,7 +359,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                   {news.map(({ r, i }) => {
                     const s = rowState[i] || {};
                     if (s.editorSaved) return (
-                      <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><Text style={st.doneTxt}>{r.extracted.payee}</Text></View>
+                      <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><RowText style={st.doneTxt}>{r.extracted.payee}</RowText></View>
                     );
                     const cat = s.categoryId || 'other';
                     const c = getCatIcon(cat, catGroups);     // handles custom categories (icon + colour from user-defined groups)
@@ -401,8 +401,30 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                   {similars.map(({ r, i }) => {
                     const s = rowState[i] || {};
                     if (s.editorSaved) return (
-                      <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><Text style={st.doneTxt}>{r.extracted.payee}</Text></View>
+                      <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><RowText style={st.doneTxt}>{r.extracted.payee}</RowText></View>
                     );
+                    // Decision already made — collapse the card into a compact
+                    // status row so the user sees the action landed and the
+                    // section visibly shrinks. Tap to undo and bring the card
+                    // back.
+                    if (s.decision === 'same') {
+                      return (
+                        <TouchableOpacity key={i} style={st.doneRow} onPress={() => setRowField(i, 'decision', null)} activeOpacity={0.6}>
+                          <Feather name="slash" size={14} color={colors.textMuted} />
+                          <RowText style={st.doneSkipTxt} numberOfLines={1}>{r.extracted.payee}</RowText>
+                          <Text style={st.doneUndo}>{i18n.t('statementUndo')}</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                    if (s.decision === 'confirm') {
+                      return (
+                        <TouchableOpacity key={i} style={st.doneRow} onPress={() => setRowField(i, 'decision', null)} activeOpacity={0.6}>
+                          <Feather name="repeat" size={14} color={colors.green} />
+                          <RowText style={st.doneTxt} numberOfLines={1}>{r.extracted.payee}</RowText>
+                          <Text style={st.doneUndo}>{i18n.t('statementUndo')}</Text>
+                        </TouchableOpacity>
+                      );
+                    }
                     if (r.kind === 'recurring') {
                       return (
                         <StatementSimilarCard
@@ -577,7 +599,9 @@ const createSt = () => StyleSheet.create({
   exactPayee: { color: colors.textDim, fontSize: 12, textAlign: i18n.textAlign() },
   exactAmount: { fontSize: 12, color: colors.textDim },
   doneRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 4, opacity: 0.7 },
-  doneTxt: { color: colors.green, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
+  doneTxt: { color: colors.green, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), flex: 1 },
+  doneSkipTxt: { color: colors.textMuted, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), textDecorationLine: 'line-through', flex: 1 },
+  doneUndo: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
   doneTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: 8, textAlign: 'center' },
   doneSummary: { color: colors.textDim, fontSize: 14, fontWeight: '600', textAlign: 'center' },
   doneFail: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center' },

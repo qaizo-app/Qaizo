@@ -461,6 +461,7 @@ export default {
   statementDoneAdded: 'נוספו: {count}',
   statementDoneFailed: 'נכשלו: {count}',
   statementDoneClose: 'סיום',
+  statementUndo: 'בטל',
   statementSourceHistory: 'מההיסטוריה',
   statementSourceRecurring: 'תשלום קבוע',
   statementSourceAi: 'AI',
