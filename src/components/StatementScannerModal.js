@@ -180,72 +180,105 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
     // Truthy = success: addTransaction returns the new doc (object) on success
     // and null on Firestore reject; confirmRecurring returns true/false. Both
     // collapse cleanly under a plain truthy check.
-    const recordWrite = (res) => { if (res) ok++; else { fail++; if (__DEV__) console.warn('statement save: row returned', res); } };
+    const errors = [];                                          // [{ payee, reason }] surfaced on the done screen
+    const recordWrite = (res, label) => {
+      if (res) ok++;
+      else { fail++; errors.push({ payee: label, reason: 'returned falsy' }); if (__DEV__) console.warn('statement save: row returned', res, 'for', label); }
+    };
+    // Hard timeout per row so a single hanging Firestore call cannot freeze
+    // the whole import at "0 of N" — exactly what users hit on credit-card
+    // statements. Anything that does not resolve within 12s is treated as a
+    // failure and we move on.
+    const withTimeout = (p, label) => Promise.race([
+      p,
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout-12s:' + label)), 12000)),
+    ]);
+    // Strip undefined values so Firestore does not reject the write whole —
+    // RN Firebase throws "Unsupported field value: undefined" otherwise.
+    const clean = (obj) => {
+      const out = {};
+      for (const k of Object.keys(obj)) { if (obj[k] !== undefined && obj[k] !== null) out[k] = obj[k]; }
+      return out;
+    };
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
       const s = rowState[i] || {};
       if (s.editorSaved) continue;                              // already saved through the editor
+      const label = r.extracted?.payee || `row ${i}`;
       try {
         if (r.kind === 'new' && s.checked) {
           const cfg = getCatIcon(s.categoryId, catGroups);   // works for both built-in and custom categories
           const isCharge = r.extracted.amount < 0;
-          const res = await dataService.addTransaction({
+          const amt = Number(s.amount ?? r.extracted.amount);
+          if (!Number.isFinite(amt)) throw new Error('invalid-amount');
+          const payload = clean({
             type: isCharge ? 'expense' : 'income',
-            amount: Math.abs(s.amount ?? r.extracted.amount),
-            categoryId: s.categoryId,
-            categoryName: catName(s.categoryId),
-            icon: cfg.icon,
-            recipient: r.extracted.payee,
+            amount: Math.abs(amt),
+            categoryId: s.categoryId || 'other',
+            categoryName: catName(s.categoryId || 'other'),
+            icon: cfg.icon || 'circle',
+            recipient: r.extracted.payee || '',
             note: r.extracted.notes || '',
             currency: accountCurrency || sym(),
             date: new Date(s.date || r.extracted.date).toISOString(),
             account: accountId,
             tags: [],
           });
-          recordWrite(res);
+          if (__DEV__) console.log('[statement save] adding', payload);
+          const res = await withTimeout(dataService.addTransaction(payload), label);
+          recordWrite(res, label);
         } else if (r.kind === 'similar' && s.decision === 'new') {
           // No category guess for similar matches; fall back to 'other'
-          const res = await dataService.addTransaction({
-            type: r.extracted.amount < 0 ? 'expense' : 'income',
-            amount: Math.abs(r.extracted.amount),
+          const amt = Number(r.extracted.amount);
+          if (!Number.isFinite(amt)) throw new Error('invalid-amount');
+          const payload = clean({
+            type: amt < 0 ? 'expense' : 'income',
+            amount: Math.abs(amt),
             categoryId: 'other',
-            recipient: r.extracted.payee,
+            recipient: r.extracted.payee || '',
             note: r.extracted.notes || '',
             currency: accountCurrency || sym(),
             date: new Date(r.extracted.date).toISOString(),
             account: accountId,
             tags: [],
           });
-          recordWrite(res);
+          if (__DEV__) console.log('[statement save] adding (similar→new)', payload);
+          const res = await withTimeout(dataService.addTransaction(payload), label);
+          recordWrite(res, label);
         } else if (r.kind === 'recurring' && s.decision === 'confirm') {
-          const res = await dataService.confirmRecurring(r.recurring.id, {
-            amount: Math.abs(r.extracted.amount),
+          const res = await withTimeout(dataService.confirmRecurring(r.recurring.id, {
+            amount: Math.abs(Number(r.extracted.amount) || 0),
             date: new Date(r.extracted.date).toISOString(),
-          });
-          recordWrite(res);
+          }), label);
+          recordWrite(res, label);
         } else if (r.kind === 'recurring' && s.decision === 'separate') {
-          const res = await dataService.addTransaction({
-            type: r.extracted.amount < 0 ? 'expense' : 'income',
-            amount: Math.abs(r.extracted.amount),
+          const amt = Number(r.extracted.amount);
+          if (!Number.isFinite(amt)) throw new Error('invalid-amount');
+          const payload = clean({
+            type: amt < 0 ? 'expense' : 'income',
+            amount: Math.abs(amt),
             categoryId: 'other',
-            recipient: r.extracted.payee,
+            recipient: r.extracted.payee || '',
             note: r.extracted.notes || '',
             currency: accountCurrency || sym(),
             date: new Date(r.extracted.date).toISOString(),
             account: accountId,
             tags: [],
           });
-          recordWrite(res);
+          if (__DEV__) console.log('[statement save] adding (recurring→separate)', payload);
+          const res = await withTimeout(dataService.addTransaction(payload), label);
+          recordWrite(res, label);
         }
       } catch (e) {
-        if (__DEV__) console.error('statement save row failed:', e);
+        if (__DEV__) console.error('[statement save] row failed:', label, e);
         fail++;
+        errors.push({ payee: label, reason: e?.message || String(e) });
       }
       setProgress(p => ({ ...p, current: p.current + 1 }));
     }
     // Show a real summary instead of silently closing — gives the user
     // confidence that work actually landed (and which rows failed).
-    const result = { added: ok + editorAdded, failed: fail, editorAdded };
+    const result = { added: ok + editorAdded, failed: fail, editorAdded, errors };
     setSummary(result);
     setStep('done');
     onSaved && onSaved({ added: ok + editorAdded, failed: fail });
@@ -428,15 +461,20 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
 
           {step === 'done' && (
             <View style={st.center}>
-              <Feather name="check-circle" size={48} color={colors.green} />
+              <Feather name="check-circle" size={48} color={summary.added > 0 ? colors.green : colors.red} />
               <Text style={st.doneTitle}>{i18n.t('statementDoneTitle')}</Text>
               <Text style={st.doneSummary}>
                 {i18n.t('statementDoneAdded').replace('{count}', String(summary.added))}
               </Text>
               {summary.failed > 0 && (
-                <Text style={st.doneFail}>
-                  {i18n.t('statementDoneFailed').replace('{count}', String(summary.failed))}
-                </Text>
+                <>
+                  <Text style={st.doneFail}>
+                    {i18n.t('statementDoneFailed').replace('{count}', String(summary.failed))}
+                  </Text>
+                  {(summary.errors || []).slice(0, 5).map((er, idx) => (
+                    <Text key={idx} style={st.doneErrLine}>· {er.payee} — {er.reason}</Text>
+                  ))}
+                </>
               )}
             </View>
           )}
@@ -543,5 +581,6 @@ const createSt = () => StyleSheet.create({
   doneTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: 8, textAlign: 'center' },
   doneSummary: { color: colors.textDim, fontSize: 14, fontWeight: '600', textAlign: 'center' },
   doneFail: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  doneErrLine: { color: colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 2 },
   footer: { paddingVertical: 12 },
 });
