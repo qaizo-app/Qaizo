@@ -171,6 +171,16 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
     setProgress({ current: 0, total });
     setStep('saving');
     let ok = 0, fail = 0;
+    // dataService.addTransaction swallows Firestore errors and returns null.
+    // Without this check we'd happily increment ok++ on a row that never
+    // landed (e.g. icon: undefined → invalid-argument rejected). The counter
+    // and the done-summary need to reflect actual writes, otherwise the user
+    // sees "Added 12" but their account shows nothing — exactly the bug they
+    // hit on the credit-card scan.
+    // Truthy = success: addTransaction returns the new doc (object) on success
+    // and null on Firestore reject; confirmRecurring returns true/false. Both
+    // collapse cleanly under a plain truthy check.
+    const recordWrite = (res) => { if (res) ok++; else { fail++; if (__DEV__) console.warn('statement save: row returned', res); } };
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
       const s = rowState[i] || {};
@@ -179,7 +189,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
         if (r.kind === 'new' && s.checked) {
           const cfg = getCatIcon(s.categoryId, catGroups);   // works for both built-in and custom categories
           const isCharge = r.extracted.amount < 0;
-          await dataService.addTransaction({
+          const res = await dataService.addTransaction({
             type: isCharge ? 'expense' : 'income',
             amount: Math.abs(s.amount ?? r.extracted.amount),
             categoryId: s.categoryId,
@@ -192,10 +202,10 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
             account: accountId,
             tags: [],
           });
-          ok++;
+          recordWrite(res);
         } else if (r.kind === 'similar' && s.decision === 'new') {
           // No category guess for similar matches; fall back to 'other'
-          await dataService.addTransaction({
+          const res = await dataService.addTransaction({
             type: r.extracted.amount < 0 ? 'expense' : 'income',
             amount: Math.abs(r.extracted.amount),
             categoryId: 'other',
@@ -206,15 +216,15 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
             account: accountId,
             tags: [],
           });
-          ok++;
+          recordWrite(res);
         } else if (r.kind === 'recurring' && s.decision === 'confirm') {
-          await dataService.confirmRecurring(r.recurring.id, {
+          const res = await dataService.confirmRecurring(r.recurring.id, {
             amount: Math.abs(r.extracted.amount),
             date: new Date(r.extracted.date).toISOString(),
           });
-          ok++;
+          recordWrite(res);
         } else if (r.kind === 'recurring' && s.decision === 'separate') {
-          await dataService.addTransaction({
+          const res = await dataService.addTransaction({
             type: r.extracted.amount < 0 ? 'expense' : 'income',
             amount: Math.abs(r.extracted.amount),
             categoryId: 'other',
@@ -225,7 +235,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
             account: accountId,
             tags: [],
           });
-          ok++;
+          recordWrite(res);
         }
       } catch (e) {
         if (__DEV__) console.error('statement save row failed:', e);
