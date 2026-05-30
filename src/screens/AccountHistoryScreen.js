@@ -306,14 +306,18 @@ export default function AccountHistoryScreen({ route, navigation }) {
     <>
       {renderChartOrBalance()}
 
-      <TouchableOpacity
-        onPress={() => setShowStatement(true)}
-        style={{ flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, paddingVertical: 12, marginHorizontal: 20, marginBottom: 12, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder }}
-        activeOpacity={0.7}
-      >
-        <Feather name="file-text" size={16} color={colors.green} />
-        <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>{i18n.t('importStatement')}</Text>
-      </TouchableOpacity>
+      {/* Statement import only makes sense for account types that issue
+          statements. Cash wallets and physical assets have no statements. */}
+      {!['cash', 'asset'].includes(account.type) && (
+        <TouchableOpacity
+          onPress={() => setShowStatement(true)}
+          style={{ flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, paddingVertical: 12, marginHorizontal: 20, marginBottom: 12, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder }}
+          activeOpacity={0.7}
+        >
+          <Feather name="file-text" size={16} color={colors.green} />
+          <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>{i18n.t('importStatement')}</Text>
+        </TouchableOpacity>
+      )}
 
       {renderUpcomingBlock()}
 
