@@ -8,14 +8,14 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacit
 import i18n from '../i18n';
 import aiService from '../services/aiService';
 import dataService from '../services/dataService';
-import { categoryConfig, colors } from '../theme/colors';
+import { colors } from '../theme/colors';
 import { catColor, catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
 import { reconcile } from '../utils/statementReconcile';
 import { categorize } from '../utils/statementCategorize';
 import AddTransactionModal from './AddTransactionModal';
 import Amount from './Amount';
-import CategoryPickerModal from './CategoryPickerModal';
+import CategoryPickerModal, { CatIcon, DEFAULT_GROUPS, getCatIcon } from './CategoryPickerModal';
 import RowText from './RowText';
 import StatementReviewSection from './StatementReviewSection';
 import StatementSimilarCard from './StatementSimilarCard';
@@ -32,6 +32,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
   const [editorIdx, setEditorIdx] = useState(null);    // index of result open in the full AddTransactionModal
   const [progress, setProgress] = useState({ current: 0, total: 0 }); // bulk-save progress
   const [summary, setSummary] = useState({ added: 0, failed: 0, editorAdded: 0 }); // shown on 'done' screen
+  const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);                       // built-in + user's custom categories — needed to render the right icon/colour for custom-category chips on rows
 
   const st = createSt();
 
@@ -44,6 +45,9 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       setCatGuess({});
       setRowState({});
       setError('');
+      // Refresh categories every open — the user might have added a custom
+      // category since the last scan.
+      dataService.getCategories().then(saved => { if (saved && saved.length > 0) setCatGroups(saved); }).catch(() => {});
     }
   }, [visible]);
 
@@ -173,7 +177,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       if (s.editorSaved) continue;                              // already saved through the editor
       try {
         if (r.kind === 'new' && s.checked) {
-          const cfg = categoryConfig[s.categoryId] || {};
+          const cfg = getCatIcon(s.categoryId, catGroups);   // works for both built-in and custom categories
           const isCharge = r.extracted.amount < 0;
           await dataService.addTransaction({
             type: isCharge ? 'expense' : 'income',
@@ -315,7 +319,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                       <View key={i} style={st.doneRow}><Feather name="check-circle" size={14} color={colors.green} /><Text style={st.doneTxt}>{r.extracted.payee}</Text></View>
                     );
                     const cat = s.categoryId || 'other';
-                    const c = categoryConfig[cat] || {};
+                    const c = getCatIcon(cat, catGroups);     // handles custom categories (icon + colour from user-defined groups)
                     const guessSource = catGuess[i]?.source;
                     return (
                       <TouchableOpacity
@@ -328,7 +332,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                       >
                         <Feather name={s.checked ? 'check-square' : 'square'} size={18} color={s.checked ? colors.green : colors.textMuted} />
                         <TouchableOpacity style={[st.catChip, { backgroundColor: (c.color || catColor(cat)) + '20' }]} onPress={() => setEditCatIdx(i)}>
-                          <Feather name={c.icon || 'tag'} size={12} color={c.color || catColor(cat)} />
+                          <CatIcon icon={c.icon || 'tag'} size={12} color={c.color || catColor(cat)} />
                           <Text style={[st.catChipTxt, { color: c.color || catColor(cat) }]} numberOfLines={1}>{catName(cat)}</Text>
                         </TouchableOpacity>
                         <RowText style={st.newPayee} numberOfLines={1}>
