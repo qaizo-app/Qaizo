@@ -287,7 +287,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                         </TouchableOpacity>
                         <RowText style={st.newPayee} numberOfLines={1}>
                           {r.extracted.payee}
-                          {guessSource ? <Text style={st.srcHint}>  · {i18n.t('statementSource' + guessSource.charAt(0).toUpperCase() + guessSource.slice(1))}</Text> : null}
+                          {guessSource && guessSource !== 'fallback' ? <Text style={st.srcHint}>  · {i18n.t('statementSource' + guessSource.charAt(0).toUpperCase() + guessSource.slice(1))}</Text> : null}
                         </RowText>
                         <Amount value={r.extracted.amount} sign style={st.newAmount} />
                       </TouchableOpacity>
@@ -388,7 +388,7 @@ const createSt = () => StyleSheet.create({
   pickRow: { flexDirection: i18n.row(), gap: 12, marginBottom: 14 },
   pickBtn: { flex: 1, alignItems: 'center', paddingVertical: 20, borderRadius: 14, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
   pickBtnTxt: { color: colors.text, fontSize: 13, fontWeight: '600' },
-  thumbRow: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
+  thumbRow: { flexDirection: i18n.row(), gap: 8, marginBottom: 12, flexWrap: 'wrap' },
   thumbWrap: { position: 'relative' },
   thumb: { width: 70, height: 90, borderRadius: 10, backgroundColor: colors.bg2 },
   thumbX: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.red, justifyContent: 'center', alignItems: 'center' },

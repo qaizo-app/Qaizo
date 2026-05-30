@@ -15,6 +15,7 @@ import UpcomingPaymentsModal from '../components/UpcomingPaymentsModal';
 import TransactionItem from '../components/TransactionItem';
 import { getCachedGroups } from '../components/CategoryIcon';
 import { getCatName } from '../components/CategoryPickerModal';
+import { useToast } from '../components/ToastProvider';
 import i18n from '../i18n';
 import analyticsService from '../services/analyticsService';
 import dataService from '../services/dataService';
@@ -47,6 +48,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [confirmRec, setConfirmRec] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const lang = i18n.getLanguage();
+  const toast = useToast();
 
   const styles = createStyles();
 
@@ -306,7 +308,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       <TouchableOpacity
         onPress={() => setShowStatement(true)}
-        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, paddingVertical: 12, marginHorizontal: 20, marginBottom: 12, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder }}
+        style={{ flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, paddingVertical: 12, marginHorizontal: 20, marginBottom: 12, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder }}
         activeOpacity={0.7}
       >
         <Feather name="file-text" size={16} color={colors.green} />
@@ -354,7 +356,12 @@ export default function AccountHistoryScreen({ route, navigation }) {
         onClose={() => setShowStatement(false)}
         accountId={account.id}
         accountCurrency={account.currency}
-        onSaved={() => loadData()}
+        onSaved={({ added = 0, failed = 0 } = {}) => {
+          if (added > 0) {
+            toast.show(i18n.t('statementImported').replace('{count}', String(added)), 'success');
+          }
+          loadData();
+        }}
       />
 
       <UpcomingPaymentsModal
