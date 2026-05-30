@@ -40,7 +40,9 @@ export default function StatementSimilarCard({ extracted, candidate, isRecurring
       {/* Actions */}
       <View style={st.btnRow}>
         <TouchableOpacity style={[st.btn, st.btnSecondary]} onPress={onSame} activeOpacity={0.7}>
-          <Text style={st.btnSecondaryTxt}>{i18n.t('statementBtnSameSkip')}</Text>
+          <Text style={st.btnSecondaryTxt}>
+            {isRecurring ? i18n.t('statementBtnAddSeparate') : i18n.t('statementBtnSameSkip')}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity style={[st.btn, st.btnPrimary]} onPress={onNew} activeOpacity={0.7}>
           <Text style={st.btnPrimaryTxt}>
