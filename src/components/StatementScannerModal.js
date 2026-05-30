@@ -336,6 +336,10 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                           {guessSource && guessSource !== 'fallback' ? <Text style={st.srcHint}>  · {i18n.t('statementSource' + guessSource.charAt(0).toUpperCase() + guessSource.slice(1))}</Text> : null}
                         </RowText>
                         <Amount value={r.extracted.amount} sign style={st.newAmount} color={r.extracted.amount < 0 ? colors.red : colors.green} />
+                        {/* Edit pencil → full editor (needed when the row is a transfer or wrong type). Long-press on the whole row works too, but the icon is the discoverable affordance. */}
+                        <TouchableOpacity onPress={() => setEditorIdx(i)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                          <Feather name="edit-2" size={14} color={colors.textMuted} />
+                        </TouchableOpacity>
                       </TouchableOpacity>
                     );
                   })}
