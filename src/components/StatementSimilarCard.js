@@ -17,7 +17,7 @@ export default function StatementSimilarCard({ extracted, candidate, isRecurring
       <View style={st.row}>
         <Text style={st.dim}>{extracted.date}</Text>
         <RowText style={st.payee} numberOfLines={1}>{extracted.payee}</RowText>
-        <Amount value={extracted.amount} sign style={st.amount} />
+        <Amount value={extracted.amount} sign style={st.amount} color={extracted.amount < 0 ? colors.red : colors.green} />
       </View>
 
       <View style={st.divider} />
@@ -34,7 +34,7 @@ export default function StatementSimilarCard({ extracted, candidate, isRecurring
       <View style={st.row}>
         <Text style={st.dim}>{isRecurring ? candidate.nextDate : (candidate.date || '').slice(0, 10)}</Text>
         <RowText style={st.payee} numberOfLines={1}>{candidate.recipient || '—'}</RowText>
-        <Amount value={candidate.amount} sign style={st.amount} />
+        <Amount value={candidate.amount} sign style={st.amount} color={(candidate.amount || 0) < 0 ? colors.red : colors.green} />
       </View>
 
       {/* Actions */}

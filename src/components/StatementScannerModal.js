@@ -75,8 +75,11 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
         return;
       }
 
-      // Load existing (this account, last 60 days) + recurring (this account, active) + history (all accounts, 6 months)
-      const cutoffExist = new Date(); cutoffExist.setDate(cutoffExist.getDate() - 60);
+      // Existing-tx window must cover the statement period. Credit-card
+      // billing cycles often surface transactions 60-90 days old, so 60 days
+      // is too tight — matched-but-out-of-window rows end up labelled "New"
+      // by mistake. 180 days = 6 months is the safe default.
+      const cutoffExist = new Date(); cutoffExist.setDate(cutoffExist.getDate() - 180);
       const cutoffHist  = new Date(); cutoffHist.setMonth(cutoffHist.getMonth() - 6);
       const [allTx, allRec] = await Promise.all([dataService.getTransactions(), dataService.getRecurring()]);
       const existing = allTx.filter(t => t.account === accountId && (t.date || '').slice(0, 10) >= cutoffExist.toISOString().slice(0, 10));
@@ -289,7 +292,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                           {r.extracted.payee}
                           {guessSource && guessSource !== 'fallback' ? <Text style={st.srcHint}>  · {i18n.t('statementSource' + guessSource.charAt(0).toUpperCase() + guessSource.slice(1))}</Text> : null}
                         </RowText>
-                        <Amount value={r.extracted.amount} sign style={st.newAmount} />
+                        <Amount value={r.extracted.amount} sign style={st.newAmount} color={r.extracted.amount < 0 ? colors.red : colors.green} />
                       </TouchableOpacity>
                     );
                   })}
