@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddTransactionModal from '../components/AddTransactionModal';
+import StatementScannerModal from '../components/StatementScannerModal';
 import { setCurrentAccountId } from '../components/currentAccount';
 import BalanceLineChart from '../components/BalanceLineChart';
 import ConfirmModal from '../components/ConfirmModal';
@@ -39,6 +40,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [currentBalance, setCurrentBalance] = useState(account.balance || 0);
   const [showAdd, setShowAdd] = useState(false);
+  const [showStatement, setShowStatement] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [periodKey, setPeriodKey] = useState('3m');
@@ -302,6 +304,15 @@ export default function AccountHistoryScreen({ route, navigation }) {
     <>
       {renderChartOrBalance()}
 
+      <TouchableOpacity
+        onPress={() => setShowStatement(true)}
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.bg2, paddingVertical: 12, marginHorizontal: 20, marginBottom: 12, borderRadius: 14, borderWidth: 1, borderColor: colors.cardBorder }}
+        activeOpacity={0.7}
+      >
+        <Feather name="file-text" size={16} color={colors.green} />
+        <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>{i18n.t('importStatement')}</Text>
+      </TouchableOpacity>
+
       {renderUpcomingBlock()}
 
       {/* Card-top: header sits inside the same visual card as the rows below */}
@@ -337,6 +348,14 @@ export default function AccountHistoryScreen({ route, navigation }) {
 
       <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
         onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
+
+      <StatementScannerModal
+        visible={showStatement}
+        onClose={() => setShowStatement(false)}
+        accountId={account.id}
+        accountCurrency={account.currency}
+        onSaved={() => loadData()}
+      />
 
       <UpcomingPaymentsModal
         visible={showAllUpcoming}
