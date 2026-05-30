@@ -2,7 +2,7 @@
 // SwipeModal — свайп вниз закрывает, preselectedAccount, редактирование
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
@@ -25,6 +25,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     if (visible && initialType) setType(initialType);
   }, [visible, initialType]);
   const [amount, setAmount] = useState('');
+  const [saving, setSaving] = useState(false);    // re-entrance guard for handleSave
   const [categoryId, setCategoryId] = useState('food');
   const [recipient, setRecipient] = useState('');
   const [note, setNote] = useState('');
@@ -55,6 +56,17 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
 
   useEffect(() => {
     if (visible) {
+      // Synchronous reset for non-edit opens. Without this the modal renders
+      // with previous values during the async data load (Firestore reads
+      // below) and the user sees a stale amount/recipient for ~100-500ms.
+      if (!editTransaction) {
+        setAmount(''); setRecipient(''); setNote(''); setTags([]); setSelProject('');
+        setType('expense'); setCategoryId('food'); setShowMore(false);
+        setSplitMode(false); setSplitRows([]);
+        const today = new Date();
+        setDateStr(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
+        if (preselectedAccount) setSelAcc(preselectedAccount);
+      }
       dataService.getSettings().then(s => { if (s.weekStart) setWeekStart(s.weekStart); });
       dataService.getCategories().then(saved => { if (saved && saved.length > 0) setCatGroups(saved); });
       Promise.all([dataService.getAccounts(), dataService.getTransactions(), dataService.getTags(), dataService.getProjects()]).then(([accs, txs, savedTags, projs]) => {
@@ -91,13 +103,12 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             setToAcc('');
           }
         } else {
-          setAmount(''); setRecipient(''); setNote(''); setTags([]); setSelProject('');
-          setType('expense'); setCategoryId('food'); setShowMore(false);
-          setSplitMode(false); setSplitRows([]);
-          const today = new Date();
-          setDateStr(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
-          if (preselectedAccount) setSelAcc(preselectedAccount);
-          else if (sorted.length > 0) { setSelAcc(sorted[0].id); if (sorted.length > 1) setToAcc(sorted[1].id); }
+          // Field reset already done synchronously above; here only fill in the
+          // account choices from the async-loaded `sorted` list.
+          if (!preselectedAccount && sorted.length > 0) {
+            setSelAcc(sorted[0].id);
+            if (sorted.length > 1) setToAcc(sorted[1].id);
+          }
         }
       });
     }
@@ -108,7 +119,10 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const togTag = (tag) => setTags(p => p.includes(tag) ? p.filter(t => t !== tag) : [...p, tag]);
 
   const handleSave = async () => {
+    if (saving) return;                 // re-entrance guard — prevents double-tap creating duplicate transactions
     if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
+    setSaving(true);
+    try {
     const txDate = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
 
     // Split mode — create multiple transactions
@@ -173,6 +187,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       analyticsEvents.logEvent('transaction_edited');
     }
     onSave?.(); onClose?.();
+    } finally {
+      setSaving(false);                 // always release the guard
+    }
   };
 
   const accLabel = type === 'expense' ? i18n.t('payFrom') : type === 'income' ? i18n.t('receiveTo') : i18n.t('from');
@@ -188,9 +205,11 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
             <TouchableOpacity style={st.cancelBtn} onPress={close}>
               <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
-              onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}>
-              <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
+            <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: (amount && parseFloat(amount.replace(',', '.')) > 0 && !saving) ? 1 : 0.35 }]}
+              onPress={handleSave} disabled={saving || !amount || parseFloat(amount.replace(',', '.')) <= 0}>
+              {saving
+                ? <ActivityIndicator size="small" color="#fff" style={{ marginEnd: 6 }} />
+                : <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />}
               <Text style={st.saveTxt}>{i18n.t('save')}</Text>
             </TouchableOpacity>
           </View>
