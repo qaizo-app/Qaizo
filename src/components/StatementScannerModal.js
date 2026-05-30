@@ -22,14 +22,16 @@ import StatementSimilarCard from './StatementSimilarCard';
 import SwipeModal from './SwipeModal';
 
 export default function StatementScannerModal({ visible, onClose, accountId, accountCurrency, onSaved }) {
-  const [step, setStep] = useState('pick');           // 'pick' | 'analyzing' | 'review' | 'saving'
+  const [step, setStep] = useState('pick');           // 'pick' | 'analyzing' | 'review' | 'saving' | 'done'
   const [images, setImages] = useState([]);            // [{ uri, base64 }]
   const [results, setResults] = useState([]);          // ReconcileResult[]
   const [catGuess, setCatGuess] = useState({});        // id → CategoryGuess (for 'new' results)
-  const [rowState, setRowState] = useState({});        // id → { checked, decision, categoryId, date, amount }
+  const [rowState, setRowState] = useState({});        // id → { checked, decision, categoryId, date, amount, editorSaved }
   const [error, setError] = useState('');
   const [editCatIdx, setEditCatIdx] = useState(null);  // index of result whose category is being edited
   const [editorIdx, setEditorIdx] = useState(null);    // index of result open in the full AddTransactionModal
+  const [progress, setProgress] = useState({ current: 0, total: 0 }); // bulk-save progress
+  const [summary, setSummary] = useState({ added: 0, failed: 0, editorAdded: 0 }); // shown on 'done' screen
 
   const st = createSt();
 
@@ -141,6 +143,28 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
   }, [results, rowState]);
 
   const save = async () => {
+    // Pre-count the rows we will actually save so the progress bar is honest
+    let total = 0, editorAdded = 0;
+    results.forEach((r, i) => {
+      const s = rowState[i] || {};
+      if (s.editorSaved) { editorAdded++; return; }
+      if (r.kind === 'new' && s.checked) total++;
+      else if (r.kind === 'similar' && s.decision === 'new') total++;
+      else if (r.kind === 'recurring' && s.decision != null) total++;
+    });
+
+    // Nothing left to save in this loop — go straight to the summary (the
+    // editor-saved rows are already in Firestore, so this still counts as a
+    // successful import).
+    if (total === 0) {
+      const result = { added: editorAdded, failed: 0, editorAdded };
+      setSummary(result);
+      setStep('done');
+      onSaved && onSaved({ added: editorAdded, failed: 0 });
+      return;
+    }
+
+    setProgress({ current: 0, total });
     setStep('saving');
     let ok = 0, fail = 0;
     for (let i = 0; i < results.length; i++) {
@@ -203,9 +227,14 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
         if (__DEV__) console.error('statement save row failed:', e);
         fail++;
       }
+      setProgress(p => ({ ...p, current: p.current + 1 }));
     }
-    onSaved && onSaved({ added: ok, failed: fail });
-    onClose && onClose();
+    // Show a real summary instead of silently closing — gives the user
+    // confidence that work actually landed (and which rows failed).
+    const result = { added: ok + editorAdded, failed: fail, editorAdded };
+    setSummary(result);
+    setStep('done');
+    onSaved && onSaved({ added: ok + editorAdded, failed: fail });
   };
 
   // ---------------------------------------------------------------- Render
@@ -369,21 +398,57 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
           })()}
 
           {step === 'saving' && (
-            <View style={st.center}><ActivityIndicator size="large" color={colors.green} /></View>
+            <View style={st.center}>
+              <ActivityIndicator size="large" color={colors.green} />
+              <Text style={st.centerTxt}>
+                {i18n.t('statementSavingProgress')
+                  .replace('{current}', String(progress.current))
+                  .replace('{total}', String(progress.total))}
+              </Text>
+            </View>
+          )}
+
+          {step === 'done' && (
+            <View style={st.center}>
+              <Feather name="check-circle" size={48} color={colors.green} />
+              <Text style={st.doneTitle}>{i18n.t('statementDoneTitle')}</Text>
+              <Text style={st.doneSummary}>
+                {i18n.t('statementDoneAdded').replace('{count}', String(summary.added))}
+              </Text>
+              {summary.failed > 0 && (
+                <Text style={st.doneFail}>
+                  {i18n.t('statementDoneFailed').replace('{count}', String(summary.failed))}
+                </Text>
+              )}
+            </View>
           )}
         </ScrollView>
 
         {/* Footer Save button (only in review) */}
-        {step === 'review' && (
+        {step === 'review' && (() => {
+          const editorAdded = Object.values(rowState).filter(s => s?.editorSaved).length;
+          const totalToSave = saveCount + editorAdded;          // editor-saved rows count toward the "Save N" total
+          return (
+            <View style={st.footer}>
+              <TouchableOpacity
+                style={[st.actionBtn, totalToSave === 0 && { opacity: 0.4 }]}
+                onPress={save}
+                disabled={totalToSave === 0}
+                activeOpacity={0.7}
+              >
+                <Feather name="check" size={16} color={colors.bg} />
+                <Text style={st.actionBtnTxt}>{i18n.t('statementSaveBtn').replace('{count}', String(totalToSave))}</Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })()}
+
+        {/* Footer Close button (only on done summary) */}
+        {step === 'done' && (
           <View style={st.footer}>
-            <TouchableOpacity
-              style={[st.actionBtn, saveCount === 0 && { opacity: 0.4 }]}
-              onPress={save}
-              disabled={saveCount === 0}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={st.actionBtn} onPress={() => onClose && onClose()} activeOpacity={0.7}>
               <Feather name="check" size={16} color={colors.bg} />
-              <Text style={st.actionBtnTxt}>{i18n.t('statementSaveBtn').replace('{count}', String(saveCount))}</Text>
+              <Text style={st.actionBtnTxt}>{i18n.t('statementDoneClose')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -457,5 +522,8 @@ const createSt = () => StyleSheet.create({
   exactAmount: { fontSize: 12, color: colors.textDim },
   doneRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 4, opacity: 0.7 },
   doneTxt: { color: colors.green, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
+  doneTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: 8, textAlign: 'center' },
+  doneSummary: { color: colors.textDim, fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  doneFail: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center' },
   footer: { paddingVertical: 12 },
 });
