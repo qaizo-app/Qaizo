@@ -13,12 +13,14 @@ import { catColor, catName } from '../utils/categoryName';
 import { sym } from '../utils/currency';
 import { reconcile } from '../utils/statementReconcile';
 import { categorize } from '../utils/statementCategorize';
+import { suggestRecurring } from '../utils/statementSuggestRecurring';
 import AddTransactionModal from './AddTransactionModal';
 import Amount from './Amount';
 import CategoryPickerModal, { CatIcon, DEFAULT_GROUPS, getCatIcon } from './CategoryPickerModal';
 import RowText from './RowText';
 import StatementReviewSection from './StatementReviewSection';
 import StatementSimilarCard from './StatementSimilarCard';
+import StatementSuggestRecurringCard from './StatementSuggestRecurringCard';
 import SwipeModal from './SwipeModal';
 
 export default function StatementScannerModal({ visible, onClose, accountId, accountCurrency, onSaved }) {
@@ -33,6 +35,8 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
   const [progress, setProgress] = useState({ current: 0, total: 0 }); // bulk-save progress
   const [summary, setSummary] = useState({ added: 0, failed: 0, editorAdded: 0 }); // shown on 'done' screen
   const [catGroups, setCatGroups] = useState(DEFAULT_GROUPS);                       // built-in + user's custom categories — needed to render the right icon/colour for custom-category chips on rows
+  const [suggestions, setSuggestions] = useState([]);                               // RecurringSuggestion[] from pattern detector
+  const [acceptedSuggestions, setAcceptedSuggestions] = useState({});               // index in suggestions → bool
 
   const st = createSt();
 
@@ -44,6 +48,8 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       setResults([]);
       setCatGuess({});
       setRowState({});
+      setSuggestions([]);
+      setAcceptedSuggestions({});
       setError('');
       // Refresh categories every open — the user might have added a custom
       // category since the last scan.
@@ -125,6 +131,15 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       setCatGuess(guesses);
       setRowState(initial);
       setResults(reconciled);
+      // Pattern detector: 2+ 'new' rows with same payee + weekly/monthly
+      // cadence + stable amount → offer a recurring template alongside.
+      // 'high' confidence (3+ rows) auto-accepted; 'medium' (2 rows) requires
+      // a tap so we don't spam templates from spurious pairs.
+      const suggs = suggestRecurring(reconciled);
+      setSuggestions(suggs);
+      const initAccept = {};
+      suggs.forEach((s, i) => { if (s.confidence === 'high') initAccept[i] = true; });
+      setAcceptedSuggestions(initAccept);
       setStep('review');
     } catch (e) {
       if (__DEV__) console.error('statement analyze:', e);
@@ -282,12 +297,47 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       }
       setProgress(p => ({ ...p, current: p.current + 1 }));
     }
+
+    // Create recurring templates for any suggestions the user accepted.
+    // Failure here is logged but does NOT count against the row-save tally —
+    // the transactions are independent and already landed.
+    let recurringCreated = 0;
+    for (let i = 0; i < suggestions.length; i++) {
+      if (!acceptedSuggestions[i]) continue;
+      const sug = suggestions[i];
+      try {
+        // nextDate = the most recent statement row + one interval, so the
+        // template will fire for the next expected period rather than
+        // duplicating a charge that's already in the saved rows.
+        const lastRowDate = sug.rowIndices
+          .map(idx => results[idx].extracted.date)
+          .sort()
+          .pop();
+        const nextDate = new Date(lastRowDate);
+        nextDate.setDate(nextDate.getDate() + sug.intervalDays);
+        const created = await withTimeout(dataService.addRecurring({
+          recipient: sug.payee,
+          amount: sug.avgAmount,
+          type: 'expense',
+          categoryId: 'other',
+          currency: accountCurrency || sym(),
+          account: accountId,
+          frequency: sug.intervalKind === 'weekly' ? 'weekly' : 'monthly',
+          nextDate: nextDate.toISOString(),
+        }), `recurring-template-${sug.payee}`);
+        if (created) recurringCreated++;
+        else if (__DEV__) console.warn('[statement save] addRecurring returned null for', sug.payee);
+      } catch (e) {
+        if (__DEV__) console.error('[statement save] addRecurring failed:', sug.payee, e);
+      }
+    }
+
     // Show a real summary instead of silently closing — gives the user
     // confidence that work actually landed (and which rows failed).
-    const result = { added: ok + editorAdded, failed: fail, editorAdded, errors };
+    const result = { added: ok + editorAdded, failed: fail, editorAdded, errors, recurringCreated };
     setSummary(result);
     setStep('done');
-    onSaved && onSaved({ added: ok + editorAdded, failed: fail });
+    onSaved && onSaved({ added: ok + editorAdded, failed: fail, recurringCreated });
   };
 
   // ---------------------------------------------------------------- Render
@@ -363,6 +413,29 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
                   <Feather name="alert-triangle" size={14} color={colors.yellow} />
                   <RowText style={st.warnTxt}>{i18n.t('statementVerifyHint')}</RowText>
                 </View>
+
+                {/* Suggested recurring templates — clusters of 'new' rows that
+                    look like the user has an unregistered monthly/weekly
+                    payment. Tapping a card flags it for creation alongside
+                    the bulk save. */}
+                {suggestions.length > 0 && (
+                  <StatementReviewSection
+                    title={i18n.t('statementSuggestSection')}
+                    count={suggestions.length}
+                    accent={colors.yellow}
+                    defaultOpen={true}
+                  >
+                    {suggestions.map((sug, i) => (
+                      <StatementSuggestRecurringCard
+                        key={i}
+                        suggestion={sug}
+                        accepted={!!acceptedSuggestions[i]}
+                        onToggle={() => setAcceptedSuggestions(prev => ({ ...prev, [i]: !prev[i] }))}
+                      />
+                    ))}
+                  </StatementReviewSection>
+                )}
+
                 <StatementReviewSection
                   title={i18n.t('statementSectionNew')}
                   count={news.length}
@@ -501,6 +574,11 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
               <Text style={st.doneSummary}>
                 {i18n.t('statementDoneAdded').replace('{count}', String(summary.added))}
               </Text>
+              {summary.recurringCreated > 0 && (
+                <Text style={st.doneSummary}>
+                  {i18n.t('statementDoneRecurringCreated').replace('{count}', String(summary.recurringCreated))}
+                </Text>
+              )}
               {summary.failed > 0 && (
                 <>
                   <Text style={st.doneFail}>
