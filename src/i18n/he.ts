@@ -467,6 +467,7 @@ export default {
   statementSourceRecurring: 'תשלום קבוע',
   statementSourceAi: 'AI',
   scanFailed: 'לא הצלחתי לקרוא את הקבלה. נסה תמונה ברורה יותר.',
+  aiNotConfigured: 'תכונות הבינה המלאכותית לא הוגדרו בגרסה הזו. התקן מחדש מ-App Store / Google Play.',
   cameraPermission: 'נדרשת הרשאת מצלמה',
   items: 'פריטים',
   monthlyReport: 'דוח חודשי',

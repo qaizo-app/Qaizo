@@ -78,7 +78,13 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       const base64List = images.map(i => i.base64);
       const extracted = await aiService.scanStatement(base64List, accountCurrency);
       if (!extracted || extracted.length === 0) {
-        setError(i18n.t('statementNoneFound'));
+        // Distinguish "AI not configured" from "AI ran but found nothing".
+        // The local-build .env can be missing the Gemini key, which silently
+        // returns []; if we keep showing the generic "no transactions" the
+        // user thinks the photo is bad and keeps re-scanning.
+        const lastErr = aiService.getLastAIError && aiService.getLastAIError();
+        if (lastErr && lastErr.code === 'no_api_key') setError(i18n.t('aiNotConfigured'));
+        else setError(i18n.t('statementNoneFound'));
         setStep('pick');
         return;
       }

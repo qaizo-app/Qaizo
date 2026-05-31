@@ -47,6 +47,22 @@ const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
 const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 const GEMINI_URL = geminiUrl(GEMINI_MODEL_PRIMARY);
 
+// Loud one-shot warning at module load so a misconfigured dev build is
+// visible in the very first Metro log, not only when the user tries to scan.
+// Past sessions wasted hours debugging "scanner returns nothing on iOS"
+// because the symptom looked like an AI failure when the real cause was a
+// missing local .env on the dev machine. See project_ios_gemini_key_missing.
+if (__DEV__ && !GEMINI_API_KEY) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '\n[Qaizo aiService] EXPO_PUBLIC_GEMINI_API_KEY is missing in this build.\n' +
+    '  → Receipt scan, statement scan, voice input parsing and Smart Input\n' +
+    '    will all silently return empty.\n' +
+    '  → Fix: copy `.env.example` to `.env` in the repo root, fill in keys,\n' +
+    '    then Clean Build Folder + rebuild (Xcode) or `npx expo start --clear`.\n'
+  );
+}
+
 // ─── МААМ и налоговые ставки (Израиль) ──────────────────
 const MAAM_RATE = 0.17;
 const ESTIMATED_INCOME_TAX = 0.10; // упрощённо для осека

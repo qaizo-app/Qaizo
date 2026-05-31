@@ -148,8 +148,15 @@ export default function ReceiptScannerModal({ visible, onClose, onSaved }) {
         });
       } else {
         const aiErr = aiService.getLastAIError?.();
-        const detail = aiErr ? ` [${aiErr.code}${aiErr.status ? ' ' + aiErr.status : ''}${aiErr.message ? ': ' + aiErr.message : ''}]` : '';
-        setError(i18n.t('scanFailed') + detail);
+        // Friendly message when the build was shipped without an AI key —
+        // otherwise the user keeps re-photographing receipts thinking the
+        // photo is bad. Other codes keep the raw diagnostic tail.
+        if (aiErr?.code === 'no_api_key') {
+          setError(i18n.t('aiNotConfigured'));
+        } else {
+          const detail = aiErr ? ` [${aiErr.code}${aiErr.status ? ' ' + aiErr.status : ''}${aiErr.message ? ': ' + aiErr.message : ''}]` : '';
+          setError(i18n.t('scanFailed') + detail);
+        }
         setStep('pick');
         analyticsEvents.logEvent('receipt_scanned', { success: false, images: images.length, reason: aiErr?.code });
       }

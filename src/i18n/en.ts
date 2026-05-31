@@ -467,6 +467,7 @@ export default {
   statementSourceRecurring: 'recurring',
   statementSourceAi: 'AI',
   scanFailed: 'Could not read receipt. Try a clearer photo.',
+  aiNotConfigured: 'AI features are not configured in this build. Please reinstall the app from the App Store / Google Play.',
   cameraPermission: 'Camera permission required',
   items: 'Items',
   monthlyReport: 'Monthly Report',

@@ -474,6 +474,7 @@ export default {
   statementSourceRecurring: 'плановый',
   statementSourceAi: 'AI',
   scanFailed: 'Не удалось прочитать чек. Попробуйте более чёткое фото.',
+  aiNotConfigured: 'AI-функции не настроены в этой сборке. Переустанови приложение из App Store / Google Play.',
   cameraPermission: 'Нужен доступ к камере',
   items: 'Позиции',
   monthlyReport: 'Месячный отчёт',
