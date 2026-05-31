@@ -88,6 +88,37 @@ describe('reconcile', () => {
     expect(r[0].ambiguous?.map(x => x.id).sort()).toEqual(['r1', 'r2']);
   });
 
+  test('recurring overdue: statement after nextDate by 10 days still matches', () => {
+    // Real scenario: user has a kupat-gemel transfer scheduled for 2026-05-05
+    // but forgot to confirm. Bank executed anyway, statement shows 2026-05-15.
+    // Without the overdue window this falls to 'new' and the recurring schedule
+    // never advances.
+    const extracted = [{ date: '2026-05-15', amount: -1000, payee: 'Kupat Gemel' }];
+    const recurring = [rec({ recipient: 'Kupat Gemel', amount: 1000, nextDate: '2026-05-05' })];
+    const r = reconcile(extracted, [], recurring);
+    expect(r[0].kind).toBe('recurring');
+    expect(r[0].recurring.id).toBe(recurring[0].id);
+  });
+
+  test('recurring overdue: statement 40 days after nextDate does NOT match', () => {
+    // Too long ago — this is more likely an unrelated past transaction, not
+    // the missed execution of this recurring.
+    const extracted = [{ date: '2026-06-15', amount: -1000, payee: 'Kupat Gemel' }];
+    const recurring = [rec({ recipient: 'Kupat Gemel', amount: 1000, nextDate: '2026-05-05' })];
+    const r = reconcile(extracted, [], recurring);
+    expect(r[0].kind).toBe('new');
+  });
+
+  test('recurring future: statement BEFORE nextDate by 10 days does NOT match', () => {
+    // The recurring is not yet due. A row 10 days before its scheduled date
+    // is too far to be the upcoming execution — keep narrow window in this
+    // direction to avoid false positives.
+    const extracted = [{ date: '2026-05-18', amount: -1000, payee: 'Kupat Gemel' }];
+    const recurring = [rec({ recipient: 'Kupat Gemel', amount: 1000, nextDate: '2026-05-28' })];
+    const r = reconcile(extracted, [], recurring);
+    expect(r[0].kind).toBe('new');
+  });
+
   test('no match → new', () => {
     const extracted = [{ date: '2026-05-20', amount: -42, payee: 'Random Shop' }];
     const r = reconcile(extracted, [], []);
