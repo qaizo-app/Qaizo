@@ -33,7 +33,28 @@ jest.mock('../src/utils/currency', () => ({
 }));
 
 const ai = require('../src/services/aiService').default;
-const { detectCardBrand: detectCardBrandNamed, CARD_BRAND_KEYWORDS } = require('../src/services/aiService');
+const { detectCardBrand: detectCardBrandNamed, CARD_BRAND_KEYWORDS, amountAppearsInRaw } = require('../src/services/aiService');
+
+describe('amountAppearsInRaw (statement row self-consistency)', () => {
+  test('true when the amount is printed in the same row', () => {
+    expect(amountAppearsInRaw(123.45, 'SUPER PHARM 123.45')).toBe(true);
+    expect(amountAppearsInRaw(-123.45, '12/05 SUPER PHARM 123.45')).toBe(true); // sign ignored
+  });
+  test('false when the amount is NOT in the row (cross-row swap)', () => {
+    expect(amountAppearsInRaw(99.90, 'SHUFERSAL 123.45')).toBe(false);
+  });
+  test('handles thousands separators and comma decimals', () => {
+    expect(amountAppearsInRaw(1234.56, 'RENT 1,234.56')).toBe(true);
+    expect(amountAppearsInRaw(123.45, 'KZAT 123,45')).toBe(true);
+  });
+  test('integer amount matches integer-printed row', () => {
+    expect(amountAppearsInRaw(200, 'PAYBOX 200')).toBe(true);
+  });
+  test('missing raw → cannot verify → not penalised (true)', () => {
+    expect(amountAppearsInRaw(50, '')).toBe(true);
+    expect(amountAppearsInRaw(50, undefined)).toBe(true);
+  });
+});
 
 describe('parseTransaction', () => {
   test('returns null on empty input', () => {

@@ -44,6 +44,10 @@ export interface TranslatedCategoryName {
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const GEMINI_MODEL_PRIMARY = 'gemini-2.5-flash';
 const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
+// Statements are dense tables where row alignment matters; the Pro model is
+// markedly better at keeping each payee paired with its own row's amount.
+// Falls back to flash on overload/rate-limit (handled in scanStatement).
+const GEMINI_MODEL_STATEMENT = 'gemini-2.5-pro';
 const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 const GEMINI_URL = geminiUrl(GEMINI_MODEL_PRIMARY);
 
@@ -1115,6 +1119,30 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
   }
 }
 
+// Self-consistency check for a statement row: the extracted `amount` must
+// actually appear in that row's own `raw` text. If it doesn't, the model has
+// almost certainly paired this payee with an amount from an ADJACENT row — a
+// confident mis-alignment that the `confidence` field won't catch on its own.
+// Returns true when the amount is found in raw (or raw is missing → can't
+// verify, so we don't penalise).
+export function amountAppearsInRaw(amount: number, raw?: string): boolean {
+  if (!raw || typeof raw !== 'string') return true;
+  const target = Math.abs(amount);
+  const tokens = raw.match(/-?\d[\d.,]*\d|\d/g) || [];
+  for (const tok of tokens) {
+    let t = tok;
+    if (t.includes(',') && !t.includes('.')) {
+      // comma-as-decimal ("123,45") vs thousands ("1,234"): trailing ,dd → decimal
+      t = t.replace(/,(\d{1,2})$/, '.$1').replace(/,/g, '');
+    } else {
+      t = t.replace(/,/g, ''); // drop thousands separators
+    }
+    const n = parseFloat(t);
+    if (!isNaN(n) && Math.abs(Math.abs(n) - target) < 0.01) return true;
+  }
+  return false;
+}
+
 // ─── Statement scanner (bank / credit-card statements) ────────────────────
 async function scanStatement(imageInput: any, accountCurrency?: string): Promise<ExtractedTx[]> {
   if (!GEMINI_API_KEY) {
@@ -1149,6 +1177,7 @@ Extract EVERY individual transaction line as a JSON ARRAY (no prose, no markdown
   "date": "YYYY-MM-DD",
   "amount": <signed number, negative = charge/debit, positive = refund/credit/income>,
   "payee": "<original merchant text, do NOT translate>",
+  "raw": "<the ENTIRE physical row, verbatim: the payee text AND the amount (and date) exactly as printed on that single line>",
   "notes": "<optional: installment X/Y, foreign amount with currency, standing-order tag>",
   "confidence": "high" | "medium" | "low"
 }]
@@ -1159,6 +1188,7 @@ ORIENTATION & LAYOUT — READ THIS FIRST:
 - For multi-column tables: pick a row, then read date+payee+amount across that single row. Never pair a payee from row N with an amount from row N±1.
 - If a row is hard to align (rotated photo, faint print, smudge), set confidence: "low" rather than guessing. We can fix low-confidence rows by hand; a wrong-amount/wrong-name pairing silently corrupts the user's data.
 - Use the printed amount that sits on the SAME row as the payee. If a foreign-purchase row prints both the foreign amount AND the local-currency charged amount, take the local-currency one and put the foreign amount in notes.
+- "raw": transcribe the WHOLE physical row verbatim (payee text + amount, in their printed order). The "amount" and "payee" you output MUST both be taken from this exact "raw" line. This is a self-check that keeps every row aligned — if you cannot put the amount and payee in the same "raw" line, the row is misaligned: lower its confidence.
 
 EXTRACT FROM:
 - Domestic transaction list (any list of dated rows with amounts)
@@ -1191,9 +1221,9 @@ Return ONLY the JSON array. No surrounding text, no markdown fences.`;
     });
 
     const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
-    let res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, fetchOpts);
+    let res = await fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts);
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
-      if (__DEV__) console.warn('scanStatement: primary', res.status, '— retrying on fallback model');
+      if (__DEV__) console.warn('scanStatement: pro model', res.status, '— retrying on fallback model');
       res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
     }
 
@@ -1233,9 +1263,25 @@ Return ONLY the JSON array. No surrounding text, no markdown fences.`;
     }
 
     _lastAIError = null;
-    return parsed.filter((row: any) =>
-      row && typeof row.amount === 'number' && typeof row.date === 'string' && typeof row.payee === 'string'
-    ) as ExtractedTx[];
+    return parsed
+      .filter((row: any) =>
+        row && typeof row.amount === 'number' && typeof row.date === 'string' && typeof row.payee === 'string'
+      )
+      .map((row: any) => {
+        const raw = typeof row.raw === 'string' ? row.raw : '';
+        // If the amount isn't present in its own row text, the model paired
+        // this payee with a neighbouring row's amount → force 'low' so the
+        // review screen leaves it unchecked for manual verification.
+        const aligned = amountAppearsInRaw(row.amount, raw);
+        return {
+          date: row.date,
+          amount: row.amount,
+          payee: row.payee,
+          notes: typeof row.notes === 'string' ? row.notes : undefined,
+          confidence: aligned ? (row.confidence || 'medium') : 'low',
+          raw: raw || undefined,
+        } as ExtractedTx;
+      });
   } catch (e: any) {
     if (__DEV__) console.error('scanStatement error:', e);
     _lastAIError = { code: 'network', message: String(e?.message || e) };

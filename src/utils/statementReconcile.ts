@@ -15,6 +15,10 @@ export interface ExtractedTx {
   payee: string;
   notes?: string;
   confidence?: 'high' | 'medium' | 'low';
+  // Verbatim transcription of the whole physical row (payee + amount together).
+  // Used to self-check that amount/payee came from the SAME row — a mismatch
+  // means the model paired this payee with an adjacent row's amount.
+  raw?: string;
 }
 
 export type ReconcileResult =
