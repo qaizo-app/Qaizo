@@ -7,7 +7,9 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import AccountPickerModal from './AccountPickerModal';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
+import RowText from './RowText';
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
@@ -40,6 +42,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [newTagText, setNewTagText] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState(false);
+  const [accPicker, setAccPicker] = useState(null); // 'from' | 'to' | null
   const isEdit = !!editItem;
   const st = createSt();
 
@@ -48,6 +51,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
 
     setSaveErr(false);
     setSaving(false);
+    setAccPicker(null);
     // Reset form SYNCHRONOUSLY on open — don't wait on getAccounts() to settle,
     // or stale values from the previous session leak into the new one when the
     // promise is slow or rejects silently.
@@ -361,50 +365,35 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
             <>
               {/* Откуда */}
               <Text style={st.label}>{i18n.t('from')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(acc => ['cash', 'bank', 'credit', 'investment', 'crypto', 'asset'].includes(acc.type)).map(acc => {
-                  const sl = selAcc === acc.id;
-                  return (
-                    <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
-                      onPress={() => setSelAcc(acc.id)}>
-                      <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
-                      <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+              <TouchableOpacity style={st.pickBtn} onPress={() => setAccPicker('from')} activeOpacity={0.7}>
+                {(() => { const selF = accounts.find(a => a.id === selAcc); return (<>
+                  <MaterialCommunityIcons name={getAI(selF?.type)} size={16} color={selF ? tc : colors.textMuted} />
+                  <RowText style={[st.pickBtnTxt, !selF && { color: colors.textMuted }]} numberOfLines={1}>{selF?.name || '—'}</RowText>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </>); })()}
+              </TouchableOpacity>
 
               {/* Куда */}
               <Text style={st.label}>{i18n.t('to')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(acc => ['cash', 'bank', 'credit', 'investment', 'crypto', 'asset'].includes(acc.type) && acc.id !== selAcc).map(acc => {
-                  const sl = toAcc === acc.id;
-                  return (
-                    <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: colors.blue, backgroundColor: colors.blueSoft }]}
-                      onPress={() => setToAcc(acc.id)}>
-                      <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? colors.blue : colors.textMuted} />
-                      <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+              <TouchableOpacity style={st.pickBtn} onPress={() => setAccPicker('to')} activeOpacity={0.7}>
+                {(() => { const selT = accounts.find(a => a.id === toAcc); return (<>
+                  <MaterialCommunityIcons name={getAI(selT?.type)} size={16} color={selT ? colors.blue : colors.textMuted} />
+                  <RowText style={[st.pickBtnTxt, !selT && { color: colors.textMuted }]} numberOfLines={1}>{selT?.name || '—'}</RowText>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </>); })()}
+              </TouchableOpacity>
             </>
           ) : (
             <>
               {/* Счёт */}
               <Text style={st.label}>{i18n.t('account')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {accounts.filter(acc => type === 'income' ? ['cash', 'bank', 'investment', 'crypto', 'asset'].includes(acc.type) : ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
-                  const sl = selAcc === acc.id;
-                  return (
-                    <TouchableOpacity key={acc.id} style={[st.chip, sl && { borderColor: tc, backgroundColor: `${tc}10` }]}
-                      onPress={() => setSelAcc(acc.id)}>
-                      <MaterialCommunityIcons name={getAI(acc.type)} size={14} color={sl ? tc : colors.textMuted} />
-                      <Text style={[st.chipTxt, sl && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+              <TouchableOpacity style={st.pickBtn} onPress={() => setAccPicker('from')} activeOpacity={0.7}>
+                {(() => { const sel = accounts.find(a => a.id === selAcc); return (<>
+                  <MaterialCommunityIcons name={getAI(sel?.type)} size={16} color={sel ? tc : colors.textMuted} />
+                  <RowText style={[st.pickBtnTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</RowText>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </>); })()}
+              </TouchableOpacity>
 
               {/* Категория */}
               <Text style={st.label}>{i18n.t('category')}</Text>
@@ -531,6 +520,20 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
     <CategoryPickerModal visible={showCatPicker} onClose={() => setShowCatPicker(false)}
       onSelect={(catId, latestGroups) => { setCategoryId(catId); if (latestGroups) setCatGroups(latestGroups); }}
       type={type} />
+    <AccountPickerModal
+      visible={accPicker === 'from'}
+      onClose={() => setAccPicker(null)}
+      accounts={accounts}
+      selectedId={selAcc}
+      onSelect={setSelAcc}
+      title={i18n.t(type === 'transfer' ? 'from' : 'account')} />
+    <AccountPickerModal
+      visible={accPicker === 'to'}
+      onClose={() => setAccPicker(null)}
+      accounts={accounts.filter(a => a.id !== selAcc)}
+      selectedId={toAcc}
+      onSelect={setToAcc}
+      title={i18n.t('to')} />
     </>
   );
 }
@@ -555,6 +558,8 @@ const createSt = () => StyleSheet.create({
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8, marginTop: 4, textAlign: i18n.textAlign() },
   chip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent' },
   chipTxt: { color: colors.textDim, fontSize: 12, fontWeight: '500', marginStart: 6, maxWidth: 90 },
+  pickBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
+  pickBtnTxt: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
   catPickerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder, gap: 12 },
   catPickerIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   catPickerText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
