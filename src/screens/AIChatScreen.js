@@ -164,7 +164,7 @@ function ChatPieChart({ data }) {
         {slices.map((s, idx) => (
           <View key={idx} style={{ flexDirection: i18n.row(), alignItems: 'center', gap: 4 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
-            <Text style={{ color: colors.textDim, fontSize: 10 }}>{i18n.t(s.name) || s.name} {Math.round(s.pct * 100)}%</Text>
+            <Text style={{ color: colors.textDim, fontSize: 10 }}>{s.label || i18n.t(s.name) || s.name} {Math.round(s.pct * 100)}%</Text>
           </View>
         ))}
       </View>

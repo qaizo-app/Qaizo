@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import * as StoreReview from 'expo-store-review';
+import Constants from 'expo-constants';
 import Card from '../components/Card';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
@@ -461,20 +461,13 @@ export default function SettingsScreen() {
           </Card>
         )}
 
-        {/* Rate Qaizo — uses the native store-review API. iOS shows the
-            SKStoreReviewController prompt (throttled by Apple); Android shows
-            the In-App Review card. No star-picker, no fork by rating. */}
-        <TouchableOpacity style={styles.sectionBtn} onPress={async () => {
-          try {
-            const available = await StoreReview.isAvailableAsync();
-            if (available) {
-              await StoreReview.requestReview();
-              return;
-            }
-          } catch (e) {}
-          // Fallback when the native API can't show its prompt (e.g. dev build,
-          // or it has already been shown the max number of times this year):
-          // open the public store listing for the current platform.
+        {/* Rate Qaizo — an explicit "Rate" button must reliably do something.
+            The native In-App Review API is quota-throttled and silently no-ops
+            for sideloaded/internal builds (and Google discourages triggering it
+            from a button), so we deep-link straight to the store listing where
+            the user can leave a review. The contextual in-app review prompt
+            lives in App.js. */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => {
           const url = Platform.OS === 'ios'
             ? 'https://apps.apple.com/app/id6764638553'
             : 'https://play.google.com/store/apps/details?id=com.qaizo.app';
@@ -517,7 +510,7 @@ export default function SettingsScreen() {
                 Sentry?.captureException(new Error('Sentry test crash from Settings'));
                 toast.show(i18n.t('sentryTestSent'));
               }
-            }}>v1.0.0</Text>
+            }}>v{Constants.expoConfig?.version || '1.1.0'}</Text>
             <Feather name={openSection === 'about' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
           </View>
         </TouchableOpacity>

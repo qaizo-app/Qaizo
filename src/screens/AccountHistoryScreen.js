@@ -207,12 +207,16 @@ export default function AccountHistoryScreen({ route, navigation }) {
             : (savedIcon || (fromGroups && fromGroups.icon !== 'circle' ? fromGroups : categoryConfig[rec.categoryId] || categoryConfig.other));
           const nd = new Date(rec.nextDate);
           const diffDays = Math.ceil((nd - new Date()) / (1000 * 60 * 60 * 24));
-          const isOverdue = diffDays <= 0;
+          const isOverdue = diffDays < 0;   // strictly past due
+          const isToday = diffDays === 0;
+          const isDue = diffDays <= 0;       // overdue OR due today → confirm button highlighted
           const dateLabel = isOverdue
-            ? i18n.t('today')
-            : diffDays === 1
-              ? i18n.t('tomorrow')
-              : `${diffDays} ${i18n.t('days')}`;
+            ? `${Math.abs(diffDays)} ${i18n.t('daysOverdue')}`
+            : isToday
+              ? i18n.t('today')
+              : diffDays === 1
+                ? i18n.t('tomorrow')
+                : `${diffDays} ${i18n.t('days')}`;
 
           let displayName;
           if (rec.isTransfer) {
@@ -249,10 +253,10 @@ export default function AccountHistoryScreen({ route, navigation }) {
                   <Feather name="fast-forward" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.upcomingConfirm, isOverdue && { backgroundColor: colors.yellow + '20' }]}
+                  style={[styles.upcomingConfirm, isDue && { backgroundColor: colors.yellow + '20' }]}
                   onPress={() => openRecurringConfirm(rec.id)}
                 >
-                  <Feather name="check" size={16} color={isOverdue ? colors.yellow : colors.green} />
+                  <Feather name="check" size={16} color={isDue ? colors.yellow : colors.green} />
                 </TouchableOpacity>
               </View>
             </View>

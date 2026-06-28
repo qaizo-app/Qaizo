@@ -52,6 +52,7 @@ export default function DashboardScreen() {
   const [budgets, setBudgets] = useState({});
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
+  const [dupPrefill, setDupPrefill] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null); // diagnostic: shows on screen if loadData fails
   const [refreshing, setRefreshing] = useState(false);
@@ -409,12 +410,23 @@ export default function DashboardScreen() {
       toast.show(ok ? i18n.t('deleted') : i18n.t('errorOccurred'), ok ? 'success' : 'error');
     }
   };
-  const handleDuplicate = async (tx) => {
-    const res = await dataService.addTransaction({ ...tx, id: undefined, createdAt: undefined, date: new Date().toISOString(), note: tx.note ? `${tx.note} (copy)` : '(copy)' });
-    await loadData();
-    toast.show(res ? i18n.t('duplicated') : i18n.t('errorOccurred'), res ? 'success' : 'error');
+  // "Duplicate" opens the add modal pre-filled with this transaction so the
+  // user can adjust date/amount before saving — instead of writing a copy
+  // immediately. Also fixes the old error toast: the previous version passed
+  // id/createdAt: undefined into addTransaction, which Firestore rejects
+  // (undefined fields) → null → "Произошла ошибка".
+  const handleDuplicate = (tx) => {
+    const { id, createdAt, runningBalance, date, ...rest } = tx;
+    setShowAdd(false);
+    setEditTx(null);
+    setDupPrefill({
+      ...rest,
+      note: rest.note || '',
+      tags: Array.isArray(rest.tags) ? rest.tags : [],
+      showMore: !!(rest.recipient || rest.tags?.length || rest.projectId),
+    });
   };
-  const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
+  const handleCloseModal = () => { setShowAdd(false); setEditTx(null); setDupPrefill(null); };
   const handleBudgetSave = async (categoryId, limit) => {
     await dataService.setBudget(categoryId, limit);
     await loadData();
@@ -626,7 +638,7 @@ export default function DashboardScreen() {
         })}
       </ScrollView>
 
-      <AddTransactionModal visible={showAdd || !!editTx} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} />
+      <AddTransactionModal visible={showAdd || !!editTx || !!dupPrefill} onClose={handleCloseModal} onSave={() => loadData()} editTransaction={editTx} prefill={dupPrefill} />
       <ConfirmModal visible={!!deleteTarget} title={i18n.t('delete')}
         message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}

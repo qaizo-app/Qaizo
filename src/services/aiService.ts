@@ -772,6 +772,23 @@ RULES:
   return fallback;
 }
 
+// Build an id → human-readable category-name resolver. Custom categories have
+// ids like "cat_mpqmr6qzivvo" that aren't i18n keys, so the LLM (and any UI)
+// must be fed the real name. The name stored on the user's own transactions
+// (categoryName) is the most reliable source; fall back to catName for
+// built-ins, and finally the raw id.
+function buildCatNamer(txs: any[]): (id: string) => string {
+  const map: Record<string, string> = {};
+  for (const t of txs || []) {
+    const id = t?.categoryId;
+    if (id && !map[id]) {
+      const n = catName(id, t.categoryName);
+      if (n && n !== id) map[id] = n;
+    }
+  }
+  return (id: string) => map[id] || catName(id) || id;
+}
+
 // Персональные советы от Gemini
 async function getPersonalAdvice(transactions: any[], budgets: any, lang: string) {
   const now = new Date();
@@ -788,14 +805,15 @@ async function getPersonalAdvice(transactions: any[], budgets: any, lang: string
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
 
+  const catLabel = buildCatNamer(transactions);
   const topCats = Object.entries(catTotals)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([cat, amount]) => `${cat}: ${amount}`)
+    .map(([cat, amount]) => `${catLabel(cat)}: ${amount}`)
     .join(', ');
 
   const budgetInfo = Object.entries(budgets as Record<string, number>)
-    .map(([cat, limit]) => `${cat}: spent ${catTotals[cat] || 0}/${limit}`)
+    .map(([cat, limit]) => `${catLabel(cat)}: spent ${catTotals[cat] || 0}/${limit}`)
     .join(', ');
 
   const langMap: Record<string, string> = { ru: 'Russian', he: 'Hebrew', en: 'English' };
@@ -1347,12 +1365,15 @@ function buildChartData(chartParams: any, transactions: any[]) {
     filtered.filter((t: any) => t.type === typeFilter && !t.isTransfer).forEach((t: any) => {
       catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
     });
+    const catLabel = buildCatNamer(filtered);
     return {
       type: 'pie',
+      // `name` stays the id (legend colour lookup keys on it); `label` carries
+      // the human-readable category name so custom "cat_…" ids aren't shown raw.
       data: Object.entries(catTotals)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8)
-        .map(([name, amount]) => ({ name, amount })),
+        .map(([id, amount]) => ({ name: id, amount, label: catLabel(id) })),
     };
   }
 
@@ -1409,10 +1430,11 @@ async function chatWithAI(question: string, transactions: any[], budgets: any, l
     catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
   });
 
+  const catLabel = buildCatNamer(transactions);
   const topCats = Object.entries(catTotals)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([cat, amount]) => `${cat}: ${Math.round(amount)} ${curCode()}`)
+    .map(([cat, amount]) => `${catLabel(cat)}: ${Math.round(amount)} ${curCode()}`)
     .join(', ');
 
   const monthlyIncomes: Record<string, number> = {};
@@ -1431,7 +1453,7 @@ async function chatWithAI(question: string, transactions: any[], budgets: any, l
     .join('; ');
 
   const budgetInfo = Object.entries((budgets || {}) as Record<string, number>)
-    .map(([cat, limit]) => `${cat}: spent ${Math.round(catTotals[cat] || 0)} of ${limit}`)
+    .map(([cat, limit]) => `${catLabel(cat)}: spent ${Math.round(catTotals[cat] || 0)} of ${limit}`)
     .join(', ');
 
   // Top payees
@@ -1453,7 +1475,7 @@ async function chatWithAI(question: string, transactions: any[], budgets: any, l
   const thisMonthTopCats = Object.entries(thisMonthCats)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([cat, amount]) => `${cat}: ${Math.round(amount)}`)
+    .map(([cat, amount]) => `${catLabel(cat)}: ${Math.round(amount)}`)
     .join(', ');
 
   // Today's transactions
@@ -1461,7 +1483,7 @@ async function chatWithAI(question: string, transactions: any[], budgets: any, l
   const todayTxs = transactions.filter((t: any) => (t.date || t.createdAt || '').slice(0, 10) === todayStr);
   const todayExpense = todayTxs.filter((t: any) => t.type === 'expense' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
   const todayIncome = todayTxs.filter((t: any) => t.type === 'income' && !t.isTransfer).reduce((s: number, t: any) => s + t.amount, 0);
-  const todayDetail = todayTxs.map((t: any) => `${t.type === 'income' && !t.isTransfer ? '+' : '-'}${Math.round(t.amount)} ${t.categoryId}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
+  const todayDetail = todayTxs.map((t: any) => `${t.type === 'income' && !t.isTransfer ? '+' : '-'}${Math.round(t.amount)} ${catLabel(t.categoryId)}${t.recipient ? ' (' + t.recipient + ')' : ''}`).join(', ');
 
   const langMap: Record<string, string> = { ru: 'Russian', he: 'Hebrew', en: 'English' };
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
