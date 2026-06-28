@@ -257,6 +257,21 @@ const notificationService = {
     await Notifications.cancelAllScheduledNotificationsAsync();
   },
 
+  // Сбросить счётчик на иконке и очистить уже доставленные уведомления из трея.
+  // Вызывается при запуске и при возврате приложения в foreground: открыл
+  // приложение = «увидел», поэтому залипший бейдж («5 уведомлений», которых
+  // внутри приложения нет) обнуляется. setBadgeCountAsync чинит iOS-бейдж,
+  // dismissAllNotificationsAsync убирает уведомления из шторки → Android-лаунчер
+  // перестаёт рисовать их количество.
+  async clearDelivered() {
+    try {
+      await Notifications.setBadgeCountAsync(0);
+      await Notifications.dismissAllNotificationsAsync();
+    } catch (e) {
+      if (__DEV__) console.error('clearDelivered:', e);
+    }
+  },
+
   // Настроить канал для Android
   async setupAndroidChannel() {
     if (Platform.OS === 'android') {

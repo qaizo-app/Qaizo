@@ -260,6 +260,11 @@ function AppInner() {
         }
       } catch (e) {}
 
+      // Clear any stale icon badge / tray notifications on launch — opening the
+      // app means the user has "seen" their reminders, so the icon count must
+      // not keep showing "5" while the in-app bell shows nothing.
+      try { await notificationService.clearDelivered(); } catch (e) {}
+
       // Auto-execute any recurring payments marked autoConfirm whose nextDate
       // has passed. Catches up missed months too. Runs once on every app
       // startup so the user gets fresh transactions without thinking about it.
@@ -294,6 +299,8 @@ function AppInner() {
       } else if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
         const pinOn = await securityService.isPinEnabled();
         if (pinOn && !securityService.isWithinUnlockGrace()) setLocked(true);
+        // Returning to foreground = reminders seen → clear the icon badge / tray.
+        notificationService.clearDelivered();
       }
       appStateRef.current = nextState;
     });

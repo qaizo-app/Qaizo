@@ -26,6 +26,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   }, [visible, initialType]);
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);    // re-entrance guard for handleSave
+  const [saveErr, setSaveErr] = useState(false);  // shown when a write fails / times out
   const [categoryId, setCategoryId] = useState('food');
   const [recipient, setRecipient] = useState('');
   const [note, setNote] = useState('');
@@ -56,6 +57,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
 
   useEffect(() => {
     if (visible) {
+      setSaveErr(false);
       // Synchronous reset for non-edit opens. Without this the modal renders
       // with previous values during the async data load (Firestore reads
       // below) and the user sees a stale amount/recipient for ~100-500ms.
@@ -74,6 +76,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           if (prefill.type) setType(prefill.type);
           if (prefill.categoryId) setCategoryId(prefill.categoryId);
           if (prefill.date) setDateStr(prefill.date);
+          if (prefill.account) setSelAcc(prefill.account);
+          if (Array.isArray(prefill.tags)) setTags(prefill.tags);
+          if (prefill.projectId) setSelProject(prefill.projectId);
           if (prefill.showMore) setShowMore(true);
         }
       }
@@ -114,8 +119,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           }
         } else {
           // Field reset already done synchronously above; here only fill in the
-          // account choices from the async-loaded `sorted` list.
-          if (!preselectedAccount && sorted.length > 0) {
+          // account choices from the async-loaded `sorted` list. Don't clobber a
+          // prefilled account (e.g. when duplicating an existing transaction).
+          if (!preselectedAccount && !prefill?.account && sorted.length > 0) {
             setSelAcc(sorted[0].id);
             if (sorted.length > 1) setToAcc(sorted[1].id);
           }
@@ -132,6 +138,12 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     if (saving) return;                 // re-entrance guard — prevents double-tap creating duplicate transactions
     if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
     setSaving(true);
+    setSaveErr(false);
+    // dataService writes return null/false (never hang — see withTimeout) on
+    // failure; track that so we keep the modal open instead of silently losing
+    // the entered transaction.
+    let failed = false;
+    const guard = (r) => { if (r === null || r === false) failed = true; return r; };
     try {
     const txDate = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
 
@@ -140,13 +152,14 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       const validRows = splitRows.filter(r => parseFloat((r.amount || '').replace(',', '.')) > 0);
       for (const row of validRows) {
         const ci = getCatIcon(row.categoryId, catGroups);
-        await dataService.addTransaction({
+        guard(await dataService.addTransaction({
           type, amount: parseFloat(row.amount.replace(',', '.')),
           categoryId: row.categoryId, categoryName: getCatName(row.categoryId, catGroups, lang),
           icon: ci.icon, recipient, note, currency: sym(), date: txDate,
           account: selAcc, tags, projectId: selProject || null,
-        });
+        }));
       }
+      if (failed) { setSaveErr(true); return; }
       onSave?.(); onClose?.();
       return;
     }
@@ -160,31 +173,32 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         const amt = parseFloat(amount.replace(',', '.'));
         const allTxs = await dataService.getTransactions();
         const partner = allTxs.find(t => t.transferPairId === editTransaction.transferPairId && t.id !== editTransaction.id);
-        await dataService.updateTransaction(editTransaction.id, {
+        guard(await dataService.updateTransaction(editTransaction.id, {
           type: 'expense', amount: amt, categoryId: 'transfer', icon: 'repeat',
           recipient: tn, note: note || `→ ${tn}`, date: txDate, account: selAcc, tags,
-        });
+        }));
         if (partner) {
-          await dataService.updateTransaction(partner.id, {
+          guard(await dataService.updateTransaction(partner.id, {
             type: 'income', amount: amt, categoryId: 'transfer', icon: 'repeat',
             recipient: fn, note: note || `← ${fn}`, date: txDate, account: toAcc, tags,
-          });
+          }));
         }
       } else {
         const ci = getCatIcon(categoryId, catGroups);
-        await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null });
+        guard(await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null }));
       }
     } else if (type === 'transfer') {
       if (selAcc === toAcc) return;
       const fn = accounts.find(a => a.id === selAcc)?.name || '';
       const tn = accounts.find(a => a.id === toAcc)?.name || '';
       const transferPairId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags });
-      await dataService.addTransaction({ type: 'income', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags });
+      guard(await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags }));
+      guard(await dataService.addTransaction({ type: 'income', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags }));
     } else {
       const ci2 = getCatIcon(categoryId, catGroups);
-      await dataService.addTransaction({ type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null });
+      guard(await dataService.addTransaction({ type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null }));
     }
+    if (failed) { setSaveErr(true); return; }
     if (!isEdit) {
       analyticsEvents.logEvent('transaction_added', {
         type,
@@ -211,7 +225,9 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   return (
     <>
       <SwipeModal visible={visible} onClose={onClose} footer={({ close }) => (
-          <View style={st.btnRow}>
+          <View>
+            {saveErr && <RowText style={st.saveErr}>{i18n.t('saveFailed')}</RowText>}
+            <View style={st.btnRow}>
             <TouchableOpacity style={st.cancelBtn} onPress={close}>
               <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
             </TouchableOpacity>
@@ -222,6 +238,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                 : <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />}
               <Text style={st.saveTxt}>{i18n.t('save')}</Text>
             </TouchableOpacity>
+            </View>
           </View>
         )}>
         {({ close }) => (
@@ -565,4 +582,5 @@ const createSt = () => StyleSheet.create({
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   saveTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveErr: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), marginBottom: 8 },
 });

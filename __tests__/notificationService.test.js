@@ -158,6 +158,18 @@ describe('notificationService', () => {
     );
   });
 
+  // ─── clearDelivered ────────────────────────────
+  test('clearDelivered resets the icon badge and clears the tray', async () => {
+    await notificationService.clearDelivered();
+    expect(Notifications.setBadgeCountAsync).toHaveBeenCalledWith(0);
+    expect(Notifications.dismissAllNotificationsAsync).toHaveBeenCalled();
+  });
+
+  test('clearDelivered swallows errors so it never breaks app startup', async () => {
+    Notifications.setBadgeCountAsync.mockRejectedValueOnce(new Error('no permission'));
+    await expect(notificationService.clearDelivered()).resolves.toBeUndefined();
+  });
+
   // ─── scheduleRecurringNotifications - extended ──────────
   test('scheduleRecurringNotifications skips past dates', async () => {
     const past = new Date();

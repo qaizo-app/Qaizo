@@ -673,6 +673,7 @@ export default {
   smartExample3: 'Taxi 35',
   examples: 'Examples',
   confirm: 'Confirm',
+  saveFailed: "Couldn't save — check your connection and try again",
 
   // Gemini AI
   aiPersonalAdvice: 'Personal AI Advice',

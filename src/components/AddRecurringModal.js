@@ -2,7 +2,7 @@
 // Модал создания запланированного платежа
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
@@ -38,12 +38,16 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const [tags, setTags] = useState([]);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState(false);
   const isEdit = !!editItem;
   const st = createSt();
 
   useEffect(() => {
     if (!visible) return;
 
+    setSaveErr(false);
+    setSaving(false);
     // Reset form SYNCHRONOUSLY on open — don't wait on getAccounts() to settle,
     // or stale values from the previous session leak into the new one when the
     // promise is slow or rejects silently.
@@ -114,6 +118,7 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   const transferReady = type !== 'transfer' || (selAcc && toAcc && selAcc !== toAcc);
 
   const handleSave = async () => {
+    if (saving) return;
     if (!amount || parseFloat(amount.replace(',', '.')) <= 0) return;
     let nextDate = startDate;
     if (!nextDate) {
@@ -158,18 +163,30 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       tags: Array.isArray(tags) ? tags : [],
     };
 
-    let saved = null;
-    if (isEdit) {
-      await dataService.updateRecurring(editItem.id, data);
-      saved = { ...editItem, ...data };
-    } else {
-      saved = await dataService.addRecurring(data);
+    setSaving(true);
+    setSaveErr(false);
+    try {
+      // dataService writes are bounded by withTimeout, so they always settle —
+      // a stuck Firestore stream no longer leaves this hanging with the modal
+      // frozen and no feedback (the "Save does nothing" bug).
+      let ok = false;
+      let saved = null;
+      if (isEdit) {
+        ok = await dataService.updateRecurring(editItem.id, data);
+        saved = { ...editItem, ...data };
+      } else {
+        saved = await dataService.addRecurring(data);
+        ok = !!saved;
+      }
+      if (!ok) { setSaveErr(true); return; }
+      onClose?.();
+      // Pass the persisted item back so the parent can append to its state
+      // immediately, bypassing the Firestore offline-cache propagation delay
+      // that caused new recurring payments to appear only on next focus.
+      onSave?.(saved);
+    } finally {
+      setSaving(false);
     }
-    onClose?.();
-    // Pass the persisted item back so the parent can append to its state
-    // immediately, bypassing the Firestore offline-cache propagation delay
-    // that caused new recurring payments to appear only on next focus.
-    onSave?.(saved);
   };
 
   const intervalLabel = (m) => {
@@ -217,15 +234,20 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
   return (
     <>
     <SwipeModal visible={visible} onClose={onClose} footer={({ close }) => (
-        <View style={st.btnRow}>
+        <View>
+          {saveErr && <Text style={st.saveErr}>{i18n.t('saveFailed')}</Text>}
+          <View style={st.btnRow}>
           <TouchableOpacity style={st.cancelBtn} onPress={close}>
             <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: (amount && parseFloat(amount.replace(',', '.')) > 0 && transferReady) ? 1 : 0.35 }]}
-            onPress={handleSave} disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0 || !transferReady}>
-            <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />
+          <TouchableOpacity style={[st.saveBtn, { backgroundColor: tc, opacity: (amount && parseFloat(amount.replace(',', '.')) > 0 && transferReady && !saving) ? 1 : 0.35 }]}
+            onPress={handleSave} disabled={saving || !amount || parseFloat(amount.replace(',', '.')) <= 0 || !transferReady}>
+            {saving
+              ? <ActivityIndicator size="small" color="#fff" style={{ marginEnd: 6 }} />
+              : <Feather name="check" size={18} color="#fff" style={{ marginEnd: 6 }} />}
             <Text style={st.saveTxt}>{i18n.t('save')}</Text>
           </TouchableOpacity>
+          </View>
         </View>
       )}>
       {({ close }) => (
@@ -549,6 +571,7 @@ const createSt = () => StyleSheet.create({
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' },
   saveTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveErr: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), marginBottom: 8 },
   tagsRow: { flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   tagChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent' },
   tagTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },

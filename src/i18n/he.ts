@@ -673,6 +673,7 @@ export default {
   smartExample3: 'מונית 35',
   examples: 'דוגמאות',
   confirm: 'אישור',
+  saveFailed: 'השמירה נכשלה — בדקו את החיבור ונסו שוב',
 
   // Gemini AI
   aiPersonalAdvice: 'ייעוץ אישי מ-AI',

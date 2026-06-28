@@ -46,6 +46,7 @@ jest.mock('@react-native-firebase/firestore', () => {
         };
       },
       set: async (data) => {
+        if (state.hangWrites) return new Promise(() => {});
         const segments = path.split('/');
         const id = segments.pop();
         const colPath = segments.join('/');
@@ -60,17 +61,28 @@ jest.mock('@react-native-firebase/firestore', () => {
         }
       },
       update: async (data) => {
+        if (state.hangWrites) return new Promise(() => {});
         const segments = path.split('/');
         const id = segments.pop();
         const colPath = segments.join('/');
+        // Resolve FieldValue sentinels (e.g. increment) against the current value.
+        const applyOps = (current) => {
+          const out = { ...current };
+          for (const [k, v] of Object.entries(data)) {
+            if (v && v.__fieldValue === 'increment') out[k] = (current[k] || 0) + v.operand;
+            else out[k] = v;
+          }
+          return out;
+        };
         if (state.collections[colPath]) {
           const idx = state.collections[colPath].findIndex(i => i.id === id);
-          if (idx >= 0) state.collections[colPath][idx] = { ...state.collections[colPath][idx], ...data };
+          if (idx >= 0) state.collections[colPath][idx] = applyOps(state.collections[colPath][idx]);
         } else if (state.docs[path]) {
-          state.docs[path] = { ...state.docs[path], ...data };
+          state.docs[path] = applyOps(state.docs[path]);
         }
       },
       delete: async () => {
+        if (state.hangWrites) return new Promise(() => {});
         const segments = path.split('/');
         const id = segments.pop();
         const colPath = segments.join('/');
@@ -88,6 +100,8 @@ jest.mock('@react-native-firebase/firestore', () => {
       path,
       doc: (id) => makeDocRef(`${path}/${id}`),
       add: async (data) => {
+        // Simulate a stuck Firestore gRPC stream: the write promise never settles.
+        if (state.hangWrites) return new Promise(() => {});
         const id = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
         if (!state.collections[path]) state.collections[path] = [];
         state.collections[path].push({ id, ...data });
@@ -113,6 +127,11 @@ jest.mock('@react-native-firebase/firestore', () => {
   const firestoreFn = () => ({
     collection: (name) => makeColRef(name),
   });
+
+  // Atomic field operations — mirror firestore.FieldValue.increment(n).
+  firestoreFn.FieldValue = {
+    increment: (operand) => ({ __fieldValue: 'increment', operand }),
+  };
 
   firestoreFn.__state = state; // expose for test reset
 
@@ -200,6 +219,39 @@ describe('dataService (firestore mode)', () => {
     expect(updated.balance).toBe(999);
   });
 
+  test('addTransaction adjusts account balance via atomic increment', async () => {
+    const acc = await dataService.addAccount({ name: 'Wallet', type: 'cash', balance: 1000, currency: '₪' });
+
+    await dataService.addTransaction({ type: 'expense', amount: 100, categoryId: 'food', account: acc.id });
+    let accs = await dataService.getAccounts();
+    expect(accs.find(a => a.id === acc.id).balance).toBe(900);
+
+    await dataService.addTransaction({ type: 'income', amount: 250, categoryId: 'salary_me', account: acc.id });
+    accs = await dataService.getAccounts();
+    expect(accs.find(a => a.id === acc.id).balance).toBe(1150);
+  });
+
+  test('back-to-back saves do not lose a balance update (no read-modify-write race)', async () => {
+    const acc = await dataService.addAccount({ name: 'Race', type: 'cash', balance: 0, currency: '₪' });
+    await Promise.all([
+      dataService.addTransaction({ type: 'income', amount: 10, categoryId: 'salary_me', account: acc.id }),
+      dataService.addTransaction({ type: 'income', amount: 20, categoryId: 'salary_me', account: acc.id }),
+      dataService.addTransaction({ type: 'income', amount: 30, categoryId: 'salary_me', account: acc.id }),
+    ]);
+    const accs = await dataService.getAccounts();
+    expect(accs.find(a => a.id === acc.id).balance).toBe(60);
+  });
+
+  test('addAccount resolves to null (does not hang) when the Firestore write never settles', async () => {
+    firestoreMock.__state.hangWrites = true;
+    try {
+      const result = await dataService.addAccount({ name: 'Stuck', type: 'cash', balance: 0, currency: '₪' });
+      expect(result).toBeNull();
+    } finally {
+      firestoreMock.__state.hangWrites = false;
+    }
+  }, 15000);
+
   test('deleteAccount removes from firestore', async () => {
     const acc = await dataService.addAccount({ name: 'Trash', type: 'cash', balance: 0, currency: '₪' });
     await dataService.deleteAccount(acc.id);
@@ -247,6 +299,20 @@ describe('dataService (firestore mode)', () => {
     await dataService.deleteRecurring(rec.id);
     expect((await dataService.getRecurring()).length).toBe(0);
   });
+
+  test('addRecurring resolves to null (does not hang) when the Firestore write never settles', async () => {
+    // Stuck gRPC stream: add() never settles. withTimeout must reject internally
+    // so addRecurring returns null instead of leaving the save modal frozen.
+    firestoreMock.__state.hangWrites = true;
+    try {
+      const result = await dataService.addRecurring({
+        type: 'expense', amount: 100, categoryId: 'rent', frequency: 'monthly', nextDate: '2026-07-01',
+      });
+      expect(result).toBeNull();
+    } finally {
+      firestoreMock.__state.hangWrites = false;
+    }
+  }, 15000);
 
   test('confirmRecurring creates transaction in firestore', async () => {
     const rec = await dataService.addRecurring({

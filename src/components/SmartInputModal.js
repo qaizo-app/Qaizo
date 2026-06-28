@@ -24,6 +24,7 @@ import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
 import { fmt } from '../utils/currency';
+import RowText from './RowText';
 import Amount from './Amount';
 import CategoryPickerModal from './CategoryPickerModal';
 import CalculatorModal from './CalculatorModal';
@@ -32,6 +33,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
   const [text, setText] = useState('');
   const [parsed, setParsed] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const inputRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -115,6 +117,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     if (visible) {
       setText('');
       setParsed(null);
+      setSaveErr(false);
       lastAIRequestText.current = '';
       // Load accounts + projects for smart selection
       dataService.getAccounts().then(accs => setAccounts(accs.filter(a => a.isActive !== false)));
@@ -220,8 +223,9 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
   };
 
   const handleSave = async () => {
-    if (!parsed) return;
+    if (!parsed || saving) return;
     setSaving(true);
+    setSaveErr(false);
     Keyboard.dismiss();
 
     const tx = {
@@ -235,10 +239,16 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       projectId: parsed.projectId || null,
     };
 
-    await dataService.addTransaction(tx);
-    setSaving(false);
-    onSaved?.();
-    onClose();
+    try {
+      // addTransaction is bounded by withTimeout, so it always settles — on
+      // failure it returns null and we keep the modal open instead of freezing.
+      const r = await dataService.addTransaction(tx);
+      if (!r) { setSaveErr(true); return; }
+      onSaved?.();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cfg = parsed ? (categoryConfig[parsed.categoryId] || categoryConfig.other) : null;
@@ -420,6 +430,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                 </View>
               )}
 
+              {saveErr && <RowText style={st.saveErr}>{i18n.t('saveFailed')}</RowText>}
               <TouchableOpacity style={st.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.8}>
                 <Feather name="check" size={20} color={colors.bg} />
                 <Text style={st.saveTxt}>{saving ? '...' : i18n.t('confirm')}</Text>
@@ -515,4 +526,5 @@ const createStyles = () => StyleSheet.create({
 
   saveBtn: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, borderRadius: 14, paddingVertical: 16 },
   saveTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
+  saveErr: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), marginBottom: 10 },
 });

@@ -43,6 +43,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [showAdd, setShowAdd] = useState(false);
   const [showStatement, setShowStatement] = useState(false);
   const [editTx, setEditTx] = useState(null);
+  const [dupPrefill, setDupPrefill] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [periodKey, setPeriodKey] = useState('3m');
   const [confirmRec, setConfirmRec] = useState(null);
@@ -136,11 +137,23 @@ export default function AccountHistoryScreen({ route, navigation }) {
     const r = upcomingRecurring.find(x => x.id === id);
     if (r) setConfirmRec(r);
   };
-  const handleDuplicate = async (tx) => {
-    await dataService.addTransaction({ ...tx, id: undefined, createdAt: undefined, date: new Date().toISOString(), note: tx.note ? `${tx.note} (copy)` : '(copy)' });
-    await loadData();
+  // "Duplicate" opens the add modal pre-filled with this transaction so the
+  // user can adjust the date/amount before saving (instead of writing a copy
+  // immediately). This also fixes the old silent failure: the previous version
+  // passed id/createdAt: undefined straight into addTransaction, which Firestore
+  // rejects (undefined fields) → the write threw and nothing happened.
+  const handleDuplicate = (tx) => {
+    const { id, createdAt, runningBalance, date, ...rest } = tx;
+    setShowAdd(false);
+    setEditTx(null);
+    setDupPrefill({
+      ...rest,
+      note: rest.note || '',
+      tags: Array.isArray(rest.tags) ? rest.tags : [],
+      showMore: !!(rest.recipient || rest.tags?.length || rest.projectId),
+    });
   };
-  const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
+  const handleCloseModal = () => { setShowAdd(false); setEditTx(null); setDupPrefill(null); };
 
   const periodDays = (PERIODS.find(p => p.key === periodKey) || PERIODS[1]).days;
   const chartData = analyticsService.getAccountBalanceHistory(transactions, account.id, currentBalance, periodDays);
@@ -352,8 +365,8 @@ export default function AccountHistoryScreen({ route, navigation }) {
         ListEmptyComponent={<View style={styles.empty}><Feather name="inbox" size={48} color={colors.textMuted} /><Text style={styles.emptyText}>{i18n.t('noTransactions')}</Text></View>} />
 
 
-      <AddTransactionModal visible={showAdd||!!editTx} onClose={handleCloseModal}
-        onSave={() => loadData()} editTransaction={editTx} preselectedAccount={account.id} />
+      <AddTransactionModal visible={showAdd||!!editTx||!!dupPrefill} onClose={handleCloseModal}
+        onSave={() => loadData()} editTransaction={editTx} prefill={dupPrefill} preselectedAccount={account.id} />
 
       <StatementScannerModal
         visible={showStatement}

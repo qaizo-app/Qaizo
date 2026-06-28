@@ -7,12 +7,15 @@ import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import RowText from './RowText';
 
 export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   // ВСЕ хуки — в самом верху, до любых условий
   const [amount, setAmount] = useState('');
   const [accounts, setAccounts] = useState([]);
   const [selAcc, setSelAcc] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const inputRef = useRef(null);
@@ -34,6 +37,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   useEffect(() => {
     if (visible) {
       setAmount('');
+      setSaveErr(false);
       dataService.getAccounts().then(accs => {
         const active = accs.filter(a => a.isActive !== false && ['cash', 'bank', 'credit'].includes(a.type));
         setAccounts(active);
@@ -66,23 +70,31 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
 
   const handleSave = async () => {
     const num = parseFloat(amount.replace(',', '.'));
-    if (!num || num <= 0) return;
+    if (!num || num <= 0 || saving) return;
+    setSaving(true);
+    setSaveErr(false);
 
-    await dataService.addTransaction({
-      type: 'expense',
-      amount: num,
-      categoryId: template.categoryId,
-      icon: cfg.icon,
-      recipient: template.recipient || '',
-      note: '',
-      currency: sym(),
-      date: new Date().toISOString(),
-      account: selAcc,
-      tags: [],
-    });
-
-    onSaved?.();
-    onClose();
+    try {
+      // addTransaction is bounded by withTimeout — always settles. On failure
+      // it returns null, so keep the modal open instead of losing the entry.
+      const r = await dataService.addTransaction({
+        type: 'expense',
+        amount: num,
+        categoryId: template.categoryId,
+        icon: cfg.icon,
+        recipient: template.recipient || '',
+        note: '',
+        currency: sym(),
+        date: new Date().toISOString(),
+        account: selAcc,
+        tags: [],
+      });
+      if (!r) { setSaveErr(true); return; }
+      onSaved?.();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -135,18 +147,19 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
                 })}
               </ScrollView>
 
+              {saveErr && <RowText style={st.saveErr}>{i18n.t('saveFailed')}</RowText>}
               {/* Кнопки */}
               <View style={st.buttons}>
                 <TouchableOpacity style={st.cancelBtn} onPress={onClose}>
                   <Text style={st.cancelTxt}>{i18n.t('cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[st.saveBtn, { backgroundColor: cfg.color, opacity: amount && parseFloat(amount.replace(',', '.')) > 0 ? 1 : 0.35 }]}
+                  style={[st.saveBtn, { backgroundColor: cfg.color, opacity: (amount && parseFloat(amount.replace(',', '.')) > 0 && !saving) ? 1 : 0.35 }]}
                   onPress={handleSave}
-                  disabled={!amount || parseFloat(amount.replace(',', '.')) <= 0}
+                  disabled={saving || !amount || parseFloat(amount.replace(',', '.')) <= 0}
                 >
                   <Feather name="check" size={18} color={colors.bg} style={{ marginEnd: 6 }} />
-                  <Text style={st.saveTxt}>{i18n.t('save')}</Text>
+                  <Text style={st.saveTxt}>{saving ? '...' : i18n.t('save')}</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -184,4 +197,5 @@ const createSt = () => StyleSheet.create({
   cancelTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
   saveBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   saveTxt: { color: colors.bg, fontSize: 14, fontWeight: '700' },
+  saveErr: { color: colors.red, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign(), marginBottom: 10 },
 });

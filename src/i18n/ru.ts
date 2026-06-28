@@ -680,6 +680,7 @@ export default {
   smartExample3: 'Такси 35',
   examples: 'Примеры',
   confirm: 'Подтвердить',
+  saveFailed: 'Не удалось сохранить — проверьте соединение и попробуйте снова',
 
   // Gemini AI
   aiPersonalAdvice: 'Персональные советы ИИ',

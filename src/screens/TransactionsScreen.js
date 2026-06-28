@@ -30,6 +30,7 @@ export default function TransactionsScreen({ route }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editTx, setEditTx] = useState(null);
+  const [dupPrefill, setDupPrefill] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Advanced filters
@@ -165,18 +166,24 @@ export default function TransactionsScreen({ route }) {
     }
   };
 
-  const handleDuplicate = async (tx) => {
-    const { id, createdAt, ...rest } = tx;
-    await dataService.addTransaction({
+  // "Duplicate" no longer writes immediately — it opens the add modal
+  // pre-filled with this transaction so the user can adjust the date/amount
+  // before saving. Date is intentionally left to the modal's default (today)
+  // so the user picks it; note is copied as-is (no "(copy)" suffix).
+  const handleDuplicate = (tx) => {
+    const { id, createdAt, runningBalance, date, ...rest } = tx;
+    setShowAdd(false);
+    setEditTx(null);
+    setDupPrefill({
       ...rest,
-      date: new Date().toISOString(),
-      note: tx.note ? `${tx.note} (${i18n.t('copy')})` : `(${i18n.t('copy')})`,
+      note: rest.note || '',
+      tags: Array.isArray(rest.tags) ? rest.tags : [],
+      showMore: !!(rest.recipient || rest.tags?.length || rest.projectId),
     });
-    await loadData();
   };
 
   const handleEdit = (tx) => { setEditTx(tx); };
-  const handleCloseModal = () => { setShowAdd(false); setEditTx(null); };
+  const handleCloseModal = () => { setShowAdd(false); setEditTx(null); setDupPrefill(null); };
 
   const getAccIcon = (type) => (accountTypeConfig[type] || accountTypeConfig.bank).icon;
 
@@ -443,10 +450,11 @@ export default function TransactionsScreen({ route }) {
       />
 
       <AddTransactionModal
-        visible={showAdd || !!editTx}
+        visible={showAdd || !!editTx || !!dupPrefill}
         onClose={handleCloseModal}
         onSave={() => loadData()}
         editTransaction={editTx}
+        prefill={dupPrefill}
       />
 
       <ConfirmModal

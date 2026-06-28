@@ -10,6 +10,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import authService from './authService';
+import { withTimeout } from '../utils/withTimeout';
 import type {
   Account,
   Goal,
@@ -132,7 +133,7 @@ async function getDocData(colName: string, defaultVal: any): Promise<any> {
 
 async function setDocData(colName: string, value: any): Promise<boolean> {
   try {
-    await userDoc(colName + '/data').set({ value, updatedAt: new Date().toISOString() });
+    await withTimeout(userDoc(colName + '/data').set({ value, updatedAt: new Date().toISOString() }));
     return true;
   } catch (e) {
     if (__DEV__) console.error(`Firestore setDocData(${colName}):`, e);
@@ -162,14 +163,15 @@ async function updateAccountBalance(accountId: string, amount: number, type: str
   const uid = getUid();
   try {
     if (uid) {
-      const ref = firestore().collection('users').doc(uid).collection('accounts').doc(accountId);
-      const snap = await ref.get();
-      if (snapExists(snap)) {
-        const data = snap.data() as any;
-        let bal: number = (data?.balance) || 0;
-        if (type === 'income') bal += amount;
-        else if (type === 'expense') bal -= amount;
-        await ref.update({ balance: bal });
+      // Atomic increment (FieldValue.increment) instead of read-modify-write:
+      //   1. removes the `.get()` that could hang forever on a stuck Firestore
+      //      stream (the root cause of the frozen save spinner), and
+      //   2. fixes the lost-update race when two saves land back-to-back.
+      // It resolves on the local cache write, so it stays fast offline too.
+      const delta = type === 'income' ? amount : type === 'expense' ? -amount : 0;
+      if (delta !== 0) {
+        const ref = firestore().collection('users').doc(uid).collection('accounts').doc(accountId);
+        await withTimeout(ref.update({ balance: firestore.FieldValue.increment(delta) }));
       }
     } else {
       const data = await AsyncStorage.getItem(KEYS.ACCOUNTS);
@@ -225,7 +227,7 @@ const dataService = {
     const newTx: any = { ...transaction, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        const ref = await userCol('transactions').add(newTx);
+        const ref: any = await withTimeout(userCol('transactions').add(newTx));
         newTx.id = ref.id;
       } else {
         newTx.id = generateId();
@@ -258,20 +260,20 @@ const dataService = {
     try {
       if (uid) {
         const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
-        const snap = await ref.get();
+        const snap = await withTimeout(ref.get());
         const tx: any = snapExists(snap) ? { ...snap.data(), id } : null;
-        await ref.delete();
+        await withTimeout(ref.delete());
         if (tx && tx.account) {
           const reverseType = tx.type === 'income' ? 'expense' : 'income';
           await updateAccountBalance(tx.account, tx.amount, reverseType);
         }
         // Cascade-delete the paired transfer side
         if (tx && tx.transferPairId) {
-          const allSnap = await userCol('transactions').get();
+          const allSnap: any = await withTimeout(userCol('transactions').get());
           const pair = allSnap.docs.find((d: any) => (d.data() as any).transferPairId === tx.transferPairId && d.id !== id);
           if (pair) {
             const pairData = pair.data() as any;
-            await pair.ref.delete();
+            await withTimeout(pair.ref.delete());
             if (pairData.account) {
               const pairReverse = pairData.type === 'income' ? 'expense' : 'income';
               await updateAccountBalance(pairData.account, pairData.amount, pairReverse);
@@ -309,9 +311,9 @@ const dataService = {
     try {
       if (uid) {
         const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
-        const snap = await ref.get();
+        const snap = await withTimeout(ref.get());
         const oldTx: any = snapExists(snap) ? { ...snap.data(), id } : null;
-        await ref.update(changes);
+        await withTimeout(ref.update(changes));
         // Recompute balances
         if (oldTx && oldTx.account) {
           const reverseType = oldTx.type === 'income' ? 'expense' : 'income';
@@ -377,14 +379,14 @@ const dataService = {
     if (uid) {
       try {
         // Rewrite all documents with explicit ordering
-        const snap = await userCol('accounts').get();
+        const snap: any = await withTimeout(userCol('accounts').get());
         const deletes = snap.docs.map((d: any) => d.ref.delete());
-        await Promise.all(deletes);
+        await withTimeout(Promise.all(deletes));
         const writes = accounts.map((a: any, i: number) => {
           const { id, ...rest } = a;
           return firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, order: i });
         });
-        await Promise.all(writes);
+        await withTimeout(Promise.all(writes));
         return true;
       } catch (e) { if (__DEV__) console.error('saveAccounts:', e); return false; }
     }
@@ -397,7 +399,7 @@ const dataService = {
       if (uid) {
         const id = generateId();
         const { id: _id, ...rest } = account;
-        await firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() });
+        await withTimeout(firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() }));
         emitChange();
         return { ...account, id } as Account;
       } else {
@@ -415,7 +417,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await firestore().collection('users').doc(uid).collection('accounts').doc(id).update(changes);
+        await withTimeout(firestore().collection('users').doc(uid).collection('accounts').doc(id).update(changes));
       } else {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.map((a: any) => a.id === id ? { ...a, ...changes } : a)));
@@ -429,7 +431,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await firestore().collection('users').doc(uid).collection('accounts').doc(id).delete();
+        await withTimeout(firestore().collection('users').doc(uid).collection('accounts').doc(id).delete());
       } else {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.filter((a: any) => a.id !== id)));
@@ -450,12 +452,12 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await userCol('investments').get();
-        await Promise.all(snap.docs.map((d: any) => d.ref.delete()));
-        await Promise.all(investments.map((inv: any) => {
+        const snap: any = await withTimeout(userCol('investments').get());
+        await withTimeout(Promise.all(snap.docs.map((d: any) => d.ref.delete())));
+        await withTimeout(Promise.all(investments.map((inv: any) => {
           const { id, ...rest } = inv;
           return firestore().collection('users').doc(uid).collection('investments').doc(id || generateId()).set({ ...rest, createdAt: rest.createdAt || new Date().toISOString() });
-        }));
+        })));
         return true;
       } catch (e) { return false; }
     }
@@ -620,7 +622,7 @@ const dataService = {
     const newItem: any = { ...item, completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        const ref = await userCol('recurring').add(newItem);
+        const ref: any = await withTimeout(userCol('recurring').add(newItem));
         newItem.id = ref.id;
       } else {
         newItem.id = generateId();
@@ -636,7 +638,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await firestore().collection('users').doc(uid).collection('recurring').doc(id).update(changes);
+        await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).update(changes));
       } else {
         const items = await this.getRecurring();
         await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items.map((r: any) => r.id === id ? { ...r, ...changes } : r)));
@@ -649,7 +651,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await firestore().collection('users').doc(uid).collection('recurring').doc(id).delete();
+        await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).delete());
       } else {
         const items = await this.getRecurring();
         await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items.filter((r: any) => r.id !== id)));
@@ -663,7 +665,7 @@ const dataService = {
       const uid = getUid();
       let rec: any;
       if (uid) {
-        const snap = await firestore().collection('users').doc(uid).collection('recurring').doc(id).get();
+        const snap = await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).get());
         rec = snapExists(snap) ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
@@ -771,7 +773,7 @@ const dataService = {
       const uid = getUid();
       let rec: any;
       if (uid) {
-        const snap = await firestore().collection('users').doc(uid).collection('recurring').doc(id).get();
+        const snap = await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).get());
         rec = snapExists(snap) ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
