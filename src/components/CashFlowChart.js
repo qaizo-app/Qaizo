@@ -61,12 +61,12 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
         <View style={st.summaryItem}>
           <View style={[st.dot, { backgroundColor: colors.green }]} />
           <Text style={st.summaryLabel}>{i18n.t('income')}</Text>
-          <Amount value={sel ? sel.income : totalIncome} style={st.summaryAmount} />
+          <Amount value={sel ? sel.income : totalIncome} style={st.summaryAmount} numberOfLines={1} adjustsFontSizeToFit />
         </View>
         <View style={st.summaryItem}>
           <View style={[st.dot, { backgroundColor: colors.red }]} />
           <Text style={st.summaryLabel}>{i18n.t('expenses')}</Text>
-          <Amount value={sel ? sel.expense : totalExpense} style={st.summaryAmount} />
+          <Amount value={sel ? sel.expense : totalExpense} style={st.summaryAmount} numberOfLines={1} adjustsFontSizeToFit />
         </View>
         <View style={st.summaryItem}>
           <Text style={[st.netAmount, { color: netFlow >= 0 ? colors.green : colors.red }]}>
@@ -151,11 +151,11 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
 }
 
 const st = StyleSheet.create({
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, columnGap: 12, rowGap: 6 },
+  summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   dot: { width: 8, height: 8, borderRadius: 4 },
   summaryLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
-  summaryAmount: { fontSize: 12, fontWeight: '600', color: colors.text },
+  summaryAmount: { fontSize: 12, fontWeight: '600', color: colors.text, flexShrink: 1 },
   netAmount: { fontSize: 14, fontWeight: '700' },
   selectedDate: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textAlign: 'center', marginTop: 4 },
 });
