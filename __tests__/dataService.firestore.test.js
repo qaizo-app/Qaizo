@@ -161,6 +161,24 @@ describe('dataService (firestore mode)', () => {
     expect(txs[0].amount).toBe(100);
   });
 
+  test('addTransaction with a clientId is idempotent — retry with same id does not duplicate', async () => {
+    // Simulates the double-press after a timed-out save: the same logical
+    // transaction is sent twice with the same client key. It must land on the
+    // same document, never create two rows.
+    const first = await dataService.addTransaction({
+      type: 'expense', amount: 100, categoryId: 'food',
+    }, 'cli_abc');
+    const second = await dataService.addTransaction({
+      type: 'expense', amount: 100, categoryId: 'food',
+    }, 'cli_abc');
+
+    expect(first.id).toBe('cli_abc');
+    expect(second.id).toBe('cli_abc');
+
+    const txs = await dataService.getTransactions();
+    expect(txs.length).toBe(1);
+  });
+
   test('updateTransaction modifies firestore doc', async () => {
     const tx = await dataService.addTransaction({ type: 'expense', amount: 50, categoryId: 'food' });
     await dataService.updateTransaction(tx.id, { amount: 75 });

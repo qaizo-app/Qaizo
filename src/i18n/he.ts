@@ -81,6 +81,8 @@ export default {
   receiveTo: 'הפקד ל',
   from: 'מ',
   to: 'ל',
+  transferReceive: 'לקבל',
+  round: 'עיגול',
   more: 'עוד',
   less: 'פחות',
   tags: 'תגיות',

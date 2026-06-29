@@ -82,6 +82,8 @@ export default {
   receiveTo: 'Куда зачислить',
   from: 'Откуда',
   to: 'Куда',
+  transferReceive: 'Зачислить',
+  round: 'Округлить',
   more: 'Ещё',
   less: 'Меньше',
   tags: 'Теги',

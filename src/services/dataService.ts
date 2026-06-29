@@ -222,17 +222,27 @@ const dataService = {
     } catch (e) { if (__DEV__) console.error('getTransactions error:', e); return []; }
   },
 
-  async addTransaction(transaction: Partial<Transaction>): Promise<Transaction | null> {
+  async addTransaction(transaction: Partial<Transaction>, clientId?: string): Promise<Transaction | null> {
     const uid = getUid();
     const newTx: any = { ...transaction, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        const ref: any = await withTimeout(userCol('transactions').add(newTx));
-        newTx.id = ref.id;
+        // When a clientId is supplied, write to a deterministic document id via
+        // set() so a retry after a timed-out save overwrites the same doc
+        // instead of creating a duplicate. Without it, fall back to add().
+        if (clientId) {
+          await withTimeout(userCol('transactions').doc(clientId).set(newTx));
+          newTx.id = clientId;
+        } else {
+          const ref: any = await withTimeout(userCol('transactions').add(newTx));
+          newTx.id = ref.id;
+        }
       } else {
-        newTx.id = generateId();
+        newTx.id = clientId || generateId();
         const txs = await this.getTransactions();
-        await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([newTx, ...txs]));
+        // Idempotent in guest mode too: replace any existing row with this id.
+        const without = clientId ? txs.filter((t: any) => t.id !== clientId) : txs;
+        await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([newTx, ...without]));
       }
       if (newTx.account) await updateAccountBalance(newTx.account, newTx.amount, newTx.type);
       // Fire-and-forget project budget threshold check (does not block transaction save)

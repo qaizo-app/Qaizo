@@ -81,6 +81,8 @@ export default {
   receiveTo: 'Receive to',
   from: 'From',
   to: 'To',
+  transferReceive: 'Receive',
+  round: 'Round',
   more: 'More',
   less: 'Less',
   tags: 'Tags',

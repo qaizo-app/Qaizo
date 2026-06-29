@@ -7,7 +7,8 @@ import i18n from '../i18n';
 import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
-import { sym } from '../utils/currency';
+import { sym, code, convert, getRate, CURRENCIES } from '../utils/currency';
+import { buildTransferLegs } from '../utils/transferLegs';
 import AccountPickerModal from './AccountPickerModal';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS, CatIcon } from './CategoryPickerModal';
 import DatePickerModal from './DatePickerModal';
@@ -37,6 +38,14 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
   const [selAcc, setSelAcc] = useState('');
   const [accPicker, setAccPicker] = useState(null); // 'from' | 'to' | null
   const [toAcc, setToAcc] = useState('');
+  // Cross-currency transfer: amount credited to the destination account, in its
+  // own currency. Prefilled from the live rate; `toAmountEdited` keeps a manual
+  // override from being overwritten by the auto-recompute.
+  const [toAmount, setToAmount] = useState('');
+  const [toAmountEdited, setToAmountEdited] = useState(false);
+  // Stable per-open key so a retry after a timed-out save overwrites the same
+  // document instead of creating a duplicate transaction.
+  const [saveKey, setSaveKey] = useState('');
   const [showMore, setShowMore] = useState(false);
   const [userTags, setUserTags] = useState([]);
   const [newTagText, setNewTagText] = useState('');
@@ -65,6 +74,8 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         setAmount(''); setRecipient(''); setNote(''); setTags([]); setSelProject('');
         setType('expense'); setCategoryId('food'); setShowMore(false);
         setSplitMode(false); setSplitRows([]);
+        setToAmount(''); setToAmountEdited(false);
+        setSaveKey('tx_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
         const today = new Date();
         setDateStr(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
         if (preselectedAccount) setSelAcc(preselectedAccount);
@@ -113,7 +124,13 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
           // Restore "to" account for transfer pair — find the partner row.
           if (editTransaction.isTransfer && editTransaction.transferPairId) {
             const partner = txs.find(t => t.transferPairId === editTransaction.transferPairId && t.id !== editTransaction.id);
-            if (partner) setToAcc(partner.account);
+            if (partner) {
+              setToAcc(partner.account);
+              // Restore the credited amount (destination currency) and treat it
+              // as user-set so the auto-recompute doesn't clobber it on open.
+              setToAmount(String(partner.amount));
+              setToAmountEdited(true);
+            }
           } else {
             setToAcc('');
           }
@@ -129,6 +146,26 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       });
     }
   }, [visible, editTransaction]);
+
+  // Resolve a fiat code from an account's currency symbol; fall back to the
+  // app's global currency for accounts created before per-account currency.
+  const codeOf = (acc) => CURRENCIES.find(c => c.symbol === acc?.currency)?.code || code();
+  const fromAccObj = accounts.find(a => a.id === selAcc);
+  const toAccObj = accounts.find(a => a.id === toAcc);
+  const fromCode = codeOf(fromAccObj);
+  const toCode = codeOf(toAccObj);
+  const crossCurrency = type === 'transfer' && !!fromAccObj && !!toAccObj && fromCode !== toCode;
+  const xferRate = crossCurrency ? getRate(fromCode, toCode) : 1;
+
+  // Prefill / refresh the destination amount from the live rate when source
+  // amount or accounts change — unless the user has typed their own value.
+  useEffect(() => {
+    if (!crossCurrency || toAmountEdited) return;
+    const src = parseFloat((amount || '').replace(',', '.'));
+    if (!src || src <= 0) { setToAmount(''); return; }
+    const conv = convert(src, fromCode, toCode);
+    setToAmount(conv ? String(conv) : '');
+  }, [crossCurrency, amount, fromCode, toCode, toAmountEdited]);
 
   const cats = type === 'income' ? INC : EXP;
   const chgType = (t) => { setType(t); if (t === 'income') setCategoryId('salary_me'); else if (t === 'expense') setCategoryId('food'); };
@@ -150,14 +187,15 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
     // Split mode — create multiple transactions
     if (splitMode && splitRows.length > 0 && !isEdit) {
       const validRows = splitRows.filter(r => parseFloat((r.amount || '').replace(',', '.')) > 0);
-      for (const row of validRows) {
+      for (let i = 0; i < validRows.length; i++) {
+        const row = validRows[i];
         const ci = getCatIcon(row.categoryId, catGroups);
         guard(await dataService.addTransaction({
           type, amount: parseFloat(row.amount.replace(',', '.')),
           categoryId: row.categoryId, categoryName: getCatName(row.categoryId, catGroups, lang),
           icon: ci.icon, recipient, note, currency: sym(), date: txDate,
           account: selAcc, tags, projectId: selProject || null,
-        }));
+        }, saveKey ? `${saveKey}_${i}` : undefined));
       }
       if (failed) { setSaveErr(true); return; }
       onSave?.(); onClose?.();
@@ -168,35 +206,37 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
       // Transfer edit: keep both sides of the pair in sync (account, recipient, amount, date, tags).
       if (editTransaction.isTransfer && editTransaction.transferPairId) {
         if (!toAcc || selAcc === toAcc) return;
-        const fn = accounts.find(a => a.id === selAcc)?.name || '';
-        const tn = accounts.find(a => a.id === toAcc)?.name || '';
-        const amt = parseFloat(amount.replace(',', '.'));
+        const srcAmt = parseFloat(amount.replace(',', '.'));
+        const destAmt = crossCurrency ? (parseFloat((toAmount || '').replace(',', '.')) || 0) : srcAmt;
+        if (crossCurrency && destAmt <= 0) { setSaveErr(true); return; }
         const allTxs = await dataService.getTransactions();
         const partner = allTxs.find(t => t.transferPairId === editTransaction.transferPairId && t.id !== editTransaction.id);
-        guard(await dataService.updateTransaction(editTransaction.id, {
-          type: 'expense', amount: amt, categoryId: 'transfer', icon: 'repeat',
-          recipient: tn, note: note || `→ ${tn}`, date: txDate, account: selAcc, tags,
-        }));
-        if (partner) {
-          guard(await dataService.updateTransaction(partner.id, {
-            type: 'income', amount: amt, categoryId: 'transfer', icon: 'repeat',
-            recipient: fn, note: note || `← ${fn}`, date: txDate, account: toAcc, tags,
-          }));
-        }
+        const [expenseLeg, incomeLeg] = buildTransferLegs({
+          fromAcc: fromAccObj || { id: selAcc }, toAcc: toAccObj || { id: toAcc },
+          sourceAmount: srcAmt, toAmount: destAmt,
+          transferPairId: editTransaction.transferPairId, date: txDate, tags, note,
+        });
+        guard(await dataService.updateTransaction(editTransaction.id, expenseLeg));
+        if (partner) guard(await dataService.updateTransaction(partner.id, incomeLeg));
       } else {
         const ci = getCatIcon(categoryId, catGroups);
         guard(await dataService.updateTransaction(editTransaction.id, { type: type === 'transfer' ? editTransaction.type : type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), recipient, icon: ci.icon, note, tags, date: txDate, account: selAcc, projectId: selProject || null }));
       }
     } else if (type === 'transfer') {
       if (selAcc === toAcc) return;
-      const fn = accounts.find(a => a.id === selAcc)?.name || '';
-      const tn = accounts.find(a => a.id === toAcc)?.name || '';
+      const srcAmt = parseFloat(amount.replace(',', '.'));
+      const destAmt = crossCurrency ? (parseFloat((toAmount || '').replace(',', '.')) || 0) : srcAmt;
+      if (crossCurrency && destAmt <= 0) { setSaveErr(true); return; }
       const transferPairId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      guard(await dataService.addTransaction({ type: 'expense', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: tn, note: note || `→ ${tn}`, currency: sym(), date: txDate, account: selAcc, isTransfer: true, transferPairId, tags }));
-      guard(await dataService.addTransaction({ type: 'income', amount: parseFloat(amount.replace(',', '.')), categoryId: 'transfer', icon: 'repeat', recipient: fn, note: note || `← ${fn}`, currency: sym(), date: txDate, account: toAcc, isTransfer: true, transferPairId, tags }));
+      const [expenseLeg, incomeLeg] = buildTransferLegs({
+        fromAcc: fromAccObj || { id: selAcc }, toAcc: toAccObj || { id: toAcc },
+        sourceAmount: srcAmt, toAmount: destAmt, transferPairId, date: txDate, tags, note,
+      });
+      guard(await dataService.addTransaction(expenseLeg, saveKey ? `${saveKey}_exp` : undefined));
+      guard(await dataService.addTransaction(incomeLeg, saveKey ? `${saveKey}_inc` : undefined));
     } else {
       const ci2 = getCatIcon(categoryId, catGroups);
-      guard(await dataService.addTransaction({ type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null }));
+      guard(await dataService.addTransaction({ type, amount: parseFloat(amount.replace(',', '.')), categoryId, categoryName: getCatName(categoryId, catGroups, lang), icon: ci2.icon, recipient, note, currency: sym(), date: txDate, account: selAcc, tags, projectId: selProject || null }, saveKey || undefined));
     }
     if (failed) { setSaveErr(true); return; }
     if (!isEdit) {
@@ -376,6 +416,37 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
                       </RowText>
                       <Feather name="chevron-down" size={16} color={colors.textMuted} />
                     </TouchableOpacity>
+
+                    {/* Cross-currency: amount credited to the destination, in its
+                        own currency. Prefilled by rate, editable, roundable. */}
+                    {crossCurrency && (
+                      <>
+                        <Text style={st.label}>{i18n.t('transferReceive')}</Text>
+                        <View style={st.convRow}>
+                          <TextInput
+                            style={[st.input, { flex: 1, marginBottom: 0, textAlign: i18n.textAlign() }]}
+                            value={toAmount}
+                            onChangeText={(v) => { setToAmount(v); setToAmountEdited(true); }}
+                            placeholder="0" placeholderTextColor={colors.textMuted}
+                            keyboardType="decimal-pad"
+                          />
+                          <Text style={st.convSym}>{selT?.currency || sym()}</Text>
+                          <TouchableOpacity
+                            onPress={() => {
+                              const n = parseFloat((toAmount || '').replace(',', '.'));
+                              if (n > 0) { setToAmount(String(Math.round(n))); setToAmountEdited(true); }
+                            }}
+                            style={st.roundBtn} activeOpacity={0.7}>
+                            <Text style={st.roundTxt}>{i18n.t('round')}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        {xferRate && xferRate !== 1 ? (
+                          <Text style={st.rateHint}>
+                            1 {selF?.currency || ''} ≈ {xferRate.toFixed(xferRate < 1 ? 4 : 2)} {selT?.currency || ''}
+                          </Text>
+                        ) : null}
+                      </>
+                    )}
                   </>
                 );
               })()}
@@ -516,7 +587,7 @@ export default function AddTransactionModal({ visible, onClose, onSave, editTran
         onClose={() => setAccPicker(null)}
         accounts={accounts.filter(a => a.id !== selAcc)}
         selectedId={toAcc}
-        onSelect={setToAcc}
+        onSelect={(id) => { setToAcc(id); setToAmountEdited(false); }}
         title={i18n.t('to')}
       />
       <DatePickerModal visible={showCal} onClose={() => setShowCal(false)} onSelect={d => setDateStr(d)} selectedDate={dateStr} lang={lang} weekStart={weekStart} />
@@ -566,6 +637,11 @@ const createSt = () => StyleSheet.create({
   catPickerIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   catPickerText: { color: colors.text, fontSize: 16, fontWeight: '600', flex: 1 },
   input: { backgroundColor: colors.card, borderRadius: 14, padding: 14, color: colors.text, fontSize: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.cardBorder, textAlign: i18n.textAlign() },
+  convRow: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 6 },
+  convSym: { color: colors.textDim, fontSize: 16, fontWeight: '700' },
+  roundBtn: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.cardBorder },
+  roundTxt: { color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  rateHint: { color: colors.textMuted, fontSize: 12, fontWeight: '500', marginBottom: 12, textAlign: i18n.textAlign() },
   recipientList: { backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, marginTop: -8, marginBottom: 10, overflow: 'hidden' },
   recipientItem: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
   recipientText: { color: colors.text, fontSize: 14, fontWeight: '500' },
