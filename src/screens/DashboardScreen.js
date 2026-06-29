@@ -31,6 +31,8 @@ import StreakCard from '../components/StreakCard';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { catColor, catName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon, CatIcon } from '../components/CategoryPickerModal';
 import streakService from '../services/streakService';
 import { useToast } from '../components/ToastProvider';
 import notificationService from '../services/notificationService';
@@ -648,13 +650,13 @@ export default function DashboardScreen() {
         title={i18n.t('saveAsTemplate')}
         message={templateSuggestion && templateSuggestion.categoryId
           ? (i18n.t('templateSuggestMessage') || '')
-              .replace('{category}', i18n.t(templateSuggestion.categoryId))
+              .replace('{category}', catName(templateSuggestion.categoryId))
               .replace('{count}', String(templateSuggestion.count || 0))
           : ''}
         confirmText={i18n.t('save')} cancelText={i18n.t('notNow')}
         onConfirm={handleAcceptTemplate} onCancel={handleDismissTemplate} />
       <ConfirmModal visible={deleteTemplate !== null} title={i18n.t('delete')}
-        message={deleteTemplate !== null && quickTemplates[deleteTemplate] ? (quickTemplates[deleteTemplate].name || i18n.t(quickTemplates[deleteTemplate].categoryId)) : ''}
+        message={deleteTemplate !== null && quickTemplates[deleteTemplate] ? catName(quickTemplates[deleteTemplate].categoryId, quickTemplates[deleteTemplate].name) : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={() => {
           const updated = quickTemplates.filter((_, i) => i !== deleteTemplate);
@@ -733,16 +735,16 @@ export default function DashboardScreen() {
                 {quickTemplates.length > 0 ? (
                   <View style={st.quickSelectGrid}>
                     {quickTemplates.map((tpl, idx) => {
-                      const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                      const cfg = getCatIcon(tpl.categoryId, getCachedGroups());
                       return (
                         <TouchableOpacity key={idx} style={st.quickBtn}
                           onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }}
                           onLongPress={() => setDeleteTemplate(idx)}
                           activeOpacity={0.7}>
                           <View style={[st.quickIcon, { backgroundColor: cfg.color + '18' }]}>
-                            <Feather name={cfg.icon} size={20} color={cfg.color} />
+                            <CatIcon icon={cfg.icon} size={20} color={cfg.color} />
                           </View>
-                          <Text style={st.quickLabel} numberOfLines={1}>{tpl.name || i18n.t(tpl.categoryId)}</Text>
+                          <Text style={st.quickLabel} numberOfLines={1}>{catName(tpl.categoryId, tpl.name)}</Text>
                         </TouchableOpacity>
                       );
                     })}

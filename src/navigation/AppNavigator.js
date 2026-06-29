@@ -10,6 +10,9 @@ import IconRow from '../components/IconRow';
 import { useToast } from '../components/ToastProvider';
 import dataService from '../services/dataService';
 import { categoryConfig, colors } from '../theme/colors';
+import { catName as resolveCatName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon, CatIcon } from '../components/CategoryPickerModal';
 
 import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
@@ -291,14 +294,14 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
                 {quickTemplates.length > 0 ? (
                   <View style={styles.quickGrid}>
                     {quickTemplates.map((tpl, idx) => {
-                      const cfg = categoryConfig[tpl.categoryId] || categoryConfig.other;
+                      const cfg = getCatIcon(tpl.categoryId, getCachedGroups());
                       return (
                         <TouchableOpacity key={idx} style={styles.quickBtn}
                           onPress={() => { setShowQuickSelect(false); setQuickTemplate(tpl); }} activeOpacity={0.7}>
                           <View style={[styles.quickIcon, { backgroundColor: cfg.color + '18' }]}>
-                            <Feather name={cfg.icon} size={20} color={cfg.color} />
+                            <CatIcon icon={cfg.icon} size={20} color={cfg.color} />
                           </View>
-                          <Text style={styles.quickLabel} numberOfLines={1}>{tpl.name || i18n.t(tpl.categoryId)}</Text>
+                          <Text style={styles.quickLabel} numberOfLines={1}>{resolveCatName(tpl.categoryId, tpl.name)}</Text>
                         </TouchableOpacity>
                       );
                     })}

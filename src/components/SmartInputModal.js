@@ -22,11 +22,13 @@ try {
 import aiService from '../services/aiService';
 import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
-import { categoryConfig, colors } from '../theme/colors';
+import { colors } from '../theme/colors';
 import { fmt } from '../utils/currency';
+import { catName } from '../utils/categoryName';
+import { getCachedGroups, setCachedGroups, ensureCachedGroups } from '../utils/categoryCache';
 import RowText from './RowText';
 import Amount from './Amount';
-import CategoryPickerModal from './CategoryPickerModal';
+import CategoryPickerModal, { getCatIcon, CatIcon } from './CategoryPickerModal';
 import CalculatorModal from './CalculatorModal';
 
 export default function SmartInputModal({ visible, onClose, onSaved }) {
@@ -46,6 +48,9 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  // Bumped once the category cache is warm so the result card re-renders with
+  // resolved custom-category names/icons instead of the raw id.
+  const [, setCacheReady] = useState(0);
   const [voiceLang, setVoiceLang] = useState(() => {
     const ui = i18n.getLanguage();
     return VOICE_LANGS.includes(ui) ? ui : 'en';
@@ -122,6 +127,9 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       // Load accounts + projects for smart selection
       dataService.getAccounts().then(accs => setAccounts(accs.filter(a => a.isActive !== false)));
       dataService.getProjects().then(setProjects);
+      // Warm the shared category cache so catName / getCatIcon resolve custom
+      // categories in the result card instead of showing the raw id.
+      ensureCachedGroups().then(() => setCacheReady(v => v + 1));
       // Don't auto-focus the input — keyboard would pop up immediately and cover
       // the modal. User taps the mic for voice or the input for typing when ready.
     } else {
@@ -251,7 +259,7 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     }
   };
 
-  const cfg = parsed ? (categoryConfig[parsed.categoryId] || categoryConfig.other) : null;
+  const cfg = parsed ? getCatIcon(parsed.categoryId, getCachedGroups()) : null;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -347,11 +355,11 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                 {/* Tap category icon/name to change */}
                 <TouchableOpacity onPress={() => setShowCatPicker(true)} activeOpacity={0.7}
                   style={[st.resultIcon, { backgroundColor: cfg.color + '18' }]}>
-                  <Feather name={cfg.icon} size={22} color={cfg.color} />
+                  <CatIcon icon={cfg.icon} size={22} color={cfg.color} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setShowCatPicker(true)} activeOpacity={0.7} style={{ flex: 1 }}>
                   <View style={st.editableRow}>
-                    <Text style={st.resultCategory}>{i18n.t(parsed.categoryId)}</Text>
+                    <Text style={st.resultCategory}>{catName(parsed.categoryId)}</Text>
                     <Feather name="edit-2" size={11} color={colors.textMuted} />
                   </View>
                   {parsed.recipient ? <Text style={st.resultRecipient}>{parsed.recipient}</Text> : null}
@@ -444,7 +452,10 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       <CategoryPickerModal
         visible={showCatPicker}
         onClose={() => setShowCatPicker(false)}
-        onSelect={(catId) => {
+        onSelect={(catId, latestGroups) => {
+          // When a category was just created in the picker it isn't in the
+          // cache yet — seed it so catName/getCatIcon resolve it immediately.
+          if (latestGroups) setCachedGroups(latestGroups);
           setParsed({ ...parsed, categoryId: catId });
           setShowCatPicker(false);
         }}

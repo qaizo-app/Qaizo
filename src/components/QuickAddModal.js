@@ -5,8 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Keyboard, KeyboardAvoidingView, Modal, PanResponder, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
-import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { accountTypeConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { catName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon, CatIcon } from './CategoryPickerModal';
 import RowText from './RowText';
 
 export default function QuickAddModal({ visible, template, onClose, onSaved }) {
@@ -65,7 +68,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   // Early return ПОСЛЕ всех хуков
   if (!template) return null;
 
-  const cfg = categoryConfig[template.categoryId] || categoryConfig.other;
+  const cfg = getCatIcon(template.categoryId, getCachedGroups());
   const getAccIcon = (t) => (accountTypeConfig[t] || accountTypeConfig.bank).icon;
 
   const handleSave = async () => {
@@ -109,9 +112,9 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
               </View>
               <View style={st.header}>
                 <View style={[st.iconWrap, { backgroundColor: cfg.color + '20' }]}>
-                  <Feather name={cfg.icon} size={22} color={cfg.color} />
+                  <CatIcon icon={cfg.icon} size={22} color={cfg.color} />
                 </View>
-                <Text style={st.title}>{i18n.t(template.categoryId)}</Text>
+                <Text style={st.title}>{catName(template.categoryId, template.name)}</Text>
               </View>
 
               {/* Сумма */}

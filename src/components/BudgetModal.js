@@ -5,8 +5,11 @@ import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Keyboard, KeyboardAvoidingView, Modal, PanResponder, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
-import { categoryConfig, colors } from '../theme/colors';
+import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { catName as resolveCatName } from '../utils/categoryName';
+import { getCachedGroups } from '../utils/categoryCache';
+import { getCatIcon, CatIcon } from './CategoryPickerModal';
 
 export default function BudgetModal({ visible, categoryId, currentLimit, spent, onSave, onDelete, onClose }) {
   const [value, setValue] = useState('');
@@ -45,8 +48,8 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
     },
   })).current;
 
-  const cfg = categoryConfig[categoryId] || categoryConfig.other;
-  const catName = i18n.t(categoryId) || categoryId;
+  const cfg = getCatIcon(categoryId, getCachedGroups());
+  const catName = resolveCatName(categoryId);
   const pct = currentLimit > 0 ? Math.round((spent / currentLimit) * 100) : 0;
 
   const handleSave = () => {
@@ -74,7 +77,7 @@ export default function BudgetModal({ visible, categoryId, currentLimit, spent, 
               </View>
               <View style={st.header}>
                 <View style={[st.iconWrap, { backgroundColor: cfg.color + '20' }]}>
-                  <Feather name={cfg.icon} size={20} color={cfg.color} />
+                  <CatIcon icon={cfg.icon} size={20} color={cfg.color} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={st.title}>{catName}</Text>
