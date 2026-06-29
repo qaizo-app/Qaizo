@@ -15,6 +15,7 @@ import BalanceCard from '../components/BalanceCard';
 import BarChartCard from '../components/BarChartCard';
 import BudgetModal from '../components/BudgetModal';
 import BudgetsBlock from '../components/BudgetsBlock';
+import AccountPickerModal from '../components/AccountPickerModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DashboardLayoutModal, { DEFAULT_LAYOUT } from '../components/DashboardLayoutModal';
 import FreeMoneyTodayBlock from '../components/FreeMoneyTodayBlock';
@@ -75,6 +76,7 @@ export default function DashboardScreen() {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateCat, setNewTemplateCat] = useState('');
   const [newTemplateAcc, setNewTemplateAcc] = useState('');
+  const [showTplAccPicker, setShowTplAccPicker] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [deleteTemplate, setDeleteTemplate] = useState(null);
   const [showSmartInput, setShowSmartInput] = useState(false);
@@ -808,17 +810,15 @@ export default function DashboardScreen() {
               })}
             </ScrollView>
             <Text style={st.templateLabel}>{i18n.t('account')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              {accounts.filter(a => ['cash','bank','credit'].includes(a.type)).map(acc => {
-                const sel = newTemplateAcc === acc.id;
-                return (
-                  <TouchableOpacity key={acc.id} style={[st.templateChip, sel && { borderColor: colors.teal, backgroundColor: `${colors.teal}15` }]}
-                    onPress={() => setNewTemplateAcc(acc.id)}>
-                    <Text style={[st.templateChipTxt, sel && { color: colors.teal }]} numberOfLines={1}>{acc.name}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            {(() => {
+              const sel = accounts.find(a => a.id === newTemplateAcc);
+              return (
+                <TouchableOpacity style={st.templateAccBtn} onPress={() => setShowTplAccPicker(true)} activeOpacity={0.7}>
+                  <Text style={[st.templateAccTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</Text>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              );
+            })()}
             <View style={{ flexDirection: i18n.row(), gap: 12 }}>
               <TouchableOpacity style={st.templateCancelBtn} onPress={() => setShowAddTemplate(false)}>
                 <Text style={{ color: colors.textDim, fontWeight: '600' }}>{i18n.t('cancel')}</Text>
@@ -844,6 +844,14 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       )}
+      <AccountPickerModal
+        visible={showTplAccPicker}
+        onClose={() => setShowTplAccPicker(false)}
+        accounts={accounts.filter(a => ['cash', 'bank', 'credit'].includes(a.type))}
+        selectedId={newTemplateAcc}
+        onSelect={(id) => setNewTemplateAcc(id)}
+        title={i18n.t('account')}
+      />
       <QuickAddModal visible={!!quickTemplate} template={quickTemplate}
         onClose={() => setQuickTemplate(null)} onSaved={() => loadData()} />
       <SmartInputModal visible={showSmartInput}
@@ -954,6 +962,8 @@ const createSt = () => StyleSheet.create({
   templateLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6, textAlign: i18n.textAlign() },
   templateChip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg, marginEnd: 6, borderWidth: 1.5, borderColor: 'transparent', gap: 4 },
   templateChipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  templateAccBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.bg, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder },
+  templateAccTxt: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   templateCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   templateSaveBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
   quickSelectGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', justifyContent: 'center', gap: 8 },

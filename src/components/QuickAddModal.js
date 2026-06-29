@@ -2,7 +2,7 @@
 // Быстрый ввод: категория выбрана, вводим сумму + выбираем счёт
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, KeyboardAvoidingView, Modal, PanResponder, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Modal, PanResponder, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { accountTypeConfig, colors } from '../theme/colors';
@@ -10,6 +10,7 @@ import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
 import { getCachedGroups } from '../utils/categoryCache';
 import { getCatIcon, CatIcon } from './CategoryPickerModal';
+import AccountPickerModal from './AccountPickerModal';
 import RowText from './RowText';
 
 export default function QuickAddModal({ visible, template, onClose, onSaved }) {
@@ -19,6 +20,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   const [selAcc, setSelAcc] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState(false);
+  const [showAccPicker, setShowAccPicker] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const inputRef = useRef(null);
@@ -101,6 +103,7 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   };
 
   return (
+    <>
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
@@ -133,22 +136,19 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
                 />
               </View>
 
-              {/* Выбор счёта */}
+              {/* Выбор счёта — дропдаун (консистентно с транзакциями) */}
               <Text style={st.label}>{i18n.t('payFrom')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }} keyboardShouldPersistTaps="always">
-                {accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type)).map(acc => {
-                  const sel = selAcc === acc.id;
-                  const accCfg = accountTypeConfig[acc.type] || accountTypeConfig.bank;
-                  return (
-                    <TouchableOpacity key={acc.id}
-                      style={[st.accChip, sel && { borderColor: accCfg.color, backgroundColor: `${accCfg.color}10` }]}
-                      onPress={() => { setSelAcc(acc.id); inputRef.current?.focus(); }}>
-                      <MaterialCommunityIcons name={getAccIcon(acc.type)} size={14} color={sel ? accCfg.color : colors.textMuted} />
-                      <Text style={[st.accTxt, sel && { color: colors.text }]} numberOfLines={1}>{acc.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+              {(() => {
+                const sel = accounts.find(a => a.id === selAcc);
+                const accCfg = accountTypeConfig[sel?.type] || accountTypeConfig.bank;
+                return (
+                  <TouchableOpacity style={st.accPickBtn} onPress={() => setShowAccPicker(true)} activeOpacity={0.7}>
+                    <MaterialCommunityIcons name={getAccIcon(sel?.type)} size={16} color={sel ? accCfg.color : colors.textMuted} />
+                    <RowText style={[st.accPickTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</RowText>
+                    <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                );
+              })()}
 
               {saveErr && <RowText style={st.saveErr}>{i18n.t('saveFailed')}</RowText>}
               {/* Кнопки */}
@@ -171,6 +171,15 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
       </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </Modal>
+    <AccountPickerModal
+      visible={showAccPicker}
+      onClose={() => setShowAccPicker(false)}
+      accounts={accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type))}
+      selectedId={selAcc}
+      onSelect={(id) => { setSelAcc(id); }}
+      title={i18n.t('payFrom')}
+    />
+    </>
   );
 }
 
@@ -193,8 +202,8 @@ const createSt = () => StyleSheet.create({
   currency: { fontSize: 24, fontWeight: '700', marginEnd: 8 },
   input: { flex: 1, color: colors.text, fontSize: 24, fontWeight: '700', paddingVertical: 16 },
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, textAlign: i18n.textAlign() },
-  accChip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.bg2, marginEnd: 8, borderWidth: 1.5, borderColor: 'transparent', gap: 6 },
-  accTxt: { color: colors.textDim, fontSize: 12, fontWeight: '500', maxWidth: 90 },
+  accPickBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 20, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
+  accPickTxt: { flex: 1, color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
   buttons: { flexDirection: i18n.row(), gap: 12 },
   cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },

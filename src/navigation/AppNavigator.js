@@ -18,6 +18,7 @@ import AccountHistoryScreen from '../screens/AccountHistoryScreen';
 import AccountsScreen from '../screens/AccountsScreen';
 import AddRecurringModal from '../components/AddRecurringModal';
 import AddTransactionModal from '../components/AddTransactionModal';
+import AccountPickerModal from '../components/AccountPickerModal';
 import { useCurrentAccountId } from '../components/currentAccount';
 import RecurringDetailModal from '../components/RecurringDetailModal';
 import CategoriesScreen from '../screens/CategoriesScreen';
@@ -136,6 +137,7 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateCat, setNewTemplateCat] = useState('');
   const [newTemplateAcc, setNewTemplateAcc] = useState('');
+  const [showTplAccPicker, setShowTplAccPicker] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -365,17 +367,15 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
               })}
             </ScrollView>
             <Text style={styles.templateLabel}>{i18n.t('account')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              {accounts.filter(a => ['cash','bank','credit'].includes(a.type)).map(acc => {
-                const sel = newTemplateAcc === acc.id;
-                return (
-                  <TouchableOpacity key={acc.id} style={[styles.templateChip, sel && { borderColor: colors.teal, backgroundColor: `${colors.teal}15` }]}
-                    onPress={() => setNewTemplateAcc(acc.id)}>
-                    <Text style={[styles.templateChipTxt, sel && { color: colors.teal }]} numberOfLines={1}>{acc.name}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            {(() => {
+              const sel = accounts.find(a => a.id === newTemplateAcc);
+              return (
+                <TouchableOpacity style={styles.templateAccBtn} onPress={() => setShowTplAccPicker(true)} activeOpacity={0.7}>
+                  <Text style={[styles.templateAccTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</Text>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              );
+            })()}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity style={styles.templateCancelBtn} onPress={() => setShowAddTemplate(false)}>
                 <Text style={{ color: colors.textDim, fontWeight: '600' }}>{i18n.t('cancel')}</Text>
@@ -398,6 +398,15 @@ export default function AppNavigator({ pendingAction, onPendingActionHandled, pe
           </TouchableOpacity>
         </TouchableOpacity>
       )}
+
+      <AccountPickerModal
+        visible={showTplAccPicker}
+        onClose={() => setShowTplAccPicker(false)}
+        accounts={accounts.filter(a => ['cash', 'bank', 'credit'].includes(a.type))}
+        selectedId={newTemplateAcc}
+        onSelect={(id) => setNewTemplateAcc(id)}
+        title={i18n.t('account')}
+      />
 
       {/* Global Modals */}
       <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} onSave={() => setShowAdd(false)} initialType={addInitialType} preselectedAccount={currentAccountId} />
@@ -449,6 +458,8 @@ const createStyles = () => StyleSheet.create({
   templateLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 6 },
   templateChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg, marginEnd: 6, borderWidth: 1.5, borderColor: 'transparent', gap: 4 },
   templateChipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  templateAccBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.bg, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder },
+  templateAccTxt: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   templateCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   templateSaveBtn: { flex: 1, flexDirection: 'row', paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
 });
