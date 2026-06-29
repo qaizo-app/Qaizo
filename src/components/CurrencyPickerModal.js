@@ -64,7 +64,7 @@ export default function CurrencyPickerModal({ visible, onClose, onSelect, select
           )}
         </View>
 
-        <ScrollView style={st.list} showsVerticalScrollIndicator={false}>
+        <ScrollView style={st.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {filtered.map(cur => {
             const isSel = cur.code === selected;
             return (

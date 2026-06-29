@@ -296,7 +296,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
 
         {/* Search results */}
         {searchResults ? (
-          <ScrollView style={st.list} showsVerticalScrollIndicator={false}>
+          <ScrollView style={st.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {searchResults.length === 0 ? (
               <Text style={st.emptyText}>{i18n.t('noResults')}</Text>
             ) : (
@@ -315,7 +315,7 @@ export default function CategoryPickerModal({ visible, onClose, onSelect, type =
           </ScrollView>
         ) : (
           /* Full list by groups */
-          <ScrollView style={st.list} showsVerticalScrollIndicator={false}>
+          <ScrollView style={st.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {filteredGroups.map(g => (
               <View key={g.id} style={st.groupSection}>
                 <Text style={[st.groupTitle, { color: g.color }]}>
