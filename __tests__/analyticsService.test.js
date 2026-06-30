@@ -95,3 +95,51 @@ describe('getAccountBalanceHistory', () => {
     expect(beforeYesterday.balance).toBe(130);
   });
 });
+
+describe('getAccountsBalanceHistory (multi-account)', () => {
+  test('no transactions → flat line at the summed current balance', () => {
+    const result = analyticsService.getAccountsBalanceHistory([], ['a', 'b'], 1500, 30);
+    expect(result.length).toBe(31);
+    result.forEach(p => expect(p.balance).toBe(1500));
+  });
+
+  test('single account in the set matches getAccountBalanceHistory', () => {
+    const now = new Date();
+    const d1 = new Date(now); d1.setDate(now.getDate() - 1);
+    const txs = [
+      tx({ account: 'acc1', type: 'income', amount: 100, date: d1.toISOString() }),
+      tx({ account: 'acc1', type: 'expense', amount: 30, date: d1.toISOString() }),
+    ];
+    const single = analyticsService.getAccountBalanceHistory(txs, 'acc1', 200, 5);
+    const multi = analyticsService.getAccountsBalanceHistory(txs, ['acc1'], 200, 5);
+    expect(multi.map(p => p.balance)).toEqual(single.map(p => p.balance));
+  });
+
+  test('combines deltas from all selected accounts; seed = summed balance', () => {
+    const now = new Date();
+    const d1 = new Date(now); d1.setDate(now.getDate() - 1);
+    const txs = [
+      tx({ account: 'a', type: 'income', amount: 100, date: d1.toISOString() }),
+      tx({ account: 'b', type: 'expense', amount: 40, date: d1.toISOString() }),
+    ];
+    // Combined net yesterday: +100 - 40 = +60. Current summed 1000 → day before: 940
+    const result = analyticsService.getAccountsBalanceHistory(txs, ['a', 'b'], 1000, 5);
+    const last = result[result.length - 1];
+    const beforeYesterday = result[result.length - 3];
+    expect(last.balance).toBe(1000);
+    expect(beforeYesterday.balance).toBe(940);
+  });
+
+  test('ignores transactions from accounts not in the set', () => {
+    const now = new Date();
+    const d1 = new Date(now); d1.setDate(now.getDate() - 1);
+    const txs = [
+      tx({ account: 'a', type: 'income', amount: 100, date: d1.toISOString() }),
+      tx({ account: 'other', type: 'income', amount: 9999, date: d1.toISOString() }),
+    ];
+    const result = analyticsService.getAccountsBalanceHistory(txs, ['a'], 500, 5);
+    const beforeYesterday = result[result.length - 3];
+    // Only account 'a' counts: +100 yesterday → day before = 400
+    expect(beforeYesterday.balance).toBe(400);
+  });
+});

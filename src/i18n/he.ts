@@ -355,6 +355,8 @@ export default {
   amountTo: 'מקס׳',
   allCategories: 'כל הקטגוריות',
   allAccounts: 'כל החשבונות',
+  filterAccounts: 'סינון חשבונות',
+  apply: 'החל',
   clearFilters: 'נקה',
   activeFilters: 'סינונים פעילים',
 

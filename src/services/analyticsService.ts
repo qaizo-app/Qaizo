@@ -347,6 +347,46 @@ const analyticsService = {
     return pointsDesc.reverse();
   },
 
+  // Combined balance history for a SET of accounts — the multi-account
+  // generalisation of getAccountBalanceHistory. Seeds the running balance with
+  // the summed current balance of the selected accounts and walks backwards
+  // applying the combined daily deltas of their transactions.
+  getAccountsBalanceHistory(transactions: Transaction[], accountIds: string[], sumCurrentBalance = 0, periodDays = 30) {
+    const idSet = new Set(accountIds);
+    const now = new Date();
+
+    const accountTxs = transactions
+      .filter(t => idSet.has(t.account || '') && new Date(t.date || t.createdAt || '') <= now)
+      .sort((a, b) => new Date(a.date || a.createdAt || '').getTime() - new Date(b.date || b.createdAt || '').getTime());
+
+    const deltaByDate: Record<string, number> = {};
+    accountTxs.forEach(tx => {
+      const d = new Date(tx.date || tx.createdAt || '');
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      let delta = 0;
+      if (tx.type === 'income') delta = tx.amount;
+      else if (tx.type === 'expense') delta = -tx.amount;
+      deltaByDate[key] = (deltaByDate[key] || 0) + delta;
+    });
+
+    const keysDesc: { key: string; day: number }[] = [];
+    const cursor = new Date(now);
+    for (let i = 0; i <= periodDays; i++) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+      keysDesc.push({ key, day: cursor.getDate() });
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    let bal = sumCurrentBalance;
+    const pointsDesc: { date: string; day: number; balance: number }[] = [];
+    for (let i = 0; i < keysDesc.length; i++) {
+      const { key, day } = keysDesc[i];
+      pointsDesc.push({ date: key, day, balance: bal });
+      bal -= deltaByDate[key] || 0;
+    }
+    return pointsDesc.reverse();
+  },
+
   // === Cash Flow (daily income vs expense) ===
   getCashFlow(transactions: Transaction[], periodDays = 30) {
     const now = new Date();

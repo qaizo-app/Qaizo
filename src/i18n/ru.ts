@@ -362,6 +362,8 @@ export default {
   amountTo: 'Макс',
   allCategories: 'Все категории',
   allAccounts: 'Все счета',
+  filterAccounts: 'Фильтр счетов',
+  apply: 'Применить',
   clearFilters: 'Сбросить',
   activeFilters: 'фильтров активно',
 

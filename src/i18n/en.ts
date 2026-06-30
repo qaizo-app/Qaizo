@@ -354,6 +354,8 @@ export default {
   amountTo: 'Max',
   allCategories: 'All categories',
   allAccounts: 'All accounts',
+  filterAccounts: 'Filter accounts',
+  apply: 'Apply',
   clearFilters: 'Clear',
   activeFilters: 'filters active',
 

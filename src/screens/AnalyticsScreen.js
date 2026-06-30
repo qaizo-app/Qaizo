@@ -10,6 +10,7 @@ import BalanceLineChart from '../components/BalanceLineChart';
 import Card from '../components/Card';
 import CashFlowChart from '../components/CashFlowChart';
 import InteractivePieChart from '../components/InteractivePieChart';
+import AccountFilterModal from '../components/AccountFilterModal';
 import i18n from '../i18n';
 import { catName } from '../utils/categoryName';
 import analyticsService from '../services/analyticsService';
@@ -57,6 +58,11 @@ export default function AnalyticsScreen() {
   const [quickStats, setQuickStats] = useState(null);
   const [accountBalances, setAccountBalances] = useState([]);
 
+  // Account filter — empty array means "all accounts" (default behaviour).
+  const [accounts, setAccounts] = useState([]);
+  const [selectedAccountIds, setSelectedAccountIds] = useState([]);
+  const [showAccountFilter, setShowAccountFilter] = useState(false);
+
   const st = createSt();
   const lang = i18n.getLanguage();
   const period = PERIODS[periodIdx];
@@ -69,7 +75,7 @@ export default function AnalyticsScreen() {
 
   useFocusEffect(useCallback(() => {
     loadData();
-  }, [periodIdx, monthOffset, periodMode]));
+  }, [periodIdx, monthOffset, periodMode, selectedAccountIds]));
 
   // Get period days based on mode
   const getEffectiveDays = () => {
@@ -96,13 +102,22 @@ export default function AnalyticsScreen() {
 
   const loadData = async () => {
     try {
-      const [txs, budgets, goals] = await Promise.all([
+      const [allTxsRaw, budgets, goals] = await Promise.all([
         dataService.getTransactions(),
         dataService.getBudgets(),
         dataService.getGoals(),
       ]);
       const recurring = await dataService.getRecurring();
-      setAllTxs(txs);
+      const accountsList = await dataService.getAccounts();
+      setAccounts(accountsList);
+      setAllTxs(allTxsRaw);
+
+      // Account-filter choke point: everything below is computed from `txs`,
+      // so filtering here narrows the whole screen to the selected accounts.
+      // Empty selection (or all selected) = all accounts.
+      const isAll = selectedAccountIds.length === 0 || selectedAccountIds.length === accountsList.length;
+      const selSet = new Set(selectedAccountIds);
+      const txs = isAll ? allTxsRaw : allTxsRaw.filter(t => selSet.has(t.account));
 
       if (__DEV__) console.log('Analytics: loaded', txs.length, 'txs, period:', getEffectiveDays(), 'days');
 
@@ -164,7 +179,14 @@ export default function AnalyticsScreen() {
 
       // Trends
       try {
-        const bh = analyticsService.getBalanceHistory(txs, getEffectiveDays());
+        const bh = isAll
+          ? analyticsService.getBalanceHistory(txs, getEffectiveDays())
+          : analyticsService.getAccountsBalanceHistory(
+              allTxsRaw,
+              selectedAccountIds,
+              accountsList.filter(a => selSet.has(a.id)).reduce((s, a) => s + (a.balance || 0), 0),
+              getEffectiveDays(),
+            );
         if (__DEV__) console.log('Balance history:', bh.length, 'points');
         setBalanceHistory(bh);
       } catch (e) { if (__DEV__) console.error('Balance history error:', e); }
@@ -180,11 +202,12 @@ export default function AnalyticsScreen() {
         setQuickStats(qs);
       } catch (e) { if (__DEV__) console.error('Quick stats error:', e); }
 
-      // Account balances
+      // Account balances — limited to the selected accounts so the list
+      // matches the rest of the (filtered) screen.
       try {
-        const accounts = await dataService.getAccounts();
         const ACCOUNT_COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#f97316'];
-        const sorted = [...accounts]
+        const sorted = accountsList
+          .filter(a => isAll || selSet.has(a.id))
           .filter(a => a.balance !== 0)
           .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance));
         setAccountBalances(sorted.map((a, idx) => ({
@@ -281,6 +304,17 @@ export default function AnalyticsScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Account filter — narrows the whole screen to a chosen set */}
+        <TouchableOpacity style={st.acctFilterBtn} onPress={() => setShowAccountFilter(true)} activeOpacity={0.7}>
+          <Feather name="filter" size={14} color={colors.green} />
+          <Text style={st.acctFilterTxt} numberOfLines={1}>
+            {selectedAccountIds.length === 0 || selectedAccountIds.length === accounts.length
+              ? i18n.t('allAccounts')
+              : `${selectedAccountIds.length} ${i18n.t('accounts')}`}
+          </Text>
+          <Feather name="chevron-down" size={14} color={colors.textMuted} />
+        </TouchableOpacity>
 
         {/* === OVERVIEW TAB === */}
         {tab === 'overview' && (
@@ -577,6 +611,14 @@ export default function AnalyticsScreen() {
           </>
         )}
       </ScrollView>
+
+      <AccountFilterModal
+        visible={showAccountFilter}
+        onClose={() => setShowAccountFilter(false)}
+        accounts={accounts}
+        selectedIds={selectedAccountIds}
+        onApply={(ids) => { setSelectedAccountIds(ids); setShowAccountFilter(false); }}
+      />
     </View>
   );
 }
@@ -586,6 +628,10 @@ const createSt = () => StyleSheet.create({
   header: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
   backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.cardBorder },
   title: { color: colors.text, fontSize: 24, fontWeight: '800' },
+
+  // Account filter trigger
+  acctFilterBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.cardBorder },
+  acctFilterTxt: { flex: 1, color: colors.text, fontSize: 13, fontWeight: '600', textAlign: i18n.textAlign() },
 
   // Tabs
   tabsRow: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.cardBorder },
