@@ -79,15 +79,21 @@ export default function CalendarScreen() {
 
   const isToday = (d) => d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
 
+  // Functional updaters so the PanResponder's frozen first-render closure
+  // still advances from the CURRENT month (not the stale initial one).
   const prevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
-    else setViewMonth(viewMonth - 1);
     setSelectedDate(null);
+    setViewMonth(m => {
+      if (m === 0) { setViewYear(y => y - 1); return 11; }
+      return m - 1;
+    });
   };
   const nextMonth = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
-    else setViewMonth(viewMonth + 1);
     setSelectedDate(null);
+    setViewMonth(m => {
+      if (m === 11) { setViewYear(y => y + 1); return 0; }
+      return m + 1;
+    });
   };
 
   // Swipe to change month
