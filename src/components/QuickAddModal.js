@@ -103,7 +103,6 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
   };
 
   return (
-    <>
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
@@ -170,16 +169,18 @@ export default function QuickAddModal({ visible, template, onClose, onSaved }) {
         </Animated.View>
       </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+
+      {/* Inside the native Modal so the SwipeModal-based picker (zIndex) renders
+          on top of the QuickAdd sheet instead of behind its native window. */}
+      <AccountPickerModal
+        visible={showAccPicker}
+        onClose={() => setShowAccPicker(false)}
+        accounts={accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type))}
+        selectedId={selAcc}
+        onSelect={(id) => { setSelAcc(id); }}
+        title={i18n.t('payFrom')}
+      />
     </Modal>
-    <AccountPickerModal
-      visible={showAccPicker}
-      onClose={() => setShowAccPicker(false)}
-      accounts={accounts.filter(acc => ['cash', 'bank', 'credit'].includes(acc.type))}
-      selectedId={selAcc}
-      onSelect={(id) => { setSelAcc(id); }}
-      title={i18n.t('payFrom')}
-    />
-    </>
   );
 }
 
