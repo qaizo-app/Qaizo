@@ -194,7 +194,9 @@ export default function AccountsScreen() {
   const openHistory = (acc) => navigation.navigate('AccountHistory', { account: acc });
   const openEdit = (acc) => {
     setEditAccount(acc); setName(acc.name); setAccountNumber(acc.accountNumber||'');
-    setType(acc.type||'bank'); setCurrency(acc.currency||sym()); setBalance(acc.balance ? String(parseFloat(acc.balance.toFixed(2))) : '');
+    setType(acc.type||'bank');
+    { const cur = acc.currency||sym(); setCurrency(cur); setCurrencyCode(CURRENCIES.find(c => c.symbol === cur)?.code || code()); }
+    setBalance(acc.balance ? String(parseFloat(acc.balance.toFixed(2))) : '');
     setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false);
     setHoldings(Array.isArray(acc.holdings) ? acc.holdings.map(h => ({ ...h })) : []);
     setNewCoin(''); setNewCoinAmount('');
@@ -202,7 +204,8 @@ export default function AccountsScreen() {
   };
   const openAdd = () => {
     setEditAccount(null); setName(''); setAccountNumber(''); setType('bank');
-    setCurrency(sym()); setBalance(''); setOverdraft(''); setBillingDay(10); setIsActive(true);
+    { const cur = sym(); setCurrency(cur); setCurrencyCode(CURRENCIES.find(c => c.symbol === cur)?.code || code()); }
+    setBalance(''); setOverdraft(''); setBillingDay(10); setIsActive(true);
     setHoldings([]); setNewCoin(''); setNewCoinAmount('');
     setShowEdit(true);
   };
