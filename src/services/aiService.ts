@@ -49,7 +49,6 @@ const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
 // Falls back to flash on overload/rate-limit (handled in scanStatement).
 const GEMINI_MODEL_STATEMENT = 'gemini-2.5-pro';
 const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-const GEMINI_URL = geminiUrl(GEMINI_MODEL_PRIMARY);
 
 // Loud one-shot warning at module load so a misconfigured dev build is
 // visible in the very first Metro log, not only when the user tries to scan.
@@ -883,6 +882,7 @@ async function scanReceipt(imageInput: any, lang: string, _retryCount = 0): Prom
       contents: [{
         parts: [
           { text: `You are an expert receipt scanner. The receipt may be in ANY language (Hebrew, Russian, English, Arabic, etc.). The image may be slightly blurry, rotated, or have low contrast — do your best to extract data.
+Hebrew OCR care: Hebrew letters are visually similar — do NOT confuse ד/ר, ה/ח/ת, ב/כ/נ, ו/ז/ן, ל/ר, ם/ס, ע/צ. Prefer real, meaningful Hebrew words and product/store names over letter-by-letter guesses.
 ${multiImageHint}
 Extract:
 - total: the TOTAL amount (number). Look for the LAST/LARGEST bold number, or words in any language: Total, סה"כ, סהכ, Итого, Всего, לתשלום, סך הכל, المجموع. If multiple totals, pick the final one.
@@ -906,7 +906,9 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
     });
 
     const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
-    let res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, fetchOpts);
+    // 2.5-pro reads Hebrew far better than flash (fewer confused look-alike
+    // letters); fall back to flash-latest on overload/rate-limit below.
+    let res = await fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts);
     // Fallback to gemini-flash-latest on transient overload (503) or rate limit (429)
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
       if (__DEV__) console.warn('scanReceipt: primary', res.status, '— retrying on fallback model', GEMINI_MODEL_FALLBACK);
@@ -1022,6 +1024,7 @@ async function scanReceiptItems(imageInput: any): Promise<any[]> {
       : '';
 
     const prompt = `You are an expert receipt reader. Extract EVERY purchased item from this receipt with its price.${multiHint}
+Hebrew OCR care: Hebrew letters are visually similar — do NOT confuse ד/ר, ה/ח/ת, ב/כ/נ, ו/ז/ן, ל/ר, ם/ס, ע/צ. Prefer real, meaningful Hebrew product names over letter-by-letter guesses.
 
 WHAT TO INCLUDE — line items the customer paid for:
   - Product names exactly as printed (keep original language: Hebrew/Russian/English/Arabic — do NOT translate)
@@ -1080,7 +1083,8 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
     });
 
     const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
-    let res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, fetchOpts);
+    // 2.5-pro for sharper Hebrew item-name OCR; flash-latest fallback below.
+    let res = await fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts);
     // Fallback to gemini-flash-latest on transient overload (503) or rate limit (429)
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
       if (__DEV__) console.warn('scanReceiptItems: primary', res.status, '— retrying on fallback model', GEMINI_MODEL_FALLBACK);
