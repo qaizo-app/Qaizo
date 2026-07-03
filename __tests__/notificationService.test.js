@@ -15,6 +15,7 @@ jest.mock('../src/services/dataService', () => {
   const mock = {
     getRecurring: jest.fn(() => Promise.resolve([])),
     getTransactions: jest.fn(() => Promise.resolve([])),
+    getSettings: jest.fn(() => Promise.resolve({ reminderEnabled: false })),
   };
   return { __esModule: true, default: mock };
 });
@@ -66,13 +67,17 @@ describe('notificationService', () => {
   });
 
   // ─── scheduleRecurringNotifications ────────────
-  test('scheduleRecurringNotifications with no recurring = cancels old only', async () => {
+  test('scheduleRecurringNotifications with no recurring cancels old + re-adds streak reminder', async () => {
     dataService.getRecurring.mockResolvedValue([]);
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+    dataService.getSettings.mockResolvedValue({ reminderEnabled: false });
 
     const result = await notificationService.scheduleRecurringNotifications();
     expect(result).toBe(true);
     expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
-    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    // No recurring, expense reminders off → only the streak reminder is re-added.
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
+    expect(Notifications.scheduleNotificationAsync.mock.calls[0][0].content.data.type).toBe('streak_reminder');
   });
 
   test('scheduleRecurringNotifications schedules for future payment', async () => {
@@ -90,12 +95,15 @@ describe('notificationService', () => {
       amount: 50,
     }]);
 
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+    dataService.getSettings.mockResolvedValue({ reminderEnabled: false });
+
     const result = await notificationService.scheduleRecurringNotifications();
     expect(result).toBe(true);
-    // Day-of + day-before = 2 notifications
-    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(2);
+    // Day-of + day-before = 2 recurring, + 1 re-added streak reminder = 3
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
 
-    // Verify trigger format uses timeInterval type
+    // Verify trigger format uses timeInterval type (recurring scheduled first)
     const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
     expect(call.trigger.type).toBe('timeInterval');
     expect(call.trigger.seconds).toBeGreaterThan(0);
@@ -112,6 +120,8 @@ describe('notificationService', () => {
       type: 'expense',
       amount: 100,
     }]);
+    // Existing streak already scheduled → consolidation re-add is a no-op here.
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([{ content: { data: { type: 'streak_reminder' } } }]);
 
     await notificationService.scheduleRecurringNotifications();
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -138,6 +148,42 @@ describe('notificationService', () => {
 
     await notificationService.scheduleStreakReminder();
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  // ─── scheduleExpenseReminders ──────────────────
+  test('scheduleExpenseReminders does nothing when disabled', async () => {
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+    dataService.getSettings.mockResolvedValue({ reminderEnabled: false });
+
+    await notificationService.scheduleExpenseReminders();
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  test('scheduleExpenseReminders schedules one daily reminder per interval hour', async () => {
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+    dataService.getSettings.mockResolvedValue({
+      reminderEnabled: true, reminderInterval: 6, reminderStart: 9, reminderEnd: 22,
+    });
+
+    await notificationService.scheduleExpenseReminders();
+    // hours 9, 15, 21 → 3 notifications
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
+    const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
+    expect(call.content.data.type).toBe('expense_reminder');
+    expect(call.trigger.type).toBe('daily');
+    expect([9, 15, 21]).toContain(call.trigger.hour);
+  });
+
+  test('scheduleExpenseReminders clears its own previous reminders first', async () => {
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([
+      { identifier: 'old1', content: { data: { type: 'expense_reminder' } } },
+      { identifier: 'keep', content: { data: { type: 'streak_reminder' } } },
+    ]);
+    dataService.getSettings.mockResolvedValue({ reminderEnabled: false });
+
+    await notificationService.scheduleExpenseReminders();
+    expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('old1');
+    expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalledWith('keep');
   });
 
   // ─── cancelAll ─────────────────────────────────
@@ -180,6 +226,7 @@ describe('notificationService', () => {
       id: 'r1', isActive: true, nextDate: pastStr,
       recipient: 'Old', categoryId: 'food', type: 'expense', amount: 100,
     }]);
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([{ content: { data: { type: 'streak_reminder' } } }]);
 
     await notificationService.scheduleRecurringNotifications();
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -194,6 +241,7 @@ describe('notificationService', () => {
       id: 'r1', isActive: true, nextDate: futureStr, notify: false,
       recipient: 'Test', categoryId: 'food', type: 'expense', amount: 100,
     }]);
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([{ content: { data: { type: 'streak_reminder' } } }]);
 
     await notificationService.scheduleRecurringNotifications();
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -213,9 +261,10 @@ describe('notificationService', () => {
       recipient: 'Phone plan', categoryId: 'utilities', type: 'expense',
       amount: 80, contractEndDate: contractStr,
     }]);
+    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([{ content: { data: { type: 'streak_reminder' } } }]);
 
     await notificationService.scheduleRecurringNotifications();
-    // 2 payment + 1 contract = 3 notifications
+    // 2 payment + 1 contract = 3 notifications (streak already present → no re-add)
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
 
     const calls = Notifications.scheduleNotificationAsync.mock.calls;

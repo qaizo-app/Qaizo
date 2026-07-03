@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
+import { computeReminderHours } from '../utils/reminderSchedule';
 import dataService from './dataService';
 import type { Recurring, Transaction, Project } from '../types';
 
@@ -115,10 +116,58 @@ const notificationService = {
         }
       }
 
+      // Re-add the persistent daily reminders that the cancelAll at the top of
+      // this method wiped (streak + the periodic "log your expenses" nudges).
+      // This is the single reschedule point, so they survive Dashboard reloads.
+      await this.scheduleStreakReminder();
+      await this.scheduleExpenseReminders();
+
       return true;
     } catch (e) {
       if (__DEV__) console.error('scheduleRecurringNotifications:', e);
       return false;
+    }
+  },
+
+  // Периодические напоминания «внеси расходы» в дневном окне. По умолчанию
+  // выключены; настраиваются в Настройках. Идемпотентно: сначала снимает свои
+  // прежние напоминания, чтобы не плодить дубли при вызове из настроек.
+  async scheduleExpenseReminders() {
+    try {
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      await Promise.all(
+        (scheduled || [])
+          .filter(n => n.content.data?.type === 'expense_reminder')
+          .map(n => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+      );
+
+      const s = await dataService.getSettings();
+      if (!s.reminderEnabled) return;
+
+      const hours = computeReminderHours(
+        s.reminderInterval ?? 3,
+        s.reminderStart ?? 9,
+        s.reminderEnd ?? 22,
+      );
+
+      for (const hour of hours) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Qaizo',
+            body: i18n.t('expenseReminderBody'),
+            data: { type: 'expense_reminder' },
+            categoryIdentifier: 'quick_add',
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour,
+            minute: 0,
+            channelId: 'payments',
+          },
+        });
+      }
+    } catch (e) {
+      if (__DEV__) console.error('scheduleExpenseReminders:', e);
     }
   },
 

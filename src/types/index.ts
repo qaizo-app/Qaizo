@@ -175,6 +175,11 @@ export interface Settings {
   weekStart?: WeekStart;
   themeMode?: ThemeMode;
   monthlyExtra?: number;       // recurring "other income" surplus
+  // "Log your expenses" reminders — periodic nudges within a daytime window.
+  reminderEnabled?: boolean;   // default off
+  reminderInterval?: number;   // hours between reminders (e.g. 2/3/4/6)
+  reminderStart?: number;      // window start clock hour (default 9)
+  reminderEnd?: number;        // window end clock hour (default 22)
   // Layout, voice, and consent live alongside but are loaded by their own
   // services — keep them out of the canonical Settings shape for now.
 }

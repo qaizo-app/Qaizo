@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Constants from 'expo-constants';
 import Card from '../components/Card';
+import notificationService from '../services/notificationService';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import PinScreen from './PinScreen';
@@ -34,6 +35,10 @@ export default function SettingsScreen() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [monthlyExtra, setMonthlyExtra] = useState('');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderInterval, setReminderInterval] = useState(3);
+  const [reminderStart, setReminderStart] = useState(9);
+  const [reminderEnd, setReminderEnd] = useState(22);
   const [langVersion, setLangVersion] = useState(0);
   const currentUser = authService.getCurrentUser();
   const toast = useToast();
@@ -46,6 +51,10 @@ export default function SettingsScreen() {
     dataService.getSettings().then(s => {
       if (s.weekStart) setWeekStart(s.weekStart);
       if (s.monthlyExtra) setMonthlyExtra(String(s.monthlyExtra));
+      setReminderEnabled(!!s.reminderEnabled);
+      if (s.reminderInterval) setReminderInterval(s.reminderInterval);
+      if (s.reminderStart != null) setReminderStart(s.reminderStart);
+      if (s.reminderEnd != null) setReminderEnd(s.reminderEnd);
     });
     securityService.isPinEnabled().then(setPinEnabled);
     securityService.isBiometricEnabled().then(setBioEnabled);
@@ -53,6 +62,21 @@ export default function SettingsScreen() {
   }, []);
 
   const toggle = (s) => setOpenSection(openSection === s ? null : s);
+
+  // Persist reminder settings + (re)schedule the notifications immediately.
+  const saveReminders = async (patch) => {
+    const next = { reminderEnabled, reminderInterval, reminderStart, reminderEnd, ...patch };
+    setReminderEnabled(next.reminderEnabled);
+    setReminderInterval(next.reminderInterval);
+    setReminderStart(next.reminderStart);
+    setReminderEnd(next.reminderEnd);
+    const settings = await dataService.getSettings();
+    await dataService.saveSettings({ ...settings,
+      reminderEnabled: next.reminderEnabled, reminderInterval: next.reminderInterval,
+      reminderStart: next.reminderStart, reminderEnd: next.reminderEnd });
+    if (next.reminderEnabled) await notificationService.requestPermission();
+    await notificationService.scheduleExpenseReminders();
+  };
 
   const changeCurrency = async (cur) => {
     setCurrency(cur.symbol, cur.code);
@@ -314,6 +338,59 @@ export default function SettingsScreen() {
         )}
 
         {/* ═══ DATA & SECURITY ═══ */}
+        {/* Expense reminders */}
+        <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('reminders')}>
+          <View style={styles.sectionLeft}>
+            <Feather name="bell" size={18} color={colors.green} />
+            <Text style={styles.sectionText}>{i18n.t('expenseReminders')}</Text>
+          </View>
+          <View style={styles.sectionRight}>
+            <Text style={styles.sectionValue}>{reminderEnabled ? i18n.t('everyNHours').replace('{n}', String(reminderInterval)) : i18n.t('off')}</Text>
+            <Feather name={openSection === 'reminders' ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+          </View>
+        </TouchableOpacity>
+        {openSection === 'reminders' && (
+          <Card>
+            <View style={{ flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', marginBottom: reminderEnabled ? 14 : 0 }}>
+              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() }}>{i18n.t('expenseRemindersHint')}</Text>
+              <Switch value={reminderEnabled} onValueChange={(v) => saveReminders({ reminderEnabled: v })}
+                trackColor={{ false: colors.cardBorder, true: colors.green }} thumbColor="#fff" />
+            </View>
+
+            {reminderEnabled && (
+              <>
+                <Text style={styles.reminderLabel}>{i18n.t('reminderInterval')}</Text>
+                <View style={{ flexDirection: i18n.row(), flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                  {[2, 3, 4, 6].map(h => {
+                    const on = reminderInterval === h;
+                    return (
+                      <TouchableOpacity key={h} onPress={() => saveReminders({ reminderInterval: h })}
+                        style={[styles.reminderChip, on && { borderColor: colors.green, backgroundColor: colors.green + '15' }]}>
+                        <Text style={[styles.reminderChipTxt, on && { color: colors.green }]}>{i18n.t('everyNHours').replace('{n}', String(h))}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.reminderLabel}>{i18n.t('reminderWindow')}</Text>
+                <View style={{ flexDirection: i18n.row(), alignItems: 'center', gap: 12 }}>
+                  {[['reminderStart', reminderStart, setReminderStart], ['reminderEnd', reminderEnd, setReminderEnd]].map(([key, val]) => (
+                    <View key={key} style={styles.reminderStepper}>
+                      <TouchableOpacity onPress={() => saveReminders({ [key]: Math.max(0, val - 1) })} style={styles.reminderStepBtn}>
+                        <Feather name="minus" size={16} color={colors.text} />
+                      </TouchableOpacity>
+                      <Text style={styles.reminderStepVal}>{String(val).padStart(2, '0')}:00</Text>
+                      <TouchableOpacity onPress={() => saveReminders({ [key]: Math.min(23, val + 1) })} style={styles.reminderStepBtn}>
+                        <Feather name="plus" size={16} color={colors.text} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </Card>
+        )}
+
         <Text style={styles.groupTitle}>{i18n.t('settingsDataSection')}</Text>
 
         {/* Security */}
@@ -636,6 +713,12 @@ const createStyles = () => StyleSheet.create({
   comingSoonBadge: { color: colors.textMuted, fontSize: 12, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden' },
   extraInput: { backgroundColor: colors.bg, borderRadius: 12, padding: 14, color: colors.text, fontSize: 16, fontWeight: '700', borderWidth: 1, borderColor: colors.cardBorder, writingDirection: 'ltr' },
   extraSaveBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center' },
+  reminderLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.3, marginBottom: 8, textAlign: i18n.textAlign() },
+  reminderChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg, borderWidth: 1.5, borderColor: 'transparent' },
+  reminderChipTxt: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  reminderStepper: { flexDirection: i18n.row(), alignItems: 'center', gap: 10, backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 6, paddingVertical: 4, borderWidth: 1, borderColor: colors.cardBorder },
+  reminderStepBtn: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  reminderStepVal: { color: colors.text, fontSize: 15, fontWeight: '700', minWidth: 48, textAlign: 'center' },
 
   optRow: { flexDirection: i18n.row(), alignItems: 'center', paddingVertical: 16, gap: 12 },
   optBorder: { borderBottomWidth: 1, borderBottomColor: colors.divider },

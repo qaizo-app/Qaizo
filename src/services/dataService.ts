@@ -79,7 +79,7 @@ const DEFAULT_CATEGORIES = {
   ],
 };
 
-const DEFAULT_SETTINGS: Settings = { language: 'ru', currency: '₪', weekStart: 'sunday' };
+const DEFAULT_SETTINGS: Settings = { language: 'ru', currency: '₪', weekStart: 'sunday', reminderEnabled: false, reminderInterval: 3, reminderStart: 9, reminderEnd: 22 };
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
