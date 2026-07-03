@@ -10,6 +10,7 @@ import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch,
 import Constants from 'expo-constants';
 import Card from '../components/Card';
 import notificationService from '../services/notificationService';
+import backupService from '../services/backupService';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import PinScreen from './PinScreen';
@@ -32,6 +33,7 @@ export default function SettingsScreen() {
   const [curSymbol, setCurSymbol] = useState(sym());
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [restoreData, setRestoreData] = useState(null); // parsed backup awaiting restore confirm
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [monthlyExtra, setMonthlyExtra] = useState('');
@@ -76,6 +78,32 @@ export default function SettingsScreen() {
       reminderStart: next.reminderStart, reminderEnd: next.reminderEnd });
     if (next.reminderEnabled) await notificationService.requestPermission();
     await notificationService.scheduleExpenseReminders();
+  };
+
+  // Full backup: export the whole data bundle to a JSON file via the share sheet.
+  const handleFullBackup = async () => {
+    setOpenSection(null);
+    const r = await backupService.exportBackup();
+    if (r === 'ok') toast.show(i18n.t('backupDone'), 'success');
+    else if (r === 'empty') toast.show(i18n.t('noDataToExport') || i18n.t('error'), 'error');
+    else toast.show(i18n.t('error'), 'error');
+  };
+
+  // Restore: pick a backup file, then confirm before overwriting.
+  const handleRestorePick = async () => {
+    setOpenSection(null);
+    const r = await backupService.pickBackupFile();
+    if (r.ok) setRestoreData(r.data);
+    else if (r.reason === 'invalid') toast.show(i18n.t('backupInvalid'), 'error');
+    else if (r.reason === 'error') toast.show(i18n.t('error'), 'error');
+    // cancelled → silent
+  };
+
+  const handleRestoreConfirm = async () => {
+    const data = restoreData;
+    setRestoreData(null);
+    const ok = await dataService.importData(data);
+    toast.show(ok ? i18n.t('restoreDone') : i18n.t('error'), ok ? 'success' : 'error');
   };
 
   const changeCurrency = async (cur) => {
@@ -472,6 +500,20 @@ export default function SettingsScreen() {
               </View>
               <Text style={styles.sectionValue}>CSV / Excel</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleFullBackup}>
+              <Feather name="save" size={18} color={colors.green} style={{ }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('fullBackup')}</Text>
+              </View>
+              <Text style={styles.sectionValue}>JSON</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleRestorePick}>
+              <Feather name="rotate-ccw" size={18} color={colors.blue} style={{ }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('restoreBackup')}</Text>
+              </View>
+              <Text style={styles.sectionValue}>JSON</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleRecalc}>
               <Feather name="refresh-cw" size={18} color={colors.blue} style={{ }} />
               <View style={{ flex: 1 }}>
@@ -627,6 +669,13 @@ export default function SettingsScreen() {
 
       <ExportModal visible={showExport} onClose={() => setShowExport(false)} onResult={handleExportResult} />
       <ImportModal visible={showImport} onClose={() => setShowImport(false)} onImported={() => toast.show(i18n.t('importDone'), 'success')} />
+
+      <ConfirmModal visible={restoreData !== null}
+        title={i18n.t('restoreBackup')}
+        message={i18n.t('restoreConfirmMsg')}
+        confirmText={i18n.t('restoreBackup')} cancelText={i18n.t('cancel')}
+        confirmColor={colors.blue}
+        onConfirm={handleRestoreConfirm} onCancel={() => setRestoreData(null)} />
 
       <ConfirmModal visible={showLangRestart}
         title={i18n.t('langChanged')} message={i18n.t('restartApp')}
