@@ -34,6 +34,7 @@ import dataService from '../services/dataService';
 import { catColor, catName } from '../utils/categoryName';
 import { getCachedGroups } from '../utils/categoryCache';
 import { getCatIcon, CatIcon } from '../components/CategoryPickerModal';
+import RowText from '../components/RowText';
 import streakService from '../services/streakService';
 import { useToast } from '../components/ToastProvider';
 import notificationService from '../services/notificationService';
@@ -814,7 +815,7 @@ export default function DashboardScreen() {
               const sel = accounts.find(a => a.id === newTemplateAcc);
               return (
                 <TouchableOpacity style={st.templateAccBtn} onPress={() => setShowTplAccPicker(true)} activeOpacity={0.7}>
-                  <Text style={[st.templateAccTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</Text>
+                  <RowText style={[st.templateAccTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</RowText>
                   <Feather name="chevron-down" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
               );
@@ -963,7 +964,7 @@ const createSt = () => StyleSheet.create({
   templateChip: { flexDirection: i18n.row(), alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.bg, marginEnd: 6, borderWidth: 1.5, borderColor: 'transparent', gap: 4 },
   templateChipTxt: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   templateAccBtn: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, backgroundColor: colors.bg, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.cardBorder },
-  templateAccTxt: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
+  templateAccTxt: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   templateCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   templateSaveBtn: { flex: 1, flexDirection: i18n.row(), paddingVertical: 14, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', gap: 6 },
   quickSelectGrid: { flexDirection: i18n.row(), flexWrap: 'wrap', justifyContent: 'center', gap: 8 },

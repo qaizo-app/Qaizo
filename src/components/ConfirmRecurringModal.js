@@ -271,7 +271,7 @@ const createSt = () => StyleSheet.create({
     backgroundColor: colors.card, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14,
     marginBottom: 12, borderWidth: 1, borderColor: colors.cardBorder,
   },
-  accPickTxt: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
+  accPickTxt: { color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() },
   btnRow: { flexDirection: i18n.row(), gap: 12, marginTop: 8 },
   cancelBtn: {
     flex: 1, paddingVertical: 16, borderRadius: 14,

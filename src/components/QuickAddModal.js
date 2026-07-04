@@ -171,7 +171,7 @@ const createSt = () => StyleSheet.create({
   input: { flex: 1, color: colors.text, fontSize: 24, fontWeight: '700', paddingVertical: 16 },
   label: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, textAlign: i18n.textAlign() },
   accPickBtn: { flexDirection: i18n.row(), alignItems: 'center', backgroundColor: colors.bg2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 20, borderWidth: 1, borderColor: colors.cardBorder, gap: 8 },
-  accPickTxt: { flex: 1, color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
+  accPickTxt: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: i18n.textAlign() },
   buttons: { flexDirection: i18n.row(), gap: 12 },
   cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center' },
   cancelTxt: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
