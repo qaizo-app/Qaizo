@@ -863,6 +863,7 @@ export default {
   enterCurrentPin: 'Enter current PIN',
   unlockQaizo: 'Unlock Qaizo',
   wrongPin: 'Wrong PIN',
+  pinLocked: 'Too many attempts. Try again in',
   pinsDontMatch: 'PINs don\'t match, try again',
   pinEnabled: 'PIN enabled',
   pinDisabled: 'PIN disabled',

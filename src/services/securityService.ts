@@ -2,6 +2,7 @@
 // PIN code + biometric authentication (fingerprint / face).
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
+import { lockoutMsForAttempts } from '../utils/pinLockout';
 
 // Minimal surface of expo-local-authentication that we touch.
 interface LocalAuth {
@@ -22,6 +23,8 @@ const KEYS = {
   PIN_HASH: 'qaizo_pin_hash',
   PIN_ENABLED: 'qaizo_pin_enabled',
   BIOMETRIC_ENABLED: 'qaizo_biometric_enabled',
+  PIN_ATTEMPTS: 'qaizo_pin_attempts',
+  PIN_LOCKED_UNTIL: 'qaizo_pin_locked_until',
 };
 
 // Grace window after the user unlocks: if the app is only briefly sent to
@@ -59,6 +62,28 @@ const securityService = {
   async isPinEnabled(): Promise<boolean> {
     const val = await AsyncStorage.getItem(KEYS.PIN_ENABLED);
     return val === 'true';
+  },
+
+  // --- Brute-force throttling ---
+  // Remaining lockout in ms (0 = unlocked). The lock screen disables entry
+  // while this is > 0.
+  async getLockRemainingMs(): Promise<number> {
+    const until = parseInt((await AsyncStorage.getItem(KEYS.PIN_LOCKED_UNTIL)) || '0', 10) || 0;
+    return Math.max(0, until - Date.now());
+  },
+
+  // Call on every wrong PIN. Escalates the lockout as failures pile up.
+  async recordFailedPin(): Promise<{ attempts: number; lockMs: number }> {
+    const attempts = (parseInt((await AsyncStorage.getItem(KEYS.PIN_ATTEMPTS)) || '0', 10) || 0) + 1;
+    await AsyncStorage.setItem(KEYS.PIN_ATTEMPTS, String(attempts));
+    const lockMs = lockoutMsForAttempts(attempts);
+    if (lockMs > 0) await AsyncStorage.setItem(KEYS.PIN_LOCKED_UNTIL, String(Date.now() + lockMs));
+    return { attempts, lockMs };
+  },
+
+  // Call on a correct PIN — clears the failure counter and any lockout.
+  async resetPinAttempts(): Promise<void> {
+    await AsyncStorage.multiRemove([KEYS.PIN_ATTEMPTS, KEYS.PIN_LOCKED_UNTIL]);
   },
 
   // --- Biometric ---

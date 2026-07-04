@@ -14,8 +14,15 @@ export default function PinScreen({ mode = 'unlock', onSuccess, onCancel }) {
   const [step, setStep] = useState(mode === 'setup' ? 'enter' : mode); // enter → confirm (setup)
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  const [nowTick, setNowTick] = useState(Date.now());
+  const verifies = mode === 'unlock' || mode === 'remove';
 
   useEffect(() => {
+    // Restore an in-progress lockout (survives reopening the lock screen).
+    if (verifies) {
+      securityService.getLockRemainingMs().then(ms => { if (ms > 0) setLockedUntil(Date.now() + ms); });
+    }
     // Try biometric on unlock
     if (mode === 'unlock') {
       (async () => {
@@ -28,12 +35,28 @@ export default function PinScreen({ mode = 'unlock', onSuccess, onCancel }) {
     }
   }, []);
 
+  // Tick every second while locked so the countdown updates and clears.
+  useEffect(() => {
+    if (lockedUntil <= Date.now()) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [lockedUntil]);
+
+  const lockRemaining = Math.max(0, lockedUntil - nowTick);
+  const isLocked = lockRemaining > 0;
+
+  const registerFailure = async () => {
+    const { lockMs } = await securityService.recordFailedPin();
+    if (lockMs > 0) setLockedUntil(Date.now() + lockMs);
+  };
+
   const title = step === 'enter' && mode === 'setup' ? i18n.t('createPin')
     : step === 'confirm' ? i18n.t('confirmPin')
     : mode === 'remove' ? i18n.t('enterCurrentPin')
     : i18n.t('enterPin');
 
   const handlePress = async (digit) => {
+    if (isLocked) return; // entry throttled after too many wrong PINs
     if (pin.length >= 4) return;
     const next = pin + digit;
     setPin(next);
@@ -58,16 +81,20 @@ export default function PinScreen({ mode = 'unlock', onSuccess, onCancel }) {
       } else if (mode === 'unlock') {
         const ok = await securityService.verifyPin(next);
         if (ok) {
+          await securityService.resetPinAttempts();
           onSuccess?.();
         } else {
+          await registerFailure();
           triggerError(i18n.t('wrongPin'));
         }
       } else if (mode === 'remove') {
         const ok = await securityService.verifyPin(next);
         if (ok) {
+          await securityService.resetPinAttempts();
           await securityService.removePin();
           onSuccess?.();
         } else {
+          await registerFailure();
           triggerError(i18n.t('wrongPin'));
         }
       }
@@ -116,11 +143,13 @@ export default function PinScreen({ mode = 'unlock', onSuccess, onCancel }) {
           ))}
         </View>
 
-        {error ? <Text style={st.error}>{error}</Text> : null}
+        {isLocked
+          ? <Text style={st.error}>{i18n.t('pinLocked')} {fmtMSS(lockRemaining)}</Text>
+          : (error ? <Text style={st.error}>{error}</Text> : null)}
       </View>
 
       {/* Numpad */}
-      <View style={st.numpad}>
+      <View style={[st.numpad, isLocked && { opacity: 0.4 }]}>
         {keys.map((row, ri) => (
           <View key={ri} style={st.numRow}>
             {row.map((k) => {
@@ -156,6 +185,11 @@ export default function PinScreen({ mode = 'unlock', onSuccess, onCancel }) {
       )}
     </View>
   );
+}
+
+function fmtMSS(ms) {
+  const s = Math.ceil(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
 const createSt = () => StyleSheet.create({

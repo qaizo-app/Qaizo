@@ -831,6 +831,7 @@ export default {
   enterCurrentPin: 'Введите текущий PIN',
   unlockQaizo: 'Разблокировать Qaizo',
   wrongPin: 'Неверный PIN',
+  pinLocked: 'Слишком много попыток. Повторите через',
   pinsDontMatch: 'PIN не совпадает, попробуйте снова',
   pinEnabled: 'PIN включён',
   pinDisabled: 'PIN отключён',

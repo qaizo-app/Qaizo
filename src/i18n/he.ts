@@ -863,6 +863,7 @@ export default {
   enterCurrentPin: 'הזן PIN נוכחי',
   unlockQaizo: 'פתח את Qaizo',
   wrongPin: 'PIN שגוי',
+  pinLocked: 'יותר מדי ניסיונות. נסה שוב בעוד',
   pinsDontMatch: 'הקודים לא תואמים, נסה שוב',
   pinEnabled: 'PIN הופעל',
   pinDisabled: 'PIN הושבת',
