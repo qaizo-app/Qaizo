@@ -23,8 +23,10 @@ import notificationService from '../services/notificationService';
 import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
 import Amount from '../components/Amount';
 import { catName } from '../utils/categoryName';
+import { fundingShortfall } from '../utils/cardCharge';
 import { getCatIcon } from '../components/CategoryPickerModal';
-import { sym } from '../utils/currency';
+import { sym, fmtNum } from '../utils/currency';
+import RowText from '../components/RowText';
 
 const PERIODS = [
   { key: '1m', days: 30, labelKey: 'period30d' },
@@ -48,6 +50,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
   const [periodKey, setPeriodKey] = useState('3m');
   const [confirmRec, setConfirmRec] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const [shortfall, setShortfall] = useState(0); // card-charge shortfall for this funding account
   const lang = i18n.getLanguage();
   const toast = useToast();
 
@@ -103,6 +106,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
     setTransactions(filtered);
     setAllAccounts(accs);
     if (acc) setCurrentBalance(acc.balance || 0);
+    setShortfall(fundingShortfall(acc || account, accs, rec, now));
     setUpcomingRecurring(upcoming);
     setLoaded(true);
   };
@@ -323,6 +327,17 @@ export default function AccountHistoryScreen({ route, navigation }) {
     <>
       {renderChartOrBalance()}
 
+      {/* Card-charge shortfall: this funding account won't cover the linked
+          cards' upcoming charges (+ recurring) before end of month. */}
+      {shortfall > 0 && (
+        <View style={styles.shortfallBanner}>
+          <Feather name="alert-triangle" size={16} color={colors.orange} />
+          <RowText style={styles.shortfallTxt} numberOfLines={2}>
+            {i18n.t('cardChargeShortfall')} {fmtNum(shortfall)} {account.currency || sym()}
+          </RowText>
+        </View>
+      )}
+
       {/* Statement import only makes sense for account types that issue
           statements. Cash wallets and physical assets have no statements. */}
       {!['cash', 'asset'].includes(account.type) && (
@@ -420,6 +435,8 @@ const createStyles = () => StyleSheet.create({
   balLabel:{color:colors.textDim,fontSize:12,marginBottom:6},
   balAmount:{fontSize:32,fontWeight:'800',letterSpacing:-1},
   odText:{color:colors.textMuted,fontSize:12,marginTop:8},
+  shortfallBanner:{flexDirection:i18n.row(),alignItems:'center',gap:10,marginHorizontal:20,marginBottom:12,paddingVertical:12,paddingHorizontal:14,borderRadius:14,backgroundColor:`${colors.orange}14`,borderWidth:1,borderColor:`${colors.orange}40`},
+  shortfallTxt:{color:colors.orange,fontSize:13,fontWeight:'600',textAlign:i18n.textAlign()},
   chartCard:{marginHorizontal:20,marginBottom:16,backgroundColor:colors.card,borderRadius:20,padding:16,borderWidth:1,borderColor:colors.cardBorder},
   upcomingCard:{marginHorizontal:20,marginBottom:16,backgroundColor:colors.card,borderRadius:20,padding:16,borderWidth:1,borderColor:colors.cardBorder},
   upcomingTitle:{color:colors.text,fontSize:14,fontWeight:'700',marginBottom:12,textAlign:i18n.textAlign()},

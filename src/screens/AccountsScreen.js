@@ -16,7 +16,10 @@ import exchangeRateService from '../services/exchangeRateService';
 import { breadcrumb, captureError, captureMessage } from '../services/logger';
 import { accountTypeConfig, colors } from '../theme/colors';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
+import AccountPickerModal from '../components/AccountPickerModal';
+import RowText from '../components/RowText';
 import { CURRENCIES, sym, code, convert } from '../utils/currency';
+import { fundingShortfall } from '../utils/cardCharge';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -52,6 +55,9 @@ export default function AccountsScreen() {
   const [balance, setBalance] = useState('');
   const [overdraft, setOverdraft] = useState('');
   const [billingDay, setBillingDay] = useState(10);
+  const [fundingAccountId, setFundingAccountId] = useState('');
+  const [fixedCharge, setFixedCharge] = useState('');
+  const [showFundingPicker, setShowFundingPicker] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [reorderMode, setReorderMode] = useState(false);
@@ -151,20 +157,14 @@ export default function AccountsScreen() {
   // Only bank and credit accounts get overdraft/warning status: mortgage/debt/loan are
   // inherently negative and asset/investment/cash/crypto don't have an overdraft concept.
   const getAccountStatus = (acc) => {
-    if (acc.type !== 'bank' && acc.type !== 'credit') return 'ok';
+    // bank/cash can fund credit cards; credit itself warns from its own recurring.
+    if (acc.type !== 'bank' && acc.type !== 'credit' && acc.type !== 'cash') return 'ok';
     const bal = acc.balance || 0;
-    const limit = acc.overdraft || 0;
-    const minAllowed = -limit;
-    const now = new Date();
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
-    const upcomingForAcc = recurring.filter(r =>
-      r.isActive && r.account === acc.id && r.nextDate && r.nextDate <= endOfMonth
-    );
-    const projected = upcomingForAcc.reduce((s, r) => {
-      return s + (r.type === 'expense' ? -r.amount : r.amount);
-    }, bal);
+    const minAllowed = -(acc.overdraft || 0);
     if (bal < minAllowed) return 'overdraft';
-    if (projected < minAllowed) return 'warning';
+    // Projected balance falls below the floor once recurring + linked-card
+    // charges are applied (see cardCharge.fundingShortfall).
+    if (fundingShortfall(acc, accounts, recurring, new Date()) > 0) return 'warning';
     return 'ok';
   };
 
@@ -198,6 +198,7 @@ export default function AccountsScreen() {
     { const cur = acc.currency||sym(); setCurrency(cur); setCurrencyCode(CURRENCIES.find(c => c.symbol === cur)?.code || code()); }
     setBalance(acc.balance ? String(parseFloat(acc.balance.toFixed(2))) : '');
     setOverdraft(acc.overdraft ? String(acc.overdraft) : ''); setBillingDay(acc.billingDay||10); setIsActive(acc.isActive!==false);
+    setFundingAccountId(acc.fundingAccountId||''); setFixedCharge(acc.fixedCharge ? String(acc.fixedCharge) : '');
     setHoldings(Array.isArray(acc.holdings) ? acc.holdings.map(h => ({ ...h })) : []);
     setNewCoin(''); setNewCoinAmount('');
     setShowEdit(true);
@@ -205,7 +206,7 @@ export default function AccountsScreen() {
   const openAdd = () => {
     setEditAccount(null); setName(''); setAccountNumber(''); setType('bank');
     { const cur = sym(); setCurrency(cur); setCurrencyCode(CURRENCIES.find(c => c.symbol === cur)?.code || code()); }
-    setBalance(''); setOverdraft(''); setBillingDay(10); setIsActive(true);
+    setBalance(''); setOverdraft(''); setBillingDay(10); setFundingAccountId(''); setFixedCharge(''); setIsActive(true);
     setHoldings([]); setNewCoin(''); setNewCoinAmount('');
     setShowEdit(true);
   };
@@ -226,7 +227,7 @@ export default function AccountsScreen() {
   const handleSave = async () => {
     if (!name.trim()) return;
     const cfg = accountTypeConfig[type]||accountTypeConfig.bank;
-    const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat((balance||'').replace(',','.'))||0, overdraft:overdraft?parseFloat(overdraft.replace(',','.')):null, billingDay: type==='credit'?billingDay:null, isActive, icon:cfg.icon };
+    const data = { name:name.trim(), accountNumber:accountNumber.trim(), type, currency, balance:parseFloat((balance||'').replace(',','.'))||0, overdraft:overdraft?parseFloat(overdraft.replace(',','.')):null, billingDay: type==='credit'?billingDay:null, fundingAccountId: type==='credit'?(fundingAccountId||null):null, fixedCharge: type==='credit'&&fixedCharge?(parseFloat(fixedCharge.replace(',','.'))||null):null, isActive, icon:cfg.icon };
     if (type === 'crypto') {
       data.holdings = holdings.filter(h => h.symbol && h.amount > 0);
     }
@@ -602,6 +603,23 @@ export default function AccountsScreen() {
               </View>
             )}
 
+            {type==='credit'&&(
+              <>
+                <Text style={styles.fieldLabel}>{i18n.t('chargeFromAccount')}</Text>
+                {(() => {
+                  const sel = accounts.find(a => a.id === fundingAccountId);
+                  return (
+                    <TouchableOpacity style={styles.fundingBtn} onPress={()=>setShowFundingPicker(true)} activeOpacity={0.7}>
+                      <RowText style={[styles.fundingTxt, !sel && { color: colors.textMuted }]} numberOfLines={1}>{sel?.name || '—'}</RowText>
+                      <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  );
+                })()}
+                <Text style={styles.fieldLabel}>{i18n.t('chargeAmount')}</Text>
+                <TextInput style={[styles.input, { textAlign: i18n.textAlign() }]} value={fixedCharge} onChangeText={setFixedCharge} keyboardType="numeric" placeholder={i18n.t('chargeAmountHint')} placeholderTextColor={colors.textMuted} />
+              </>
+            )}
+
             <View style={styles.toggleRow}>
               <View>
                 <Text style={styles.toggleLabel}>{i18n.t('active')}</Text>
@@ -624,6 +642,12 @@ export default function AccountsScreen() {
         onClose={() => setShowCurrencyPicker(false)}
         selected={currencyCode}
         onSelect={(cur) => { setCurrency(cur.symbol); setCurrencyCode(cur.code); }} />
+      <AccountPickerModal visible={showFundingPicker}
+        onClose={() => setShowFundingPicker(false)}
+        accounts={accounts.filter(a => (a.type === 'bank' || a.type === 'cash') && a.id !== editAccount?.id)}
+        selectedId={fundingAccountId}
+        onSelect={(id) => setFundingAccountId(id)}
+        title={i18n.t('chargeFromAccount')} />
     </View>
   );
 }
@@ -682,6 +706,8 @@ const createStyles = () => StyleSheet.create({
   currPickerBtn:{flexDirection:'row',alignItems:'center',backgroundColor:colors.card,borderRadius:14,padding:14,marginBottom:16,borderWidth:1,borderColor:colors.cardBorder,gap:12},
   currPickerSymbol:{color:colors.text,fontSize:20,fontWeight:'700',width:36,textAlign:'center'},
   currPickerCode:{color:colors.textSecondary,fontSize:16,fontWeight:'600',flex:1},
+  fundingBtn:{flexDirection:i18n.row(),alignItems:'center',gap:8,backgroundColor:colors.card,borderRadius:14,padding:14,marginBottom:16,borderWidth:1,borderColor:colors.cardBorder},
+  fundingTxt:{color:colors.text,fontSize:15,fontWeight:'600',textAlign:i18n.textAlign()},
   billingRow:{flexDirection:'row',gap:8,marginBottom:16},
   billingBtn:{flex:1,paddingVertical:12,borderRadius:12,backgroundColor:colors.card,borderWidth:1.5,borderColor:'transparent',alignItems:'center'},
   billingTxt:{color:colors.textMuted,fontSize:16,fontWeight:'700'},
