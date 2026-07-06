@@ -157,8 +157,8 @@ export default function AccountsScreen() {
   // Only bank and credit accounts get overdraft/warning status: mortgage/debt/loan are
   // inherently negative and asset/investment/cash/crypto don't have an overdraft concept.
   const getAccountStatus = (acc) => {
-    // bank/cash can fund credit cards; credit itself warns from its own recurring.
-    if (acc.type !== 'bank' && acc.type !== 'credit' && acc.type !== 'cash') return 'ok';
+    // Only bank (funds cards) and credit (own recurring/limit) get a status.
+    if (acc.type !== 'bank' && acc.type !== 'credit') return 'ok';
     const bal = acc.balance || 0;
     const minAllowed = -(acc.overdraft || 0);
     if (bal < minAllowed) return 'overdraft';
@@ -644,7 +644,7 @@ export default function AccountsScreen() {
         onSelect={(cur) => { setCurrency(cur.symbol); setCurrencyCode(cur.code); }} />
       <AccountPickerModal visible={showFundingPicker}
         onClose={() => setShowFundingPicker(false)}
-        accounts={accounts.filter(a => (a.type === 'bank' || a.type === 'cash') && a.id !== editAccount?.id)}
+        accounts={accounts.filter(a => a.type === 'bank' && a.id !== editAccount?.id)}
         selectedId={fundingAccountId}
         onSelect={(id) => setFundingAccountId(id)}
         title={i18n.t('chargeFromAccount')} />

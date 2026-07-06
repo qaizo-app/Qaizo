@@ -106,7 +106,12 @@ export default function AccountHistoryScreen({ route, navigation }) {
     setTransactions(filtered);
     setAllAccounts(accs);
     if (acc) setCurrentBalance(acc.balance || 0);
-    setShortfall(fundingShortfall(acc || account, accs, rec, now));
+    // Card-charge shortfall banner only makes sense when cards are actually
+    // linked to this account — otherwise a plain negative balance would
+    // falsely read as "not enough for card charges".
+    const acctForShortfall = acc || account;
+    const hasLinkedCards = accs.some(a => a.type === 'credit' && a.fundingAccountId === acctForShortfall.id);
+    setShortfall(hasLinkedCards ? fundingShortfall(acctForShortfall, accs, rec, now) : 0);
     setUpcomingRecurring(upcoming);
     setLoaded(true);
   };
