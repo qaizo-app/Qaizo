@@ -73,22 +73,34 @@ projected = balance
   `warning`, with `shortfall = minAllowed − projected` (a positive number).
 - `overdraft` status (already-negative balance) is unchanged.
 
-`getAccountStatus` currently returns a status string; it will return an object
-`{ status: 'ok' | 'warning' | 'overdraft', shortfall: number }` (shortfall `0`
-unless status is `warning` from a card-charge gap) so the tile can show the
-amount. All call sites are updated to read `.status`. Cash accounts join bank in
+The subtraction of linked-card charges is extracted into a pure
+`fundingShortfall(account, allAccounts, recurring, now)` helper that returns the
+shortfall number (`0` when the projection covers everything). `getAccountStatus`
+keeps returning its status **string** — it just calls `fundingShortfall` and, if
+`> 0`, returns `'warning'` (unless already `'overdraft'` from a negative balance).
+So the tile needs no return-type change; `AccountHistoryScreen` calls the same
+`fundingShortfall` helper directly to display N. Cash accounts join bank in
 getting a status (they can fund cards); mortgage/loan/investment/crypto/asset
 stay `'ok'`.
 
 ## Display
 
-On the funding account tile (`renderTile`), when the account is a funding source
-with a card-charge shortfall, keep the existing warning border and add one line
-under the balance:
+Split across two screens — the tile stays a glanceable **icon only**, the full
+text lives inside the account (a warning sentence would look cramped in the small
+square tile).
 
-> ⚠️ {i18n.t('cardChargeShortfall')} N ₪   — e.g. "не хватит 3 000 ₪ на списание карт"
+- **Accounts screen tile (`renderTile`):** a card-charge shortfall sets the
+  account's status to `warning`, which already renders the existing warning
+  border + `alert-triangle` icon in the tile corner. No text added to the tile —
+  the icon is the signal to open the account.
+- **Account detail (`AccountHistoryScreen`), on open:** when the opened account
+  has a card-charge shortfall, show a warning banner near the top:
+  > ⚠️ {i18n.t('cardChargeShortfall')} N ₪  — e.g. "не хватит 3 000 ₪ на списание карт"
 
-Reuse the existing `tileSub`/warning styling. No change to non-funding tiles.
+  `AccountHistoryScreen` already loads `recurring` (for its upcoming block); it
+  also loads the full `accounts` list so the shared `fundingShortfall` helper can
+  find the cards linked to this account and compute N. Banner shown only when
+  `shortfall > 0`.
 
 ## Settings UI (account form, credit only)
 
