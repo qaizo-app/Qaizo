@@ -161,8 +161,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       const s = rowState[i] || {};
       if (s.editorSaved) return;                                 // already saved through the editor
       if (r.kind === 'new' && s.checked) n++;
-      if (r.kind === 'similar' && s.decision === 'new') n++;
-      if (r.kind === 'recurring' && s.decision != null) n++;     // either confirm or separate counts
+      if (r.kind === 'recurring' && s.decision === 'confirm') n++; // 'similar'/'separate' flows land via the editor (editorSaved)
     });
     return n;
   }, [results, rowState]);
@@ -174,8 +173,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       const s = rowState[i] || {};
       if (s.editorSaved) { editorAdded++; return; }
       if (r.kind === 'new' && s.checked) total++;
-      else if (r.kind === 'similar' && s.decision === 'new') total++;
-      else if (r.kind === 'recurring' && s.decision != null) total++;
+      else if (r.kind === 'recurring' && s.decision === 'confirm') total++;
     });
 
     // Nothing left to save in this loop — go straight to the summary (the
@@ -226,8 +224,13 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
       const s = rowState[i] || {};
       if (s.editorSaved) continue;                              // already saved through the editor
       const label = r.extracted?.payee || `row ${i}`;
+      // Advance the progress bar only for rows we actually attempt to write —
+      // skipped rows (exact matches, unchecked, no decision) previously
+      // incremented too, showing nonsense like "20 of 3".
+      let attempted = false;
       try {
         if (r.kind === 'new' && s.checked) {
+          attempted = true;
           const cfg = getCatIcon(s.categoryId, catGroups);   // works for both built-in and custom categories
           const isCharge = r.extracted.amount < 0;
           const amt = Number(s.amount ?? r.extracted.amount);
@@ -248,46 +251,15 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
           if (__DEV__) console.log('[statement save] adding', payload);
           const res = await withTimeout(dataService.addTransaction(payload), label);
           recordWrite(res, label);
-        } else if (r.kind === 'similar' && s.decision === 'new') {
-          // No category guess for similar matches; fall back to 'other'
-          const amt = Number(r.extracted.amount);
-          if (!Number.isFinite(amt)) throw new Error('invalid-amount');
-          const payload = clean({
-            type: amt < 0 ? 'expense' : 'income',
-            amount: Math.abs(amt),
-            categoryId: 'other',
-            recipient: r.extracted.payee || '',
-            note: r.extracted.notes || '',
-            currency: accountCurrency || sym(),
-            date: new Date(r.extracted.date).toISOString(),
-            account: accountId,
-            tags: [],
-          });
-          if (__DEV__) console.log('[statement save] adding (similar→new)', payload);
-          const res = await withTimeout(dataService.addTransaction(payload), label);
-          recordWrite(res, label);
         } else if (r.kind === 'recurring' && s.decision === 'confirm') {
+          // The other decisions ('similar' → add as new, 'recurring' →
+          // separate one-off) go through the full editor and land as
+          // editorSaved — only 'confirm' is saved directly here.
+          attempted = true;
           const res = await withTimeout(dataService.confirmRecurring(r.recurring.id, {
             amount: Math.abs(Number(r.extracted.amount) || 0),
             date: new Date(r.extracted.date).toISOString(),
           }), label);
-          recordWrite(res, label);
-        } else if (r.kind === 'recurring' && s.decision === 'separate') {
-          const amt = Number(r.extracted.amount);
-          if (!Number.isFinite(amt)) throw new Error('invalid-amount');
-          const payload = clean({
-            type: amt < 0 ? 'expense' : 'income',
-            amount: Math.abs(amt),
-            categoryId: 'other',
-            recipient: r.extracted.payee || '',
-            note: r.extracted.notes || '',
-            currency: accountCurrency || sym(),
-            date: new Date(r.extracted.date).toISOString(),
-            account: accountId,
-            tags: [],
-          });
-          if (__DEV__) console.log('[statement save] adding (recurring→separate)', payload);
-          const res = await withTimeout(dataService.addTransaction(payload), label);
           recordWrite(res, label);
         }
       } catch (e) {
@@ -295,7 +267,7 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
         fail++;
         errors.push({ payee: label, reason: e?.message || String(e) });
       }
-      setProgress(p => ({ ...p, current: p.current + 1 }));
+      if (attempted) setProgress(p => ({ ...p, current: p.current + 1 }));
     }
 
     // Create recurring templates for any suggestions the user accepted.
@@ -322,7 +294,10 @@ export default function StatementScannerModal({ visible, onClose, accountId, acc
           categoryId: 'other',
           currency: accountCurrency || sym(),
           account: accountId,
-          frequency: sug.intervalKind === 'weekly' ? 'weekly' : 'monthly',
+          // Weekly cadence is day-based (confirm/skip advance by intervalDays);
+          // everything else advances by intervalMonths. `frequency` used to be
+          // written here but nothing in the app ever read it.
+          ...(sug.intervalKind === 'weekly' ? { intervalDays: 7 } : { intervalMonths: 1 }),
           nextDate: nextDate.toISOString(),
         }), `recurring-template-${sug.payee}`);
         if (created) recurringCreated++;

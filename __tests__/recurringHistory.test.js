@@ -49,6 +49,37 @@ describe('matchHistory', () => {
     expect(matchHistory(rec, txs).map(t => t.id)).toEqual(['1']);
   });
 
+  test('two transfers from same source to different destinations do not cross-match', () => {
+    const recToSavings = { isTransfer: true, account: 'bank', toAccount: 'savings', amount: 500 };
+    const recToBroker = { isTransfer: true, account: 'bank', toAccount: 'broker', amount: 800 };
+    const txs = [
+      // Bank -> Savings occurrence
+      { id: 's-exp', isTransfer: true, type: 'expense', account: 'bank', amount: 500, transferPairId: 'p1', date: '2026-03-01' },
+      { id: 's-inc', isTransfer: true, type: 'income', account: 'savings', amount: 500, transferPairId: 'p1', date: '2026-03-01' },
+      // Bank -> Broker occurrence
+      { id: 'b-exp', isTransfer: true, type: 'expense', account: 'bank', amount: 800, transferPairId: 'p2', date: '2026-03-02' },
+      { id: 'b-inc', isTransfer: true, type: 'income', account: 'broker', amount: 800, transferPairId: 'p2', date: '2026-03-02' },
+    ];
+    expect(matchHistory(recToSavings, txs).map(t => t.id)).toEqual(['s-exp']);
+    expect(matchHistory(recToBroker, txs).map(t => t.id)).toEqual(['b-exp']);
+  });
+
+  test('legacy transfer expense leg without transferPairId is still returned', () => {
+    const rec = { isTransfer: true, account: 'bank', toAccount: 'savings', amount: 500 };
+    const txs = [
+      { id: 'legacy', isTransfer: true, type: 'expense', account: 'bank', amount: 500, date: '2026-03-01' },
+    ];
+    expect(matchHistory(rec, txs).map(t => t.id)).toEqual(['legacy']);
+  });
+
+  test('transfer expense leg whose income pair is absent is still returned', () => {
+    const rec = { isTransfer: true, account: 'bank', toAccount: 'savings', amount: 500 };
+    const txs = [
+      { id: 'orphan', isTransfer: true, type: 'expense', account: 'bank', amount: 500, transferPairId: 'missing', date: '2026-03-01' },
+    ];
+    expect(matchHistory(rec, txs).map(t => t.id)).toEqual(['orphan']);
+  });
+
   test('non-transfer recurring excludes transfer transactions', () => {
     const rec = { recipient: 'Anon', categoryId: 'food', amount: 100 };
     const txs = [

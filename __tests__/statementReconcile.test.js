@@ -167,4 +167,26 @@ describe('reconcile', () => {
   test('empty inputs return empty result', () => {
     expect(reconcile([], [], [])).toEqual([]);
   });
+
+  // Направление суммы: возврат средств (+) не должен «съедаться» расходом (−)
+  test('refund (positive) does NOT exact-match an expense of same amount/date', () => {
+    const extracted = [{ date: '2026-05-20', amount: 100, payee: 'Shop' }];
+    const existing = [tx({ type: 'expense', amount: 100, date: '2026-05-20' })];
+    const r = reconcile(extracted, existing, []);
+    expect(r[0].kind).toBe('new');
+  });
+
+  test('refund (positive) exact-matches an income of same amount/date', () => {
+    const extracted = [{ date: '2026-05-20', amount: 100, payee: 'Shop' }];
+    const existing = [tx({ type: 'income', amount: 100, date: '2026-05-20' })];
+    const r = reconcile(extracted, existing, []);
+    expect(r[0].kind).toBe('exact');
+  });
+
+  test('charge (negative) is not similar to an income within the date window', () => {
+    const extracted = [{ date: '2026-05-22', amount: -100, payee: 'Shop' }];
+    const existing = [tx({ type: 'income', amount: 100, date: '2026-05-20' })];
+    const r = reconcile(extracted, existing, []);
+    expect(r[0].kind).toBe('new');
+  });
 });

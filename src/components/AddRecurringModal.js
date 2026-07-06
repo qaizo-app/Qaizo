@@ -156,6 +156,9 @@ export default function AddRecurringModal({ visible, onClose, onSave, editItem }
       toAccount: isTransfer ? toAcc : null,
       isTransfer: isTransfer || false,
       intervalMonths,
+      // This modal only offers month-based schedules; clear any day-based
+      // interval (weekly statement templates) so the edit actually converts.
+      intervalDays: null,
       nextDate,
       endType,
       totalCount: endType === 'count' ? parseInt(totalCount, 10) || 12 : null,

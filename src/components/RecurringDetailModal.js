@@ -55,13 +55,17 @@ export default function RecurringDetailModal({ visible, item, onClose, onConfirm
     remainLabel = i18n.t('noEnd');
   }
 
-  // Периодичность
-  const intervalLabel = item.intervalMonths === 1 ? i18n.t('everyMonth')
-    : item.intervalMonths === 2 ? i18n.t('every2Months')
-    : item.intervalMonths === 3 ? i18n.t('every3Months')
-    : item.intervalMonths === 6 ? i18n.t('every6Months')
-    : item.intervalMonths === 12 ? i18n.t('everyYear')
-    : `${item.intervalMonths} ${i18n.t('months')}`;
+  // Периодичность. Day-based intervals (weekly templates from the statement
+  // scanner) take precedence; items without either field default to monthly.
+  const months = item.intervalMonths || 1;
+  const intervalLabel = item.intervalDays > 0
+    ? (item.intervalDays === 7 ? i18n.t('everyWeek') : `${item.intervalDays} ${i18n.t('days')}`)
+    : months === 1 ? i18n.t('everyMonth')
+    : months === 2 ? i18n.t('every2Months')
+    : months === 3 ? i18n.t('every3Months')
+    : months === 6 ? i18n.t('every6Months')
+    : months === 12 ? i18n.t('everyYear')
+    : `${months} ${i18n.t('months')}`;
 
   // Дни до следующего
   const diffDays = nextDate ? Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24)) : 0;

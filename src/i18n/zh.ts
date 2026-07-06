@@ -272,6 +272,7 @@ export default {
   newRecurring: '新付款',
   addRecurring: '添加付款',
   frequency: '频率',
+  everyWeek: '每周',
   everyMonth: '每月',
   every2Months: '每2个月',
   every3Months: '每3个月',

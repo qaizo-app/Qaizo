@@ -267,6 +267,7 @@ export default {
   newRecurring: 'Nuevo Pago',
   addRecurring: 'Agregar pago',
   frequency: 'Frecuencia',
+  everyWeek: 'Semanal',
   everyMonth: 'Mensual',
   every2Months: 'Cada 2 meses',
   every3Months: 'Cada 3 meses',

@@ -374,6 +374,28 @@ describe('dataService (guest mode)', () => {
     expect(ok).toBe(false);
   });
 
+  test('confirmRecurring advances by intervalDays for weekly items', async () => {
+    const rec = await dataService.addRecurring({
+      name: 'Groceries', amount: 250, type: 'expense', categoryId: 'food',
+      nextDate: '2026-04-01', intervalDays: 7,
+    });
+
+    await dataService.confirmRecurring(rec.id);
+    const items = await dataService.getRecurring();
+    expect(items[0].nextDate).toBe('2026-04-08');
+  });
+
+  test('skipRecurring advances by intervalDays for weekly items', async () => {
+    const rec = await dataService.addRecurring({
+      name: 'Groceries', amount: 250, type: 'expense', categoryId: 'food',
+      nextDate: '2026-04-25', intervalDays: 7,
+    });
+
+    await dataService.skipRecurring(rec.id);
+    const items = await dataService.getRecurring();
+    expect(items[0].nextDate).toBe('2026-05-02');
+  });
+
   test('skipRecurring advances nextDate without creating transaction', async () => {
     const rec = await dataService.addRecurring({
       name: 'Gym', amount: 200, type: 'expense', categoryId: 'health',
@@ -389,9 +411,63 @@ describe('dataService (guest mode)', () => {
     expect(items[0].nextDate).toBe('2026-05-10');
   });
 
+  test('confirmRecurring cross-currency transfer converts the destination leg', async () => {
+    const fx = require('../src/services/exchangeRateService').default;
+    fx.__setRatesForTest({ USD: 1, ILS: 4 });
+
+    const from = await dataService.addAccount({ name: 'Bank ILS', type: 'bank', balance: 1000, currency: '₪' });
+    const to = await dataService.addAccount({ name: 'Broker USD', type: 'investment', balance: 0, currency: '$' });
+    const rec = await dataService.addRecurring({
+      type: 'transfer', isTransfer: true, amount: 400, currency: '₪',
+      account: from.id, toAccount: to.id, categoryId: 'transfer',
+      nextDate: '2026-04-01', intervalMonths: 1,
+    });
+
+    await dataService.confirmRecurring(rec.id);
+
+    const txs = await dataService.getTransactions();
+    const expense = txs.find(t => t.type === 'expense');
+    const income = txs.find(t => t.type === 'income');
+    // Нога-источник: 400 ₪; нога-получатель: 100 $ по курсу 4 ILS = 1 USD
+    expect(expense.amount).toBe(400);
+    expect(expense.currency).toBe('₪');
+    expect(income.amount).toBe(100);
+    expect(income.currency).toBe('$');
+
+    const accounts = await dataService.getAccounts();
+    expect(accounts.find(a => a.id === from.id).balance).toBe(600);
+    expect(accounts.find(a => a.id === to.id).balance).toBe(100);
+  });
+
   test('skipRecurring returns false for missing id', async () => {
     const ok = await dataService.skipRecurring('nonexistent');
     expect(ok).toBe(false);
+  });
+
+  // ─── AUTO-EXECUTE RECURRING ──────────────────
+  test('autoExecuteRecurring confirms due autoConfirm items', async () => {
+    await dataService.addRecurring({
+      name: 'Netflix', amount: 50, type: 'expense', categoryId: 'entertainment',
+      nextDate: '2020-01-01', intervalMonths: 1, autoConfirm: true,
+    });
+
+    const confirmed = await dataService.autoExecuteRecurring();
+    expect(confirmed).toBeGreaterThanOrEqual(1);
+    expect((await dataService.getTransactions()).length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('autoExecuteRecurring does not count or hammer failed confirms', async () => {
+    await dataService.addRecurring({
+      name: 'Netflix', amount: 50, type: 'expense', categoryId: 'entertainment',
+      nextDate: '2020-01-01', intervalMonths: 1, autoConfirm: true,
+    });
+    const spy = jest.spyOn(dataService, 'confirmRecurring').mockResolvedValue(false);
+
+    const confirmed = await dataService.autoExecuteRecurring();
+    // Провальный confirm: не засчитываем и не крутим 100 итераций по тому же элементу
+    expect(confirmed).toBe(0);
+    expect(spy.mock.calls.length).toBe(1);
+    spy.mockRestore();
   });
 
   // ─── RECALCULATE BALANCES ───────────────────

@@ -272,6 +272,7 @@ export default {
   newRecurring: 'नया भुगतान',
   addRecurring: 'भुगतान जोड़ें',
   frequency: 'आवृत्ति',
+  everyWeek: 'साप्ताहिक',
   everyMonth: 'मासिक',
   every2Months: 'हर 2 महीने',
   every3Months: 'हर 3 महीने',

@@ -35,8 +35,29 @@ export function matchHistory(rec: RecurringLike | null | undefined, transactions
     // Transfers come as linked expense/income pairs — anchor on the expense
     // leg (from → to) so each occurrence counts once, and accept amount
     // drift in case the user tweaked the value at confirm time.
+    //
+    // The expense leg alone doesn't record its destination, so two recurring
+    // transfers leaving the same source account (Bank→Savings, Bank→Broker)
+    // would otherwise both scoop up every leg. Recover the destination from
+    // the paired income leg (same transferPairId) and keep only legs that
+    // land on rec.toAccount.
+    //
+    // Backward-compat: legacy legs with no transferPairId, or whose pair is
+    // absent from `transactions`, have an unknown destination — keep them so
+    // old data doesn't silently lose its history. Only drop a leg when its
+    // pair is present AND points at a different account.
+    const pairDest = new Map<string, string | undefined>();
+    for (const t of transactions) {
+      if (t.isTransfer && t.type === 'income' && t.transferPairId) {
+        pairDest.set(t.transferPairId, t.account);
+      }
+    }
     return transactions
-      .filter(t => t.isTransfer && t.type === 'expense' && t.account === rec.account)
+      .filter(t => {
+        if (!(t.isTransfer && t.type === 'expense' && t.account === rec.account)) return false;
+        if (!t.transferPairId || !pairDest.has(t.transferPairId)) return true; // unknown dest — keep
+        return pairDest.get(t.transferPairId) === rec.toAccount;
+      })
       .sort((a, b) => tsOf(b) - tsOf(a));
   }
 

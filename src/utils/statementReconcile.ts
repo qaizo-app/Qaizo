@@ -5,7 +5,9 @@
 // Caller responsibilities:
 //   - `existing` is pre-filtered to the same account (typically last 60 days).
 //   - `recurring` is pre-filtered to the same account and active.
-//   - `extracted.amount` may be signed (negative = charge); we compare absolute values.
+//   - `extracted.amount` may be signed (negative = charge); magnitudes are
+//     compared as absolute values, and the SIGN must agree with the existing
+//     transaction's type (negative↔expense, positive↔income).
 import type { Recurring, Transaction } from '../types';
 import { fuzzyPayee } from './payeeMatch';
 
@@ -47,18 +49,27 @@ function sameAmount(a: number, b: number): boolean {
   return Math.abs(Math.abs(a) - Math.abs(b)) < 0.005;
 }
 
+// Direction check: a signed statement amount must match the transaction type,
+// otherwise a refund (+100) silently "reconciles" against an expense (−100)
+// of the same date and never gets imported. Zero carries no signal.
+function sameDirection(t: Transaction, e: ExtractedTx): boolean {
+  if (e.amount < 0) return t.type === 'expense';
+  if (e.amount > 0) return t.type === 'income';
+  return true;
+}
+
 export function reconcile(
   extracted: ExtractedTx[],
   existing: Transaction[],
   recurring: Recurring[],
 ): ReconcileResult[] {
   return extracted.map((e): ReconcileResult => {
-    // 1. exact (amount + date)
-    const exact = existing.find(t => sameAmount(t.amount, e.amount) && t.date.slice(0, 10) === e.date);
+    // 1. exact (amount + direction + date)
+    const exact = existing.find(t => sameAmount(t.amount, e.amount) && sameDirection(t, e) && t.date.slice(0, 10) === e.date);
     if (exact) return { kind: 'exact', extracted: e, match: exact };
 
-    // 2. similar (amount + date within ±NEAR_DAYS)
-    const similar = existing.filter(t => sameAmount(t.amount, e.amount) && dayDiff(t.date.slice(0, 10), e.date) <= NEAR_DAYS);
+    // 2. similar (amount + direction + date within ±NEAR_DAYS)
+    const similar = existing.filter(t => sameAmount(t.amount, e.amount) && sameDirection(t, e) && dayDiff(t.date.slice(0, 10), e.date) <= NEAR_DAYS);
     if (similar.length > 0) return { kind: 'similar', extracted: e, candidates: similar };
 
     // 3. recurring (active + payee fuzzy; amount IGNORED).

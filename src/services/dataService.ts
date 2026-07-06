@@ -11,6 +11,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import authService from './authService';
 import { withTimeout } from '../utils/withTimeout';
+import { buildTransferLegs } from '../utils/transferLegs';
+import { CURRENCIES, code as globalCurrencyCode, convert } from '../utils/currency';
 import type {
   Account,
   Goal,
@@ -190,6 +192,17 @@ async function updateAccountBalance(accountId: string, amount: number, type: str
   } catch (e) {
     if (__DEV__) console.error('Error updating account balance:', e);
   }
+}
+
+// Advance a recurring item's nextDate by one interval. Day-based intervals
+// (weekly templates from the statement scanner set intervalDays: 7) take
+// precedence; otherwise fall back to the classic month-based schedule.
+function advanceNextDate(rec: any): Date {
+  const next = new Date(rec.nextDate);
+  const days = Number(rec.intervalDays);
+  if (Number.isFinite(days) && days > 0) next.setDate(next.getDate() + days);
+  else next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+  return next;
 }
 
 // ─── Change broadcaster ──────────────────────────────────
@@ -691,25 +704,30 @@ const dataService = {
       if (rec.isTransfer && toAccount) {
         // Scheduled transfer: materialize as a linked expense/income pair
         // so running balances and account filters behave like a one-off
-        // transfer created from AddTransactionModal.
-        const pairId = generateId();
+        // transfer created from AddTransactionModal — including converting
+        // the destination amount when the two accounts hold different
+        // currencies (previously both legs got the source amount).
         const accs = await this.getAccounts();
-        const fromName = accs.find((a: any) => a.id === account)?.name || '';
-        const toName = accs.find((a: any) => a.id === toAccount)?.name || '';
-        await this.addTransaction({
-          type: 'expense', amount, categoryId: 'transfer', icon: 'repeat',
-          recipient: toName, note: rec.note || `→ ${toName}`,
-          currency: rec.currency || '₪', date,
-          account, isTransfer: true, transferPairId: pairId,
+        const fromAcc = accs.find((a: any) => a.id === account);
+        const toAcc = accs.find((a: any) => a.id === toAccount);
+        const fromCurrency = fromAcc?.currency || rec.currency || '₪';
+        const toCurrency = toAcc?.currency || rec.currency || '₪';
+        const codeOf = (symbol: string) => CURRENCIES.find(c => c.symbol === symbol)?.code || globalCurrencyCode();
+        const toAmount = fromCurrency === toCurrency
+          ? amount
+          : convert(amount, codeOf(fromCurrency), codeOf(toCurrency));
+        const [expenseLeg, incomeLeg] = buildTransferLegs({
+          fromAcc: { id: account, name: fromAcc?.name || '', currency: fromCurrency },
+          toAcc: { id: toAccount, name: toAcc?.name || '', currency: toCurrency },
+          sourceAmount: amount,
+          toAmount,
+          transferPairId: generateId(),
+          date,
           tags: rec.tags || [],
+          note: rec.note || undefined,
         });
-        await this.addTransaction({
-          type: 'income', amount, categoryId: 'transfer', icon: 'repeat',
-          recipient: fromName, note: rec.note || `← ${fromName}`,
-          currency: rec.currency || '₪', date,
-          account: toAccount, isTransfer: true, transferPairId: pairId,
-          tags: rec.tags || [],
-        });
+        await this.addTransaction(expenseLeg);
+        await this.addTransaction(incomeLeg);
       } else {
         await this.addTransaction({
           type: rec.type,
@@ -725,8 +743,7 @@ const dataService = {
         });
       }
 
-      const next = new Date(rec.nextDate);
-      next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+      const next = advanceNextDate(rec);
       const newCount = (rec.completedCount || 0) + 1;
 
       let stillActive = true;
@@ -766,7 +783,14 @@ const dataService = {
         for (const rec of due) {
           // Use the nextDate as the transaction date so missed-month
           // catchups land on the correct historical month.
-          await this.confirmRecurring(rec.id, { date: new Date(rec.nextDate).toISOString() });
+          const ok = await this.confirmRecurring(rec.id, { date: new Date(rec.nextDate).toISOString() });
+          if (!ok) {
+            // A failed confirm leaves nextDate unchanged, so the item stays
+            // "due" — retrying in a loop would hammer the same write up to
+            // MAX_ITERATIONS times. Report what actually landed and stop.
+            if (__DEV__) console.warn('[autoExecuteRecurring] confirm failed for', rec.id, '— stopping');
+            return confirmed;
+          }
           confirmed++;
         }
       }
@@ -797,8 +821,7 @@ const dataService = {
       if (overrides.nextDate) {
         next = new Date(overrides.nextDate);
       } else {
-        next = new Date(rec.nextDate);
-        next.setMonth(next.getMonth() + (rec.intervalMonths || 1));
+        next = advanceNextDate(rec);
       }
 
       let stillActive = true;
@@ -983,7 +1006,7 @@ const dataService = {
           const snap = await userCol(col).get();
           await Promise.all(snap.docs.map((d: any) => d.ref.delete()));
         }
-        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals'];
+        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals', 'quickTemplates', 'shoppingList'];
         for (const name of singleDocs) {
           try { await userDoc(name + '/data').delete(); } catch (e) {}
         }
@@ -995,12 +1018,13 @@ const dataService = {
 
   async exportData() {
     try {
-      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals] = await Promise.all([
+      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, shoppingList] = await Promise.all([
         this.getTransactions(), this.getAccounts(), this.getInvestments(),
         this.getCategories(), this.getSettings(), this.getBudgets(),
         this.getRecurring(), this.getTags(), this.getStreaks(), this.getProjects(), this.getGoals(),
+        this.getQuickTemplates(), this.getShoppingList(),
       ]);
-      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, exportedAt: new Date().toISOString() };
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, shoppingList, exportedAt: new Date().toISOString() };
     } catch (e) { return null; }
   },
 
@@ -1047,6 +1071,16 @@ const dataService = {
         if (data.projects) await AsyncStorage.setItem(KEYS.PROJECTS, JSON.stringify(data.projects));
         if (data.goals) await AsyncStorage.setItem(KEYS.GOALS, JSON.stringify(data.goals));
       }
+      // Mode-agnostic entities (saveX dispatches on uid internally). The
+      // snake_case aliases come from migrateToFirestore, which lowercases the
+      // KEYS constant names (QUICK_TEMPLATES → quick_templates). Before these
+      // lines the migration silently DROPPED streaks, quick templates and the
+      // shopping list — and then wiped them from AsyncStorage.
+      if (data.streaks) await this.saveStreaks(data.streaks);
+      const quickTemplates = data.quickTemplates || data.quick_templates;
+      if (quickTemplates) await this.saveQuickTemplates(quickTemplates);
+      const shoppingList = data.shoppingList || data.shopping_list;
+      if (shoppingList) await this.saveShoppingList(shoppingList);
       return true;
     } catch (e) { return false; }
   },

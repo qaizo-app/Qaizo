@@ -272,6 +272,7 @@ export default {
   newRecurring: 'دفعة جديدة',
   addRecurring: 'إضافة دفعة',
   frequency: 'التكرار',
+  everyWeek: 'أسبوعياً',
   everyMonth: 'شهرياً',
   every2Months: 'كل شهرين',
   every3Months: 'كل 3 أشهر',

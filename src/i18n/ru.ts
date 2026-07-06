@@ -321,6 +321,7 @@ export default {
   newRecurring: 'Новый платёж',
   addRecurring: 'Добавить платёж',
   frequency: 'Периодичность',
+  everyWeek: 'Каждую неделю',
   everyMonth: 'Каждый месяц',
   every2Months: 'Каждые 2 мес.',
   every3Months: 'Каждые 3 мес.',

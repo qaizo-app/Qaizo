@@ -4,6 +4,16 @@
 jest.mock('../src/config/firebase', () => ({ db: {}, auth: {} }));
 jest.mock('../src/services/authService', () => ({ default: { getUid: () => null }, getUid: () => null }));
 jest.mock('../src/utils/currency', () => ({ __esModule: true, sym: () => '₪' }));
+jest.mock('../src/services/dataService', () => ({
+  __esModule: true,
+  default: {
+    getTransactions: jest.fn(async () => []),
+    getAccounts: jest.fn(async () => []),
+    saveAccounts: jest.fn(async () => true),
+    addTransaction: jest.fn(async (tx) => tx),
+  },
+}));
+const dataService = require('../src/services/dataService').default;
 
 const importService = require('../src/services/importService').default;
 const { resolveCategory, detectDelimiter, parseCSVLine, detectFormat, parseDate, parseAmount,
@@ -129,6 +139,20 @@ describe('parseDate', () => {
     const d = new Date(result);
     expect(d.getDate()).toBe(15);
     expect(d.getMonth()).toBe(0);
+  });
+
+  test('DD/MM/YYYY keeps calendar date regardless of timezone (no UTC shift)', () => {
+    // BUG 1: local-midnight → ISO shifted a day back in UTC+ zones. Date component must match input.
+    expect(parseDate('01/05/2024').slice(0, 10)).toBe('2024-05-01');
+  });
+
+  test('DD.MM.YYYY (dots) keeps calendar date', () => {
+    expect(parseDate('15.03.2024').slice(0, 10)).toBe('2024-03-15');
+  });
+
+  test('MM/DD/YYYY fallback keeps calendar date', () => {
+    // 13 is not a valid month, so DMY branch skips and MDY fallback handles it
+    expect(parseDate('05/13/2024').slice(0, 10)).toBe('2024-05-13');
   });
 
   test('returns current date for invalid input', () => {
@@ -312,6 +336,20 @@ describe('parseGenericRow', () => {
     const result = parseGenericRow(cols);
     expect(result.amount).toBe(200);
   });
+
+  test('does not treat a leading ISO date column as the amount', () => {
+    // BUG 2: parseAmount('2024-05-13') === 2024 was grabbed as amount before date check
+    const result = parseGenericRow(['2024-05-13', 'Coffee shop', '12.50']);
+    expect(result.amount).toBe(12.5);
+    expect(result.date.slice(0, 10)).toBe('2024-05-13');
+    expect(result.recipient).toBe('Coffee shop');
+  });
+
+  test('does not treat a leading DD.MM.YYYY date column as the amount', () => {
+    const result = parseGenericRow(['28.03.2024', 'Store', '99.90']);
+    expect(result.amount).toBe(99.9);
+    expect(result.date.slice(0, 10)).toBe('2024-03-28');
+  });
 });
 
 describe('analyzeImportData', () => {
@@ -363,5 +401,45 @@ describe('analyzeImportData', () => {
     const existing = [{ id: 'acc_1', name: 'Hapoalim' }];
     const result = importService.analyzeImportData(txs, existing);
     expect(result.accounts[0].match.confidence).toBe('high');
+  });
+});
+
+describe('importTransactions dedup', () => {
+  beforeEach(() => {
+    dataService.getTransactions.mockResolvedValue([]);
+    dataService.getAccounts.mockResolvedValue([
+      { id: 'acc_1', name: 'Hapoalim' },
+      { id: 'acc_2', name: 'Cash' },
+    ]);
+    dataService.addTransaction.mockClear();
+  });
+
+  test('BUG 3: same date/amount/category/type on DIFFERENT accounts are both imported', async () => {
+    const base = {
+      date: '2024-05-13T00:00:00.000Z', type: 'expense', amount: 50,
+      categoryId: 'food', recipient: '', note: '', tags: [], currency: '₪',
+    };
+    const txs = [
+      { ...base, _accountName: 'Hapoalim' },
+      { ...base, _accountName: 'Cash' },
+    ];
+    const result = await importService.importTransactions(txs);
+    expect(result.imported).toBe(2);
+    expect(result.skippedDuplicates).toBe(0);
+    expect(dataService.addTransaction).toHaveBeenCalledTimes(2);
+  });
+
+  test('true duplicate on the SAME account is still skipped', async () => {
+    const base = {
+      date: '2024-05-13T00:00:00.000Z', type: 'expense', amount: 50,
+      categoryId: 'food', recipient: '', note: '', tags: [], currency: '₪',
+    };
+    const txs = [
+      { ...base, _accountName: 'Hapoalim' },
+      { ...base, _accountName: 'Hapoalim' },
+    ];
+    const result = await importService.importTransactions(txs);
+    expect(result.imported).toBe(1);
+    expect(result.skippedDuplicates).toBe(1);
   });
 });

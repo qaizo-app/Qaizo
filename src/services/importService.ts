@@ -171,7 +171,7 @@ function parseDate(val?: string | null): string {
     const [, d, m, y] = dmyMatch;
     const mi = parseInt(m) - 1;
     if (mi >= 0 && mi <= 11 && parseInt(d) >= 1 && parseInt(d) <= 31) {
-      return new Date(parseInt(y), mi, parseInt(d)).toISOString();
+      return new Date(Date.UTC(parseInt(y), mi, parseInt(d))).toISOString();
     }
   }
 
@@ -179,7 +179,7 @@ function parseDate(val?: string | null): string {
   const mdyMatch = v.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})/);
   if (mdyMatch) {
     const [, m, d, y] = mdyMatch;
-    const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const dt = new Date(Date.UTC(parseInt(y), parseInt(m) - 1, parseInt(d)));
     if (!isNaN(dt.getTime())) return dt.toISOString();
   }
 
@@ -442,11 +442,12 @@ function parseGenericRow(cols: string[]): ParsedRow | null {
 
   for (const col of cols) {
     if (!col) continue;
-    const n = parseAmount(col);
-    if (n > 0 && amount === 0) { amount = n; continue; }
+    // Check date-like columns FIRST so a date (e.g. "2024-05-13") isn't grabbed as the amount
     if (/\d{4}[-/]\d{2}[-/]\d{2}/.test(col) || /\d{1,2}[/.]\d{1,2}[/.]\d{4}/.test(col)) {
       date = parseDate(col); continue;
     }
+    const n = parseAmount(col);
+    if (n > 0 && amount === 0) { amount = n; continue; }
     if (col.length > 2 && !description) description = col;
   }
 
@@ -583,17 +584,6 @@ async function pickAndParseFile() {
     catCounts[tx.categoryId] = (catCounts[tx.categoryId] || 0) + 1;
     if (tx._accountName) acctCounts[tx._accountName] = (acctCounts[tx._accountName] || 0) + 1;
   }
-  // Collect raw category values that mapped to 'other'
-  const rawOtherCats: Record<string, number> = {};
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    if (cols.length < 2) continue;
-    const rawCat = (cols[headerMap['category']] || '').trim();
-    const customCat = (cols[headerMap['custom_category']] || '').trim();
-    const cat = customCat || rawCat;
-    if (cat) rawOtherCats[cat] = (rawOtherCats[cat] || 0) + 1;
-  }
-
   // Sample rows for preview
   const sampleRows: string[][] = [];
   for (let i = 1; i <= Math.min(3, lines.length - 1); i++) {
@@ -699,7 +689,7 @@ async function importTransactions(transactions: ParsedRow[], options: ImportOpti
   const existingKeys = new Set<string>();
   for (const tx of existingTxs) {
     const date = (tx.date || tx.createdAt || '').slice(0, 10);
-    const key = `${date}|${tx.amount}|${tx.categoryId}|${tx.type}`;
+    const key = `${date}|${tx.amount}|${tx.categoryId}|${tx.type}|${tx.account || ''}`;
     existingKeys.add(key);
   }
 
@@ -780,7 +770,7 @@ async function importTransactions(transactions: ParsedRow[], options: ImportOpti
     delete tx._rawCategory;
 
     const txDate = (tx.date || '').slice(0, 10);
-    const txKey = `${txDate}|${tx.amount}|${tx.categoryId}|${tx.type}`;
+    const txKey = `${txDate}|${tx.amount}|${tx.categoryId}|${tx.type}|${tx.account || ''}`;
     if (existingKeys.has(txKey)) {
       skippedDuplicates++;
       continue;

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Constants from 'expo-constants';
 import Card from '../components/Card';
+import RowText from '../components/RowText';
 import notificationService from '../services/notificationService';
 import backupService from '../services/backupService';
 import ConfirmModal from '../components/ConfirmModal';
@@ -380,7 +381,7 @@ export default function SettingsScreen() {
         {openSection === 'reminders' && (
           <Card>
             <View style={{ flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', marginBottom: reminderEnabled ? 14 : 0 }}>
-              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600', flex: 1, textAlign: i18n.textAlign() }}>{i18n.t('expenseRemindersHint')}</Text>
+              <RowText style={{ color: colors.text, fontSize: 14, fontWeight: '600', textAlign: i18n.textAlign() }}>{i18n.t('expenseRemindersHint')}</RowText>
               <Switch value={reminderEnabled} onValueChange={(v) => saveReminders({ reminderEnabled: v })}
                 trackColor={{ false: colors.cardBorder, true: colors.green }} thumbColor="#fff" />
             </View>

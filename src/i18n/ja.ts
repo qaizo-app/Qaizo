@@ -271,6 +271,7 @@ export default {
   newRecurring: '新しい支払い',
   addRecurring: '支払いを追加',
   frequency: '頻度',
+  everyWeek: '毎週',
   everyMonth: '毎月',
   every2Months: '2ヶ月ごと',
   every3Months: '3ヶ月ごと',

@@ -7,6 +7,15 @@ jest.mock('../src/services/authService', () => ({
   getUid: () => 'test-user',
 }));
 
+// Seedable AsyncStorage — migrateToFirestore reads guest data from here.
+const mockStorage = {};
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(key => Promise.resolve(mockStorage[key] || null)),
+  setItem: jest.fn((key, val) => { mockStorage[key] = val; return Promise.resolve(); }),
+  removeItem: jest.fn(key => { delete mockStorage[key]; return Promise.resolve(); }),
+  multiRemove: jest.fn(keys => { keys.forEach(k => delete mockStorage[k]); return Promise.resolve(); }),
+}));
+
 // In-memory Firestore mock for @react-native-firebase/firestore (chained API)
 jest.mock('@react-native-firebase/firestore', () => {
   const state = {
@@ -144,6 +153,7 @@ const firestoreMock = require('@react-native-firebase/firestore').default;
 beforeEach(() => {
   firestoreMock.__state.collections = {};
   firestoreMock.__state.docs = {};
+  Object.keys(mockStorage).forEach(k => delete mockStorage[k]);
 });
 
 describe('dataService (firestore mode)', () => {
@@ -388,6 +398,45 @@ describe('dataService (firestore mode)', () => {
     expect((await dataService.getBudgets()).food).toBe(800);
   });
 
+  test('importData restores streaks, quick templates and shopping list', async () => {
+    const ok = await dataService.importData({
+      streaks: { currentStreak: 5, longestStreak: 9 },
+      quickTemplates: [{ id: 'qt1', categoryId: 'food' }],
+      shoppingList: { manualItems: [{ name: 'Milk' }], listItems: {}, checkedItems: {} },
+    });
+    expect(ok).toBe(true);
+
+    expect((await dataService.getStreaks()).currentStreak).toBe(5);
+    expect((await dataService.getQuickTemplates()).length).toBe(1);
+    expect((await dataService.getShoppingList()).manualItems.length).toBe(1);
+  });
+
+  test('exportData includes quick templates and shopping list', async () => {
+    await dataService.saveQuickTemplates([{ id: 'qt1', categoryId: 'food' }]);
+    await dataService.saveShoppingList({ manualItems: [{ name: 'Bread' }], listItems: {}, checkedItems: {} });
+
+    const data = await dataService.exportData();
+    expect(data.quickTemplates.length).toBe(1);
+    expect(data.shoppingList.manualItems.length).toBe(1);
+  });
+
+  // ─── MIGRATION ──────────────────────────────
+  test('migrateToFirestore preserves streaks, quick templates and shopping list', async () => {
+    mockStorage['qaizo_transactions'] = JSON.stringify([{ id: 't1', type: 'expense', amount: 10, categoryId: 'food' }]);
+    mockStorage['qaizo_streaks'] = JSON.stringify({ currentStreak: 5, longestStreak: 9 });
+    mockStorage['qaizo_quick_templates'] = JSON.stringify([{ id: 'qt1', categoryId: 'food' }]);
+    mockStorage['qaizo_shopping_list'] = JSON.stringify({ manualItems: [{ name: 'Milk' }], listItems: {}, checkedItems: {} });
+
+    const ok = await dataService.migrateToFirestore();
+    expect(ok).toBe(true);
+
+    // The guest data must land in Firestore — not silently vanish after the
+    // post-migration AsyncStorage wipe.
+    expect((await dataService.getStreaks()).currentStreak).toBe(5);
+    expect((await dataService.getQuickTemplates()).length).toBe(1);
+    expect((await dataService.getShoppingList()).manualItems.length).toBe(1);
+  });
+
   // ─── CLEAR ──────────────────────────────────
   test('clearAllData removes everything in firestore', async () => {
     await dataService.addTransaction({ type: 'expense', amount: 100, categoryId: 'food' });
@@ -396,5 +445,14 @@ describe('dataService (firestore mode)', () => {
     await dataService.clearAllData();
     expect((await dataService.getTransactions()).length).toBe(0);
     expect(await dataService.getBudgets()).toEqual({});
+  });
+
+  test('clearAllData also removes quick templates and shopping list', async () => {
+    await dataService.saveQuickTemplates([{ id: 'qt1', categoryId: 'food' }]);
+    await dataService.saveShoppingList({ manualItems: [{ name: 'Milk' }], listItems: {}, checkedItems: {} });
+
+    await dataService.clearAllData();
+    expect(await dataService.getQuickTemplates()).toEqual([]);
+    expect((await dataService.getShoppingList()).manualItems).toEqual([]);
   });
 });

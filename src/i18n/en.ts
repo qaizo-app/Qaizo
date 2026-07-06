@@ -313,6 +313,7 @@ export default {
   newRecurring: 'New Payment',
   addRecurring: 'Add payment',
   frequency: 'Frequency',
+  everyWeek: 'Weekly',
   everyMonth: 'Monthly',
   every2Months: 'Every 2 mo.',
   every3Months: 'Every 3 mo.',

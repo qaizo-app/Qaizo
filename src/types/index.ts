@@ -86,6 +86,7 @@ export interface Recurring {
   note?: string;
   interval?: RecurringInterval;
   intervalMonths?: number;       // legacy/runtime: months between executions
+  intervalDays?: number;         // day-based cadence (weekly statement templates = 7); wins over intervalMonths
   nextDate: string;              // 'YYYY-MM-DD'
   endDate?: string | null;
   endType?: 'never' | 'count' | 'date';

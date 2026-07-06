@@ -314,6 +314,7 @@ export default {
   newRecurring: 'תשלום חדש',
   addRecurring: 'הוסף תשלום',
   frequency: 'תדירות',
+  everyWeek: 'כל שבוע',
   everyMonth: 'כל חודש',
   every2Months: 'כל חודשיים',
   every3Months: 'כל 3 חודשים',
