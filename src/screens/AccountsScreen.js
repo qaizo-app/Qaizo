@@ -294,6 +294,8 @@ export default function AccountsScreen() {
     const balColor = status === 'overdraft' ? colors.red : status === 'warning' ? colors.orange : (bal >= 0 ? colors.green : colors.red);
     const holdingsCount = isCrypto && Array.isArray(acc.holdings) ? acc.holdings.length : 0;
     const displayCurrency = acc.currency;
+    // Billing day (day of month the card is charged) — only for credit cards.
+    const billingDay = acc.type === 'credit' && acc.billingDay ? acc.billingDay : null;
     return (
       <TouchableOpacity key={acc.id}
         style={[styles.tile,
@@ -303,7 +305,15 @@ export default function AccountsScreen() {
         onPress={() => openHistory(acc)} onLongPress={() => openEdit(acc)} activeOpacity={0.7}>
         <View style={styles.tileTop}>
           <MaterialCommunityIcons name={cfg.icon} size={16} color={cfg.color} />
-          {statusColor && <Feather name="alert-triangle" size={14} color={statusColor} />}
+          <View style={styles.tileTopRight}>
+            {billingDay != null && (
+              <View style={styles.billBadge}>
+                <Feather name="calendar" size={10} color={colors.textMuted} />
+                <Text style={styles.billBadgeTxt}>{billingDay}</Text>
+              </View>
+            )}
+            {statusColor && <Feather name="alert-triangle" size={14} color={statusColor} />}
+          </View>
         </View>
         <Text style={styles.tileName} numberOfLines={1}>{acc.name}</Text>
         <Amount value={bal} sign style={styles.tileBalance} color={balColor} numberOfLines={1} adjustsFontSizeToFit currency={displayCurrency} />
@@ -643,6 +653,9 @@ const createStyles = () => StyleSheet.create({
   tilesRow:{flexDirection:i18n.row(),flexWrap:'wrap',paddingHorizontal:24,gap:TILE_GAP},
   tile:{width:TILE_W,backgroundColor:colors.card,borderRadius:14,padding:12,borderWidth:1,borderColor:colors.cardBorder,marginBottom:TILE_GAP},
   tileTop:{marginBottom:6,flexDirection:i18n.row(),alignItems:'center',justifyContent:'space-between'},
+  tileTopRight:{flexDirection:i18n.row(),alignItems:'center',gap:6},
+  billBadge:{flexDirection:i18n.row(),alignItems:'center',gap:3,backgroundColor:colors.bg2,borderRadius:6,paddingHorizontal:5,paddingVertical:2},
+  billBadgeTxt:{color:colors.textMuted,fontSize:10,fontWeight:'700'},
   tileName:{color:colors.textSecondary,fontSize:12,fontWeight:'600',marginBottom:4,textAlign:i18n.textAlign()},
   tileBalance:{color:colors.text,fontSize:14,fontWeight:'700',textAlign:i18n.textAlign()},
   tileSub:{color:colors.textMuted,fontSize:10,fontWeight:'600',marginTop:2,textAlign:i18n.textAlign()},
