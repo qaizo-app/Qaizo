@@ -20,7 +20,7 @@ function formatK(n) {
   return String(Math.round(n));
 }
 
-export default function BalanceLineChart({ data, limit, currency, limitLabel }) {
+export default function BalanceLineChart({ data, limit, currency, limitLabel, chargeAmount }) {
   const [containerW, setContainerW] = useState(300);
   const [selected, setSelected] = useState(null);
 
@@ -107,6 +107,7 @@ export default function BalanceLineChart({ data, limit, currency, limitLabel }) 
       {limit > 0 && (
         <Text style={st.limitText}>
           {limitLabel || i18n.t('creditLimit')}: <Amount value={limit} currency={currency} style={st.limitText} />
+          {chargeAmount > 0 ? <Text style={st.limitText}> · {i18n.t('chargeShort')}: <Amount value={chargeAmount} currency={currency} style={st.limitText} /></Text> : null}
         </Text>
       )}
 

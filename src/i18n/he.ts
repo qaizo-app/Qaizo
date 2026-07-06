@@ -239,6 +239,7 @@ export default {
   billingDay: 'מועד חיוב',
   chargeFromAccount: 'מחויב מחשבון',
   chargeAmount: 'סכום חיוב',
+  chargeShort: 'חיוב',
   chargeAmountHint: 'ריק = כל החוב',
   cardChargeShortfall: 'לא יספיק לחיוב הכרטיסים:',
   active: 'פעיל',

@@ -238,6 +238,7 @@ export default {
   billingDay: 'Billing day',
   chargeFromAccount: 'Charged from account',
   chargeAmount: 'Charge amount',
+  chargeShort: 'Charge',
   chargeAmountHint: 'empty = full debt',
   cardChargeShortfall: 'Not enough for card charges:',
   active: 'Active',

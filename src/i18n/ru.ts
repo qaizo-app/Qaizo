@@ -244,6 +244,7 @@ export default {
   billingDay: 'Дата списания',
   chargeFromAccount: 'Списывается со счёта',
   chargeAmount: 'Сумма списания',
+  chargeShort: 'Списание',
   chargeAmountHint: 'пусто = весь долг',
   cardChargeShortfall: 'Не хватит на списание карт:',
   active: 'Активный',

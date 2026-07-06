@@ -304,6 +304,7 @@ export default function AccountHistoryScreen({ route, navigation }) {
           <BalanceLineChart data={chartData}
             limit={account.overdraft}
             currency={account.currency}
+            chargeAmount={account.type === 'credit' ? account.fixedCharge : null}
             limitLabel={account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')} />
         </View>
       );
@@ -317,6 +318,9 @@ export default function AccountHistoryScreen({ route, navigation }) {
           <Text style={styles.odText}>
             {account.type === 'credit' ? i18n.t('creditLimit') : i18n.t('overdraft')}:{' '}
             <Amount value={account.overdraft} style={styles.odText} currency={account.currency} />
+            {account.type === 'credit' && account.fixedCharge > 0 ? (
+              <Text style={styles.odText}> · {i18n.t('chargeShort')}: <Amount value={account.fixedCharge} style={styles.odText} currency={account.currency} /></Text>
+            ) : null}
           </Text>
         )}
       </View>
