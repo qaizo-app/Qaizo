@@ -31,7 +31,6 @@ import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
-import ShoppingListScreen from '../screens/ShoppingListScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import ProjectsScreen from '../screens/ProjectsScreen';
 import QuickAddModal from '../components/QuickAddModal';
@@ -66,7 +65,6 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="Goals" component={GoalsScreen} />
       <DashboardStack.Screen name="Analytics" component={AnalyticsScreen} />
       <DashboardStack.Screen name="Calendar" component={CalendarScreen} />
-      <DashboardStack.Screen name="ShoppingList" component={ShoppingListScreen} />
       <DashboardStack.Screen name="AIChat" component={AIChatScreen} />
     </DashboardStack.Navigator>
   );

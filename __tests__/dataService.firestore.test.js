@@ -398,34 +398,29 @@ describe('dataService (firestore mode)', () => {
     expect((await dataService.getBudgets()).food).toBe(800);
   });
 
-  test('importData restores streaks, quick templates and shopping list', async () => {
+  test('importData restores streaks and quick templates', async () => {
     const ok = await dataService.importData({
       streaks: { currentStreak: 5, longestStreak: 9 },
       quickTemplates: [{ id: 'qt1', categoryId: 'food' }],
-      shoppingList: { manualItems: [{ name: 'Milk' }], listItems: {}, checkedItems: {} },
     });
     expect(ok).toBe(true);
 
     expect((await dataService.getStreaks()).currentStreak).toBe(5);
     expect((await dataService.getQuickTemplates()).length).toBe(1);
-    expect((await dataService.getShoppingList()).manualItems.length).toBe(1);
   });
 
-  test('exportData includes quick templates and shopping list', async () => {
+  test('exportData includes quick templates', async () => {
     await dataService.saveQuickTemplates([{ id: 'qt1', categoryId: 'food' }]);
-    await dataService.saveShoppingList({ manualItems: [{ name: 'Bread' }], listItems: {}, checkedItems: {} });
 
     const data = await dataService.exportData();
     expect(data.quickTemplates.length).toBe(1);
-    expect(data.shoppingList.manualItems.length).toBe(1);
   });
 
   // ─── MIGRATION ──────────────────────────────
-  test('migrateToFirestore preserves streaks, quick templates and shopping list', async () => {
+  test('migrateToFirestore preserves streaks and quick templates', async () => {
     mockStorage['qaizo_transactions'] = JSON.stringify([{ id: 't1', type: 'expense', amount: 10, categoryId: 'food' }]);
     mockStorage['qaizo_streaks'] = JSON.stringify({ currentStreak: 5, longestStreak: 9 });
     mockStorage['qaizo_quick_templates'] = JSON.stringify([{ id: 'qt1', categoryId: 'food' }]);
-    mockStorage['qaizo_shopping_list'] = JSON.stringify({ manualItems: [{ name: 'Milk' }], listItems: {}, checkedItems: {} });
 
     const ok = await dataService.migrateToFirestore();
     expect(ok).toBe(true);
@@ -434,7 +429,6 @@ describe('dataService (firestore mode)', () => {
     // post-migration AsyncStorage wipe.
     expect((await dataService.getStreaks()).currentStreak).toBe(5);
     expect((await dataService.getQuickTemplates()).length).toBe(1);
-    expect((await dataService.getShoppingList()).manualItems.length).toBe(1);
   });
 
   // ─── CLEAR ──────────────────────────────────
@@ -447,12 +441,10 @@ describe('dataService (firestore mode)', () => {
     expect(await dataService.getBudgets()).toEqual({});
   });
 
-  test('clearAllData also removes quick templates and shopping list', async () => {
+  test('clearAllData also removes quick templates', async () => {
     await dataService.saveQuickTemplates([{ id: 'qt1', categoryId: 'food' }]);
-    await dataService.saveShoppingList({ manualItems: [{ name: 'Milk' }], listItems: {}, checkedItems: {} });
 
     await dataService.clearAllData();
     expect(await dataService.getQuickTemplates()).toEqual([]);
-    expect((await dataService.getShoppingList()).manualItems).toEqual([]);
   });
 });

@@ -195,17 +195,6 @@ export interface QuickTemplate {
   createdAt?: string;
 }
 
-// ─── Shopping list ───────────────────────────────────────
-export interface ShoppingItem {
-  id: string;
-  name: string;
-  price?: number;
-  quantity?: number;
-  note?: string;
-  checked?: boolean;
-  createdAt?: string;
-}
-
 // ─── Streaks ─────────────────────────────────────────────
 // Gamification: consecutive days of logging finances + consecutive days kept
 // under the daily budget. Persisted by dataService.saveStreaks / getStreaks.

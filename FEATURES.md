@@ -26,17 +26,16 @@
 13. [Investments](#investments)
 14. [Crypto](#crypto)
 15. [Multi-currency & live FX](#multi-currency--live-fx)
-16. [Shopping list](#shopping-list)
-17. [Projects](#projects)
-18. [Reports & exports](#reports--exports)
-19. [Notifications](#notifications)
-20. [Themes & UI](#themes--ui)
-21. [Internationalization](#internationalization)
-22. [Privacy & security](#privacy--security)
-23. [Onboarding](#onboarding)
-24. [Settings](#settings)
-25. [Streaks & gamification](#streaks--gamification)
-26. [Quality & telemetry](#quality--telemetry)
+16. [Projects](#projects)
+17. [Reports & exports](#reports--exports)
+18. [Notifications](#notifications)
+19. [Themes & UI](#themes--ui)
+20. [Internationalization](#internationalization)
+21. [Privacy & security](#privacy--security)
+22. [Onboarding](#onboarding)
+23. [Settings](#settings)
+24. [Streaks & gamification](#streaks--gamification)
+25. [Quality & telemetry](#quality--telemetry)
 
 ---
 
@@ -406,21 +405,6 @@ For accounts of `type: 'crypto'` with multi-asset holdings:
 - All cross-currency totals (account total, dashboard balance, monthly
   income/expense) use live rates
 - Initial currency auto-detected from device locale on first run
-
----
-
-## Shopping list
-
-A grocery-list screen separate from transactions, useful for planning
-before a supermarket run.
-
-- Manual entries: name, optional price + quantity + note
-- Three filter tabs: **Frequent** (auto-built from recurring purchases),
-  **My list** (manually added), **All**
-- Search box across the list
-- Receipt scanner here too — adds scanned items as a batch
-- Share button — copies the list to a friend
-- Persists across sessions via the new `SHOPPING_LIST` key in `dataService`
 
 ---
 

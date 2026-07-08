@@ -40,7 +40,7 @@ const KEYS = {
   QUICK_TEMPLATES: 'qaizo_quick_templates',
   PROJECTS: 'qaizo_projects',
   GOALS: 'qaizo_goals',
-  SHOPPING_LIST: 'qaizo_shopping_list',
+  SHOPPING_LIST: 'qaizo_shopping_list', // legacy (feature removed) — kept so clearAllData wipes old data
 };
 
 const DEFAULT_ACCOUNTS: Account[] = [
@@ -918,29 +918,6 @@ const dataService = {
     } catch (e) { /* noop */ }
   },
 
-  // Manual product-name overrides for ShoppingList grouping.
-  // Stored as { "lower-case alias name": "Canonical Display Name" }.
-  // When the matcher sees "lower-case alias name", it's treated as belonging
-  // to whichever group already has that canonical display name.
-  async getProductMergeOverrides(): Promise<Record<string, string>> {
-    try {
-      const raw = await AsyncStorage.getItem('product_merge_overrides');
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) { return {}; }
-  },
-
-  async saveProductMergeOverride(aliasName: string, canonicalName?: string) {
-    try {
-      const raw = await AsyncStorage.getItem('product_merge_overrides');
-      const map: Record<string, string> = raw ? JSON.parse(raw) : {};
-      const key = String(aliasName || '').trim().toLowerCase();
-      if (!key) return;
-      if (canonicalName) map[key] = String(canonicalName).trim();
-      else delete map[key];
-      await AsyncStorage.setItem('product_merge_overrides', JSON.stringify(map));
-    } catch (e) { /* noop */ }
-  },
-
   async getQuickTemplates(): Promise<QuickTemplate[]> {
     const uid = getUid();
     if (uid) return getDocData('quickTemplates', []);
@@ -951,22 +928,6 @@ const dataService = {
     const uid = getUid();
     if (uid) return setDocData('quickTemplates', templates);
     try { await AsyncStorage.setItem(KEYS.QUICK_TEMPLATES, JSON.stringify(templates)); return true; } catch (e) { return false; }
-  },
-
-  // ─── SHOPPING LIST ────────────────────────────────────────
-  // Stored as { manualItems: [{name, price?, quantity?}], listItems: {name:true},
-  // checkedItems: {name:true} } — survives app restart and cross-device sync.
-  async getShoppingList(): Promise<any> {
-    const uid = getUid();
-    const defaults = { manualItems: [], listItems: {}, checkedItems: {} };
-    if (uid) return getDocData('shoppingList', defaults);
-    try { const data = await AsyncStorage.getItem(KEYS.SHOPPING_LIST); return data ? JSON.parse(data) : defaults; } catch (e) { return defaults; }
-  },
-
-  async saveShoppingList(state: any) {
-    const uid = getUid();
-    if (uid) return setDocData('shoppingList', state);
-    try { await AsyncStorage.setItem(KEYS.SHOPPING_LIST, JSON.stringify(state)); return true; } catch (e) { return false; }
   },
 
   // ─── STREAKS ──────────────────────────────────────────────
@@ -1006,6 +967,7 @@ const dataService = {
           const snap = await userCol(col).get();
           await Promise.all(snap.docs.map((d: any) => d.ref.delete()));
         }
+        // 'shoppingList' is legacy (feature removed) — kept so old docs get wiped too
         const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals', 'quickTemplates', 'shoppingList'];
         for (const name of singleDocs) {
           try { await userDoc(name + '/data').delete(); } catch (e) {}
@@ -1018,13 +980,13 @@ const dataService = {
 
   async exportData() {
     try {
-      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, shoppingList] = await Promise.all([
+      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates] = await Promise.all([
         this.getTransactions(), this.getAccounts(), this.getInvestments(),
         this.getCategories(), this.getSettings(), this.getBudgets(),
         this.getRecurring(), this.getTags(), this.getStreaks(), this.getProjects(), this.getGoals(),
-        this.getQuickTemplates(), this.getShoppingList(),
+        this.getQuickTemplates(),
       ]);
-      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, shoppingList, exportedAt: new Date().toISOString() };
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, exportedAt: new Date().toISOString() };
     } catch (e) { return null; }
   },
 
@@ -1074,13 +1036,11 @@ const dataService = {
       // Mode-agnostic entities (saveX dispatches on uid internally). The
       // snake_case aliases come from migrateToFirestore, which lowercases the
       // KEYS constant names (QUICK_TEMPLATES → quick_templates). Before these
-      // lines the migration silently DROPPED streaks, quick templates and the
-      // shopping list — and then wiped them from AsyncStorage.
+      // lines the migration silently DROPPED streaks and quick templates —
+      // and then wiped them from AsyncStorage.
       if (data.streaks) await this.saveStreaks(data.streaks);
       const quickTemplates = data.quickTemplates || data.quick_templates;
       if (quickTemplates) await this.saveQuickTemplates(quickTemplates);
-      const shoppingList = data.shoppingList || data.shopping_list;
-      if (shoppingList) await this.saveShoppingList(shoppingList);
       return true;
     } catch (e) { return false; }
   },
