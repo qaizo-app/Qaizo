@@ -18,6 +18,7 @@ import type {
   Goal,
   GoalDeposit,
   Investment,
+  PensionProfile,
   Project,
   QuickTemplate,
   Recurring,
@@ -40,6 +41,7 @@ const KEYS = {
   QUICK_TEMPLATES: 'qaizo_quick_templates',
   PROJECTS: 'qaizo_projects',
   GOALS: 'qaizo_goals',
+  PENSION_PROFILES: 'qaizo_pension_profiles',
   SHOPPING_LIST: 'qaizo_shopping_list', // legacy (feature removed) — kept so clearAllData wipes old data
 };
 
@@ -576,6 +578,19 @@ const dataService = {
     try { await AsyncStorage.setItem(KEYS.GOALS, JSON.stringify(goals)); return true; } catch (e) { return false; }
   },
 
+  // ─── PENSION PROFILES ─────────────────────────────────────
+  async getPensionProfiles(): Promise<PensionProfile[]> {
+    const uid = getUid();
+    if (uid) return getDocData('pensionProfiles', []);
+    try { const data = await AsyncStorage.getItem(KEYS.PENSION_PROFILES); return data ? JSON.parse(data) : []; } catch (e) { return []; }
+  },
+
+  async savePensionProfiles(profiles: PensionProfile[]): Promise<boolean> {
+    const uid = getUid();
+    if (uid) return setDocData('pensionProfiles', profiles);
+    try { await AsyncStorage.setItem(KEYS.PENSION_PROFILES, JSON.stringify(profiles)); return true; } catch (e) { return false; }
+  },
+
   async addGoal(goal: Partial<Goal>): Promise<Goal> {
     const goals = await this.getGoals();
     const newGoal = { ...goal, id: generateId(), createdAt: new Date().toISOString(), deposits: [] } as Goal;
@@ -968,7 +983,7 @@ const dataService = {
           await Promise.all(snap.docs.map((d: any) => d.ref.delete()));
         }
         // 'shoppingList' is legacy (feature removed) — kept so old docs get wiped too
-        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals', 'quickTemplates', 'shoppingList'];
+        const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals', 'quickTemplates', 'pensionProfiles', 'shoppingList'];
         for (const name of singleDocs) {
           try { await userDoc(name + '/data').delete(); } catch (e) {}
         }
@@ -980,13 +995,13 @@ const dataService = {
 
   async exportData() {
     try {
-      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates] = await Promise.all([
+      const [transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, pensionProfiles] = await Promise.all([
         this.getTransactions(), this.getAccounts(), this.getInvestments(),
         this.getCategories(), this.getSettings(), this.getBudgets(),
         this.getRecurring(), this.getTags(), this.getStreaks(), this.getProjects(), this.getGoals(),
-        this.getQuickTemplates(),
+        this.getQuickTemplates(), this.getPensionProfiles(),
       ]);
-      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, exportedAt: new Date().toISOString() };
+      return { transactions, accounts, investments, categories, settings, budgets, recurring, tags, streaks, projects, goals, quickTemplates, pensionProfiles, exportedAt: new Date().toISOString() };
     } catch (e) { return null; }
   },
 
@@ -1041,6 +1056,8 @@ const dataService = {
       if (data.streaks) await this.saveStreaks(data.streaks);
       const quickTemplates = data.quickTemplates || data.quick_templates;
       if (quickTemplates) await this.saveQuickTemplates(quickTemplates);
+      const pensionProfiles = data.pensionProfiles || data.pension_profiles;
+      if (pensionProfiles) await this.savePensionProfiles(pensionProfiles);
       return true;
     } catch (e) { return false; }
   },

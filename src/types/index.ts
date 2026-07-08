@@ -195,6 +195,26 @@ export interface QuickTemplate {
   createdAt?: string;
 }
 
+// ─── Pension forecast ────────────────────────────────────
+export type PensionBasket = 'pension' | 'capital';
+
+export interface PensionAccountLink {
+  accountId: string;
+  basket: PensionBasket;   // pension → annuity; capital → lump sum
+}
+
+export interface PensionProfile {
+  id: string;
+  name: string;                    // 'Алекс'
+  birthYear: number;               // 1980
+  retireAge: number;               // persisted stepper value, 55–75
+  annualReturnPct?: number;        // default 4 (percent, annual)
+  annuityCoef?: number;            // default 200 (מקדם המרה)
+  monthlyOverride?: number | null; // total ₪/month; null/undefined → auto
+  links: PensionAccountLink[];
+  createdAt?: string;
+}
+
 // ─── Streaks ─────────────────────────────────────────────
 // Gamification: consecutive days of logging finances + consecutive days kept
 // under the daily budget. Persisted by dataService.saveStreaks / getStreaks.

@@ -447,4 +447,24 @@ describe('dataService (firestore mode)', () => {
     await dataService.clearAllData();
     expect(await dataService.getQuickTemplates()).toEqual([]);
   });
+
+  // ─── PENSION PROFILES ───────────────────────────
+  test('pension profiles: save/get, export, import, clearAllData', async () => {
+    const profiles = [{
+      id: 'p1', name: 'Alex', birthYear: 1980, retireAge: 62,
+      links: [{ accountId: 'a1', basket: 'pension' }],
+    }];
+    await dataService.savePensionProfiles(profiles);
+    expect((await dataService.getPensionProfiles()).length).toBe(1);
+
+    const data = await dataService.exportData();
+    expect(data.pensionProfiles.length).toBe(1);
+
+    await dataService.clearAllData();
+    expect(await dataService.getPensionProfiles()).toEqual([]);
+
+    const ok = await dataService.importData({ pensionProfiles: profiles });
+    expect(ok).toBe(true);
+    expect((await dataService.getPensionProfiles())[0].name).toBe('Alex');
+  });
 });
