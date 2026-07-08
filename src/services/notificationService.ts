@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
 import { sym } from '../utils/currency';
 import { catName } from '../utils/categoryName';
-import { computeReminderHours } from '../utils/reminderSchedule';
+import { computeReminderHours, nextReminderDates } from '../utils/reminderSchedule';
 import dataService from './dataService';
 import type { Recurring, Transaction, Project } from '../types';
 
@@ -150,7 +150,14 @@ const notificationService = {
         s.reminderEnd ?? 22,
       );
 
-      for (const hour of hours) {
+      // One-shot DATE triggers instead of repeating DAILY ones: on Android a
+      // DAILY trigger whose hour already passed today fires IMMEDIATELY when
+      // scheduled — and we reschedule on every app open, so users got the
+      // reminder the second they opened the app. Explicit future dates can't
+      // fire early; 2 days of occurrences are kept topped up by the reschedule
+      // on every Dashboard load / settings change.
+      const dates = nextReminderDates(hours, new Date(), 2);
+      for (const date of dates) {
         await Notifications.scheduleNotificationAsync({
           content: {
             title: 'Qaizo',
@@ -159,9 +166,8 @@ const notificationService = {
             categoryIdentifier: 'quick_add',
           },
           trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DAILY,
-            hour,
-            minute: 0,
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date,
             channelId: 'payments',
           },
         });

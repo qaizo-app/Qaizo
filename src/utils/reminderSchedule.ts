@@ -16,4 +16,19 @@ export function computeReminderHours(intervalHours: number, startHour: number, e
   return hours;
 }
 
+// Expand clock hours into concrete future fire Dates over the next `days`
+// days (day 0 = today). Occurrences at or before `now` are skipped — this is
+// what lets the caller use one-shot DATE triggers instead of repeating DAILY
+// ones, which on Android fire immediately when the hour already passed today.
+export function nextReminderDates(hours: number[], now: Date, days: number): Date[] {
+  const dates: Date[] = [];
+  for (let day = 0; day < days; day++) {
+    for (const hour of hours) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + day, hour, 0, 0, 0);
+      if (d.getTime() > now.getTime()) dates.push(d);
+    }
+  }
+  return dates.sort((a, b) => a.getTime() - b.getTime());
+}
+
 export default computeReminderHours;

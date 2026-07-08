@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { mergeTransferPairs } from '../utils/transactions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, AppState, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, AppState, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddRecurringModal from '../components/AddRecurringModal';
@@ -871,7 +871,10 @@ export default function DashboardScreen() {
 
       {/* Notifications modal */}
       <Modal visible={showNotifModal} transparent animationType="fade" onRequestClose={() => setShowNotifModal(false)}>
-        <TouchableOpacity style={st.notifOverlay} activeOpacity={1} onPress={() => setShowNotifModal(false)}>
+        {/* Backdrop is a SIBLING of the card, not a parent — a Touchable parent
+            swallows drag gestures on Android and the list can't scroll. */}
+        <View style={st.notifOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowNotifModal(false)} />
           <View style={st.notifModal}>
             <View style={st.notifHeader}>
               <Feather name="bell" size={20} color={colors.green} />
@@ -905,7 +908,7 @@ export default function DashboardScreen() {
               </ScrollView>
             )}
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       {/* Milestone celebration */}

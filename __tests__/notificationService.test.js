@@ -159,19 +159,30 @@ describe('notificationService', () => {
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
-  test('scheduleExpenseReminders schedules one daily reminder per interval hour', async () => {
-    Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
-    dataService.getSettings.mockResolvedValue({
-      reminderEnabled: true, reminderInterval: 6, reminderStart: 9, reminderEnd: 22,
-    });
+  test('scheduleExpenseReminders schedules only FUTURE one-shot dates (no immediate fire)', async () => {
+    // Android bug guard: repeating DAILY triggers fire immediately when the
+    // hour already passed today, so the service must schedule explicit future
+    // DATE triggers instead.
+    jest.useFakeTimers().setSystemTime(new Date(2026, 6, 8, 10, 0)); // 10:00
+    try {
+      Notifications.getAllScheduledNotificationsAsync.mockResolvedValue([]);
+      dataService.getSettings.mockResolvedValue({
+        reminderEnabled: true, reminderInterval: 6, reminderStart: 9, reminderEnd: 22,
+      });
 
-    await notificationService.scheduleExpenseReminders();
-    // hours 9, 15, 21 → 3 notifications
-    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
-    const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
-    expect(call.content.data.type).toBe('expense_reminder');
-    expect(call.trigger.type).toBe('daily');
-    expect([9, 15, 21]).toContain(call.trigger.hour);
+      await notificationService.scheduleExpenseReminders();
+      // hours 9, 15, 21 over 2 days; 9:00 today already passed →
+      // today 15/21 + tomorrow 9/15/21 = 5 notifications
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(5);
+      const now = Date.now();
+      for (const [call] of Notifications.scheduleNotificationAsync.mock.calls) {
+        expect(call.content.data.type).toBe('expense_reminder');
+        expect(call.trigger.type).toBe('date');
+        expect(call.trigger.date.getTime()).toBeGreaterThan(now);
+      }
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('scheduleExpenseReminders clears its own previous reminders first', async () => {
