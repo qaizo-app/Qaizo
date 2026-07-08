@@ -42,7 +42,7 @@ export default function InvestmentsScreen() {
       dataService.getTransactions(),
     ]);
     setInvestments(inv);
-    setInvAccounts(accs.filter(a => a.type === 'investment' && !a.archived));
+    setInvAccounts(accs.filter(a => a.type === 'investment' && !a.archived && a.isActive !== false));
     setTransactions(txs);
     const tickers = new Set();
     inv.forEach(i => { if (i.type === 'stocks' && Array.isArray(i.holdings)) i.holdings.forEach(h => h.ticker && tickers.add(h.ticker)); });
