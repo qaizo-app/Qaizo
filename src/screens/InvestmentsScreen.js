@@ -75,8 +75,6 @@ export default function InvestmentsScreen() {
   const totalInvested =
     investments.reduce((sum, i) => sum + invValue(i), 0) +
     invAccounts.reduce((sum, a) => sum + (a.balance || 0), 0);
-  const totalMonthly = investments.reduce((sum, i) => sum + (i.monthly || 0), 0);
-
   // Monthly investment history — last 6 months.
   // Money flowing INTO investments — counted by any of these signals:
   //  1. Category is one of pension/investment/savings/children/education.
@@ -119,6 +117,15 @@ export default function InvestmentsScreen() {
   })();
   const investMaxMonthly = Math.max(1, ...monthlyInvestData.map(m => m.amount));
   const investTotal6m = monthlyInvestData.reduce((s, m) => s + m.amount, 0);
+
+  // "Monthly contribution" = average of the last 3 FULL months of real
+  // deposits (the current month is partial and would understate it), plus
+  // any `monthly` field from legacy hand-entered investment records.
+  const fullMonths = monthlyInvestData.slice(-4, -1);
+  const avgMonthlyDeposit = fullMonths.length > 0
+    ? fullMonths.reduce((s, m) => s + m.amount, 0) / fullMonths.length
+    : 0;
+  const totalMonthly = investments.reduce((sum, i) => sum + (i.monthly || 0), 0) + Math.round(avgMonthlyDeposit);
 
   const typeIcon = (t) => {
     switch (t) {
