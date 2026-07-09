@@ -171,7 +171,7 @@ export default function PensionForecastScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.chipsRow}>
           {profiles.map(p => (
             <TouchableOpacity key={p.id} style={[st.chip, selectedId === p.id && st.chipActive]}
-              onPress={() => setSelectedId(p.id)} onLongPress={() => openEdit(p)} delayLongPress={350}>
+              onPress={() => { setSelectedId(p.id); setOverrideDraft(null); }} onLongPress={() => openEdit(p)} delayLongPress={350}>
               <Text style={[st.chipTxt, selectedId === p.id && st.chipTxtActive]}>{p.name}</Text>
             </TouchableOpacity>
           ))}
@@ -280,8 +280,11 @@ export default function PensionForecastScreen() {
               ))}
             </Card>
 
-            {/* Assumptions (collapsed) */}
-            <Card>
+            {/* Assumptions (collapsed). Keyed by profile id: the TextInputs
+                inside use uncontrolled defaultValue, which is only applied on
+                mount — without the key, switching profiles with this section
+                open kept showing the previous profile's values. */}
+            <Card key={`assump_${selected.id}`}>
               <TouchableOpacity style={st.sectionHead} onPress={() => setAssumptionsOpen(v => !v)}>
                 <RowText style={st.sectionTitle}>{i18n.t('pfAssumptions')}</RowText>
                 <Feather name={assumptionsOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textDim} />
