@@ -4,7 +4,7 @@
 // calendar years for age, no fees/inflation/tax, single editable annuity
 // coefficient instead of actuarial tables.
 
-import type { Transaction } from '../types';
+import type { Account, PensionProfile, Transaction } from '../types';
 
 export const DEFAULT_ANNUAL_RETURN_PCT = 4;
 export const DEFAULT_ANNUITY_COEF = 200;
@@ -49,4 +49,100 @@ export function avgMonthlyDeposit(transactions: Transaction[], accountIds: strin
     total += t.amount || 0;
   }
   return total / 3;
+}
+
+export interface BasketForecast { current: number; projected: number; }
+
+export interface ProfileForecast {
+  currentAge: number;
+  months: number;                 // 0 when already eligible
+  alreadyEligible: boolean;
+  pension: BasketForecast & { annuity: number };
+  capital: BasketForecast;
+  monthlyAuto: { pension: number; capital: number };
+  monthlyUsed: { pension: number; capital: number };
+}
+
+export function forecastProfile(
+  profile: PensionProfile,
+  accounts: Account[],
+  transactions: Transaction[],
+  now: Date = new Date(),
+  retireAgeOverride?: number,
+): ProfileForecast {
+  const accById = new Map((accounts || []).map(a => [a.id, a]));
+  // Links to deleted accounts are ignored here (and pruned on next save).
+  const links = (profile.links || []).filter(l => accById.has(l.accountId));
+  const idsOf = (basket: string) => links.filter(l => l.basket === basket).map(l => l.accountId);
+  const balanceOf = (ids: string[]) => ids.reduce((s, id) => s + ((accById.get(id) as Account).balance || 0), 0);
+
+  const pensionIds = idsOf('pension');
+  const capitalIds = idsOf('capital');
+  const autoPension = avgMonthlyDeposit(transactions, pensionIds, now);
+  const autoCapital = avgMonthlyDeposit(transactions, capitalIds, now);
+
+  // Override replaces the TOTAL deposit, split proportionally to the auto
+  // shares; when both auto shares are 0 everything goes to pension.
+  let usedPension = autoPension;
+  let usedCapital = autoCapital;
+  const o = profile.monthlyOverride;
+  if (o != null && Number.isFinite(o)) {
+    const autoTotal = autoPension + autoCapital;
+    if (autoTotal > 0) {
+      usedPension = o * (autoPension / autoTotal);
+      usedCapital = o * (autoCapital / autoTotal);
+    } else {
+      usedPension = o;
+      usedCapital = 0;
+    }
+  }
+
+  const currentAge = now.getFullYear() - profile.birthYear;
+  const retireAge = retireAgeOverride ?? profile.retireAge;
+  const months = Math.max(0, (retireAge - currentAge) * 12);
+  const annual = profile.annualReturnPct ?? DEFAULT_ANNUAL_RETURN_PCT;
+  const coef = profile.annuityCoef || DEFAULT_ANNUITY_COEF;
+
+  const pensionCurrent = Math.round(balanceOf(pensionIds));
+  const capitalCurrent = Math.round(balanceOf(capitalIds));
+  const pensionProjected = projectSavings(pensionCurrent, usedPension, months, annual);
+  const capitalProjected = projectSavings(capitalCurrent, usedCapital, months, annual);
+
+  return {
+    currentAge,
+    months,
+    alreadyEligible: months === 0,
+    pension: { current: pensionCurrent, projected: pensionProjected, annuity: Math.round(pensionProjected / coef) },
+    capital: { current: capitalCurrent, projected: capitalProjected },
+    monthlyAuto: { pension: Math.round(autoPension), capital: Math.round(autoCapital) },
+    monthlyUsed: { pension: Math.round(usedPension), capital: Math.round(usedCapital) },
+  };
+}
+
+export interface FamilyForecast {
+  pension: { current: number; projected: number; annuity: number };
+  capital: { current: number; projected: number };
+}
+
+// Each profile is forecast at its OWN retireAge/assumptions, then summed.
+export function forecastFamily(
+  profiles: PensionProfile[],
+  accounts: Account[],
+  transactions: Transaction[],
+  now: Date = new Date(),
+): FamilyForecast {
+  return (profiles || []).reduce<FamilyForecast>((acc, p) => {
+    const f = forecastProfile(p, accounts, transactions, now);
+    return {
+      pension: {
+        current: acc.pension.current + f.pension.current,
+        projected: acc.pension.projected + f.pension.projected,
+        annuity: acc.pension.annuity + f.pension.annuity,
+      },
+      capital: {
+        current: acc.capital.current + f.capital.current,
+        projected: acc.capital.projected + f.capital.projected,
+      },
+    };
+  }, { pension: { current: 0, projected: 0, annuity: 0 }, capital: { current: 0, projected: 0 } });
 }
