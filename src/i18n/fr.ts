@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: 'Âge de départ atteint — épargne actuelle affichée',
   pfDeleteProfile: 'Supprimer le profil ?',
   pfDisclaimer: 'Estimation selon vos hypothèses (années entières, hors frais/inflation/impôts). Ne constitue pas un conseil financier ou retraite.',
+  // Sauvegarde automatique
+  autoBackupTitle: 'Sauvegarde auto',
+  abDaily: 'Quotidienne',
+  abWeekly: 'Hebdomadaire',
+  abLast: 'Dernière : {date}',
+  abNever: 'Aucune sauvegarde pour l’instant',
+  abDirUnavailable: 'Dossier indisponible — choisissez-le à nouveau',
+  abBackupNow: 'Sauvegarder maintenant',
+  abDone: 'Sauvegarde enregistrée',
 };

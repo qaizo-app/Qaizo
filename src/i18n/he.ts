@@ -892,4 +892,13 @@ export default {
   pfAlreadyEligible: 'גיל הפרישה כבר הושג — מוצג החיסכון הנוכחי',
   pfDeleteProfile: 'למחוק את הפרופיל?',
   pfDisclaimer: 'הערכה לפי ההנחות שהוגדרו (שנים שלמות, ללא דמי ניהול/אינפלציה/מס). אינה ייעוץ פיננסי או פנסיוני.',
+  // גיבוי אוטומטי
+  autoBackupTitle: 'גיבוי אוטומטי',
+  abDaily: 'יומי',
+  abWeekly: 'שבועי',
+  abLast: 'אחרון: {date}',
+  abNever: 'אין גיבויים עדיין',
+  abDirUnavailable: 'התיקייה לא זמינה — בחר שוב',
+  abBackupNow: 'גבה עכשיו',
+  abDone: 'הגיבוי נשמר',
 };

@@ -33,7 +33,9 @@
         "NSFaceIDUsageDescription": "Allow Qaizo to use Face ID to unlock the app",
         "NSCameraUsageDescription": "Allow Qaizo to take photos of receipts so it can read items, prices and totals.",
         "NSPhotoLibraryUsageDescription": "Allow Qaizo to pick a receipt image from your photo library so it can read items, prices and totals.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true
       }
     },
     "plugins": [

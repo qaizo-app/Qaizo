@@ -455,6 +455,15 @@ ad-hoc cost tracking outside the normal category system.
 - **Excel (XLSX)** — multi-sheet via `xlsx`
 - **PDF** — uses the same Monthly Report template
 
+**Backup:**
+
+- **Manual full backup** — the entire data bundle as one JSON file via the
+  share sheet (Drive, email, …); restore via file pick + confirm
+- **Auto backup** — optional scheduled copy: daily or weekly, written
+  silently on app open into a user-picked folder (Android SAF; on iOS the
+  app's Files-visible `backups/` dir). Keeps the newest 7
+  `qaizo-backup-*.json` files; restorable via the normal restore flow
+
 **Imports:**
 
 - CSV / Excel via `ImportModal`

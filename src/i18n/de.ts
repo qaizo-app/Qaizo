@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: 'Rentenalter erreicht — aktuelle Ersparnisse werden angezeigt',
   pfDeleteProfile: 'Profil löschen?',
   pfDisclaimer: 'Schätzung auf Basis deiner Annahmen (ganze Jahre, ohne Gebühren/Inflation/Steuern). Keine Finanz- oder Rentenberatung.',
+  // Automatisches Backup
+  autoBackupTitle: 'Auto-Backup',
+  abDaily: 'Täglich',
+  abWeekly: 'Wöchentlich',
+  abLast: 'Zuletzt: {date}',
+  abNever: 'Noch keine Backups',
+  abDirUnavailable: 'Ordner nicht verfügbar — bitte neu wählen',
+  abBackupNow: 'Jetzt sichern',
+  abDone: 'Backup gespeichert',
 };

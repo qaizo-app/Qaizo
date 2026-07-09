@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: '已达到退休年龄 — 显示当前储蓄',
   pfDeleteProfile: '删除档案？',
   pfDisclaimer: '基于你的假设估算（整年计算，不含费用/通胀/税）。不构成财务或养老建议。',
+  // 自动备份
+  autoBackupTitle: '自动备份',
+  abDaily: '每天',
+  abWeekly: '每周',
+  abLast: '上次：{date}',
+  abNever: '还没有备份',
+  abDirUnavailable: '文件夹不可用 — 请重新选择',
+  abBackupNow: '立即备份',
+  abDone: '备份已保存',
 };

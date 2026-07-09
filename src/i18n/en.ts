@@ -892,4 +892,13 @@ export default {
   pfAlreadyEligible: 'Retirement age reached — figures show current savings',
   pfDeleteProfile: 'Delete profile?',
   pfDisclaimer: 'Estimate based on your assumptions (whole years, no fees/inflation/tax). Not financial or pension advice.',
+  // Auto backup
+  autoBackupTitle: 'Auto backup',
+  abDaily: 'Daily',
+  abWeekly: 'Weekly',
+  abLast: 'Last: {date}',
+  abNever: 'No backups yet',
+  abDirUnavailable: 'Folder unavailable — pick it again',
+  abBackupNow: 'Back up now',
+  abDone: 'Backup saved',
 };

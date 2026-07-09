@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: '退職年齢に到達 — 現在の貯蓄を表示中',
   pfDeleteProfile: 'プロフィールを削除しますか？',
   pfDisclaimer: '設定した前提に基づく概算です（年単位、手数料・インフレ・税金は考慮せず）。財務・年金アドバイスではありません。',
+  // 自動バックアップ
+  autoBackupTitle: '自動バックアップ',
+  abDaily: '毎日',
+  abWeekly: '毎週',
+  abLast: '前回: {date}',
+  abNever: 'まだバックアップがありません',
+  abDirUnavailable: 'フォルダが利用できません — 再選択してください',
+  abBackupNow: '今すぐバックアップ',
+  abDone: 'バックアップを保存しました',
 };

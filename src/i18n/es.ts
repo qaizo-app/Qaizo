@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: 'Edad de jubilación alcanzada — se muestran los ahorros actuales',
   pfDeleteProfile: '¿Eliminar perfil?',
   pfDisclaimer: 'Estimación basada en tus supuestos (años completos, sin comisiones/inflación/impuestos). No es asesoramiento financiero ni de pensiones.',
+  // Copia automática
+  autoBackupTitle: 'Copia automática',
+  abDaily: 'Diaria',
+  abWeekly: 'Semanal',
+  abLast: 'Última: {date}',
+  abNever: 'Aún no hay copias',
+  abDirUnavailable: 'Carpeta no disponible — elígela de nuevo',
+  abBackupNow: 'Copiar ahora',
+  abDone: 'Copia guardada',
 };

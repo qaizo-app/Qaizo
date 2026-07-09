@@ -12,6 +12,7 @@ import Card from '../components/Card';
 import RowText from '../components/RowText';
 import notificationService from '../services/notificationService';
 import backupService from '../services/backupService';
+import autoBackupService from '../services/autoBackupService';
 import ConfirmModal from '../components/ConfirmModal';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import PinScreen from './PinScreen';
@@ -42,6 +43,7 @@ export default function SettingsScreen() {
   const [reminderInterval, setReminderInterval] = useState(3);
   const [reminderStart, setReminderStart] = useState(9);
   const [reminderEnd, setReminderEnd] = useState(22);
+  const [abCfg, setAbCfg] = useState(null); // AutoBackupConfig | null until loaded
   const [langVersion, setLangVersion] = useState(0);
   const currentUser = authService.getCurrentUser();
   const toast = useToast();
@@ -105,6 +107,39 @@ export default function SettingsScreen() {
     setRestoreData(null);
     const ok = await dataService.importData(data);
     toast.show(ok ? i18n.t('restoreDone') : i18n.t('error'), ok ? 'success' : 'error');
+  };
+
+  useEffect(() => { autoBackupService.getConfig().then(setAbCfg); }, []);
+
+  // Auto backup: toggling ON needs a folder (Android SAF picker; iOS silent
+  // app dir). Cancelling the picker keeps the feature off. dirUri is kept on
+  // toggle-off so re-enabling reuses the folder without re-picking.
+  const handleAutoBackupToggle = async (value) => {
+    if (!abCfg) return;
+    if (value && (!abCfg.dirUri || abCfg.lastError === 'dir_unavailable')) {
+      const dir = await autoBackupService.pickBackupDir();
+      if (!dir) return; // cancelled → stays off
+      setAbCfg(await autoBackupService.saveConfig({ enabled: true, dirUri: dir, lastError: null }));
+      return;
+    }
+    setAbCfg(await autoBackupService.saveConfig({ enabled: value }));
+  };
+
+  const handleAutoBackupFreq = async (frequency) => {
+    setAbCfg(await autoBackupService.saveConfig({ frequency }));
+  };
+
+  const handleAutoBackupRepick = async () => {
+    const dir = await autoBackupService.pickBackupDir();
+    if (!dir) return;
+    setAbCfg(await autoBackupService.saveConfig({ dirUri: dir, lastError: null }));
+  };
+
+  const handleBackupNow = async () => {
+    const r = await autoBackupService.runNow();
+    if (r === 'ok') toast.show(i18n.t('abDone'), 'success');
+    else toast.show(i18n.t('error'), 'error');
+    setAbCfg(await autoBackupService.getConfig());
   };
 
   const changeCurrency = async (cur) => {
@@ -507,6 +542,51 @@ export default function SettingsScreen() {
               </View>
               <Text style={styles.sectionValue}>JSON</Text>
             </TouchableOpacity>
+            {/* Auto backup */}
+            <View style={[styles.optRow, styles.optBorder]}>
+              <Feather name="hard-drive" size={18} color={colors.teal} style={{ }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optText}>{i18n.t('autoBackupTitle')}</Text>
+              </View>
+              <Switch
+                value={!!abCfg?.enabled}
+                onValueChange={handleAutoBackupToggle}
+                trackColor={{ false: colors.card, true: `${colors.green}40` }}
+                thumbColor={abCfg?.enabled ? colors.green : colors.textMuted}
+              />
+            </View>
+            {abCfg?.enabled && (
+              <>
+                <View style={[styles.optRow, styles.optBorder]}>
+                  <View style={{ width: 18 }} />
+                  <View style={{ flex: 1, flexDirection: i18n.row(), gap: 8 }}>
+                    {[['daily', 'abDaily'], ['weekly', 'abWeekly']].map(([freq, key]) => (
+                      <TouchableOpacity key={freq}
+                        style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10, backgroundColor: abCfg.frequency === freq ? `${colors.green}22` : colors.card, borderWidth: 1, borderColor: abCfg.frequency === freq ? colors.green : colors.cardBorder }}
+                        onPress={() => handleAutoBackupFreq(freq)}>
+                        <Text style={{ color: abCfg.frequency === freq ? colors.green : colors.textDim, fontSize: 12, fontWeight: '700' }}>{i18n.t(key)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                <TouchableOpacity style={[styles.optRow, styles.optBorder]}
+                  onPress={abCfg.lastError === 'dir_unavailable' ? handleAutoBackupRepick : handleBackupNow}>
+                  <Feather name={abCfg.lastError === 'dir_unavailable' ? 'alert-triangle' : 'save'} size={18}
+                    color={abCfg.lastError === 'dir_unavailable' ? colors.orange : colors.green} style={{ }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.optText}>
+                      {abCfg.lastError === 'dir_unavailable' ? i18n.t('abDirUnavailable') : i18n.t('abBackupNow')}
+                    </Text>
+                    <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>
+                      {abCfg.lastBackupAt
+                        ? i18n.t('abLast').replace('{date}', new Date(abCfg.lastBackupAt).toLocaleDateString())
+                        : i18n.t('abNever')}
+                      {autoBackupService.dirDisplayName(abCfg.dirUri) ? ` · ${autoBackupService.dirDisplayName(abCfg.dirUri)}` : ''}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
             <TouchableOpacity style={[styles.optRow, styles.optBorder]} onPress={handleRecalc}>
               <Feather name="refresh-cw" size={18} color={colors.blue} style={{ }} />
               <View style={{ flex: 1 }}>

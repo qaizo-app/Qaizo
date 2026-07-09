@@ -86,6 +86,7 @@ import AuthScreen from './src/screens/AuthScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SetupWizardScreen from './src/screens/SetupWizardScreen';
 import authService from './src/services/authService';
+import autoBackupService from './src/services/autoBackupService';
 import consentService from './src/services/consentService';
 import analyticsEvents from './src/services/analyticsEvents';
 import dataService from './src/services/dataService';
@@ -269,6 +270,11 @@ function AppInner() {
       // has passed. Catches up missed months too. Runs once on every app
       // startup so the user gets fresh transactions without thinking about it.
       try { await dataService.autoExecuteRecurring(); } catch (e) {}
+
+      // Scheduled off-cloud backup (Settings → Данные → Автобэкап). Checks the
+      // configured interval and silently writes a JSON bundle to the user's
+      // folder. Fire-and-forget: a slow/failed backup must not delay startup.
+      try { autoBackupService.runAutoBackup(); } catch (e) {}
 
       // Слушатель нажатий на уведомления
       const notifSub = Notifications.addNotificationResponseReceivedListener(response => {

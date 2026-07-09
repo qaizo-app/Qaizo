@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: 'Idade de reforma atingida — a mostrar poupança atual',
   pfDeleteProfile: 'Eliminar perfil?',
   pfDisclaimer: 'Estimativa com base nos seus pressupostos (anos inteiros, sem comissões/inflação/impostos). Não constitui aconselhamento financeiro ou de pensões.',
+  // Backup automático
+  autoBackupTitle: 'Backup automático',
+  abDaily: 'Diário',
+  abWeekly: 'Semanal',
+  abLast: 'Último: {date}',
+  abNever: 'Ainda sem backups',
+  abDirUnavailable: 'Pasta indisponível — escolha novamente',
+  abBackupNow: 'Fazer backup agora',
+  abDone: 'Backup guardado',
 };

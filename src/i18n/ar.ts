@@ -801,4 +801,13 @@ export default {
   pfAlreadyEligible: 'تم بلوغ سن التقاعد — تُعرض المدخرات الحالية',
   pfDeleteProfile: 'حذف الملف؟',
   pfDisclaimer: 'تقدير مبني على افتراضاتك (سنوات كاملة، بدون رسوم/تضخم/ضرائب). ليس نصيحة مالية أو تقاعدية.',
+  // نسخ احتياطي تلقائي
+  autoBackupTitle: 'نسخ احتياطي تلقائي',
+  abDaily: 'يومي',
+  abWeekly: 'أسبوعي',
+  abLast: 'الأخير: {date}',
+  abNever: 'لا توجد نسخ بعد',
+  abDirUnavailable: 'المجلد غير متاح — اختره مجدداً',
+  abBackupNow: 'انسخ الآن',
+  abDone: 'تم حفظ النسخة',
 };
