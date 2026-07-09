@@ -12,6 +12,8 @@ import dataService from '../services/dataService';
 import stockService from '../services/stockService';
 import { colors } from '../theme/colors';
 import { sym } from '../utils/currency';
+import { forecastProfile } from '../utils/pensionForecast';
+import RowText from '../components/RowText';
 
 const INV_TYPES = ['pension', 'savings', 'education', 'stocks', 'bonds', 'real_estate', 'crypto', 'children'];
 
@@ -33,17 +35,22 @@ export default function InvestmentsScreen() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [pensionProfiles, setPensionProfiles] = useState([]);
+  const [allAccounts, setAllAccounts] = useState([]);
   const styles = createStyles();
 
   const loadData = async (force = false) => {
-    const [inv, accs, txs] = await Promise.all([
+    const [inv, accs, txs, pp] = await Promise.all([
       dataService.getInvestments(),
       dataService.getAccounts(),
       dataService.getTransactions(),
+      dataService.getPensionProfiles(),
     ]);
     setInvestments(inv);
     setInvAccounts(accs.filter(a => a.type === 'investment' && !a.archived && a.isActive !== false));
+    setAllAccounts(accs);
     setTransactions(txs);
+    setPensionProfiles(pp);
     const tickers = new Set();
     inv.forEach(i => { if (i.type === 'stocks' && Array.isArray(i.holdings)) i.holdings.forEach(h => h.ticker && tickers.add(h.ticker)); });
     if (tickers.size > 0) {
@@ -221,6 +228,33 @@ export default function InvestmentsScreen() {
             <Text style={styles.monthlyLabel}>{i18n.t('monthlyContribution')}</Text>
             <Amount value={totalMonthly} style={styles.monthlyAmount} />
           </View>
+        </Card>
+
+        {/* Pension forecast teaser */}
+        <Card style={{ marginHorizontal: 20 }}>
+          <TouchableOpacity onPress={() => navigation.navigate('PensionForecast')} activeOpacity={0.7}>
+            <View style={styles.pfHead}>
+              <Feather name="umbrella" size={18} color={colors.green} />
+              <RowText style={styles.pfTitle}>{i18n.t('pfTitle')}</RowText>
+              <Feather name={i18n.chevronRight()} size={18} color={colors.textMuted} />
+            </View>
+            {pensionProfiles.length === 0 ? (
+              <View style={styles.pfEmptyRow}>
+                <RowText style={styles.pfEmptyTxt}>{i18n.t('pfTeaser')}</RowText>
+                <View style={styles.pfSetupBtn}><Text style={styles.pfSetupTxt}>{i18n.t('pfSetup')}</Text></View>
+              </View>
+            ) : (
+              pensionProfiles.map(p => {
+                const f = forecastProfile(p, allAccounts, transactions);
+                return (
+                  <View key={p.id} style={styles.pfRow}>
+                    <RowText style={styles.pfName}>{p.name} · {p.retireAge}</RowText>
+                    <Text style={styles.pfVal}>~{f.pension.annuity.toLocaleString()} {sym()}{i18n.t('pfPerMonth')}</Text>
+                  </View>
+                );
+              })
+            )}
+          </TouchableOpacity>
         </Card>
 
         {/* Monthly investment history — last 6 months. Always visible if user
@@ -525,4 +559,14 @@ const createStyles = () => StyleSheet.create({
   cancelTxt: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
   saveBtn: { flex: 2, flexDirection: i18n.row(), paddingVertical: 16, borderRadius: 14, backgroundColor: colors.teal, alignItems: 'center', justifyContent: 'center' },
   saveTxt: { color: colors.bg, fontSize: 16, fontWeight: '700' },
+
+  pfHead: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, marginBottom: 6 },
+  pfTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  pfEmptyRow: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+  pfEmptyTxt: { color: colors.textMuted, fontSize: 13, flexShrink: 1 },
+  pfSetupBtn: { backgroundColor: `${colors.green}18`, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10 },
+  pfSetupTxt: { color: colors.green, fontSize: 13, fontWeight: '700' },
+  pfRow: { flexDirection: i18n.row(), alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 },
+  pfName: { color: colors.textDim, fontSize: 13, fontWeight: '600' },
+  pfVal: { color: colors.text, fontSize: 14, fontWeight: '700' },
 });
