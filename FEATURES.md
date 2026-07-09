@@ -24,18 +24,19 @@
 11. [Analytics & charts](#analytics--charts)
 12. [AI features](#ai-features)
 13. [Investments](#investments)
-14. [Crypto](#crypto)
-15. [Multi-currency & live FX](#multi-currency--live-fx)
-16. [Projects](#projects)
-17. [Reports & exports](#reports--exports)
-18. [Notifications](#notifications)
-19. [Themes & UI](#themes--ui)
-20. [Internationalization](#internationalization)
-21. [Privacy & security](#privacy--security)
-22. [Onboarding](#onboarding)
-23. [Settings](#settings)
-24. [Streaks & gamification](#streaks--gamification)
-25. [Quality & telemetry](#quality--telemetry)
+14. [Pension forecast](#pension-forecast)
+15. [Crypto](#crypto)
+16. [Multi-currency & live FX](#multi-currency--live-fx)
+17. [Projects](#projects)
+18. [Reports & exports](#reports--exports)
+19. [Notifications](#notifications)
+20. [Themes & UI](#themes--ui)
+21. [Internationalization](#internationalization)
+22. [Privacy & security](#privacy--security)
+23. [Onboarding](#onboarding)
+24. [Settings](#settings)
+25. [Streaks & gamification](#streaks--gamification)
+26. [Quality & telemetry](#quality--telemetry)
 
 ---
 
@@ -379,6 +380,23 @@ For accounts of `type: 'investment'` with stock holdings:
 - Account-level totals roll up to the dashboard
 - 60s in-memory cache + AsyncStorage offline fallback
 - Pull-to-refresh forces a live re-fetch
+
+---
+
+## Pension forecast
+
+Per-person retirement projection built from real account balances and
+deposit history.
+
+- Profiles (e.g. two spouses) with birth year and retirement age; a
+  Family view sums all profiles
+- Two baskets per profile: pension (monthly annuity) and capital
+  (hishtalmut/gemel — lump sum)
+- Monthly deposits auto-averaged from the last 3 full months of
+  transactions, manual override supported
+- Age stepper (55–75) with live recompute + 3-age comparison table
+- Editable assumptions: annual return %, annuity coefficient
+- Explicitly an estimate — not financial/pension advice (disclaimer)
 
 ---
 
