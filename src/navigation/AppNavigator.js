@@ -31,6 +31,7 @@ import AIChatScreen from '../screens/AIChatScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ReceiptScannerModal from '../components/ReceiptScannerModal';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
+import PensionForecastScreen from '../screens/PensionForecastScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import ProjectsScreen from '../screens/ProjectsScreen';
 import QuickAddModal from '../components/QuickAddModal';
@@ -60,6 +61,7 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="MonthlyReport" component={MonthlyReportScreen} />
       <DashboardStack.Screen name="AIAdvisor" component={AIAdvisorScreen} />
       <DashboardStack.Screen name="Investments" component={InvestmentsScreen} />
+      <DashboardStack.Screen name="PensionForecast" component={PensionForecastScreen} />
       <DashboardStack.Screen name="AccountHistory" component={AccountHistoryScreen} />
       <DashboardStack.Screen name="Projects" component={ProjectsScreen} />
       <DashboardStack.Screen name="Goals" component={GoalsScreen} />
