@@ -63,4 +63,17 @@ describe('avgMonthlyDeposit', () => {
     const t = [{ type: 'income', account: 'a1', amount: 300, createdAt: '2026-05-02T10:00:00Z' }];
     expect(avgMonthlyDeposit(t, ['a1'], now)).toBe(100);
   });
+
+  test('boundary days: 1st of a window month included, 1st of current month excluded', () => {
+    const t = [
+      { type: 'income', account: 'a1', amount: 600, date: '2026-04-01' },
+      { type: 'income', account: 'a1', amount: 900, date: '2026-07-01' },
+    ];
+    expect(avgMonthlyDeposit(t, ['a1'], now)).toBe(200); // only the 600 counts
+  });
+
+  test('fractional average is not rounded', () => {
+    const t = [{ type: 'income', account: 'a1', amount: 100, date: '2026-05-10' }];
+    expect(avgMonthlyDeposit(t, ['a1'], now)).toBeCloseTo(33.3333, 3);
+  });
 });

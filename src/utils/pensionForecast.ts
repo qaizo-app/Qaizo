@@ -32,14 +32,20 @@ export function projectSavings(balance: number, monthlyDeposit: number, months: 
 export function avgMonthlyDeposit(transactions: Transaction[], accountIds: string[], now: Date = new Date()): number {
   if (!accountIds || accountIds.length === 0) return 0;
   const idSet = new Set(accountIds);
-  const start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-  const end = new Date(now.getFullYear(), now.getMonth(), 1); // exclusive
+  // Compare months as 'YYYY-MM' strings taken straight from the stored ISO
+  // date — timezone-free. Mixing Date(y,m,d) (local) with parsed date-only
+  // strings (UTC) shifts month boundaries in negative-UTC timezones.
+  const months = new Set<string>();
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
   let total = 0;
   for (const t of transactions || []) {
     if (t.type !== 'income') continue;
     if (!t.account || !idSet.has(t.account)) continue;
-    const td = new Date(t.date || t.createdAt || 0);
-    if (isNaN(td.getTime()) || td < start || td >= end) continue;
+    const ym = String(t.date || t.createdAt || '').slice(0, 7);
+    if (!months.has(ym)) continue;
     total += t.amount || 0;
   }
   return total / 3;
