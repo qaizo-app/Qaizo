@@ -47,6 +47,14 @@ describe('filesToPrune', () => {
     const names = ['qaizo-backup-2026-07-01-0800.json', 'qaizo-backup-2026-07-02-0800.json'];
     expect(filesToPrune(names, 1)).toEqual(['qaizo-backup-2026-07-01-0800.json']);
   });
+  test('a foreign file with a stray % does not abort the scan', () => {
+    const names = ['50% done.txt', 'qaizo-backup-2026-07-01-0800.json', 'qaizo-backup-2026-07-02-0800.json'];
+    expect(filesToPrune(names, 1)).toEqual(['qaizo-backup-2026-07-01-0800.json']);
+  });
+  test('a renamed file merely containing the prefix is not prunable', () => {
+    const names = ['keep-this-qaizo-backup-2026-01-01-0000.json', 'qaizo-backup-2026-07-01-0800.json'];
+    expect(filesToPrune(names, 1)).toEqual([]);
+  });
 });
 
 describe('buildBackupFilename', () => {

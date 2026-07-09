@@ -35,9 +35,12 @@ export function isDue(config: AutoBackupConfig, now: Date = new Date()): boolean
   return days >= (config.frequency === 'daily' ? 1 : 7);
 }
 
-const BACKUP_RE = /qaizo-backup-.*/;
+const BACKUP_RE = /^qaizo-backup-/;
+// A foreign file with a stray '%' (e.g. '50% done.txt') must not throw and
+// abort the whole prune scan — fall back to the raw string.
+const safeDecode = (s: string) => { try { return decodeURIComponent(s); } catch (e) { return s; } };
 const entryTail = (entry: string) => {
-  const decoded = decodeURIComponent(entry);
+  const decoded = safeDecode(entry);
   const cut = Math.max(decoded.lastIndexOf('/'), decoded.lastIndexOf(':'));
   return cut >= 0 ? decoded.slice(cut + 1) : decoded;
 };
@@ -64,7 +67,7 @@ export function buildBackupFilename(now: Date = new Date()): string {
 // show the last two path segments so the label stays short but recognizable.
 export function dirDisplayName(uri: string | null): string {
   if (!uri) return '';
-  const decoded = decodeURIComponent(uri).replace(/\/+$/, '');
+  const decoded = safeDecode(uri).replace(/\/+$/, '');
   const afterColon = decoded.slice(decoded.lastIndexOf(':') + 1);
   const parts = afterColon.split('/').filter(Boolean);
   return parts.slice(-2).join('/') || afterColon;
