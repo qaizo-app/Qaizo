@@ -4,6 +4,12 @@
 // folder (Android SAF; on iOS the app's Files-visible backups/ dir) and keep
 // only the newest 7 files. Manual export/share lives in backupService.
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import dataService from './dataService';
+import { isValidBackup } from './backupService';
+
 export interface AutoBackupConfig {
   enabled: boolean;
   frequency: 'daily' | 'weekly';
@@ -72,3 +78,100 @@ export function dirDisplayName(uri: string | null): string {
   const parts = afterColon.split('/').filter(Boolean);
   return parts.slice(-2).join('/') || afterColon;
 }
+
+const CONFIG_KEY = 'auto_backup_config';
+
+export async function getConfig(): Promise<AutoBackupConfig> {
+  try {
+    const raw = await AsyncStorage.getItem(CONFIG_KEY);
+    return raw ? { ...DEFAULT_CONFIG, ...JSON.parse(raw) } : { ...DEFAULT_CONFIG };
+  } catch (e) { return { ...DEFAULT_CONFIG }; }
+}
+
+export async function saveConfig(patch: Partial<AutoBackupConfig>): Promise<AutoBackupConfig> {
+  const next = { ...(await getConfig()), ...patch };
+  try { await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(next)); } catch (e) { /* noop */ }
+  return next;
+}
+
+// Android: system folder picker (persisted SAF permission). iOS: the app's
+// Files-visible backups/ dir — no picker to show.
+export async function pickBackupDir(): Promise<string | null> {
+  if (Platform.OS === 'android') {
+    try {
+      const res = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      return res.granted ? res.directoryUri : null;
+    } catch (e) { return null; }
+  }
+  const dir = FileSystem.documentDirectory + 'backups/';
+  try { await FileSystem.makeDirectoryAsync(dir, { intermediates: true }); } catch (e) { /* exists */ }
+  return dir;
+}
+
+// Write the JSON bundle + prune, shared by the scheduled and manual paths.
+// Prune failures are non-fatal: the backup counts once the file is written.
+async function writeBackup(dirUri: string, json: string, now: Date): Promise<'ok' | 'error'> {
+  const base = buildBackupFilename(now);
+  try {
+    if (Platform.OS === 'android') {
+      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(dirUri, base, 'application/json');
+      await FileSystem.writeAsStringAsync(fileUri, json);
+      try {
+        const entries = await FileSystem.StorageAccessFramework.readDirectoryAsync(dirUri);
+        for (const uri of filesToPrune(entries)) await FileSystem.deleteAsync(uri, { idempotent: true });
+      } catch (e) { /* best-effort */ }
+    } else {
+      try { await FileSystem.makeDirectoryAsync(dirUri, { intermediates: true }); } catch (e) { /* exists */ }
+      await FileSystem.writeAsStringAsync(dirUri + base + '.json', json);
+      try {
+        const names = await FileSystem.readDirectoryAsync(dirUri);
+        for (const name of filesToPrune(names)) await FileSystem.deleteAsync(dirUri + name, { idempotent: true });
+      } catch (e) { /* best-effort */ }
+    }
+    await saveConfig({ lastBackupAt: new Date(now).toISOString(), lastError: null });
+    return 'ok';
+  } catch (e) {
+    if (__DEV__) console.error('autoBackup write:', e);
+    await saveConfig({ lastError: 'dir_unavailable' });
+    return 'error';
+  }
+}
+
+async function exportJson(): Promise<string | null> {
+  const data = await dataService.exportData();
+  if (!data || !isValidBackup(data)) return null;
+  return JSON.stringify(data);
+}
+
+// Called fire-and-forget on app startup. Never throws.
+export async function runAutoBackup(now: Date = new Date()): Promise<'ok' | 'skipped' | 'error'> {
+  try {
+    const config = await getConfig();
+    if (!isDue(config, now)) return 'skipped';
+    const json = await exportJson();
+    if (!json) { await saveConfig({ lastError: 'export' }); return 'error'; }
+    return await writeBackup(config.dirUri as string, json, now);
+  } catch (e) {
+    if (__DEV__) console.error('runAutoBackup:', e);
+    return 'error';
+  }
+}
+
+// Manual "Сделать сейчас" from Settings: ignores enabled/schedule, needs a folder.
+export async function runNow(now: Date = new Date()): Promise<'ok' | 'nodir' | 'error'> {
+  try {
+    const config = await getConfig();
+    if (!config.dirUri) return 'nodir';
+    const json = await exportJson();
+    if (!json) { await saveConfig({ lastError: 'export' }); return 'error'; }
+    return (await writeBackup(config.dirUri, json, now)) === 'ok' ? 'ok' : 'error';
+  } catch (e) {
+    if (__DEV__) console.error('runNow:', e);
+    return 'error';
+  }
+}
+
+export default {
+  DEFAULT_CONFIG, isDue, filesToPrune, buildBackupFilename, dirDisplayName,
+  getConfig, saveConfig, pickBackupDir, runAutoBackup, runNow,
+};
