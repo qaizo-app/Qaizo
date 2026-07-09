@@ -150,7 +150,8 @@ Top to bottom:
 Name, birth year (numeric input, validated 1930–2015), account picker
 with per-account basket toggle. Delete profile from the edit modal
 (ConfirmModal, per project rules). Family view has no settings of its
-own — it renders summed results + a summed comparison table only.
+own — it renders summed results only (no comparison table: profiles
+retire at different ages, so a family table has no single age axis).
 
 ### Project rules that apply
 

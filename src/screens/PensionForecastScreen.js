@@ -2,7 +2,7 @@
 // Пенсионный прогноз: профили по людям, две корзины (кицва/капитал),
 // степпер возраста + сравнение возрастов. Математика — utils/pensionForecast.
 import { Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -26,6 +26,7 @@ const genId = () => `pp_${Date.now().toString(36)}${Math.random().toString(36).s
 
 export default function PensionForecastScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
   const [profiles, setProfiles] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -38,6 +39,7 @@ export default function PensionForecastScreen() {
   const [birthYear, setBirthYear] = useState('');
   const [links, setLinks] = useState([]); // draft [{accountId, basket}]
   const [yearErr, setYearErr] = useState(false);
+  const [nameErr, setNameErr] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   // deposit override editing
   const [overrideDraft, setOverrideDraft] = useState(null); // string | null
@@ -52,13 +54,27 @@ export default function PensionForecastScreen() {
     setProfiles(pp);
     setAccounts(accs);
     setTransactions(txs);
-    setSelectedId(prev => prev && (prev === 'family' || pp.find(p => p.id === prev)) ? prev : (pp[0]?.id || null));
+    setSelectedId(prev => {
+      if (prev === 'family') return pp.length >= 2 ? prev : (pp[0]?.id || null);
+      if (prev && pp.find(p => p.id === prev)) return prev;
+      return pp[0]?.id || null;
+    });
+    return pp;
   };
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  useFocusEffect(useCallback(() => {
+    loadData().then(pp => {
+      if (route.params?.openCreate) {
+        navigation.setParams({ openCreate: undefined });
+        if ((pp || []).length === 0) openAdd();
+      }
+    });
+  }, [route.params?.openCreate]));
 
-  const investAccounts = accounts.filter(a => a.type === 'investment' && a.isActive !== false);
+  const investAccounts = accounts.filter(a => (a.type === 'investment' && a.isActive !== false) || links.some(l => l.accountId === a.id));
   const accName = (id) => accounts.find(a => a.id === id)?.name || '?';
   const selected = selectedId === 'family' ? null : profiles.find(p => p.id === selectedId);
+  const selAge = selected && Number.isFinite(selected.retireAge) ? selected.retireAge : 67;
+  const resolvedLinks = selected ? (selected.links || []).filter(l => accounts.some(a => a.id === l.accountId && a.isActive !== false)) : [];
 
   // Persist profiles + prune links to accounts that no longer exist.
   const persist = async (next) => {
@@ -75,18 +91,18 @@ export default function PensionForecastScreen() {
 
   // ── profile modal ──
   const openAdd = () => {
-    setEditId(null); setName(''); setBirthYear(''); setLinks([]); setYearErr(false);
+    setEditId(null); setName(''); setBirthYear(''); setLinks([]); setYearErr(false); setNameErr(false);
     setShowEdit(true);
   };
   const openEdit = (p) => {
     setEditId(p.id); setName(p.name); setBirthYear(String(p.birthYear));
-    setLinks((p.links || []).map(l => ({ ...l }))); setYearErr(false);
+    setLinks((p.links || []).map(l => ({ ...l }))); setYearErr(false); setNameErr(false);
     setShowEdit(true);
   };
   const saveProfile = () => {
     const year = parseInt(birthYear, 10);
     if (!Number.isFinite(year) || year < 1930 || year > 2015) { setYearErr(true); return; }
-    if (!name.trim()) return;
+    if (!name.trim()) { setNameErr(true); return; }
     if (editId) {
       persist(profiles.map(p => p.id === editId ? { ...p, name: name.trim(), birthYear: year, links } : p));
     } else {
@@ -121,8 +137,8 @@ export default function PensionForecastScreen() {
   const fam = profiles.length > 0 ? forecastFamily(profiles, accounts, transactions) : null;
   const fc = selected ? forecastProfile(selected, accounts, transactions) : null;
   const compareAges = selected
-    ? ([selected.retireAge, 64, 67].filter((v, i, a) => a.indexOf(v) === i).length === 3
-        ? [selected.retireAge, 64, 67].sort((a, b) => a - b)
+    ? ([selAge, 64, 67].filter((v, i, a) => a.indexOf(v) === i).length === 3
+        ? [selAge, 64, 67].sort((a, b) => a - b)
         : [60, 64, 67])
     : [];
 
@@ -211,11 +227,11 @@ export default function PensionForecastScreen() {
               <View style={st.stepperRow}>
                 <RowText style={st.stepperLabel}>{i18n.t('pfRetireAge')}</RowText>
                 <View style={st.stepper}>
-                  <TouchableOpacity style={st.stepBtn} onPress={() => patchSelected({ retireAge: Math.max(AGE_MIN, selected.retireAge - 1) })}>
+                  <TouchableOpacity style={st.stepBtn} onPress={() => patchSelected({ retireAge: Math.max(AGE_MIN, selAge - 1) })}>
                     <Feather name="minus" size={18} color={colors.text} />
                   </TouchableOpacity>
-                  <Text style={st.stepVal}>{selected.retireAge}</Text>
-                  <TouchableOpacity style={st.stepBtn} onPress={() => patchSelected({ retireAge: Math.min(AGE_MAX, selected.retireAge + 1) })}>
+                  <Text style={st.stepVal}>{selAge}</Text>
+                  <TouchableOpacity style={st.stepBtn} onPress={() => patchSelected({ retireAge: Math.min(AGE_MAX, selAge + 1) })}>
                     <Feather name="plus" size={18} color={colors.text} />
                   </TouchableOpacity>
                 </View>
@@ -223,7 +239,7 @@ export default function PensionForecastScreen() {
             </Card>
 
             {/* Result */}
-            {(selected.links || []).length === 0 ? (
+            {resolvedLinks.length === 0 ? (
               <Card>
                 <View style={st.empty}>
                   <Feather name="link" size={36} color={colors.textMuted} />
@@ -235,7 +251,7 @@ export default function PensionForecastScreen() {
               </Card>
             ) : (
               <>
-                {renderResult(fc, selected.retireAge, fc.alreadyEligible)}
+                {renderResult(fc, selAge, fc.alreadyEligible)}
 
                 {/* Comparison table */}
                 <Card>
@@ -248,7 +264,7 @@ export default function PensionForecastScreen() {
                   </View>
                   {compareAges.map(age => {
                     const r = forecastProfile(selected, accounts, transactions, new Date(), age);
-                    const isChosen = age === selected.retireAge;
+                    const isChosen = age === selAge;
                     return (
                       <View key={age} style={[st.tblRow, isChosen && st.tblRowActive]}>
                         <RowText style={[st.tblCell, isChosen && st.tblCellActive]}>{age}</RowText>
@@ -362,7 +378,8 @@ export default function PensionForecastScreen() {
           <Text style={st.modalTitle}>{editId ? i18n.t('edit') : i18n.t('pfAddProfile')}</Text>
 
           <Text style={st.fieldLabel}>{i18n.t('pfProfileName')}</Text>
-          <TextInput style={[st.input, { textAlign: i18n.textAlign() }]} value={name} onChangeText={setName}
+          <TextInput style={[st.input, { textAlign: i18n.textAlign() }, nameErr && st.inputErr]} value={name}
+            onChangeText={(v) => { setName(v); setNameErr(false); }}
             placeholder={i18n.t('pfProfileName')} placeholderTextColor={colors.textMuted} />
 
           <Text style={st.fieldLabel}>{i18n.t('pfBirthYear')}</Text>
@@ -453,7 +470,7 @@ const createSt = () => StyleSheet.create({
   tblHeadTxt: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   tblRow: { flexDirection: i18n.row(), paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.divider },
   tblRowActive: { backgroundColor: `${colors.green}0E`, borderRadius: 8 },
-  tblCell: { flexBasis: 0, flexGrow: 1, color: colors.textDim, fontSize: 12 },
+  tblCell: { flexBasis: 0, flexGrow: 1, color: colors.textDim, fontSize: 12, textAlign: i18n.textAlign() },
   tblNum: { textAlign: 'center' },
   tblCellActive: { color: colors.text, fontWeight: '700' },
 

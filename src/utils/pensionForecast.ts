@@ -70,8 +70,8 @@ export function forecastProfile(
   now: Date = new Date(),
   retireAgeOverride?: number,
 ): ProfileForecast {
-  const accById = new Map((accounts || []).map(a => [a.id, a]));
-  // Links to deleted accounts are ignored here (and pruned on next save).
+  const accById = new Map((accounts || []).filter(a => a.isActive !== false).map(a => [a.id, a]));
+  // Links to deleted or inactive accounts are ignored here (and pruned on next save).
   const links = (profile.links || []).filter(l => accById.has(l.accountId));
   const idsOf = (basket: string) => links.filter(l => l.basket === basket).map(l => l.accountId);
   const balanceOf = (ids: string[]) => ids.reduce((s, id) => s + ((accById.get(id) as Account).balance || 0), 0);
@@ -98,7 +98,7 @@ export function forecastProfile(
   }
 
   const currentAge = now.getFullYear() - profile.birthYear;
-  const retireAge = retireAgeOverride ?? profile.retireAge;
+  const retireAge = retireAgeOverride ?? (Number.isFinite(profile.retireAge) ? profile.retireAge : 67);
   const months = Math.max(0, (retireAge - currentAge) * 12);
   const annual = profile.annualReturnPct ?? DEFAULT_ANNUAL_RETURN_PCT;
   const coef = profile.annuityCoef || DEFAULT_ANNUITY_COEF;

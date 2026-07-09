@@ -232,7 +232,7 @@ export default function InvestmentsScreen() {
 
         {/* Pension forecast teaser */}
         <Card style={{ marginHorizontal: 20 }}>
-          <TouchableOpacity onPress={() => navigation.navigate('PensionForecast')} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => navigation.navigate('PensionForecast', pensionProfiles.length === 0 ? { openCreate: true } : undefined)} activeOpacity={0.7}>
             <View style={styles.pfHead}>
               <Feather name="umbrella" size={18} color={colors.green} />
               <RowText style={styles.pfTitle}>{i18n.t('pfTitle')}</RowText>

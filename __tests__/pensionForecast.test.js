@@ -148,6 +148,19 @@ describe('forecastProfile', () => {
     expect(f.pension.projected).toBe(148024);
     expect(f.pension.annuity).toBe(740);
   });
+
+  test('inactive accounts are ignored even when linked (matches dashboard convention)', () => {
+    const accountsWithInactive = [...accounts, { id: 'dead1', type: 'investment', balance: 77777, isActive: false }];
+    const profile = { ...baseProfile, links: [...baseProfile.links, { accountId: 'dead1', basket: 'pension' }] };
+    const f = forecastProfile(profile, accountsWithInactive, [], now);
+    expect(f.pension.current).toBe(100000); // dead1's 77777 excluded
+  });
+
+  test('retireAge missing on profile defaults to 67', () => {
+    const p = { id: 'p3', name: 'Z', birthYear: 1980, links: [] }; // no retireAge field
+    const f = forecastProfile(p, accounts, [], now);
+    expect(f.months).toBe(252); // (67-46)*12
+  });
 });
 
 describe('forecastFamily', () => {
