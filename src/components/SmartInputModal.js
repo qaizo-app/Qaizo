@@ -210,9 +210,9 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
       projs = await dataService.getProjects();
       setProjects(projs);
     }
-    console.log('[SmartUI] sending to AI — accounts:', accs.length, 'projects:', projs.length, projs.map(p => p.name).join('|'));
+    if (__DEV__) console.log('[SmartUI] sending to AI — accounts:', accs.length, 'projects:', projs.length, projs.map(p => p.name).join('|'));
     const result = await aiService.parseTransactionSmart(t, accs, projs);
-    console.log('[SmartUI] setParsed result:', JSON.stringify(result));
+    if (__DEV__) console.log('[SmartUI] setParsed result:', JSON.stringify(result));
     setParsed(result);
     setAiLoading(false);
     // Defensive: clear any "pending" / "listening" state that might have been set

@@ -57,7 +57,7 @@ const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/
 // missing local .env on the dev machine. See project_ios_gemini_key_missing.
 if (__DEV__ && !GEMINI_API_KEY) {
   // eslint-disable-next-line no-console
-  console.warn(
+  if (__DEV__) console.warn(
     '\n[Qaizo aiService] EXPO_PUBLIC_GEMINI_API_KEY is missing in this build.\n' +
     '  → Receipt scan, statement scan, voice input parsing and Smart Input\n' +
     '    will all silently return empty.\n' +
@@ -519,7 +519,7 @@ async function parseTransactionSmart(text: string, accounts: any[] = [], project
 
   // Build accounts section for prompt (only active accounts)
   const activeAccounts = (accounts || []).filter((a: any) => a.isActive !== false);
-  console.log('[Smart] accounts in prompt:', activeAccounts.length, activeAccounts.map((a: any) => `${a.id}=${a.name}(${a.type})`).join(' | '));
+  if (__DEV__) console.log('[Smart] accounts in prompt:', activeAccounts.length, activeAccounts.map((a: any) => `${a.id}=${a.name}(${a.type})`).join(' | '));
   const accountsSection = activeAccounts.length > 0
     ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map((a: any) => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a SPECIFIC account name/brand ("Visa Hapoalim", "Mastercard", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, חשבון בנק, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → return both as null\n`
     : '';
@@ -630,9 +630,9 @@ RULES:
 - "accountId" / "accountType" — see ACCOUNT MATCHING RULES above. Both null if user said nothing about payment.
 - "projectId" — see PROJECT MATCHING RULES above. null if user did not mention a project name.`;
 
-  console.log('[Smart] input text:', JSON.stringify(text));
+  if (__DEV__) console.log('[Smart] input text:', JSON.stringify(text));
   const result = await callGemini(prompt);
-  console.log('[Smart] AI raw response:', JSON.stringify(result));
+  if (__DEV__) console.log('[Smart] AI raw response:', JSON.stringify(result));
 
   let parsed = null;
   if (result) {
@@ -647,16 +647,16 @@ RULES:
         try { parsed = JSON.parse(match[0]); }
         catch (e2: any) { console.log('[Smart] FAIL: regex JSON extract also failed:', e2.message); }
       } else {
-        console.log('[Smart] FAIL: no JSON found in AI response:', (e as any).message);
+        if (__DEV__) console.log('[Smart] FAIL: no JSON found in AI response:', (e as any).message);
       }
     }
   } else {
-    console.log('[Smart] FAIL: no AI response, falling back to local parser');
+    if (__DEV__) console.log('[Smart] FAIL: no AI response, falling back to local parser');
   }
 
   if (parsed) {
     try {
-      console.log('[Smart] parsed:', JSON.stringify(parsed));
+      if (__DEV__) console.log('[Smart] parsed:', JSON.stringify(parsed));
       if (parsed.amount && parsed.type && parsed.categoryId) {
         // Hard guarantee: income categories must have type=income, regardless of what AI returned
         const incomeCategories = ['salary_me', 'salary_spouse', 'rental_income', 'other_income', 'handyman'];
@@ -694,7 +694,7 @@ RULES:
         // Fallback: if AI didn't pick a project, try JS substring + cross-lang match
         if (!parsed.projectId) {
           const matched = matchProjectInText(text, projectsList);
-          console.log('[Smart] project fallback match:', matched, '| projects available:', projectsList.length, projectsList.map((p: any) => p.name).join('|'));
+          if (__DEV__) console.log('[Smart] project fallback match:', matched, '| projects available:', projectsList.length, projectsList.map((p: any) => p.name).join('|'));
           if (matched) parsed.projectId = matched;
         }
         // Category auto-suggest from project history: if user mentioned a project but
@@ -711,7 +711,7 @@ RULES:
               const sorted = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
               if (sorted.length > 0 && sorted[0][1] >= 2 && sorted[0][0] !== 'other') {
                 parsed.categoryId = sorted[0][0];
-                console.log('[Smart] category auto-suggested from project history:', parsed.categoryId);
+                if (__DEV__) console.log('[Smart] category auto-suggested from project history:', parsed.categoryId);
               }
             }
           } catch (e) { /* noop */ }
@@ -736,7 +736,7 @@ RULES:
               const sorted = Object.entries(projCounts).sort((a, b) => b[1] - a[1]);
               if (sorted.length > 0 && sorted[0][1] >= 2) {
                 parsed.projectId = sorted[0][0];
-                console.log('[Smart] project auto-suggested from category history:', parsed.projectId);
+                if (__DEV__) console.log('[Smart] project auto-suggested from category history:', parsed.projectId);
               }
             }
           } catch (e) { /* noop */ }
@@ -756,18 +756,18 @@ RULES:
             }
           }
         }
-        console.log('[Smart] final result:', JSON.stringify(parsed));
+        if (__DEV__) console.log('[Smart] final result:', JSON.stringify(parsed));
         return parsed;
       }
-      console.log('[Smart] FAIL: parsed missing required fields, falling back to local parser');
+      if (__DEV__) console.log('[Smart] FAIL: parsed missing required fields, falling back to local parser');
     } catch (e: any) {
-      console.log('[Smart] FAIL: error processing parsed result:', e.message);
+      if (__DEV__) console.log('[Smart] FAIL: error processing parsed result:', e.message);
     }
   }
 
   // Фоллбэк на локальный парсер
   const fallback = parseTransaction(text);
-  console.log('[Smart] FALLBACK local parser result:', JSON.stringify(fallback));
+  if (__DEV__) console.log('[Smart] FALLBACK local parser result:', JSON.stringify(fallback));
   return fallback;
 }
 
