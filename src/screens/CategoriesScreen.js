@@ -15,6 +15,7 @@ import dataService from '../services/dataService';
 import { breadcrumb, captureError, captureMessage } from '../services/logger';
 import { invalidateCachedGroups, setCachedGroups } from '../utils/categoryCache';
 import { colors } from '../theme/colors';
+import { DEFAULT_GROUPS } from '../config/categories';
 
 // Icons prefixed with 'ion:' use Ionicons outline, others use Feather
 const ICONS_BY_GROUP = {
@@ -73,77 +74,8 @@ const COLOR_OPTIONS = [
   '#ef4444','#64748b',
 ];
 
-const DEFAULT_GROUPS = [
-  { id: 'home', name: { ru:'Дом', he:'בית', en:'Home' }, icon: 'home', color: '#60a5fa',
-    subs: [
-      { id:'electricity', name:{ru:'Электричество',he:'חשמל',en:'Electricity'}, icon:'zap' },
-      { id:'water', name:{ru:'Вода',he:'מים',en:'Water'}, icon:'droplet' },
-      { id:'gas', name:{ru:'Газ',he:'גז',en:'Gas'}, icon:'sun' },
-      { id:'arnona', name:{ru:'Налог на жильё',he:'ארנונה',en:'Property Tax'}, icon:'map-pin' },
-      { id:'vaad', name:{ru:'Обслуживание дома',he:'ועד בית',en:'Building Fee'}, icon:'users' },
-      { id:'cleaning', name:{ru:'Уборка',he:'ניקיון',en:'Cleaning'}, icon:'umbrella' },
-      { id:'internet', name:{ru:'Интернет',he:'אינטרנט',en:'Internet'}, icon:'globe' },
-      { id:'repairs', name:{ru:'Ремонт',he:'תיקונים',en:'Repairs'}, icon:'tool' },
-    ]},
-  { id: 'food', name: { ru:'Еда и продукты', he:'אוכל ומצרכים', en:'Food & Grocery' }, icon: 'shopping-cart', color: '#fb7185',
-    subs: [
-      { id:'grocery', name:{ru:'Супермаркет',he:'סופרמרקט',en:'Grocery'}, icon:'shopping-cart' },
-      { id:'restaurant', name:{ru:'Рестораны',he:'מסעדות',en:'Restaurants'}, icon:'coffee' },
-      { id:'fastfood', name:{ru:'Фастфуд',he:'מזון מהיר',en:'Fast Food'}, icon:'coffee' },
-      { id:'delivery', name:{ru:'Доставка',he:'משלוחים',en:'Delivery'}, icon:'truck' },
-    ]},
-  { id: 'transport', name: { ru:'Авто и транспорт', he:'רכב ותחבורה', en:'Auto & Transport' }, icon: 'navigation', color: '#fb923c',
-    subs: [
-      { id:'fuel', name:{ru:'Топливо',he:'דלק',en:'Fuel'}, icon:'droplet' },
-      { id:'parking', name:{ru:'Парковка',he:'חניה',en:'Parking'}, icon:'map-pin' },
-      { id:'car_insurance', name:{ru:'Страховка авто',he:'ביטוח רכב',en:'Car Insurance'}, icon:'shield' },
-      { id:'car_repair', name:{ru:'Ремонт авто',he:'תיקון רכב',en:'Car Repair'}, icon:'tool' },
-      { id:'public_transport', name:{ru:'Общ. транспорт',he:'תח"צ',en:'Public Transit'}, icon:'navigation' },
-    ]},
-  { id: 'health', name: { ru:'Здоровье', he:'בריאות', en:'Health' }, icon: 'heart', color: '#f472b6',
-    subs: [
-      { id:'doctor', name:{ru:'Врач',he:'רופא',en:'Doctor'}, icon:'heart' },
-      { id:'pharmacy', name:{ru:'Аптека',he:'בית מרקחת',en:'Pharmacy'}, icon:'plus-circle' },
-      { id:'dentist', name:{ru:'Стоматолог',he:'רופא שיניים',en:'Dentist'}, icon:'smile' },
-      { id:'health_insurance', name:{ru:'Мед. страховка',he:'ביטוח בריאות',en:'Health Insurance'}, icon:'shield' },
-    ]},
-  { id: 'entertainment', name: { ru:'Развлечения', he:'בילויים', en:'Entertainment' }, icon: 'film', color: '#22d3ee',
-    subs: [
-      { id:'movies', name:{ru:'Кино',he:'קולנוע',en:'Movies'}, icon:'film' },
-      { id:'subscriptions', name:{ru:'Подписки',he:'מנויים',en:'Subscriptions'}, icon:'layers' },
-      { id:'hobbies', name:{ru:'Хобби',he:'תחביבים',en:'Hobbies'}, icon:'star' },
-      { id:'sports', name:{ru:'Спорт',he:'ספורט',en:'Sports'}, icon:'target' },
-    ]},
-  { id: 'travel', name: { ru:'Путешествия', he:'נסיעות', en:'Travel' }, icon: 'globe', color: '#2dd4bf',
-    subs: [
-      { id:'flights', name:{ru:'Авиабилеты',he:'טיסות',en:'Flights'}, icon:'navigation' },
-      { id:'hotels', name:{ru:'Гостиницы',he:'מלונות',en:'Hotels'}, icon:'home' },
-      { id:'travel_food', name:{ru:'Еда в поездке',he:'אוכל בנסיעה',en:'Travel Food'}, icon:'coffee' },
-    ]},
-  { id: 'kids', name: { ru:'Дети', he:'ילדים', en:'Kids' }, icon: 'smile', color: '#a78bfa',
-    subs: [
-      { id:'school', name:{ru:'Школа/садик',he:'בית ספר/גן',en:'School'}, icon:'book-open' },
-      { id:'kids_clothes', name:{ru:'Одежда детям',he:'ביגוד ילדים',en:'Kids Clothes'}, icon:'shopping-bag' },
-      { id:'toys', name:{ru:'Игрушки',he:'צעצועים',en:'Toys'}, icon:'gift' },
-      { id:'kids_activities', name:{ru:'Кружки',he:'חוגים',en:'Activities'}, icon:'star' },
-    ]},
-  { id: 'personal', name: { ru:'Личное', he:'אישי', en:'Personal' }, icon: 'user', color: '#c084fc',
-    subs: [
-      { id:'clothing', name:{ru:'Одежда',he:'ביגוד',en:'Clothing'}, icon:'shopping-bag' },
-      { id:'cosmetics', name:{ru:'Косметика',he:'קוסמטיקה',en:'Cosmetics'}, icon:'scissors' },
-      { id:'gifts', name:{ru:'Подарки',he:'מתנות',en:'Gifts'}, icon:'gift' },
-    ]},
-  { id: 'income_group', name: { ru:'Доходы', he:'הכנסות', en:'Income' }, icon: 'briefcase', color: '#34d399',
-    subs: [
-      { id:'salary_me', name:{ru:'Зарплата',he:'משכורת',en:'Salary'}, icon:'briefcase' },
-      { id:'salary_spouse', name:{ru:'Зарплата (супруг)',he:'משכורת (בן/בת זוג)',en:'Salary (spouse)'}, icon:'briefcase' },
-      { id:'rental_income', name:{ru:'Аренда',he:'שכירות',en:'Rental'}, icon:'home' },
-      { id:'handyman', name:{ru:'Подработка',he:'עבודה נוספת',en:'Side Job'}, icon:'tool' },
-      { id:'sales', name:{ru:'Продажи',he:'מכירות',en:'Sales'}, icon:'package' },
-      { id:'keren_hishtalmut', name:{ru:'Керен иштальмут',he:'קרן השתלמות',en:'Study Fund'}, icon:'trending-up' },
-      { id:'pension', name:{ru:'Пенсия',he:'פנסיה',en:'Pension'}, icon:'umbrella' },
-    ]},
-];
+// Canonical default tree lives in src/config/categories.ts.
+
 
 export default function CategoriesScreen() {
   const navigation = useNavigation();

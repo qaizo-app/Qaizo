@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
-import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { accountTypeConfig, colors } from '../theme/colors';
 import { sym } from '../utils/currency';
 import AccountPickerModal from './AccountPickerModal';
 import CategoryPickerModal, { getCatName, getCatIcon, DEFAULT_GROUPS } from './CategoryPickerModal';
@@ -13,8 +13,7 @@ import RowText from './RowText';
 import SchedulePickerModal from './SchedulePickerModal';
 import SwipeModal from './SwipeModal';
 
-const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income'];
-const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income','transfer'].includes(k));
+import { INCOME_CATEGORY_IDS as INC, EXP_CATEGORY_IDS as EXP } from '../config/categories';
 
 export default function AddRecurringModal({ visible, onClose, onSave, editItem }) {
   const [type, setType] = useState('expense');

@@ -13,6 +13,8 @@ import authService from './authService';
 import { withTimeout } from '../utils/withTimeout';
 import { buildTransferLegs } from '../utils/transferLegs';
 import { CURRENCIES, code as globalCurrencyCode, convert } from '../utils/currency';
+// Canonical category catalog (single source; was a local copy here).
+import { DEFAULT_CATEGORIES } from '../config/categories';
 import type {
   Account,
   Goal,
@@ -49,39 +51,6 @@ const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'cash_ils', name: 'Cash ₪', type: 'cash', icon: 'wallet-outline', balance: 0, currency: '₪', isActive: true },
 ];
 
-const DEFAULT_CATEGORIES = {
-  income: [
-    { id: 'salary_me', icon: 'briefcase', color: '#22c55e' },
-    { id: 'salary_spouse', icon: 'briefcase', color: '#10b981' },
-    { id: 'handyman', icon: 'tool', color: '#34d399' },
-    { id: 'sales', icon: 'package', color: '#6ee7b7' },
-    { id: 'rental_income', icon: 'home', color: '#059669' },
-    { id: 'keren_hishtalmut', icon: 'trending-up', color: '#14b8a6' },
-    { id: 'pension', icon: 'umbrella', color: '#0891b2' },
-    { id: 'other_income', icon: 'plus-circle', color: '#a7f3d0' },
-  ],
-  expense: [
-    { id: 'food', icon: 'shopping-cart', color: '#ef4444' },
-    { id: 'transport', icon: 'navigation', color: '#f97316' },
-    { id: 'fuel', icon: 'droplet', color: '#f59e0b' },
-    { id: 'insurance', icon: 'shield', color: '#eab308' },
-    { id: 'phone', icon: 'smartphone', color: '#8b5cf6' },
-    { id: 'utilities', icon: 'zap', color: '#3b82f6' },
-    { id: 'health', icon: 'heart', color: '#ec4899' },
-    { id: 'kids', icon: 'smile', color: '#f472b6' },
-    { id: 'clothing', icon: 'shopping-bag', color: '#a855f7' },
-    { id: 'entertainment', icon: 'film', color: '#06b6d4' },
-    { id: 'education', icon: 'book-open', color: '#14b8a6' },
-    { id: 'rent', icon: 'key', color: '#dc2626' },
-    { id: 'arnona', icon: 'map-pin', color: '#ef4444' },
-    { id: 'vaad', icon: 'users', color: '#991b1b' },
-    { id: 'restaurant', icon: 'coffee', color: '#e11d48' },
-    { id: 'household', icon: 'home', color: '#7c3aed' },
-    { id: 'electronics', icon: 'cpu', color: '#2563eb' },
-    { id: 'cosmetics', icon: 'scissors', color: '#db2777' },
-    { id: 'other', icon: 'more-horizontal', color: '#6b7280' },
-  ],
-};
 
 const DEFAULT_SETTINGS: Settings = { language: 'ru', currency: '₪', weekStart: 'sunday', reminderEnabled: false, reminderInterval: 3, reminderStart: 9, reminderEnd: 22 };
 

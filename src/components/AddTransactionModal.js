@@ -6,7 +6,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOp
 import i18n from '../i18n';
 import analyticsEvents from '../services/analyticsEvents';
 import dataService from '../services/dataService';
-import { accountTypeConfig, categoryConfig, colors } from '../theme/colors';
+import { accountTypeConfig, colors } from '../theme/colors';
 import { sym, code, convert, getRate, CURRENCIES } from '../utils/currency';
 import { buildTransferLegs } from '../utils/transferLegs';
 import AccountPickerModal from './AccountPickerModal';
@@ -16,8 +16,7 @@ import RowText from './RowText';
 import CalculatorModal from './CalculatorModal';
 import SwipeModal from './SwipeModal';
 
-const INC = ['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income'];
-const EXP = Object.keys(categoryConfig).filter(k => !['salary_me','salary_spouse','rental_income','handyman','sales','keren_hishtalmut','pension','other_income','transfer'].includes(k));
+import { INCOME_CATEGORY_IDS as INC, EXP_CATEGORY_IDS as EXP } from '../config/categories';
 
 export default function AddTransactionModal({ visible, onClose, onSave, editTransaction, preselectedAccount, initialType, prefill }) {
   const [type, setType] = useState(initialType || 'expense');

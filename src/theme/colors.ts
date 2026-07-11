@@ -120,37 +120,9 @@ export function getCurrentTheme(): ResolvedTheme {
   return _currentTheme;
 }
 
-// Категории транзакций — Feather icons (не зависят от темы)
-export const categoryConfig = {
-  food:           { icon: 'shopping-cart', color: '#fb7185' },
-  restaurant:     { icon: 'coffee',        color: '#f97316' },
-  transport:      { icon: 'navigation',    color: '#fb923c' },
-  fuel:           { icon: 'droplet',       color: '#f59e0b' },
-  health:         { icon: 'heart',         color: '#f472b6' },
-  phone:          { icon: 'smartphone',    color: '#a78bfa' },
-  utilities:      { icon: 'zap',           color: '#60a5fa' },
-  clothing:       { icon: 'shopping-bag',  color: '#c084fc' },
-  household:      { icon: 'home',          color: '#818cf8' },
-  kids:           { icon: 'smile',         color: '#fb7185' },
-  entertainment:  { icon: 'film',          color: '#22d3ee' },
-  education:      { icon: 'book-open',     color: '#2dd4bf' },
-  cosmetics:      { icon: 'scissors',      color: '#ec4899' },
-  electronics:    { icon: 'cpu',           color: '#3b82f6' },
-  insurance:      { icon: 'shield',        color: '#fbbf24' },
-  rent:           { icon: 'key',           color: '#f87171' },
-  arnona:         { icon: 'map-pin',       color: '#ef4444' },
-  vaad:           { icon: 'users',         color: '#dc2626' },
-  other:          { icon: 'more-horizontal', color: '#64748b' },
-  salary_me:      { icon: 'briefcase',     color: '#34d399' },
-  salary_spouse:  { icon: 'briefcase',     color: '#10b981' },
-  rental_income:  { icon: 'home',          color: '#059669' },
-  handyman:       { icon: 'tool',          color: '#2dd4bf' },
-  sales:          { icon: 'package',       color: '#6ee7b7' },
-  keren_hishtalmut: { icon: 'trending-up', color: '#14b8a6' },
-  pension:        { icon: 'umbrella',      color: '#0891b2' },
-  other_income:   { icon: 'plus-circle',   color: '#a7f3d0' },
-  transfer:       { icon: 'repeat',        color: '#60a5fa' },
-};
+// Категории транзакций — canonical catalog moved to src/config/categories.ts;
+// re-exported here so the historical `theme/colors` import path keeps working.
+export { categoryConfig } from '../config/categories';
 
 // Типы счетов — MaterialCommunityIcons
 export const accountTypeConfig = {
