@@ -36,9 +36,31 @@ const Notifications = require('expo-notifications');
 const { default: dataService } = require('../src/services/dataService');
 const { default: notificationService } = require('../src/services/notificationService');
 
+// setNotificationHandler runs once at module import; capture the registered
+// handler NOW — the per-test clearAllMocks wipes the recorded call.
+const registeredHandler = Notifications.setNotificationHandler.mock.calls[0][0];
+
 describe('notificationService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  // ─── foreground handler ────────────────────────
+  const foregroundBehavior = async (data) =>
+    registeredHandler.handleNotification({ request: { content: { data } } });
+
+  test('foreground handler suppresses expense reminders (they only make sense outside the app)', async () => {
+    const b = await foregroundBehavior({ type: 'expense_reminder' });
+    expect(b.shouldShowBanner).toBe(false);
+    expect(b.shouldShowAlert).toBe(false);
+    expect(b.shouldPlaySound).toBe(false);
+  });
+
+  test('foreground handler shows every other notification type', async () => {
+    const b = await foregroundBehavior({ type: 'recurring', recurringId: 'r1' });
+    expect(b.shouldShowBanner).toBe(true);
+    const none = await foregroundBehavior(undefined);
+    expect(none.shouldShowBanner).toBe(true);
   });
 
   // ─── requestPermission ─────────────────────────

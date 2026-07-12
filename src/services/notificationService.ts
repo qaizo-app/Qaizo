@@ -15,14 +15,26 @@ const PROJECT_BUDGET_NOTIFIED_KEY = 'project_budget_notified_thresholds';
 // Настройка отображения уведомлений когда приложение открыто.
 // shouldShowBanner / shouldShowList replace the deprecated shouldShowAlert
 // in expo-notifications (SDK 53) — same visible behavior.
+//
+// This handler is consulted ONLY while the app is foregrounded. An
+// "log your expenses" nudge exists to pull the user INTO the app, so
+// showing it to someone already inside is pointless — and Android's
+// standby buckets defer our exact-time alarms on rarely-opened phones
+// and deliver them right at app open, which looked like "reminders pop
+// when I open the app". Suppress that type in the foreground; scheduled
+// background delivery is unaffected.
 Notifications.setNotificationHandler({
-  handleNotification: async (): Promise<Notifications.NotificationBehavior> => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification): Promise<Notifications.NotificationBehavior> => {
+    const type = (notification?.request?.content?.data as any)?.type;
+    const show = type !== 'expense_reminder';
+    return {
+      shouldShowAlert: show,
+      shouldShowBanner: show,
+      shouldShowList: show,
+      shouldPlaySound: show,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 const notificationService = {
