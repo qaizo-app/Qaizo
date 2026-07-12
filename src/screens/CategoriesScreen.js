@@ -13,7 +13,7 @@ import SwipeModal from '../components/SwipeModal';
 import i18n from '../i18n';
 import dataService from '../services/dataService';
 import { breadcrumb, captureError, captureMessage } from '../services/logger';
-import { invalidateCachedGroups, setCachedGroups } from '../utils/categoryCache';
+import { getCachedGroups, setCachedGroups } from '../utils/categoryCache';
 import { colors } from '../theme/colors';
 import { DEFAULT_GROUPS } from '../config/categories';
 
@@ -79,7 +79,9 @@ const COLOR_OPTIONS = [
 
 export default function CategoriesScreen() {
   const navigation = useNavigation();
-  const [groups, setGroups] = useState([]);
+  // Seed from the warm cache: if the Firestore read below stalls, the user
+  // sees their categories instead of a blank screen (restored-by-restart bug).
+  const [groups, setGroups] = useState(() => getCachedGroups());
 
   useFocusEffect(useCallback(() => {
     // Capture diagnostic info — testers reported the screen rendering empty
@@ -104,8 +106,10 @@ export default function CategoriesScreen() {
 
   const persistGroups = (newGroups) => {
     setGroups(newGroups);
+    // setCachedGroups IS the cache refresh — never invalidate after it:
+    // wiping here left every catName() lookup returning raw ids until
+    // something re-warmed the cache (the "cat_xxx after rename" bug).
     setCachedGroups(newGroups);
-    invalidateCachedGroups();
     dataService.saveCategories(newGroups);
   };
   const [expandedGroup, setExpandedGroup] = useState(null);
