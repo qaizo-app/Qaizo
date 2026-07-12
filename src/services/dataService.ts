@@ -92,7 +92,10 @@ function snapExists(snap: any): boolean {
 // ─── Single-document read/write (settings, budgets, categories, tags) ────
 async function getDocData(colName: string, defaultVal: any): Promise<any> {
   try {
-    const snap = await userDoc(colName + '/data').get();
+    // withTimeout: a stuck gRPC stream on a READ must degrade to the default
+    // after 8s, not hang the caller forever (frozen screens / eternal
+    // spinners). Same treatment writes got in June.
+    const snap: any = await withTimeout(userDoc(colName + '/data').get());
     // Guard the value too: an existing doc with a missing/undefined `value`
     // must still fall back to defaultVal, never return undefined (callers do
     // `.length` etc. on the result).
@@ -117,11 +120,12 @@ async function setDocData(colName: string, value: any): Promise<boolean> {
 // ─── Collection read/write (transactions, accounts, investments, recurring) ──
 async function getColDocs(colName: string, defaultVal: any[] = []): Promise<any[]> {
   try {
-    const snap = await userCol(colName).orderBy('createdAt', 'desc').get();
+    // See getDocData: reads are bounded too (8s + 8s fallback worst case).
+    const snap: any = await withTimeout(userCol(colName).orderBy('createdAt', 'desc').get());
     return snap.docs.map((d: any) => ({ ...d.data(), id: d.id }));
   } catch (e) {
     try {
-      const snap = await userCol(colName).get();
+      const snap: any = await withTimeout(userCol(colName).get());
       const items = snap.docs.map((d: any) => ({ ...d.data(), id: d.id }));
       return items.sort((a: any, b: any) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     } catch (e2) {

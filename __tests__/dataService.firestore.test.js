@@ -29,6 +29,8 @@ jest.mock('@react-native-firebase/firestore', () => {
       path,
       collection: (subCol) => makeColRef(`${path}/${subCol}`),
       get: async () => {
+        // Simulate a stuck Firestore gRPC stream on READS too.
+        if (state.hangReads) return new Promise(() => {});
         // First try standalone docs (settings, budgets, etc)
         let data = state.docs[path];
         // If not found, try as a doc inside a collection
@@ -117,6 +119,7 @@ jest.mock('@react-native-firebase/firestore', () => {
         return { id };
       },
       get: async () => {
+        if (state.hangReads) return new Promise(() => {});
         const items = state.collections[path] || [];
         return {
           docs: items.map(item => ({
@@ -430,6 +433,33 @@ describe('dataService (firestore mode)', () => {
     expect((await dataService.getStreaks()).currentStreak).toBe(5);
     expect((await dataService.getQuickTemplates()).length).toBe(1);
   });
+
+  // ─── READ TIMEOUTS ──────────────────────────
+  test('single-doc reads fall back to the default when the read never settles', async () => {
+    await dataService.setBudget('food', 500);
+    firestoreMock.__state.hangReads = true;
+    try {
+      // Stuck gRPC stream on read: getDocData must resolve to the default
+      // instead of hanging forever (the frozen Categories screen bug).
+      const budgets = await dataService.getBudgets();
+      expect(budgets).toEqual({});
+    } finally {
+      firestoreMock.__state.hangReads = false;
+    }
+  }, 15000);
+
+  test('collection reads resolve to [] when the read never settles', async () => {
+    await dataService.addTransaction({ type: 'expense', amount: 10, categoryId: 'food' });
+    firestoreMock.__state.hangReads = true;
+    try {
+      // Both the ordered read and the plain fallback hang → bounded empty
+      // result (8s + 8s worst case), never an eternal spinner.
+      const txs = await dataService.getTransactions();
+      expect(txs).toEqual([]);
+    } finally {
+      firestoreMock.__state.hangReads = false;
+    }
+  }, 30000);
 
   // ─── CLEAR ──────────────────────────────────
   test('clearAllData removes everything in firestore', async () => {
