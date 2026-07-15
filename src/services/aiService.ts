@@ -5,8 +5,8 @@ import { catName } from '../utils/categoryName';
 import { fmt, sym, code as curCode } from '../utils/currency';
 import type { ExtractedTx } from '../utils/statementReconcile';
 import {
-  callGemini, callGeminiOnce, getLastAIError, setLastAIError,
-  GEMINI_MODEL_PRIMARY, GEMINI_MODEL_FALLBACK, GEMINI_MODEL_STATEMENT, geminiUrl,
+  callGemini, getLastAIError, setLastAIError,
+  GEMINI_MODEL_FALLBACK, GEMINI_MODEL_STATEMENT, geminiUrl,
   GEMINI_API_KEY,
 } from './ai/client';
 import type { GeminiResponse } from './ai/client';
