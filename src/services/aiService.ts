@@ -4,10 +4,13 @@ import i18n from '../i18n';
 import { catName } from '../utils/categoryName';
 import { fmt, sym, code as curCode } from '../utils/currency';
 import type { ExtractedTx } from '../utils/statementReconcile';
-
-interface GeminiResponse {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-}
+import {
+  callGemini, callGeminiOnce, getLastAIError, setLastAIError,
+  GEMINI_MODEL_PRIMARY, GEMINI_MODEL_FALLBACK, GEMINI_MODEL_STATEMENT, geminiUrl,
+  GEMINI_API_KEY,
+} from './ai/client';
+import type { GeminiResponse } from './ai/client';
+export type { AIError } from './ai/client';
 
 // Public return-type shapes — kept narrow so callers can rely on them.
 // Heterogeneous Gemini-shaped methods (parseTransactionSmart, scanReceipt, …)
@@ -29,41 +32,10 @@ export interface TaxReserveResult {
   netIncome: number;
 }
 
-export interface AIError {
-  code: string;
-  status?: number;
-  message?: string;
-}
-
 export interface TranslatedCategoryName {
   ru: string;
   en: string;
   he: string;
-}
-
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const GEMINI_MODEL_PRIMARY = 'gemini-2.5-flash';
-const GEMINI_MODEL_FALLBACK = 'gemini-flash-latest';
-// Statements are dense tables where row alignment matters; the Pro model is
-// markedly better at keeping each payee paired with its own row's amount.
-// Falls back to flash on overload/rate-limit (handled in scanStatement).
-const GEMINI_MODEL_STATEMENT = 'gemini-2.5-pro';
-const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-// Loud one-shot warning at module load so a misconfigured dev build is
-// visible in the very first Metro log, not only when the user tries to scan.
-// Past sessions wasted hours debugging "scanner returns nothing on iOS"
-// because the symptom looked like an AI failure when the real cause was a
-// missing local .env on the dev machine. See project_ios_gemini_key_missing.
-if (__DEV__ && !GEMINI_API_KEY) {
-  // eslint-disable-next-line no-console
-  if (__DEV__) console.warn(
-    '\n[Qaizo aiService] EXPO_PUBLIC_GEMINI_API_KEY is missing in this build.\n' +
-    '  → Receipt scan, statement scan, voice input parsing and Smart Input\n' +
-    '    will all silently return empty.\n' +
-    '  → Fix: copy `.env.example` to `.env` in the repo root, fill in keys,\n' +
-    '    then Clean Build Folder + rebuild (Xcode) or `npx expo start --clear`.\n'
-  );
 }
 
 // ─── МААМ и налоговые ставки (Израиль) ──────────────────
@@ -373,67 +345,6 @@ function generateInsights(transactions: any[], budgets: any, accounts: any[], re
   }
 
   return { insights, income, expense, balance, savingsRate, cashFlow };
-}
-
-// ─── Gemini API ─────────────────────────────────────────
-// Last AI failure reason — exposed so screens can show a specific message
-// ("rate limit" / "no api key" / "network") instead of a generic fallback.
-let _lastAIError: AIError | null = null;
-function getLastAIError(): AIError | null { return _lastAIError; }
-
-async function callGeminiOnce(model: string, prompt: string, { maxTokens, temperature }: { maxTokens: number; temperature: number }) {
-  const res = await fetch(`${geminiUrl(model)}?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature, maxOutputTokens: maxTokens },
-    }),
-  });
-  return res;
-}
-
-async function callGemini(prompt: string, { maxTokens = 1024, temperature = 0.3 }: { maxTokens?: number; temperature?: number } = {}): Promise<string | null> {
-  if (!GEMINI_API_KEY) {
-    _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
-    if (__DEV__) console.warn('[ai] no GEMINI_API_KEY set');
-    return null;
-  }
-  const tryModel = async (model: string): Promise<any> => {
-    try {
-      const res = await callGeminiOnce(model, prompt, { maxTokens, temperature });
-      if (!res.ok) {
-        const errText = await res.text().catch(() => '');
-        const code = res.status === 429 ? 'rate_limit'
-                   : res.status === 401 || res.status === 403 ? 'auth'
-                   : res.status >= 500 ? 'server'
-                   : 'http_error';
-        if (__DEV__) console.warn('[ai] gemini', model, 'error', res.status, errText.slice(0, 300));
-        return { ok: false, code, status: res.status, message: errText.slice(0, 300) };
-      }
-      const data = await res.json() as GeminiResponse;
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-      if (!text) return { ok: false, code: 'empty_response', message: 'Gemini returned no text' };
-      return { ok: true, text };
-    } catch (e: any) {
-      if (__DEV__) console.warn('[ai] gemini', model, 'fetch failed', e);
-      return { ok: false, code: 'network', message: String(e?.message || e) };
-    }
-  };
-
-  // Primary model
-  let r = await tryModel(GEMINI_MODEL_PRIMARY);
-  // Retry on transient overload (503) or empty response with the fallback model
-  if (!r.ok && (r.code === 'server' || r.code === 'empty_response')) {
-    if (__DEV__) console.warn('[ai] retrying on fallback model', GEMINI_MODEL_FALLBACK);
-    r = await tryModel(GEMINI_MODEL_FALLBACK);
-  }
-  if (r.ok) {
-    _lastAIError = null;
-    return r.text;
-  }
-  _lastAIError = { code: r.code, status: r.status, message: r.message };
-  return null;
 }
 
 // Cross-language semantic synonyms for project name matching.
@@ -852,7 +763,7 @@ No markdown, no explanation, only the JSON array.`;
 async function scanReceipt(imageInput: any, lang: string, _retryCount = 0): Promise<any> {
   if (!GEMINI_API_KEY) {
     if (__DEV__) console.error('scanReceipt: no API key');
-    _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
+    setLastAIError({ code: 'no_api_key', message: 'Gemini API key is not configured' });
     return null;
   }
   try {
@@ -918,11 +829,11 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       if (__DEV__) console.error('scanReceipt API error:', res.status, errText);
-      _lastAIError = {
+      setLastAIError({
         code: res.status === 429 ? 'rate_limit' : res.status === 401 || res.status === 403 ? 'auth' : res.status >= 500 ? 'server' : 'http_error',
         status: res.status,
         message: `${errText.slice(0, 200)} [mimes: ${mimes.join(',')}]`,
-      };
+      });
       return null;
     }
 
@@ -985,11 +896,11 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
         await new Promise(r => setTimeout(r, 1000));
         return scanReceipt(imageInput, lang, _retryCount + 1);
       }
-      _lastAIError = { code: 'empty_response', message: 'No total or store recognized on the receipt' };
+      setLastAIError({ code: 'empty_response', message: 'No total or store recognized on the receipt' });
       return null;
     }
 
-    _lastAIError = null;
+    setLastAIError(null);
     return parsed;
   } catch (e: any) {
     if (__DEV__) console.error('scanReceipt error:', e);
@@ -999,7 +910,7 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
       await new Promise(r => setTimeout(r, 1000));
       return scanReceipt(imageInput, lang, _retryCount + 1);
     }
-    _lastAIError = { code: 'network', message: String(e?.message || e) };
+    setLastAIError({ code: 'network', message: String(e?.message || e) });
     return null;
   }
 }
@@ -1169,7 +1080,7 @@ export function amountAppearsInRaw(amount: number, raw?: string): boolean {
 async function scanStatement(imageInput: any, accountCurrency?: string): Promise<ExtractedTx[]> {
   if (!GEMINI_API_KEY) {
     if (__DEV__) console.error('scanStatement: no API key');
-    _lastAIError = { code: 'no_api_key', message: 'Gemini API key is not configured' };
+    setLastAIError({ code: 'no_api_key', message: 'Gemini API key is not configured' });
     return [];
   }
   try {
@@ -1252,11 +1163,11 @@ Return ONLY the JSON array. No surrounding text, no markdown fences.`;
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       if (__DEV__) console.error('scanStatement API error:', res.status, errText);
-      _lastAIError = {
+      setLastAIError({
         code: res.status === 429 ? 'rate_limit' : res.status === 401 || res.status === 403 ? 'auth' : res.status >= 500 ? 'server' : 'http_error',
         status: res.status,
         message: errText.slice(0, 200),
-      };
+      });
       return [];
     }
 
@@ -1275,16 +1186,16 @@ Return ONLY the JSON array. No surrounding text, no markdown fences.`;
       parsed = JSON.parse(jsonStr);
     } catch (e) {
       if (__DEV__) console.error('scanStatement JSON parse failed:', e);
-      _lastAIError = { code: 'empty_response', message: 'Could not parse statement JSON' };
+      setLastAIError({ code: 'empty_response', message: 'Could not parse statement JSON' });
       return [];
     }
 
     if (!Array.isArray(parsed)) {
-      _lastAIError = { code: 'empty_response', message: 'Response was not an array' };
+      setLastAIError({ code: 'empty_response', message: 'Response was not an array' });
       return [];
     }
 
-    _lastAIError = null;
+    setLastAIError(null);
     return parsed
       .filter((row: any) =>
         row && typeof row.amount === 'number' && typeof row.date === 'string' && typeof row.payee === 'string'
@@ -1306,7 +1217,7 @@ Return ONLY the JSON array. No surrounding text, no markdown fences.`;
       });
   } catch (e: any) {
     if (__DEV__) console.error('scanStatement error:', e);
-    _lastAIError = { code: 'network', message: String(e?.message || e) };
+    setLastAIError({ code: 'network', message: String(e?.message || e) });
     return [];
   }
 }
@@ -1530,7 +1441,7 @@ RULES:
   const result = await callGemini(prompt, { maxTokens: 2048 });
   if (result) return result;
   // Build a fallback that reflects the actual failure reason
-  const err = _lastAIError;
+  const err = getLastAIError();
   const reason = err?.code === 'rate_limit' ? (lang === 'he' ? 'חרגת ממכסת הבקשות היומית. נסה שוב מאוחר יותר.' : lang === 'ru' ? 'Превышен дневной лимит запросов. Попробуйте позже.' : 'Daily rate limit reached. Please try again later.')
                : err?.code === 'network' ? (lang === 'he' ? 'אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.' : lang === 'ru' ? 'Нет интернета. Проверьте соединение и попробуйте снова.' : 'No internet connection. Please check and try again.')
                : err?.code === 'auth' || err?.code === 'no_api_key' ? (lang === 'he' ? 'שירות ה-AI אינו זמין כרגע (בעיית תצורה).' : lang === 'ru' ? 'AI временно недоступен (ошибка конфигурации).' : 'AI is temporarily unavailable (configuration issue).')
