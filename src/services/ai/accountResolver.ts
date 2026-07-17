@@ -20,6 +20,11 @@ export type AccountReason = 'explicit' | 'brand' | 'type' | 'habit' | 'recent' |
 
 const tsOf = (t: any) => new Date(t?.date || t?.createdAt || 0).getTime();
 
+// Max-scan, order-independent except EXACT timestamp ties (date-only strings
+// collide at midnight): strict `>` keeps the first-seen transaction, which is
+// the newest by insertion order when the caller passes a createdAt-desc list
+// (dataService.getTransactions does). Callers with unsorted data get an
+// arbitrary-but-stable pick between same-instant candidates — acceptable.
 function lastUsedAmong(ids: Set<string>, transactions: any[]): string | null {
   let best: string | null = null; let bestTs = -1;
   for (const t of transactions || []) {
