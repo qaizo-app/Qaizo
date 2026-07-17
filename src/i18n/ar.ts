@@ -779,4 +779,5 @@ export default {
   pinLocked: 'محاولات كثيرة جداً. أعد المحاولة بعد',
   expenseReminderBody: 'لا تنس تسجيل مصروفاتك 💸',
   saveFailed: 'تعذّر الحفظ. تحقق من اتصالك وحاول مرة أخرى.',
+  siFromHistory: 'من سجلّك',
 };

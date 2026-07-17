@@ -381,6 +381,13 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
                 </View>
               </View>
 
+              {parsed?.source === 'history' && (
+                <View style={{ flexDirection: i18n.row(), alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: `${colors.green}18`, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginBottom: 6 }}>
+                  <Feather name="zap" size={11} color={colors.green} />
+                  <Text style={{ color: colors.green, fontSize: 11, fontWeight: '700' }}>{i18n.t('siFromHistory')}</Text>
+                </View>
+              )}
+
               {(() => {
                 const payable = accounts.filter(a => ['bank', 'credit', 'cash'].includes(a.type));
                 if (payable.length === 0) return null;

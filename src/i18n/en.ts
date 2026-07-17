@@ -778,4 +778,5 @@ export default {
   abDirUnavailable: 'Folder unavailable — pick it again',
   abBackupNow: 'Back up now',
   abDone: 'Backup saved',
+  siFromHistory: 'From your history',
 };

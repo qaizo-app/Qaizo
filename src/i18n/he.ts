@@ -778,4 +778,5 @@ export default {
   abDirUnavailable: 'התיקייה לא זמינה — בחר שוב',
   abBackupNow: 'גבה עכשיו',
   abDone: 'הגיבוי נשמר',
+  siFromHistory: 'מההיסטוריה שלך',
 };

@@ -778,4 +778,5 @@ export default {
   abDirUnavailable: 'Папка недоступна — выбери заново',
   abBackupNow: 'Сделать сейчас',
   abDone: 'Бэкап сохранён',
+  siFromHistory: 'Из твоей истории',
 };

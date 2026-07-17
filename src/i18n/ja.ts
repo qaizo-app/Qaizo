@@ -779,4 +779,5 @@ export default {
   pinLocked: '試行回数が多すぎます。しばらくお待ちください：',
   expenseReminderBody: '支出の記録を忘れずに 💸',
   saveFailed: '保存できませんでした。接続を確認してもう一度お試しください。',
+  siFromHistory: 'あなたの履歴から',
 };

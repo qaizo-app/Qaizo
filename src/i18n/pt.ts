@@ -779,4 +779,5 @@ export default {
   pinLocked: 'Demasiadas tentativas. Tente novamente em',
   expenseReminderBody: 'Não se esqueça de registar as suas despesas 💸',
   saveFailed: 'Não foi possível guardar. Verifique a sua ligação e tente novamente.',
+  siFromHistory: 'Do seu histórico',
 };
