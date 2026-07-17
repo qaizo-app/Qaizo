@@ -11,6 +11,8 @@ describe('normalizeInput', () => {
     ['Taxi home 45 NIS', 'taxi home'],
     ['  двойные   пробелы 12 ', 'двойные пробелы'],
     ['1,250', ''],
+    ['Nissan сервис 800', 'nissan сервис'],   // 'nis' inside a word must survive
+    ['пять шекелей кофе', 'пять кофе'],       // declined RU currency stripped fully
   ])('%s → "%s"', (input, expected) => {
     expect(normalizeInput(input)).toBe(expected);
   });
@@ -51,6 +53,13 @@ describe('buildDictionary', () => {
       tx('', 'food', 'expense', '2026-06-20', 'רמי לוי'),
     ], { now });
     expect(d.get('רמי לוי')).toMatchObject({ categoryId: 'food' });
+  });
+
+  test('note === recipient on ONE transaction does not fake a repeat', () => {
+    const d = buildDictionary([
+      { note: 'рами леви', recipient: 'рами леви', categoryId: 'food', type: 'expense', date: '2026-06-01' },
+    ], { now });
+    expect(d.get('рами леви')).toBeUndefined();
   });
 
   test('income repeats carry their type', () => {

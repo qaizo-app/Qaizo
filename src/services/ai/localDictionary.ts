@@ -7,11 +7,15 @@ export interface DictEntry { categoryId: string; type: 'income' | 'expense'; cou
 
 // Lowercase, strip digits + currency tokens + punctuation, collapse spaces.
 // «Кофе с круассаном 28₪» → 'кофе с круассаном'.
+// Currency tokens are matched as STANDALONE words only ((^|\s)…(\s|$)):
+// an unbounded regex mangled words merely containing them ("Nissan" → "san").
+// Cyrillic declensions need an explicit class — \w never matches Cyrillic,
+// so шекел\w* left "шекелей" half-stripped.
 export function normalizeInput(text: string): string {
   return String(text || '')
     .toLowerCase()
     .replace(/[0-9]+([.,'][0-9]+)*/g, ' ')
-    .replace(/₪|шекел\w*|שקל(ים)?|שח|ils|nis/g, ' ')
+    .replace(/(^|\s)(₪|шекел[а-яё]*|שקל(ים)?|שח|ils|nis)(?=\s|$)/g, ' ')
     .replace(/[.,!?;:()"'`+\-–—/\\]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -33,9 +37,11 @@ export function buildDictionary(
     if (!t || (t.type !== 'expense' && t.type !== 'income') || !t.categoryId) continue;
     const ts = new Date(t.date || t.createdAt || 0).getTime();
     if (!Number.isFinite(ts) || ts < cutoff) continue;
-    for (const source of [t.note, t.recipient]) {
-      const key = normalizeInput(source);
-      if (!key) continue;
+    // Note and recipient are independent keys, but ONE transaction must never
+    // count twice toward the same key (note === recipient would let a single
+    // real occurrence pass the ≥2 repeat threshold).
+    const keys = new Set([t.note, t.recipient].map(normalizeInput).filter(Boolean));
+    for (const key of keys) {
       let perCat = counts.get(key);
       if (!perCat) { perCat = new Map(); counts.set(key, perCat); }
       const cur = perCat.get(t.categoryId) || { n: 0, type: t.type };
