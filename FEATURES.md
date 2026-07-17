@@ -342,6 +342,13 @@ sample-rate-throttled, with `__DEV__` guards on console output.
 - One-tap save with editable preview
 - Voice auto-parse: hold-to-record → speech-to-text → auto-fires Gemini
 
+Smart Input v2 pipeline: exact repeats of the user's own phrasing are
+recognized instantly on-device (⚡ badge, no AI call); novel inputs go
+to Gemini with a prompt personalized by the user's real categories
+(custom ones included) and up to 30 history examples (never amounts);
+account defaults follow the user's per-category habit. Local keyword
+parser remains the offline fallback.
+
 **Receipt scanner** — `ReceiptScannerModal`:
 - Camera capture or gallery pick
 - Gemini Vision OCR → extracts merchant, total, items, date
