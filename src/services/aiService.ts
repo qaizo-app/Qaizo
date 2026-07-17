@@ -11,6 +11,7 @@ import {
 } from './ai/client';
 import type { GeminiResponse } from './ai/client';
 import { parseTransaction, CATEGORY_KEYWORDS, extractAmount } from './ai/localParser';
+import { CARD_BRAND_KEYWORDS, detectCardBrand } from './ai/accountResolver';
 export type { AIError } from './ai/client';
 export type { ParsedTransaction } from './ai/localParser';
 
@@ -301,20 +302,6 @@ function matchProjectInText(text: string, projectsList: any[]) {
   return null;
 }
 
-// Brand keywords for credit card brand detection (used for both AI selection and UI chip filtering)
-const CARD_BRAND_KEYWORDS: Record<string, string[]> = {
-  visa: ['visa', 'ויזה', 'виза'],
-  mastercard: ['mastercard', 'master card', 'מאסטרקארד', 'מסטרקארד', 'мастеркард', 'мастер кард'],
-  amex: ['amex', 'american express', 'אמקס', 'американ экспресс'],
-};
-
-function detectCardBrand(text: string): string | null {
-  const lc = (text || '').toLowerCase();
-  for (const [brand, kws] of Object.entries(CARD_BRAND_KEYWORDS)) {
-    if (kws.some((kw: string) => lc.includes(kw))) return brand;
-  }
-  return null;
-}
 
 // Умный парсинг транзакции через Gemini
 async function parseTransactionSmart(text: string, accounts: any[] = [], projects: any[] = []) {
