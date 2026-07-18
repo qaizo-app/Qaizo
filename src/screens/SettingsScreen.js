@@ -398,7 +398,7 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.sectionBtn} onPress={() => toggle('reminders')}>
           <View style={styles.sectionLeft}>
             <Feather name="bell" size={18} color={colors.green} />
-            <Text style={styles.sectionText}>{i18n.t('expenseReminders')}</Text>
+            <RowText style={styles.sectionText} numberOfLines={1}>{i18n.t('expenseReminders')}</RowText>
           </View>
           <View style={styles.sectionRight}>
             <Text style={styles.sectionValue}>{reminderEnabled ? i18n.t('everyNHours').replace('{n}', String(reminderInterval)) : i18n.t('off')}</Text>
@@ -828,9 +828,11 @@ const createStyles = () => StyleSheet.create({
 
   groupTitle: { color: colors.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginHorizontal: 24, marginTop: 24, marginBottom: 4, textAlign: i18n.textAlign() },
   sectionBtn: { flexDirection: i18n.row(), justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginTop: 12, backgroundColor: colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.cardBorder },
-  sectionLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 12 },
+  // sectionLeft flexes so a long label (RU «Напоминания о расходах») shrinks
+  // instead of shoving the value out of the card; sectionRight never squeezes.
+  sectionLeft: { flexDirection: i18n.row(), alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
   sectionText: { color: colors.text, fontSize: 16, fontWeight: '600', textAlign: i18n.textAlign() },
-  sectionRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8 },
+  sectionRight: { flexDirection: i18n.row(), alignItems: 'center', gap: 8, flexShrink: 0 },
   sectionValue: { color: colors.textDim, fontSize: 14, fontWeight: '500' },
   comingSoonBadge: { color: colors.textMuted, fontSize: 12, fontWeight: '600', backgroundColor: colors.bg2, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden' },
   extraInput: { backgroundColor: colors.bg, borderRadius: 12, padding: 14, color: colors.text, fontSize: 16, fontWeight: '700', borderWidth: 1, borderColor: colors.cardBorder, writingDirection: 'ltr' },
