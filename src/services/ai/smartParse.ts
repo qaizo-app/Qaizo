@@ -7,9 +7,14 @@ import { getCachedGroups } from '../../utils/categoryCache';
 import { callGemini } from './client';
 import { buildSmartPrompt, PromptCategory, PromptExample } from './promptBuilder';
 import { buildDictionary, lookupRepeat } from './localDictionary';
-import { resolveAccount } from './accountResolver';
+import { resolveAccount, detectCardBrand } from './accountResolver';
 import { parseTransaction, extractAmount } from './localParser';
 import dataService from '../dataService';
+
+// Word-number amounts («12 тысяч», «חמש אלף», '12k') are multiplier forms the
+// local extractor doesn't expand — a dictionary hit would save a 1000×-wrong
+// amount with a confident badge. Send those to the AI, which handles them.
+const WORD_NUMBER_RE = /(тыс|thousand|אלף|אלפים|\d\s*[kк](\s|$))/i;
 
 // Cross-language semantic synonyms for project name matching.
 // If a project is named in one language and the user types in another,
@@ -102,15 +107,16 @@ function collectExamples(transactions: any[]): PromptExample[] {
   return [...seen.values()];
 }
 
-export async function parseTransactionSmart(text: string, accounts: any[] = [], projects: any[] = []) {
+export async function parseTransactionSmart(text: string, accounts: any[] = [], projects: any[] = [], preloadedTransactions: any[] | null = null) {
   const activeAccounts = (accounts || []).filter((a: any) => a.isActive !== false);
-  const transactions = await dataService.getTransactions().catch(() => []);
+  const transactions = preloadedTransactions ?? await dataService.getTransactions().catch(() => []);
+  const detectedBrand = detectCardBrand(text);
 
   // ── Layer 1: exact repeat of the user's own phrasing ──
   const dict = buildDictionary(transactions);
   const hit = lookupRepeat(text, dict);
   const amount = extractAmount(text);
-  if (hit && amount) {
+  if (hit && amount && !WORD_NUMBER_RE.test(text)) {
     const { account, reason } = resolveAccount({
       text, categoryId: hit.categoryId, txType: hit.type,
       accounts: activeAccounts, transactions,
@@ -120,6 +126,7 @@ export async function parseTransactionSmart(text: string, accounts: any[] = [], 
       recipient: '', note: text,
       account, accountReason: reason, source: 'history',
       projectId: matchProjectInText(text, projects || []),
+      detectedBrand,
     };
   }
 
@@ -212,6 +219,7 @@ export async function parseTransactionSmart(text: string, accounts: any[] = [], 
     parsed.account = account;
     parsed.accountReason = reason;
     parsed.source = 'ai';
+    parsed.detectedBrand = detectedBrand;
     if (__DEV__) console.log('[Smart] final result:', JSON.stringify(parsed));
     return parsed;
   }
@@ -226,6 +234,7 @@ export async function parseTransactionSmart(text: string, accounts: any[] = [], 
     fallback.account = account;
     fallback.accountReason = reason;
     fallback.source = 'fallback';
+    fallback.detectedBrand = detectedBrand;
   }
   return fallback;
 }

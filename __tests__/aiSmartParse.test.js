@@ -29,7 +29,11 @@ const accounts = [
   { id: 'cash1', name: 'Наличные', type: 'cash', isActive: true },
 ];
 
-beforeEach(() => { mockCallGemini.mockReset(); mockTxs.length = 0; });
+beforeEach(() => {
+  mockCallGemini.mockReset();
+  mockTxs.length = 0;
+  require('../src/services/dataService').default.getTransactions.mockClear();
+});
 
 describe('layer 1: repeat dictionary', () => {
   test('known phrasing skips the network entirely', async () => {
@@ -50,6 +54,18 @@ describe('layer 1: repeat dictionary', () => {
     );
     mockCallGemini.mockResolvedValue(JSON.stringify({ amount: 30, type: 'expense', categoryId: 'restaurant', recipient: '', note: 'кофе' }));
     const r = await parseTransactionSmart('кофе', accounts, []);
+    expect(mockCallGemini).toHaveBeenCalled();
+    expect(r.source).toBe('ai');
+  });
+
+  test('word-number amounts ("12 тысяч") never resolve at layer 1 — sent to AI instead', async () => {
+    mockTxs.push(
+      { note: 'получил зарплату 12 тысяч', categoryId: 'salary_me', type: 'income', date: '2026-07-01' },
+      { note: 'получил зарплату 12 тысяч', categoryId: 'salary_me', type: 'income', date: '2026-06-01' },
+      { note: 'получил зарплату 12 тысяч', categoryId: 'salary_me', type: 'income', date: '2026-05-01' },
+    );
+    mockCallGemini.mockResolvedValue(JSON.stringify({ amount: 14000, type: 'income', categoryId: 'salary_me', recipient: '', note: 'получил зарплату 14 тысяч' }));
+    const r = await parseTransactionSmart('получил зарплату 14 тысяч', accounts, []);
     expect(mockCallGemini).toHaveBeenCalled();
     expect(r.source).toBe('ai');
   });
@@ -93,5 +109,39 @@ describe('layer 3: fallback', () => {
     mockCallGemini.mockResolvedValue(null);
     const r = await parseTransactionSmart('такси 45', accounts, []);
     expect(r).toMatchObject({ amount: 45, categoryId: 'transport', source: 'fallback' });
+  });
+});
+
+describe('detectedBrand', () => {
+  test('is attached to the AI-path result when a brand word is present', async () => {
+    mockCallGemini.mockResolvedValue(JSON.stringify({ amount: 50, type: 'expense', categoryId: 'food', recipient: '', note: 'продукты по визе 50' }));
+    const r = await parseTransactionSmart('продукты по визе 50', accounts, []);
+    expect(r.detectedBrand).toBe('visa');
+  });
+
+  test('is attached to the history-path result', async () => {
+    mockTxs.push(
+      { note: 'виза кофе 25', categoryId: 'restaurant', type: 'expense', date: '2026-07-01' },
+      { note: 'виза кофе 30', categoryId: 'restaurant', type: 'expense', date: '2026-07-05' },
+    );
+    const r = await parseTransactionSmart('виза кофе 32', accounts, []);
+    expect(r.source).toBe('history');
+    expect(r.detectedBrand).toBe('visa');
+  });
+
+  test('is attached to the fallback-path result', async () => {
+    mockCallGemini.mockResolvedValue(null);
+    const r = await parseTransactionSmart('такси визой 45', accounts, []);
+    expect(r.source).toBe('fallback');
+    expect(r.detectedBrand).toBe('visa');
+  });
+});
+
+describe('preloadedTransactions (4th arg)', () => {
+  test('when provided, dataService.getTransactions is NOT called', async () => {
+    const dataService = require('../src/services/dataService').default;
+    mockCallGemini.mockResolvedValue(JSON.stringify({ amount: 45, type: 'expense', categoryId: 'transport', recipient: '', note: 'такси 45' }));
+    await parseTransactionSmart('такси 45', accounts, [], []);
+    expect(dataService.getTransactions).not.toHaveBeenCalled();
   });
 });

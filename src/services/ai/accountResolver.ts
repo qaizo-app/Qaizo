@@ -3,9 +3,12 @@
 
 // Brand keywords for credit card brand detection (used for both AI selection and UI chip filtering)
 export const CARD_BRAND_KEYWORDS: Record<string, string[]> = {
-  visa: ['visa', 'ויזה', 'виза'],
-  mastercard: ['mastercard', 'master card', 'מאסטרקארד', 'מסטרקארד', 'мастеркард', 'мастер кард'],
-  amex: ['amex', 'american express', 'אמקס', 'американ экспресс'],
+  // 'визой'/'визу'/'визе' don't contain the stem 'виза' — Russian instrumental/
+  // accusative/prepositional case endings replace the final letter, so they
+  // need explicit forms rather than relying on substring match.
+  visa: ['visa', 'ויזה', 'виза', 'визой', 'визу', 'визе'],
+  mastercard: ['mastercard', 'master card', 'מאסטרקארד', 'מסטרקארד', 'мастеркард', 'мастер кард', 'мастеркардом', 'мастеркарду'],
+  amex: ['amex', 'american express', 'אמקס', 'американ экспресс', 'амексом'],
 };
 
 export function detectCardBrand(text: string): string | null {
@@ -17,6 +20,12 @@ export function detectCardBrand(text: string): string | null {
 }
 
 export type AccountReason = 'explicit' | 'brand' | 'type' | 'habit' | 'recent' | 'none';
+
+// Only these account types show up as chips in the modal (SmartInputModal
+// filters to bank|credit|cash). A habit/recent pick that lands on an
+// investment/savings account would be invisible to the user — silently
+// "selected" but with no chip highlighted and no way to see why.
+const PAYABLE_TYPES = new Set(['bank', 'credit', 'cash']);
 
 const tsOf = (t: any) => new Date(t?.date || t?.createdAt || 0).getTime();
 
@@ -49,6 +58,7 @@ export function resolveAccount(args: {
 }): { account: string | null; reason: AccountReason } {
   const { text, aiAccountId, aiAccountType, categoryId, txType, accounts, transactions } = args;
   const accIds = new Set((accounts || []).map((a: any) => a.id));
+  const payableIds = new Set((accounts || []).filter((a: any) => PAYABLE_TYPES.has(a.type)).map((a: any) => a.id));
 
   // 1. Explicit id from the model, validated.
   if (aiAccountId && accIds.has(aiAccountId)) return { account: aiAccountId, reason: 'explicit' };
@@ -76,11 +86,13 @@ export function resolveAccount(args: {
     }
   }
 
-  // 4. Category habit: ≥3 txs of this category+type on LIVE accounts,
-  //    one account holding ≥60% of them.
+  // 4. Category habit: ≥3 txs of this category+type on LIVE PAYABLE accounts,
+  //    one account holding ≥60% of them. Investment/savings accounts are
+  //    excluded — the modal only renders bank|credit|cash chips, so a habit
+  //    pick landing there would be invisibly "selected".
   if (categoryId) {
     const catTxs = (transactions || []).filter((t: any) =>
-      t?.categoryId === categoryId && (!txType || t.type === txType) && t.account && accIds.has(t.account));
+      t?.categoryId === categoryId && (!txType || t.type === txType) && t.account && payableIds.has(t.account));
     if (catTxs.length >= 3) {
       const perAcc: Record<string, number> = {};
       for (const t of catTxs) perAcc[t.account] = (perAcc[t.account] || 0) + 1;
@@ -89,8 +101,8 @@ export function resolveAccount(args: {
     }
   }
 
-  // 5. Overall most recent transaction on a live account.
-  const recent = lastUsedAmong(accIds, transactions);
+  // 5. Overall most recent transaction on a live PAYABLE account.
+  const recent = lastUsedAmong(payableIds, transactions);
   if (recent) return { account: recent, reason: 'recent' };
 
   return { account: null, reason: 'none' };

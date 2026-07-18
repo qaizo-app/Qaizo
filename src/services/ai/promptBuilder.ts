@@ -20,7 +20,7 @@ export function buildSmartPrompt(args: {
   // Build accounts section for prompt (only active accounts)
   const activeAccounts = (accounts || []).filter((a: any) => a.isActive !== false);
   const accountsSection = activeAccounts.length > 0
-    ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map((a: any) => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a SPECIFIC account name/brand ("Visa Hapoalim", "Mastercard", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, חשבון בנק, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → return both as null\n`
+    ? `\nUSER ACCOUNTS (id → name (type)):\n${activeAccounts.map((a: any) => `  ${a.id} → "${a.name}" (${a.type || 'other'})`).join('\n')}\n\nACCOUNT MATCHING RULES:\n  - If user mentions a UNIQUE account by NAME ("Visa Hapoalim", "Cash wallet") → return "accountId": "<that exact id>"\n  - If user mentions ONLY a card brand word (visa / mastercard / amex, any language) → return "accountId": null and "accountType": "credit" (the app picks the right card itself)\n  - If user mentions only a generic TYPE (кредитка, наличка, банк, מזומן, אשראי, credit card, cash) → return "accountType": "credit" | "cash" | "bank" | "savings" | "investment"\n  - If user says nothing about payment method → both null\n`
     : '';
 
   // Build projects section — only if user has any projects

@@ -90,4 +90,46 @@ describe('cascade order', () => {
   test('HE brand keyword', () => {
     expect(detectCardBrand('קניתי בויזה 50')).toBe('visa');
   });
+
+  test('RU brand declensions (визой/визу/визе, мастеркардом/мастеркарду, амексом)', () => {
+    expect(detectCardBrand('оплатил визой 50')).toBe('visa');
+    expect(detectCardBrand('положил на визу 50')).toBe('visa');
+    expect(detectCardBrand('расплатился по визе 50')).toBe('visa');
+    expect(detectCardBrand('оплатил мастеркардом 50')).toBe('mastercard');
+    expect(detectCardBrand('привязан к мастеркарду 50')).toBe('mastercard');
+    expect(detectCardBrand('оплатил амексом 50')).toBe('amex');
+  });
+
+  test('4-5: habit/recent tiers ignore non-payable accounts (e.g. investment/pension)', () => {
+    const accountsWithInvestment = [...accounts, { id: 'inv1', name: 'Пенсия', type: 'investment' }];
+
+    // Habit attempt: most transactions on the investment account for this category.
+    const habitTxs = [
+      tx('inv1', 'food', '2026-07-01'),
+      tx('inv1', 'food', '2026-06-20'),
+      tx('inv1', 'food', '2026-06-10'),
+      tx('cash1', 'food', '2026-05-10'),
+    ];
+    const habitResult = resolveAccount({ text: 'продукты 20', categoryId: 'food', txType: 'expense', accounts: accountsWithInvestment, transactions: habitTxs });
+    expect(habitResult.account).not.toBe('inv1');
+    expect(habitResult).toEqual({ account: 'cash1', reason: 'recent' });
+
+    // Recent attempt: most recent transaction overall is on the investment account,
+    // but a payable account also has history → must pick the payable one.
+    const recentTxs = [
+      tx('inv1', 'other', '2026-07-15'),
+      tx('cash1', 'other', '2026-07-01'),
+    ];
+    const recentResult = resolveAccount({ text: 'что-то 20', accounts: accountsWithInvestment, transactions: recentTxs });
+    expect(recentResult).toEqual({ account: 'cash1', reason: 'recent' });
+
+    // Only investment-account history exists → no payable candidate → none.
+    const onlyInvestmentTxs = [
+      tx('inv1', 'food', '2026-07-01'),
+      tx('inv1', 'food', '2026-06-20'),
+      tx('inv1', 'food', '2026-06-10'),
+    ];
+    const noneResult = resolveAccount({ text: 'продукты 20', categoryId: 'food', txType: 'expense', accounts: accountsWithInvestment, transactions: onlyInvestmentTxs });
+    expect(noneResult).toEqual({ account: null, reason: 'none' });
+  });
 });

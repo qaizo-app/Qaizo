@@ -199,19 +199,22 @@ export default function SmartInputModal({ visible, onClose, onSaved }) {
     lastAIRequestText.current = t;
     setIsPending(false); // AI is taking over — debounce/dictation phase done
     setAiLoading(true);
-    // Ensure accounts and projects are loaded before AI call (race-condition guard)
-    let accs = accounts;
-    if (accs.length === 0) {
-      accs = (await dataService.getAccounts()).filter(a => a.isActive !== false);
-      setAccounts(accs);
-    }
-    let projs = projects;
-    if (projs.length === 0) {
-      projs = await dataService.getProjects();
-      setProjects(projs);
-    }
+    // Ensure accounts and projects are loaded before AI call (race-condition guard).
+    // Transactions are preloaded here once per parse session and handed to the
+    // pipeline directly — smartParse.ts no longer does its own Firestore read.
+    const needAccs = accounts.length === 0;
+    const needProjs = projects.length === 0;
+    const [loadedAccs, loadedProjs, txs] = await Promise.all([
+      needAccs ? dataService.getAccounts() : Promise.resolve(accounts),
+      needProjs ? dataService.getProjects() : Promise.resolve(projects),
+      dataService.getTransactions(),
+    ]);
+    const accs = needAccs ? loadedAccs.filter(a => a.isActive !== false) : loadedAccs;
+    if (needAccs) setAccounts(accs);
+    const projs = loadedProjs;
+    if (needProjs) setProjects(projs);
     if (__DEV__) console.log('[SmartUI] sending to AI — accounts:', accs.length, 'projects:', projs.length, projs.map(p => p.name).join('|'));
-    const result = await aiService.parseTransactionSmart(t, accs, projs);
+    const result = await aiService.parseTransactionSmart(t, accs, projs, txs);
     if (__DEV__) console.log('[SmartUI] setParsed result:', JSON.stringify(result));
     setParsed(result);
     setAiLoading(false);
