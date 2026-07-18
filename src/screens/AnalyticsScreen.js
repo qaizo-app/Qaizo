@@ -18,7 +18,7 @@ import dataService from '../services/dataService';
 import badgeService from '../services/badgeService';
 import streakService from '../services/streakService';
 import { categoryConfig, colors } from '../theme/colors';
-import { sym } from '../utils/currency';
+import { sym, CURRENCIES, convert, code as currencyCode } from '../utils/currency';
 
 const PERIODS = [
   { key: '7d', days: 7, label: '7D' },
@@ -210,9 +210,16 @@ export default function AnalyticsScreen() {
           .filter(a => isAll || selSet.has(a.id))
           .filter(a => a.balance !== 0)
           .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance));
+        // Rows keep the RAW balance + the account's OWN currency symbol (a $
+        // account showed "2 300 ₪" before); the total and the bar widths use
+        // values converted to the global currency — mixing raw $ and ₪ in one
+        // sum/scale is meaningless. Same split the Accounts screen uses.
+        const gCode = currencyCode();
         setAccountBalances(sorted.map((a, idx) => ({
           name: a.name,
           balance: a.balance,
+          currency: a.currency,
+          converted: convert(a.balance, CURRENCIES.find(c => c.symbol === a.currency)?.code || gCode, gCode),
           color: ACCOUNT_COLORS[idx % ACCOUNT_COLORS.length],
           type: a.type,
         })));
@@ -582,8 +589,9 @@ export default function AnalyticsScreen() {
               <Card>
                 <Text style={st.sectionTitle}>{i18n.t('balanceByAccounts')}</Text>
                 {(() => {
-                  const maxBal = Math.max(...accountBalances.map(a => Math.abs(a.balance)), 1);
-                  const totalBal = accountBalances.reduce((s, a) => s + a.balance, 0);
+                  const conv = (a) => a.converted ?? a.balance;
+                  const maxBal = Math.max(...accountBalances.map(a => Math.abs(conv(a))), 1);
+                  const totalBal = accountBalances.reduce((s, a) => s + conv(a), 0);
                   return (
                     <>
                       <Amount value={totalBal} style={st.accountTotal} sign />
@@ -592,11 +600,11 @@ export default function AnalyticsScreen() {
                           <View style={{ flex: 1 }}>
                             <View style={st.accountInfo}>
                               <Text style={st.accountName} numberOfLines={1}>{a.name}</Text>
-                              <Amount value={a.balance} style={[st.accountAmount, { color: a.balance >= 0 ? colors.green : colors.red }]} sign />
+                              <Amount value={a.balance} currency={a.currency} style={[st.accountAmount, { color: a.balance >= 0 ? colors.green : colors.red }]} sign />
                             </View>
                             <View style={st.accountBarBg}>
                               <View style={[st.accountBarFill, {
-                                width: `${(Math.abs(a.balance) / maxBal) * 100}%`,
+                                width: `${(Math.abs(conv(a)) / maxBal) * 100}%`,
                                 backgroundColor: a.color,
                               }]} />
                             </View>
