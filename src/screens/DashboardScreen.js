@@ -61,6 +61,8 @@ export default function DashboardScreen() {
   const [loadError, setLoadError] = useState(null); // diagnostic: shows on screen if loadData fails
   const [refreshing, setRefreshing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteBudgetTarget, setDeleteBudgetTarget] = useState(null);
+  const [deleteRecTarget, setDeleteRecTarget] = useState(null);
   const [budgetModal, setBudgetModal] = useState(null);
   const [recurring, setRecurring] = useState([]);
   const [showRecurring, setShowRecurring] = useState(false);
@@ -437,7 +439,14 @@ export default function DashboardScreen() {
     await loadData();
     toast.show(i18n.t('saved'), 'success');
   };
-  const handleBudgetDelete = async (categoryId) => { await dataService.deleteBudget(categoryId); await loadData(); };
+  // Destructive → confirm first (project rule: ConfirmModal, never direct delete)
+  const handleBudgetDelete = (categoryId) => setDeleteBudgetTarget(categoryId);
+  const confirmBudgetDelete = async () => {
+    const categoryId = deleteBudgetTarget;
+    setDeleteBudgetTarget(null);
+    await dataService.deleteBudget(categoryId);
+    await loadData();
+  };
   // Open the confirm/skip sheet where the user can tweak amount / date /
   // account before committing. Direct-apply helpers below are kept for the
   // auto-confirm path and any call site that already supplies overrides.
@@ -455,7 +464,10 @@ export default function DashboardScreen() {
     notificationService.scheduleRecurringNotifications();
     toast.show(i18n.t('paymentSkipped'), 'info');
   };
-  const handleDeleteRecurring = async (id) => {
+  const handleDeleteRecurring = (id) => setDeleteRecTarget(id);
+  const confirmDeleteRecurring = async () => {
+    const id = deleteRecTarget;
+    setDeleteRecTarget(null);
     await dataService.deleteRecurring(id);
     await loadData();
     notificationService.scheduleRecurringNotifications();
@@ -488,7 +500,7 @@ export default function DashboardScreen() {
         {loadError ? (
           <>
             <Feather name="alert-triangle" size={24} color={colors.red} style={{ marginBottom: 8 }} />
-            <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 4 }}>loadData error</Text>
+            <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 4 }}>{i18n.t('errorOccurred')}</Text>
             <Text selectable style={{ color: colors.textMuted, fontSize: 12, textAlign: 'center', marginBottom: 16 }}>{loadError}</Text>
             <TouchableOpacity onPress={() => { setLoadError(null); setLoading(true); loadData(); }}
               style={{ paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.green, borderRadius: 12 }}>
@@ -648,6 +660,14 @@ export default function DashboardScreen() {
         message={deleteTarget ? `${catName(deleteTarget.categoryId, deleteTarget.categoryName)} — ${deleteTarget.amount} ${sym()}` : ''}
         confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
         onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+      <ConfirmModal visible={!!deleteBudgetTarget} title={i18n.t('delete')}
+        message={deleteBudgetTarget ? catName(deleteBudgetTarget) : ''}
+        confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
+        onConfirm={confirmBudgetDelete} onCancel={() => setDeleteBudgetTarget(null)} />
+      <ConfirmModal visible={!!deleteRecTarget} title={i18n.t('delete')}
+        message={deleteRecTarget ? (recurring.find(r => r.id === deleteRecTarget)?.name || '') : ''}
+        confirmText={i18n.t('delete')} cancelText={i18n.t('cancel')}
+        onConfirm={confirmDeleteRecurring} onCancel={() => setDeleteRecTarget(null)} />
       <ConfirmModal visible={!!(templateSuggestion && templateSuggestion.categoryId)} icon="bookmark"
         confirmColor={colors.green}
         title={i18n.t('saveAsTemplate')}

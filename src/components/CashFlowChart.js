@@ -22,6 +22,7 @@ function formatK(n) {
 }
 
 export default function CashFlowChart({ data, totalIncome, totalExpense }) {
+  const st = createSt(); // per-render: colors is mutable, module-level freeze breaks theme switch
   const [containerW, setContainerW] = useState(300);
   const [selected, setSelected] = useState(null);
 
@@ -114,12 +115,12 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
               <React.Fragment key={idx}>
                 {d.income > 0 && (
                   <Rect x={x} y={midY - iH} width={barW} height={iH}
-                    fill={isSelected ? '#4ade80' : colors.green} rx={1}
+                    fill={colors.green} rx={1}
                     opacity={isSelected ? 1 : 0.8} />
                 )}
                 {d.expense > 0 && (
                   <Rect x={x} y={midY} width={barW} height={eH}
-                    fill={isSelected ? '#f87171' : colors.red} rx={1}
+                    fill={colors.red} rx={1}
                     opacity={isSelected ? 1 : 0.8} />
                 )}
               </React.Fragment>
@@ -150,7 +151,7 @@ export default function CashFlowChart({ data, totalIncome, totalExpense }) {
   );
 }
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, columnGap: 12, rowGap: 6 },
   summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   dot: { width: 8, height: 8, borderRadius: 4 },

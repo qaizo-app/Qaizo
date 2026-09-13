@@ -21,6 +21,7 @@ function formatK(n) {
 }
 
 export default function BalanceLineChart({ data, limit, currency, limitLabel, chargeAmount }) {
+  const st = createSt(); // per-render: colors is mutable, module-level freeze breaks theme switch
   const [containerW, setContainerW] = useState(300);
   const [selected, setSelected] = useState(null);
 
@@ -172,7 +173,7 @@ export default function BalanceLineChart({ data, limit, currency, limitLabel, ch
 // Need React for Fragment
 import React from 'react';
 
-const st = StyleSheet.create({
+const createSt = () => StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
   headerAmount: { fontSize: 22, fontWeight: '800', color: colors.text },
   changeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },

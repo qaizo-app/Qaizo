@@ -5,6 +5,8 @@
 // chat and the receipt/statement scanners stay in aiService.ts for now and
 // import this transport back.
 
+import { withTimeout } from '../../utils/withTimeout';
+
 interface GeminiResponse {
   candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
 }
@@ -51,14 +53,16 @@ let _lastAIError: AIError | null = null;
 export function getLastAIError(): AIError | null { return _lastAIError; }
 
 export async function callGeminiOnce(model: string, prompt: string, { maxTokens, temperature }: { maxTokens: number; temperature: number }) {
-  const res = await fetch(`${geminiUrl(model)}?key=${GEMINI_API_KEY}`, {
+  // Bounded: RN fetch has no timeout of its own, and a captive-portal /
+  // stuck connection would otherwise hang Smart Input / chat forever.
+  const res = await withTimeout(fetch(`${geminiUrl(model)}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature, maxOutputTokens: maxTokens },
     }),
-  });
+  }), 45000, 'gemini');
   return res;
 }
 

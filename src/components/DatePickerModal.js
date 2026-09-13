@@ -118,14 +118,10 @@ export default function DatePickerModal({ visible, onClose, onSelect, selectedDa
           <View style={styles.footer}>
             <TouchableOpacity style={styles.todayBtn} onPress={handleToday}>
               <Feather name="calendar" size={14} color={colors.green} />
-              <Text style={styles.todayText}>
-                {lang === 'ru' ? 'Сегодня' : lang === 'he' ? 'היום' : 'Today'}
-              </Text>
+              <Text style={styles.todayText}>{i18n.t('today')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Text style={styles.closeText}>
-                {lang === 'ru' ? 'Закрыть' : lang === 'he' ? 'סגור' : 'Close'}
-              </Text>
+              <Text style={styles.closeText}>{i18n.t('close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

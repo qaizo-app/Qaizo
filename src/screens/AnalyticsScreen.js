@@ -231,7 +231,7 @@ export default function AnalyticsScreen() {
   };
 
   const scoreLabel = score >= 80 ? i18n.t('scoreExcellent') : score >= 60 ? i18n.t('scoreGood') : score >= 40 ? i18n.t('scoreFair') : i18n.t('scorePoor');
-  const scoreColor = score >= 80 ? colors.green : score >= 60 ? '#34d399' : score >= 40 ? colors.yellow : colors.red;
+  const scoreColor = score >= 80 ? colors.green : score >= 60 ? colors.green : score >= 40 ? colors.yellow : colors.red;
 
   const formatInsight = (insight) => {
     let text = i18n.t(insight.titleKey);

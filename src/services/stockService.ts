@@ -2,6 +2,7 @@
 // Live stock quotes via Yahoo Finance v7 quote endpoint (free, no API key).
 // Same caching pattern as cryptoService: in-memory 60s + AsyncStorage fallback.
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { withTimeout } from '../utils/withTimeout';
 
 const CACHE_KEY = 'qaizo_stock_quote_cache';
 const CACHE_TTL_MS = 60 * 1000;
@@ -65,12 +66,12 @@ async function fetchQuotes(
 
   try {
     const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${clean.join(',')}`;
-    const res = await fetch(url, {
+    const res = await withTimeout(fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; Qaizo/1.0)',
         'Accept': 'application/json',
       },
-    });
+    }), 15000, 'stock-quotes');
     if (!res.ok) throw new Error(`status ${res.status}`);
     const json: { quoteResponse?: { result?: YahooQuote[] } } = await res.json();
     const list = json?.quoteResponse?.result || [];

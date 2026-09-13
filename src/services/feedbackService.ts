@@ -10,6 +10,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { withTimeout } from '../utils/withTimeout';
 import appJson from '../../app.json';
 
 const INSTALL_KEY = 'qaizo_install_date';
@@ -111,11 +112,11 @@ async function submitFeedback({ rating, chip, text, language, platform, email, u
     userId: userId || '',
     _subject: `Qaizo feedback — ${rating || '?'}★${email ? ` — reply to ${email}` : ''}`,
   };
-  const res = await fetch(FEEDBACK_ENDPOINT, {
+  const res = await withTimeout(fetch(FEEDBACK_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(body),
-  });
+  }), 15000, 'feedback');
   if (!res.ok) throw new Error(`feedback http ${res.status}`);
   await markSubmitted();
   return true;

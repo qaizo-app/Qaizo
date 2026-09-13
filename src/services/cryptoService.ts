@@ -3,6 +3,7 @@
 // AsyncStorage fallback for offline mode.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CryptoPrice } from '../types';
+import { withTimeout } from '../utils/withTimeout';
 
 const CACHE_KEY = 'qaizo_crypto_price_cache';
 const CACHE_TTL_MS = 60 * 1000;
@@ -104,7 +105,7 @@ async function fetchPrices(
 
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vsSafe}&include_24hr_change=true`;
-    const res = await fetch(url);
+    const res = await withTimeout(fetch(url), 15000, 'crypto-prices');
     if (!res.ok) throw new Error(`status ${res.status}`);
     const json = await res.json();
     const out: PriceMap = {};

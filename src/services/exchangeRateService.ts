@@ -3,6 +3,7 @@
 // In-memory rates + AsyncStorage persistence. refresh() runs in background;
 // getRate()/convert() stay synchronous for existing call sites.
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { withTimeout } from '../utils/withTimeout';
 
 const CACHE_KEY = 'qaizo_fx_rates';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -76,7 +77,7 @@ async function savePersisted(rates: RateMap, fetchedAt: number): Promise<void> {
 async function refresh(force = false): Promise<boolean> {
   if (!force && _fetchedAt && Date.now() - _fetchedAt < CACHE_TTL_MS) return true;
   try {
-    const res = await fetch(`https://open.er-api.com/v6/latest/${BASE}`);
+    const res = await withTimeout(fetch(`https://open.er-api.com/v6/latest/${BASE}`), 15000, 'fx-rates');
     if (!res.ok) throw new Error(`status ${res.status}`);
     const json: { result?: string; rates?: RateMap } = await res.json();
     if (json?.result !== 'success' || !json?.rates) throw new Error('invalid response');

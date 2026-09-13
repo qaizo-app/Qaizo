@@ -1,6 +1,7 @@
 // src/services/aiService.ts
 // AI-движок: Gemini API + локальный фоллбэк для парсинга, налогов, прогнозов
 import i18n from '../i18n';
+import { withTimeout } from '../utils/withTimeout';
 import { catName } from '../utils/categoryName';
 import { fmt, sym, code as curCode } from '../utils/currency';
 import type { ExtractedTx } from '../utils/statementReconcile';
@@ -380,11 +381,11 @@ Return ONLY short JSON, no items: {"total":0,"store":"","date":"2026-01-01","cat
     const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
     // 2.5-pro reads Hebrew far better than flash (fewer confused look-alike
     // letters); fall back to flash-latest on overload/rate-limit below.
-    let res = await fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts);
+    let res = await withTimeout(fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts), 90000, 'gemini-scan');
     // Fallback to gemini-flash-latest on transient overload (503) or rate limit (429)
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
       if (__DEV__) console.warn('scanReceipt: primary', res.status, '— retrying on fallback model', GEMINI_MODEL_FALLBACK);
-      res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
+      res = await withTimeout(fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts), 90000, 'gemini-scan-fallback');
     }
 
     if (!res.ok) {
@@ -556,11 +557,11 @@ OUTPUT FORMAT — return ONLY a raw JSON array, no markdown, no commentary:
 
     const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
     // 2.5-pro for sharper Hebrew item-name OCR; flash-latest fallback below.
-    let res = await fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts);
+    let res = await withTimeout(fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts), 90000, 'gemini-scan');
     // Fallback to gemini-flash-latest on transient overload (503) or rate limit (429)
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
       if (__DEV__) console.warn('scanReceiptItems: primary', res.status, '— retrying on fallback model', GEMINI_MODEL_FALLBACK);
-      res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
+      res = await withTimeout(fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts), 90000, 'gemini-scan-fallback');
     }
 
     if (!res.ok) {
@@ -715,10 +716,10 @@ Return ONLY the JSON array. No surrounding text, no markdown fences.`;
     });
 
     const fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody };
-    let res = await fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts);
+    let res = await withTimeout(fetch(`${geminiUrl(GEMINI_MODEL_STATEMENT)}?key=${GEMINI_API_KEY}`, fetchOpts), 90000, 'gemini-scan');
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
       if (__DEV__) console.warn('scanStatement: pro model', res.status, '— retrying on fallback model');
-      res = await fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts);
+      res = await withTimeout(fetch(`${geminiUrl(GEMINI_MODEL_FALLBACK)}?key=${GEMINI_API_KEY}`, fetchOpts), 90000, 'gemini-scan-fallback');
     }
 
     if (!res.ok) {
