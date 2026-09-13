@@ -81,6 +81,32 @@ function userCol(colName: string): any {
   return firestore().collection('users').doc(uid as string).collection(colName);
 }
 
+// ─── Offline-first Firestore access ──────────────────────
+// Firestore write promises resolve only on SERVER acknowledgment. Offline —
+// or on a stuck gRPC stream after a network switch — they never settle, even
+// though the mutation is already applied to the local cache and will sync
+// later. Awaiting them froze every save (the flight bug: 8s spinner → "save
+// failed" while the row was in fact saved locally). So: fire the write,
+// trust the local cache, and only log real rejections (rules violations,
+// invalid data) in the background.
+function fireWrite(promise: Promise<any>, label: string): void {
+  promise.catch((e: any) => { if (__DEV__) console.error(`Firestore write (${label}):`, e); });
+}
+
+// Bounded read that degrades to the local cache. A get() normally falls back
+// to cache by itself when the SDK knows it is offline, but with a stuck
+// stream or captive-portal Wi-Fi it just hangs waiting for the server. After
+// the bounded server attempt, retry against the cache explicitly — that is a
+// purely local, instant operation, so cached data (accounts, transactions)
+// stays visible on a plane.
+async function getWithCacheFallback(refOrQuery: any): Promise<any> {
+  try {
+    return await withTimeout(refOrQuery.get());
+  } catch (e) {
+    return await withTimeout(refOrQuery.get({ source: 'cache' }), 4000);
+  }
+}
+
 // RN Firebase v24 exposes DocumentSnapshot.exists() as a METHOD; older SDKs and
 // the jest mock use a boolean property. Reading `.exists` without calling it on
 // v24 yields a (truthy) function reference, which silently breaks every
@@ -92,10 +118,9 @@ function snapExists(snap: any): boolean {
 // ─── Single-document read/write (settings, budgets, categories, tags) ────
 async function getDocData(colName: string, defaultVal: any): Promise<any> {
   try {
-    // withTimeout: a stuck gRPC stream on a READ must degrade to the default
-    // after 8s, not hang the caller forever (frozen screens / eternal
-    // spinners). Same treatment writes got in June.
-    const snap: any = await withTimeout(userDoc(colName + '/data').get());
+    // Bounded server read, then cache retry; the default is the last resort
+    // (nothing in cache either).
+    const snap: any = await getWithCacheFallback(userDoc(colName + '/data'));
     // Guard the value too: an existing doc with a missing/undefined `value`
     // must still fall back to defaultVal, never return undefined (callers do
     // `.length` etc. on the result).
@@ -109,7 +134,7 @@ async function getDocData(colName: string, defaultVal: any): Promise<any> {
 
 async function setDocData(colName: string, value: any): Promise<boolean> {
   try {
-    await withTimeout(userDoc(colName + '/data').set({ value, updatedAt: new Date().toISOString() }));
+    fireWrite(userDoc(colName + '/data').set({ value, updatedAt: new Date().toISOString() }), `setDocData(${colName})`);
     return true;
   } catch (e) {
     if (__DEV__) console.error(`Firestore setDocData(${colName}):`, e);
@@ -120,12 +145,13 @@ async function setDocData(colName: string, value: any): Promise<boolean> {
 // ─── Collection read/write (transactions, accounts, investments, recurring) ──
 async function getColDocs(colName: string, defaultVal: any[] = []): Promise<any[]> {
   try {
-    // See getDocData: reads are bounded too (8s + 8s fallback worst case).
-    const snap: any = await withTimeout(userCol(colName).orderBy('createdAt', 'desc').get());
+    // Ordered read first (bounded + cache retry); the plain read below covers
+    // docs missing createdAt, where orderBy silently drops rows.
+    const snap: any = await getWithCacheFallback(userCol(colName).orderBy('createdAt', 'desc'));
     return snap.docs.map((d: any) => ({ ...d.data(), id: d.id }));
   } catch (e) {
     try {
-      const snap: any = await withTimeout(userCol(colName).get());
+      const snap: any = await getWithCacheFallback(userCol(colName));
       const items = snap.docs.map((d: any) => ({ ...d.data(), id: d.id }));
       return items.sort((a: any, b: any) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     } catch (e2) {
@@ -144,11 +170,12 @@ async function updateAccountBalance(accountId: string, amount: number, type: str
       //   1. removes the `.get()` that could hang forever on a stuck Firestore
       //      stream (the root cause of the frozen save spinner), and
       //   2. fixes the lost-update race when two saves land back-to-back.
-      // It resolves on the local cache write, so it stays fast offline too.
+      // Fired without awaiting the server ack — the local cache applies it
+      // immediately, so balances stay correct offline.
       const delta = type === 'income' ? amount : type === 'expense' ? -amount : 0;
       if (delta !== 0) {
         const ref = firestore().collection('users').doc(uid).collection('accounts').doc(accountId);
-        await withTimeout(ref.update({ balance: firestore.FieldValue.increment(delta) }));
+        fireWrite(ref.update({ balance: firestore.FieldValue.increment(delta) }), 'updateAccountBalance');
       }
     } else {
       const data = await AsyncStorage.getItem(KEYS.ACCOUNTS);
@@ -215,16 +242,14 @@ const dataService = {
     const newTx: any = { ...transaction, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        // When a clientId is supplied, write to a deterministic document id via
-        // set() so a retry after a timed-out save overwrites the same doc
-        // instead of creating a duplicate. Without it, fall back to add().
-        if (clientId) {
-          await withTimeout(userCol('transactions').doc(clientId).set(newTx));
-          newTx.id = clientId;
-        } else {
-          const ref: any = await withTimeout(userCol('transactions').add(newTx));
-          newTx.id = ref.id;
-        }
+        // When a clientId is supplied, write to a deterministic document id so
+        // a retry overwrites the same doc instead of creating a duplicate.
+        // Otherwise mint a local id via doc() — no network involved. Either
+        // way the write is fired without awaiting the server ack (offline it
+        // would never come; the local cache already has the row).
+        const ref: any = clientId ? userCol('transactions').doc(clientId) : userCol('transactions').doc();
+        fireWrite(ref.set(newTx), 'addTransaction');
+        newTx.id = ref.id;
       } else {
         newTx.id = clientId || generateId();
         const txs = await this.getTransactions();
@@ -258,20 +283,20 @@ const dataService = {
     try {
       if (uid) {
         const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
-        const snap = await withTimeout(ref.get());
+        const snap = await getWithCacheFallback(ref);
         const tx: any = snapExists(snap) ? { ...snap.data(), id } : null;
-        await withTimeout(ref.delete());
+        fireWrite(ref.delete(), 'deleteTransaction');
         if (tx && tx.account) {
           const reverseType = tx.type === 'income' ? 'expense' : 'income';
           await updateAccountBalance(tx.account, tx.amount, reverseType);
         }
         // Cascade-delete the paired transfer side
         if (tx && tx.transferPairId) {
-          const allSnap: any = await withTimeout(userCol('transactions').get());
+          const allSnap: any = await getWithCacheFallback(userCol('transactions'));
           const pair = allSnap.docs.find((d: any) => (d.data() as any).transferPairId === tx.transferPairId && d.id !== id);
           if (pair) {
             const pairData = pair.data() as any;
-            await withTimeout(pair.ref.delete());
+            fireWrite(pair.ref.delete(), 'deleteTransaction(pair)');
             if (pairData.account) {
               const pairReverse = pairData.type === 'income' ? 'expense' : 'income';
               await updateAccountBalance(pairData.account, pairData.amount, pairReverse);
@@ -309,9 +334,9 @@ const dataService = {
     try {
       if (uid) {
         const ref = firestore().collection('users').doc(uid).collection('transactions').doc(id);
-        const snap = await withTimeout(ref.get());
+        const snap = await getWithCacheFallback(ref);
         const oldTx: any = snapExists(snap) ? { ...snap.data(), id } : null;
-        await withTimeout(ref.update(changes));
+        fireWrite(ref.update(changes), 'updateTransaction');
         // Recompute balances
         if (oldTx && oldTx.account) {
           const reverseType = oldTx.type === 'income' ? 'expense' : 'income';
@@ -340,7 +365,9 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await userCol('accounts').get();
+        // Bounded + cache retry — this read used to be unbounded, which is
+        // exactly why accounts never appeared on a flight: it hung forever.
+        const snap = await getWithCacheFallback(userCol('accounts'));
         const accs: any[] = snap.docs.map((d: any) => ({ ...d.data(), id: d.id }));
         // Sort by 'order' field (manual ordering); fallback to original order
         accs.sort((a: any, b: any) => {
@@ -376,15 +403,14 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        // Rewrite all documents with explicit ordering
-        const snap: any = await withTimeout(userCol('accounts').get());
-        const deletes = snap.docs.map((d: any) => d.ref.delete());
-        await withTimeout(Promise.all(deletes));
-        const writes = accounts.map((a: any, i: number) => {
+        // Rewrite all documents with explicit ordering. Deletes fire before
+        // sets — Firestore applies local mutations in call order.
+        const snap: any = await getWithCacheFallback(userCol('accounts'));
+        snap.docs.forEach((d: any) => fireWrite(d.ref.delete(), 'saveAccounts(delete)'));
+        accounts.forEach((a: any, i: number) => {
           const { id, ...rest } = a;
-          return firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, order: i });
+          fireWrite(firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, order: i }), 'saveAccounts(set)');
         });
-        await withTimeout(Promise.all(writes));
         return true;
       } catch (e) { if (__DEV__) console.error('saveAccounts:', e); return false; }
     }
@@ -397,7 +423,7 @@ const dataService = {
       if (uid) {
         const id = generateId();
         const { id: _id, ...rest } = account;
-        await withTimeout(firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() }));
+        fireWrite(firestore().collection('users').doc(uid).collection('accounts').doc(id).set({ ...rest, createdAt: new Date().toISOString() }), 'addAccount');
         emitChange();
         return { ...account, id } as Account;
       } else {
@@ -415,7 +441,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await withTimeout(firestore().collection('users').doc(uid).collection('accounts').doc(id).update(changes));
+        fireWrite(firestore().collection('users').doc(uid).collection('accounts').doc(id).update(changes), 'updateAccount');
       } else {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.map((a: any) => a.id === id ? { ...a, ...changes } : a)));
@@ -429,7 +455,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await withTimeout(firestore().collection('users').doc(uid).collection('accounts').doc(id).delete());
+        fireWrite(firestore().collection('users').doc(uid).collection('accounts').doc(id).delete(), 'deleteAccount');
       } else {
         const accounts = await this.getAccounts();
         await AsyncStorage.setItem(KEYS.ACCOUNTS, JSON.stringify(accounts.filter((a: any) => a.id !== id)));
@@ -450,12 +476,12 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap: any = await withTimeout(userCol('investments').get());
-        await withTimeout(Promise.all(snap.docs.map((d: any) => d.ref.delete())));
-        await withTimeout(Promise.all(investments.map((inv: any) => {
+        const snap: any = await getWithCacheFallback(userCol('investments'));
+        snap.docs.forEach((d: any) => fireWrite(d.ref.delete(), 'saveInvestments(delete)'));
+        investments.forEach((inv: any) => {
           const { id, ...rest } = inv;
-          return firestore().collection('users').doc(uid).collection('investments').doc(id || generateId()).set({ ...rest, createdAt: rest.createdAt || new Date().toISOString() });
-        })));
+          fireWrite(firestore().collection('users').doc(uid).collection('investments').doc(id || generateId()).set({ ...rest, createdAt: rest.createdAt || new Date().toISOString() }), 'saveInvestments(set)');
+        });
         return true;
       } catch (e) { return false; }
     }
@@ -604,7 +630,8 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await userCol('recurring').get();
+        // Bounded + cache retry (was an unbounded read — hung offline).
+        const snap = await getWithCacheFallback(userCol('recurring'));
         const items: any[] = snap.docs.map((d: any) => ({ ...d.data(), id: d.id }));
         return items.sort((a: any, b: any) => (a.nextDate || '').localeCompare(b.nextDate || ''));
       } catch (e) { return []; }
@@ -616,12 +643,12 @@ const dataService = {
     const uid = getUid();
     if (uid) {
       try {
-        const snap = await userCol('recurring').get();
-        await Promise.all(snap.docs.map((d: any) => d.ref.delete()));
-        await Promise.all(items.map((r: any) => {
+        const snap = await getWithCacheFallback(userCol('recurring'));
+        snap.docs.forEach((d: any) => fireWrite(d.ref.delete(), 'saveRecurring(delete)'));
+        items.forEach((r: any) => {
           const { id, ...rest } = r;
-          return firestore().collection('users').doc(uid).collection('recurring').doc(id || generateId()).set(rest);
-        }));
+          fireWrite(firestore().collection('users').doc(uid).collection('recurring').doc(id || generateId()).set(rest), 'saveRecurring(set)');
+        });
         return true;
       } catch (e) { return false; }
     }
@@ -633,7 +660,9 @@ const dataService = {
     const newItem: any = { ...item, completedCount: 0, isActive: true, createdAt: new Date().toISOString() };
     try {
       if (uid) {
-        const ref: any = await withTimeout(userCol('recurring').add(newItem));
+        // Local id via doc() + fire-and-forget set — see addTransaction.
+        const ref: any = userCol('recurring').doc();
+        fireWrite(ref.set(newItem), 'addRecurring');
         newItem.id = ref.id;
       } else {
         newItem.id = generateId();
@@ -649,7 +678,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).update(changes));
+        fireWrite(firestore().collection('users').doc(uid).collection('recurring').doc(id).update(changes), 'updateRecurring');
       } else {
         const items = await this.getRecurring();
         await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items.map((r: any) => r.id === id ? { ...r, ...changes } : r)));
@@ -662,7 +691,7 @@ const dataService = {
     const uid = getUid();
     try {
       if (uid) {
-        await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).delete());
+        fireWrite(firestore().collection('users').doc(uid).collection('recurring').doc(id).delete(), 'deleteRecurring');
       } else {
         const items = await this.getRecurring();
         await AsyncStorage.setItem(KEYS.RECURRING, JSON.stringify(items.filter((r: any) => r.id !== id)));
@@ -676,7 +705,7 @@ const dataService = {
       const uid = getUid();
       let rec: any;
       if (uid) {
-        const snap = await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).get());
+        const snap = await getWithCacheFallback(firestore().collection('users').doc(uid).collection('recurring').doc(id));
         rec = snapExists(snap) ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
@@ -795,7 +824,7 @@ const dataService = {
       const uid = getUid();
       let rec: any;
       if (uid) {
-        const snap = await withTimeout(firestore().collection('users').doc(uid).collection('recurring').doc(id).get());
+        const snap = await getWithCacheFallback(firestore().collection('users').doc(uid).collection('recurring').doc(id));
         rec = snapExists(snap) ? { ...snap.data(), id } : null;
       } else {
         const items = await this.getRecurring();
@@ -952,13 +981,13 @@ const dataService = {
       try {
         const collections = ['transactions', 'accounts', 'investments', 'recurring'];
         for (const col of collections) {
-          const snap = await userCol(col).get();
-          await Promise.all(snap.docs.map((d: any) => d.ref.delete()));
+          const snap = await getWithCacheFallback(userCol(col));
+          snap.docs.forEach((d: any) => fireWrite(d.ref.delete(), 'clearAllData'));
         }
         // 'shoppingList' is legacy (feature removed) — kept so old docs get wiped too
         const singleDocs = ['categories', 'budgets', 'settings', 'tags', 'streaks', 'projects', 'goals', 'quickTemplates', 'pensionProfiles', 'shoppingList'];
         for (const name of singleDocs) {
-          try { await userDoc(name + '/data').delete(); } catch (e) {}
+          try { fireWrite(userDoc(name + '/data').delete(), 'clearAllData(doc)'); } catch (e) {}
         }
         return true;
       } catch (e) { return false; }
@@ -986,20 +1015,20 @@ const dataService = {
         if (data.transactions) {
           for (const tx of data.transactions) {
             const { id, ...rest } = tx;
-            await firestore().collection('users').doc(uid).collection('transactions').doc(id || generateId()).set(rest);
+            fireWrite(firestore().collection('users').doc(uid).collection('transactions').doc(id || generateId()).set(rest), 'importData(tx)');
           }
         }
         if (data.accounts) {
           for (const acc of data.accounts) {
             const { id, ...rest } = acc;
-            await firestore().collection('users').doc(uid).collection('accounts').doc(id || generateId()).set(rest);
+            fireWrite(firestore().collection('users').doc(uid).collection('accounts').doc(id || generateId()).set(rest), 'importData(account)');
           }
         }
         if (data.investments) await this.saveInvestments(data.investments);
         if (data.recurring) {
           for (const r of data.recurring) {
             const { id, ...rest } = r;
-            await firestore().collection('users').doc(uid).collection('recurring').doc(id || generateId()).set(rest);
+            fireWrite(firestore().collection('users').doc(uid).collection('recurring').doc(id || generateId()).set(rest), 'importData(recurring)');
           }
         }
         // Documents

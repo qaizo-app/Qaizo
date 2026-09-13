@@ -27,10 +27,13 @@ jest.mock('@react-native-firebase/firestore', () => {
     return {
       __type: 'doc',
       path,
+      id: path.split('/').pop(),
       collection: (subCol) => makeColRef(`${path}/${subCol}`),
-      get: async () => {
-        // Simulate a stuck Firestore gRPC stream on READS too.
-        if (state.hangReads) return new Promise(() => {});
+      get: async (options) => {
+        // Simulate a stuck Firestore gRPC stream on READS too. Cache reads
+        // ({source:'cache'}) are purely local in the real SDK — they never
+        // hang, so they must keep working here.
+        if (state.hangReads && options?.source !== 'cache') return new Promise(() => {});
         // First try standalone docs (settings, budgets, etc)
         let data = state.docs[path];
         // If not found, try as a doc inside a collection
@@ -57,7 +60,8 @@ jest.mock('@react-native-firebase/firestore', () => {
         };
       },
       set: async (data) => {
-        if (state.hangWrites) return new Promise(() => {});
+        // Real Firestore semantics: the mutation lands in the LOCAL CACHE
+        // immediately; only the server acknowledgment (the promise) hangs.
         const segments = path.split('/');
         const id = segments.pop();
         const colPath = segments.join('/');
@@ -70,9 +74,9 @@ jest.mock('@react-native-firebase/firestore', () => {
         } else {
           state.docs[path] = data;
         }
+        if (state.hangWrites) return new Promise(() => {});
       },
       update: async (data) => {
-        if (state.hangWrites) return new Promise(() => {});
         const segments = path.split('/');
         const id = segments.pop();
         const colPath = segments.join('/');
@@ -91,9 +95,9 @@ jest.mock('@react-native-firebase/firestore', () => {
         } else if (state.docs[path]) {
           state.docs[path] = applyOps(state.docs[path]);
         }
+        if (state.hangWrites) return new Promise(() => {});
       },
       delete: async () => {
-        if (state.hangWrites) return new Promise(() => {});
         const segments = path.split('/');
         const id = segments.pop();
         const colPath = segments.join('/');
@@ -101,6 +105,7 @@ jest.mock('@react-native-firebase/firestore', () => {
           state.collections[colPath] = state.collections[colPath].filter(i => i.id !== id);
         }
         delete state.docs[path];
+        if (state.hangWrites) return new Promise(() => {});
       },
     };
   }
@@ -109,17 +114,18 @@ jest.mock('@react-native-firebase/firestore', () => {
     return {
       __type: 'collection',
       path,
-      doc: (id) => makeDocRef(`${path}/${id}`),
+      // Real SDK: doc() with no argument mints a local id without any network.
+      doc: (id) => makeDocRef(`${path}/${id || `gen_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`}`),
       add: async (data) => {
-        // Simulate a stuck Firestore gRPC stream: the write promise never settles.
-        if (state.hangWrites) return new Promise(() => {});
+        // Local cache applies the row immediately; only the server ack hangs.
         const id = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
         if (!state.collections[path]) state.collections[path] = [];
         state.collections[path].push({ id, ...data });
+        if (state.hangWrites) return new Promise(() => {});
         return { id };
       },
-      get: async () => {
-        if (state.hangReads) return new Promise(() => {});
+      get: async (options) => {
+        if (state.hangReads && options?.source !== 'cache') return new Promise(() => {});
         const items = state.collections[path] || [];
         return {
           docs: items.map(item => ({
@@ -273,15 +279,59 @@ describe('dataService (firestore mode)', () => {
     expect(accs.find(a => a.id === acc.id).balance).toBe(60);
   });
 
-  test('addAccount resolves to null (does not hang) when the Firestore write never settles', async () => {
+  test('addAccount succeeds instantly when the server never acks the write (offline)', async () => {
+    // Firestore write promises resolve only on SERVER ack — offline they never
+    // settle even though the local cache already applied the mutation. The
+    // service must NOT await the ack: success comes from the cache write.
     firestoreMock.__state.hangWrites = true;
     try {
-      const result = await dataService.addAccount({ name: 'Stuck', type: 'cash', balance: 0, currency: '₪' });
-      expect(result).toBeNull();
+      const result = await dataService.addAccount({ name: 'Offline', type: 'cash', balance: 0, currency: '₪' });
+      expect(result).not.toBeNull();
+      expect(result.id).toBeDefined();
+      const accs = await dataService.getAccounts();
+      expect(accs.find(a => a.id === result.id)).toBeDefined();
     } finally {
       firestoreMock.__state.hangWrites = false;
     }
-  }, 15000);
+  });
+
+  test('addTransaction succeeds instantly offline and still adjusts the balance', async () => {
+    const acc = await dataService.addAccount({ name: 'Plane', type: 'cash', balance: 100, currency: '₪' });
+    firestoreMock.__state.hangWrites = true;
+    try {
+      const tx = await dataService.addTransaction({ type: 'expense', amount: 40, categoryId: 'food', account: acc.id });
+      expect(tx).not.toBeNull();
+      expect(tx.id).toBeDefined();
+      expect((await dataService.getTransactions()).length).toBe(1);
+      const accs = await dataService.getAccounts();
+      expect(accs.find(a => a.id === acc.id).balance).toBe(60);
+    } finally {
+      firestoreMock.__state.hangWrites = false;
+    }
+  });
+
+  test('updateTransaction and deleteTransaction succeed offline', async () => {
+    const tx = await dataService.addTransaction({ type: 'expense', amount: 50, categoryId: 'food' });
+    firestoreMock.__state.hangWrites = true;
+    try {
+      expect(await dataService.updateTransaction(tx.id, { amount: 75 })).toBe(true);
+      expect((await dataService.getTransactions())[0].amount).toBe(75);
+      expect(await dataService.deleteTransaction(tx.id)).toBe(true);
+      expect((await dataService.getTransactions()).length).toBe(0);
+    } finally {
+      firestoreMock.__state.hangWrites = false;
+    }
+  });
+
+  test('saveSettings succeeds offline', async () => {
+    firestoreMock.__state.hangWrites = true;
+    try {
+      expect(await dataService.saveSettings({ language: 'he', currency: '₪' })).toBe(true);
+      expect((await dataService.getSettings()).language).toBe('he');
+    } finally {
+      firestoreMock.__state.hangWrites = false;
+    }
+  });
 
   test('deleteAccount removes from firestore', async () => {
     const acc = await dataService.addAccount({ name: 'Trash', type: 'cash', balance: 0, currency: '₪' });
@@ -331,19 +381,19 @@ describe('dataService (firestore mode)', () => {
     expect((await dataService.getRecurring()).length).toBe(0);
   });
 
-  test('addRecurring resolves to null (does not hang) when the Firestore write never settles', async () => {
-    // Stuck gRPC stream: add() never settles. withTimeout must reject internally
-    // so addRecurring returns null instead of leaving the save modal frozen.
+  test('addRecurring succeeds instantly when the server never acks the write (offline)', async () => {
     firestoreMock.__state.hangWrites = true;
     try {
       const result = await dataService.addRecurring({
         type: 'expense', amount: 100, categoryId: 'rent', frequency: 'monthly', nextDate: '2026-07-01',
       });
-      expect(result).toBeNull();
+      expect(result).not.toBeNull();
+      expect(result.id).toBeDefined();
+      expect((await dataService.getRecurring()).length).toBe(1);
     } finally {
       firestoreMock.__state.hangWrites = false;
     }
-  }, 15000);
+  });
 
   test('confirmRecurring creates transaction in firestore', async () => {
     const rec = await dataService.addRecurring({
@@ -434,32 +484,54 @@ describe('dataService (firestore mode)', () => {
     expect((await dataService.getQuickTemplates()).length).toBe(1);
   });
 
-  // ─── READ TIMEOUTS ──────────────────────────
-  test('single-doc reads fall back to the default when the read never settles', async () => {
+  // ─── STUCK-STREAM READS → CACHE ─────────────
+  test('single-doc reads fall back to the LOCAL CACHE when the server read never settles', async () => {
     await dataService.setBudget('food', 500);
     firestoreMock.__state.hangReads = true;
     try {
-      // Stuck gRPC stream on read: getDocData must resolve to the default
-      // instead of hanging forever (the frozen Categories screen bug).
+      // Stuck gRPC stream / airplane mode: after the bounded server attempt,
+      // the read must retry against the local cache and return real data —
+      // not an empty default (the "accounts never opened on the flight" bug).
       const budgets = await dataService.getBudgets();
-      expect(budgets).toEqual({});
+      expect(budgets.food).toBe(500);
     } finally {
       firestoreMock.__state.hangReads = false;
     }
   }, 15000);
 
-  test('collection reads resolve to [] when the read never settles', async () => {
+  test('collection reads fall back to the LOCAL CACHE when the server read never settles', async () => {
     await dataService.addTransaction({ type: 'expense', amount: 10, categoryId: 'food' });
     firestoreMock.__state.hangReads = true;
     try {
-      // Both the ordered read and the plain fallback hang → bounded empty
-      // result (8s + 8s worst case), never an eternal spinner.
       const txs = await dataService.getTransactions();
-      expect(txs).toEqual([]);
+      expect(txs.length).toBe(1);
+      expect(txs[0].amount).toBe(10);
     } finally {
       firestoreMock.__state.hangReads = false;
     }
-  }, 30000);
+  }, 15000);
+
+  test('getAccounts falls back to the LOCAL CACHE when the server read never settles', async () => {
+    const acc = await dataService.addAccount({ name: 'Cached', type: 'cash', balance: 7, currency: '₪' });
+    firestoreMock.__state.hangReads = true;
+    try {
+      const accs = await dataService.getAccounts();
+      expect(accs.find(a => a.id === acc.id)).toBeDefined();
+    } finally {
+      firestoreMock.__state.hangReads = false;
+    }
+  }, 15000);
+
+  test('getRecurring falls back to the LOCAL CACHE when the server read never settles', async () => {
+    await dataService.addRecurring({ name: 'Gym', amount: 120, type: 'expense', categoryId: 'sport', frequency: 'monthly', nextDate: '2026-10-01' });
+    firestoreMock.__state.hangReads = true;
+    try {
+      const items = await dataService.getRecurring();
+      expect(items.length).toBe(1);
+    } finally {
+      firestoreMock.__state.hangReads = false;
+    }
+  }, 15000);
 
   // ─── CLEAR ──────────────────────────────────
   test('clearAllData removes everything in firestore', async () => {
