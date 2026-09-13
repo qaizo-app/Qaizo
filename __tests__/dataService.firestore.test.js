@@ -484,6 +484,20 @@ describe('dataService (firestore mode)', () => {
     expect((await dataService.getQuickTemplates()).length).toBe(1);
   });
 
+  test('migrateToFirestore does NOT wipe guest data when import fails', async () => {
+    mockStorage['qaizo_transactions'] = JSON.stringify([{ id: 't1', type: 'expense', amount: 10, categoryId: 'food' }]);
+    const origImport = dataService.importData;
+    dataService.importData = async () => false; // simulate a failed migration write
+    try {
+      const ok = await dataService.migrateToFirestore();
+      expect(ok).toBe(false);
+      // Guest data must survive — wiping it after a failed import loses it forever.
+      expect(mockStorage['qaizo_transactions']).toBeDefined();
+    } finally {
+      dataService.importData = origImport;
+    }
+  });
+
   // ─── STUCK-STREAM READS → CACHE ─────────────
   test('single-doc reads fall back to the LOCAL CACHE when the server read never settles', async () => {
     await dataService.setBudget('food', 500);

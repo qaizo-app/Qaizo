@@ -1075,8 +1075,10 @@ const dataService = {
         if (raw) localData[key.toLowerCase()] = JSON.parse(raw);
       }
       if (Object.keys(localData).length === 0) return false; // nothing to migrate
-      await this.importData(localData);
-      // Clear AsyncStorage after a successful migration.
+      const ok = await this.importData(localData);
+      // Clear AsyncStorage ONLY after a successful migration — wiping guest
+      // data after a failed import would lose it permanently.
+      if (!ok) return false;
       await AsyncStorage.multiRemove(Object.values(KEYS));
       return true;
     } catch (e) { if (__DEV__) console.error('Migration error:', e); return false; }
